@@ -1,0 +1,41 @@
+# configure.ds --
+#
+
+ds_gnuarch_package
+ds_author_name(Marco Maggi)
+ds_author_email(marcomaggi@tiscali.it)
+ds_package_license(LGPL)
+ds_copyright_years({2002, 2003, 2004})
+ds_package_title({Useless Containers Library})
+ds_package_distribution_url({http://gna.org/projects/ucl})
+ds_package_line_description({C language library of containers})
+ds_package_long_description({The UCL is a collection of simple data containers.})
+ds_source_file(./generic/ucl.h)
+
+ds_make_template({
+DS_PACKAGE_VARIABLES
+DS_DIRECTORIES
+DS_COMMON_PROGRAMS
+DS_MAIN_RULES
+DS_PROJECT_RULES
+DS_C_COMPILER_RULES
+DS_C_SHARED_LIBRARY
+DS_C_STATIC_LIBRARY
+DS_C_HEADERS_RULES
+DS_GENERIC_DOCUMENTATION
+DS_TEXINFO_DOCUMENTATION
+DS_AUTO_CONFIGURATION
+DS_END_OF_MAKEFILE
+})
+
+ds_init
+ds_c_language
+AC_CHECK_HEADERS([limits.h stddef.h stdlib.h string.h])
+AC_CHECK_TYPES([ptrdiff_t])
+AC_CHECK_FUNCS([memmove memset strerror])
+ds_output
+
+### end of file
+# Local Variables:
+# mode: sh
+# End:

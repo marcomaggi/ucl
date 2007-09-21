@@ -1,0 +1,16 @@
+		     Known bugs in UCL
+		     =================
+
+
+* Testing of the erase function  in the map and multimap has
+  been difficult, I'm not so sure of the result.
+
+* The various  forms of map  and multimap iteration  seems a
+  correct  implementation  of   what  I  think  they  should
+  be. But, are they really supposed to behave in this way?
+
+
+### end of file
+# Local Variables:
+# mode: text
+# End:

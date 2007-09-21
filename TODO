@@ -1,0 +1,25 @@
+
+		 Useless Containers Library
+		 ==========================
+
+		    List of things to do
+		    --------------------
+
+(more or less in priority order)
+
+* Write the depth first iterator for the tree. 
+* Write the depth first iterator for the binary tree?
+
+* Design the graph container.
+* Test the graph container. 
+* Document the graph container.
+* Add algorithms to the graph container. 
+* Document algorithms for the graph container.
+
+* Write the levelorder iterator for the tree container?
+
+
+### end of file
+# Local Variables:
+# mode: text
+# End:
