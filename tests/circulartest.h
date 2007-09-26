@@ -8,24 +8,22 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
-   
-   $Id: circulartest.h,v 1.1.1.1 2003/12/10 15:22:06 marco Exp $
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
 */
 
 
@@ -33,27 +31,51 @@
 #define __CIRCULARTEST_H 1
 
 #include <stdio.h>
-#include <assert.h>
 #include "ucl.h"
 	
 #define NUMBER	20
 
 UCL_BEGIN_C_DECL
 
-extern void test UCL_ARGS((void));
-extern void fill UCL_ARGS((ucl_circular_t *circPtr, int number, int first));
-extern ucl_circular_link_t *alloc_link UCL_ARGS((void));
-extern void clean_circular UCL_ARGS((ucl_circular_t *this));
+extern void test (void);
+extern void fill (ucl_circular_t circ, int number, int first);
+extern void clean_circular (ucl_circular_t this);
+
+/* ------------------------------------------------------------ */
+
+void
+fill (ucl_circular_t circ_p, int number, int first)
+{
+  int				i;
+  ucl_value_t			val;
+  ucl_circular_link_t *		link_p;
+
+
+  for (i=first; i<number; ++i)
+    {
+      link_p = NULL;
+      ucl_memory_alloc(NULL, &link_p, sizeof(ucl_circular_link_t));
+      val.integer = i;
+      ucl_circular_setval(link_p, val);
+      ucl_circular_insert(circ_p, link_p);
+    }
+}
+void
+clean_circular (ucl_circular_t this)
+{
+  ucl_circular_link_t *		link_p;
+  
+
+  while (ucl_circular_size(this))
+    {
+      link_p = ucl_circular_extract(this);
+      ucl_memory_alloc(NULL, &link_p, 0);
+    }
+  assert( ucl_circular_size(this) == 0 );
+}
 
 UCL_END_C_DECL
 
 #endif /* __CIRCULARTEST_H */
 
-
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/

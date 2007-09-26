@@ -8,24 +8,23 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This  is free  software; you  can redistribute  it and/or  modify it
-   under  the  terms  of  the  GNU Lesser  General  Public  License  as
-   published by the Free Software Foundation; either version 2.1 of the
-   License, or (at your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   Lesser General Public License for more details.
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
+   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   General Public License for more details.
    
-   You  should have received  a copy  of the  GNU Lesser  General Public
-   License along with  this library; if not, write  to the Free Software
-   Foundation, Inc.,  59 Temple Place, Suite 330,  Boston, MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: maptest.h,v 1.1.1.6 2003/12/11 09:58:24 marco Exp $
 */
 
 
@@ -33,7 +32,6 @@
 #define __MAPTEST_H 1
 
 #include <stdio.h>
-#include <assert.h>
 #include "ucl.h"
 	
 #define NUMBER		50
@@ -41,10 +39,63 @@
 
 UCL_BEGIN_C_DECL
 
-extern void test UCL_ARGS((void));
-extern ucl_map_link_t * alloc_new_link UCL_ARGS((void));
-extern void clean_map UCL_ARGS((ucl_map_t *mapPtr));
-extern void fill_map UCL_ARGS((ucl_map_t *mapPtr, int begin, int end));
+extern void test (void);
+extern ucl_map_link_t * alloc_new_link (void);
+extern void clean_map (ucl_map_t map);
+extern void fill_map (ucl_map_t map, int begin, int end);
+
+/* ------------------------------------------------------------ */
+
+ucl_map_link_t *
+alloc_new_link (void)
+{
+  ucl_map_link_t * link_p;
+    
+  link_p = (ucl_map_link_t *) malloc(sizeof(ucl_map_link_t));
+  assert(link_p != NULL);
+  return link_p;
+}
+
+void
+fill_map (ucl_map_t map, int begin, int end)
+{
+  ucl_map_link_t *	link_p;
+  int			i;
+  ucl_value_t		key, val;
+
+
+  for (i=begin; i<end; ++i)
+    {
+      link_p = alloc_new_link();
+      assert(link_p);
+
+      key.num = i;
+      val.num = i;
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
+
+      ucl_map_insert(map, link_p);
+    }
+}
+
+void
+clean_map (ucl_map_t map)
+{
+  size_t		size;
+  ucl_map_link_t *	link_p;
+
+
+  link_p = ucl_map_first(map);
+
+  while (link_p) {
+    link_p = ucl_map_remove(map, link_p);
+    free(link_p);
+    link_p = ucl_map_first(map);
+  }
+
+  size = ucl_map_size(map);
+  assert(size == 0);
+}
 
 UCL_END_C_DECL
 

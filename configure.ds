@@ -1,0 +1,19 @@
+## configure.ds --
+#
+# @configure_input@
+
+AC_CONFIG_SRCDIR([./src/ucl.c])
+DS_BEGIN
+DS_COMMON_PROGRAMS
+DS_SLACKWARE_PROGRAMS
+DS_C_LANGUAGE
+AC_CHECK_FUNC([bsearch],,[AC_MSG_ERROR([bsearch not found],[1])])
+DS_C_LANGUAGE_COMMON_LIBRARY
+DS_C_LANGUAGE_COMMON_STUB_LIBRARY
+DS_C_LANGUAGE_LIBRARY([ucl],[2],[0])
+DS_END
+
+### end of file
+# Local Variables:
+# mode: sh
+# End:

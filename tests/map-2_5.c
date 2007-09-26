@@ -8,24 +8,23 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This  is free  software; you  can redistribute  it and/or  modify it
-   under  the  terms  of  the  GNU Lesser  General  Public  License  as
-   published by the Free Software Foundation; either version 2.1 of the
-   License, or (at your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   Lesser General Public License for more details.
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
+   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   General Public License for more details.
    
-   You  should have received  a copy  of the  GNU Lesser  General Public
-   License along with  this library; if not, write  to the Free Software
-   Foundation, Inc.,  59 Temple Place, Suite 330,  Boston, MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: map-2_5.c,v 1.1.1.6 2003/12/11 10:20:41 marco Exp $
 */
 
 #include "maptest.h"
@@ -34,47 +33,46 @@ void
 test (void)
 {
   ucl_map_t		map;
-  ucl_map_t *		mapPtr;
   int			size;
-  ucl_map_link_t *	linkPtr;
+  ucl_map_link_t *	link_p;
   ucl_value_t		key, val;
   int			i;
   ucl_iterator_t	iterator;
+  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+
 
   int array[]   = { 10, 13, 5, 11, 15, 12 };
   int inorder[] = { 5, 10, 11, 12, 13, 15 };
 
-  mapPtr = &map;
-
 /*
-#define DEBUGGING
+#define UCL_DEBUGGING
 */
 
 #undef LITTLENUMBER
 #define LITTLENUMBER 6
 
-  ucl_map_constructor(mapPtr, 0, ucl_intcmp);
+  ucl_map_constructor(map, 0, compar);
 
   for (i=0; i<LITTLENUMBER; ++i)
     {
-      linkPtr = alloc_new_link();
+      link_p = alloc_new_link();
       
       key.integer = array[i];
       val.integer = array[i];
       
-      ucl_map_setkey(linkPtr, key);
-      ucl_map_setval(linkPtr, val);
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
       
-      ucl_map_insert(mapPtr, linkPtr);
+      ucl_map_insert(map, link_p);
       
-#ifdef DEBUGGING
+#ifdef UCL_DEBUGGING
       printf("\n");
 #endif
     }
-#ifdef DEBUGGING
+#ifdef UCL_DEBUGGING
   printf("\n");
 #endif
-  size = ucl_map_size(mapPtr);
+  size = ucl_map_size(map);
   assert(size == LITTLENUMBER);
 
 /*
@@ -82,25 +80,25 @@ test (void)
 	    {
 		printf("find key: %d; ", i);
 		key.integer = i;
-		linkPtr = ucl_map_find(mapPtr, key);
+		link_p = ucl_map_find(map, key);
 
-		if (linkPtr != NULL)
+		if (link_p != NULL)
 		{
-		    key = ucl_map_getkey(linkPtr);
-		    val = ucl_map_getval(linkPtr);
+		    key = ucl_map_getkey(link_p);
+		    val = ucl_map_getval(link_p);
 		    printf("key: %d, val: %d\n", key.integer, val.integer);
 
-		    if (linkPtr->node.sonPtr != NULL) {
+		    if (link_p->node.sonPtr != NULL) {
 			key = ucl_map_getkey(((UCL_Map_Link *)
-                                  linkPtr->node.sonPtr));
+                                  link_p->node.sonPtr));
 			val = ucl_map_getval((UCL_Map_Link *) 
-                                  linkPtr->node.sonPtr);
+                                  link_p->node.sonPtr);
 			printf("son key: %d, val: %d\n",
                                  key.integer, val.integer);
 		    }
-		    if (linkPtr->node.broPtr != NULL) {
-			key = ucl_map_getkey((UCL_Map_Link *)linkPtr->node.broPtr);
-			val = ucl_map_getval((UCL_Map_Link *)linkPtr->node.broPtr);
+		    if (link_p->node.broPtr != NULL) {
+			key = ucl_map_getkey((UCL_Map_Link *)link_p->node.broPtr);
+			val = ucl_map_getval((UCL_Map_Link *)link_p->node.broPtr);
 			printf("bro key: %d, val: %d\n",
                                  key.integer, val.integer);
 		    }
@@ -115,25 +113,25 @@ test (void)
 
 
   i = 0;
-  for (ucl_map_iterator_inorder(mapPtr, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_inorder(map, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr = ucl_iterator_ptr(&iterator);
-      val = ucl_map_getval(linkPtr);
+      link_p = ucl_iterator_ptr(iterator);
+      val = ucl_map_getval(link_p);
       assert(inorder[i] == val.integer);
       ++i;
     }
   assert(i == LITTLENUMBER);
   
-  linkPtr = ucl_map_first(mapPtr);
-  while (linkPtr) {
-    linkPtr = ucl_map_remove(mapPtr, linkPtr);
-    free(linkPtr);
-    linkPtr = ucl_map_first(mapPtr);
+  link_p = ucl_map_first(map);
+  while (link_p) {
+    link_p = ucl_map_remove(map, link_p);
+    free(link_p);
+    link_p = ucl_map_first(map);
   }
   
-  ucl_map_destructor(mapPtr);
+  ucl_map_destructor(map);
 }
 
 

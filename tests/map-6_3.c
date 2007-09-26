@@ -8,24 +8,23 @@
    
 	Tests for the complintersect iterator.
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This  is free  software; you  can redistribute  it and/or  modify it
-   under  the  terms  of  the  GNU Lesser  General  Public  License  as
-   published by the Free Software Foundation; either version 2.1 of the
-   License, or (at your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   Lesser General Public License for more details.
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
+   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   General Public License for more details.
    
-   You  should have received  a copy  of the  GNU Lesser  General Public
-   License along with  this library; if not, write  to the Free Software
-   Foundation, Inc.,  59 Temple Place, Suite 330,  Boston, MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: map-6_3.c,v 1.1.1.6 2003/12/11 10:35:27 marco Exp $
 */
 
 #include "maptest.h"
@@ -34,162 +33,158 @@ void
 test (void)
 {
   ucl_map_t		map1, map2;
-  ucl_map_t *		mapPtr1;
-  ucl_map_t *		mapPtr2;
   ucl_iterator_t	iterator, iter1, iter2;
   int			i;
   int			size;
-  ucl_map_link_t *	linkPtr;
+  ucl_map_link_t *	link_p;
   ucl_value_t		key, val;
+  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
 
   static int test1[] = { 0, 1, 2, 3, 4, 10 };
 
 
-  mapPtr1 = &map1;
-  mapPtr2 = &map2;
+  ucl_map_constructor(map1, 0, compar);
+  ucl_map_constructor(map2, 0, compar);
 
-  ucl_map_constructor(mapPtr1, 0, ucl_intcmp);
-  ucl_map_constructor(mapPtr2, 0, ucl_intcmp);
-
-  size = ucl_map_size(mapPtr1);  assert(size == 0);
-  size = ucl_map_size(mapPtr2);  assert(size == 0);
+  size = ucl_map_size(map1);  assert(size == 0);
+  size = ucl_map_size(map2);  assert(size == 0);
   
 
   /* two series */
 
-  fill_map(mapPtr1,  0, 10); /* from 0 to 9 */
-  fill_map(mapPtr2,  5, 11); /* from 5 to 10 */
+  fill_map(map1,  0, 10); /* from 0 to 9 */
+  fill_map(map2,  5, 11); /* from 5 to 10 */
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == test1[i]);
       ++i;
     }
   assert(key.integer == 10);
   assert(i == 6);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
   /* two series */
 
-  fill_map(mapPtr1, 5, 11);
-  fill_map(mapPtr2, 0, 10);
+  fill_map(map1, 5, 11);
+  fill_map(map2, 0, 10);
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == test1[i]);
       ++i;
     }
   assert(key.integer == 10);
   assert(i == 6);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* full overlapping */
 
-  fill_map(mapPtr1, 0, 30);
-  fill_map(mapPtr2, 0, 30);
+  fill_map(map1, 0, 30);
+  fill_map(map2, 0, 30);
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
-  ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-  assert(ucl_iterator_more(&iterator) == 0);
+  ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
   
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* empty map 1 */
 
-  fill_map(mapPtr2, 0, 20);
+  fill_map(map2, 0, 20);
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == i);
       ++i;
     }
   assert(i == 20);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* empty map 2 */
 
-  fill_map(mapPtr1, 0, 20);
+  fill_map(map1, 0, 20);
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == i);
       ++i;
     }
   assert(i == 20);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* empty maps */
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-  assert(ucl_iterator_more(&iterator) == 0);
+  ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
 
 
   /* inclusion 1 */
 
-  fill_map(mapPtr1, 10, 20); /* 10 -> 19 */
-  fill_map(mapPtr2, 0,  30); /*  0 -> 29 */
+  fill_map(map1, 10, 20); /* 10 -> 19 */
+  fill_map(map2, 0,  30); /*  0 -> 29 */
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == i);
 
       ++i;
@@ -200,25 +195,25 @@ test (void)
     }
   assert(i == 30);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* inclusion 2 */
 
-  fill_map(mapPtr1, 0,  30);
-  fill_map(mapPtr2, 10, 20);
+  fill_map(map1, 0,  30);
+  fill_map(map2, 10, 20);
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
       assert(key.integer == i);
 
       ++i;
@@ -229,47 +224,47 @@ test (void)
     }
   assert(i == 30);
   
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
   /* intermixed values */
 
   for (i=0; i<30; i += 2)
     {
-      linkPtr = alloc_new_link();
-      assert(linkPtr);
+      link_p = alloc_new_link();
+      assert(link_p);
 
       key.num = i;
       val.num = i;
-      ucl_map_setkey(linkPtr, key);
-      ucl_map_setval(linkPtr, val);
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
 
-      ucl_map_insert(mapPtr1, linkPtr);
+      ucl_map_insert(map1, link_p);
     }
   for (i=1; i<31; i += 2)
     {
-      linkPtr = alloc_new_link();
-      assert(linkPtr);
+      link_p = alloc_new_link();
+      assert(link_p);
 
       key.num = i;
       val.num = i;
-      ucl_map_setkey(linkPtr, key);
-      ucl_map_setval(linkPtr, val);
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
 
-      ucl_map_insert(mapPtr2, linkPtr);
+      ucl_map_insert(map2, link_p);
     }
 
-  ucl_map_iterator_inorder(mapPtr1, &iter1);
-  ucl_map_iterator_inorder(mapPtr2, &iter2);
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(&iter1, &iter2, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator))
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
     {
-      linkPtr	= ucl_iterator_ptr(&iterator);
-      key	= ucl_map_getkey(linkPtr);
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
 
       assert(key.integer == i);
       ++i;
@@ -277,12 +272,12 @@ test (void)
 
   assert(i == 30);
 
-  clean_map(mapPtr1);
-  clean_map(mapPtr2);
+  clean_map(map1);
+  clean_map(map2);
 
 
-  ucl_map_destructor(mapPtr1);
-  ucl_map_destructor(mapPtr2);
+  ucl_map_destructor(map1);
+  ucl_map_destructor(map2);
 }
 
 

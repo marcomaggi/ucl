@@ -6,24 +6,24 @@
    
    Abstract
    
+	Sort finding.
    
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   Copyright (c) 2003, 2004 Marco Maggi
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
-   
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
 */
 
 #include "vectortest.h"
@@ -31,51 +31,32 @@
 void
 test (void)
 {
-  int			i;
-  int *			ptr;
-  ucl_vector_t		vector;
-  ucl_vector_t *	vect_p;
-
-  vect_p = &vector;
+  int		i, j;
+  int *		ptr;
+  ucl_vector_t	vector;
+  ucl_valcmp_t	compar = { NULL, ucl_ptrintcmp };
 
 
-  assert(ucl_vector_constructor1(vect_p,8,6,10,0, sizeof(int)));
+  ucl_vector_initialise(vector, sizeof(int));
+  ucl_vector_initialise_size(vector, 8);
+  ucl_vector_initialise_step_up(vector, 6);
+  ucl_vector_initialise_step_down(vector, 10);
+  ucl_vector_initialise_pad(vector, 0);
   
-  for (i=0; i<NUMBER; i+=3)
-    {
-      ptr = ucl_vector_enlarge(vect_p);
-      assert(ptr);
-      ptr = ucl_vector_insertsort(vect_p, &i, intcmp);
-      assert(ptr != NULL);
-      *ptr = i;
-    }
+  ucl_vector_constructor(vector);
+  ucl_vector_set_compar(vector, compar);
 
-  for (i=1; i<NUMBER; i+=3)
-    {
-      ptr = ucl_vector_enlarge(vect_p);
-      assert(ptr);
-      ptr = ucl_vector_insertsort(vect_p, &i, intcmp);
-      assert(ptr != NULL);
-      *ptr = i;
-    }
-
-  for (i=2; i<NUMBER; i+=3)
-    {
-      ptr = ucl_vector_enlarge(vect_p);
-      assert(ptr);
-      ptr = ucl_vector_insertsort(vect_p, &i, (void *)intcmp);
-      assert(ptr != NULL);
-      *ptr = i;
-    }
-
+  fill(vector, NUMBER, DELTA);
+  
   for (i=0; i<NUMBER; ++i)
     {
-      ptr = ucl_vector_index(vect_p, i);
+      j = i + DELTA;
+      ptr = ucl_vector_sort_find(vector, &j);
       assert(ptr != NULL);
-      assert(*ptr == i);
+      assert(*ptr == j);
     }
 	    
-  ucl_vector_destructor(vect_p);
+  ucl_vector_destructor(vector);
 }
 
 /* end of file */

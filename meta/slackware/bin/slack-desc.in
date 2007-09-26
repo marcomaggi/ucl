@@ -1,0 +1,12 @@
+                        |-----handy-ruler-----------------------------------------------|
+@PACKAGE_NAME_LOWERCASE@: @PACKAGE_NAME@ @PACKAGE_XVERSION@
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@: The Useless Containers Library (UCL) is an implementation of
+@PACKAGE_NAME_LOWERCASE@: generic  data  type  containers  for the  C  language.   The
+@PACKAGE_NAME_LOWERCASE@: containers are: linear list, circular list, vector, map
+@PACKAGE_NAME_LOWERCASE@: tree, heap, graph.
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:
+@PACKAGE_NAME_LOWERCASE@:

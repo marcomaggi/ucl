@@ -8,24 +8,23 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2005 Marco Maggi
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: btree-2_1.c,v 1.1.1.2 2003/12/10 12:57:17 marco Exp $
 */
 
 
@@ -55,17 +54,17 @@ test (void)
   */
 
   ucl_btree_constructor(n[5], NULL);
-  ucl_btree_init(n[1]);  ucl_btree_dadson(n[5],  n[1]);
-  ucl_btree_init(n[3]);  ucl_btree_dadbro(n[1],  n[3]);
-  ucl_btree_init(n[2]);  ucl_btree_dadson(n[3],  n[2]);
-  ucl_btree_init(n[4]);  ucl_btree_dadbro(n[3],  n[4]);
-  ucl_btree_init(n[10]); ucl_btree_dadbro(n[5],  n[10]);
-  ucl_btree_init(n[7]);  ucl_btree_dadson(n[10], n[7]);
-  ucl_btree_init(n[6]);  ucl_btree_dadson(n[7],  n[6]);
-  ucl_btree_init(n[9]);  ucl_btree_dadbro(n[7],  n[9]);
-  ucl_btree_init(n[8]);  ucl_btree_dadson(n[9],  n[8]);
-  ucl_btree_init(n[12]); ucl_btree_dadbro(n[10], n[12]);
-  ucl_btree_init(n[11]); ucl_btree_dadson(n[12], n[11]);
+  ucl_btree_constructor(n[1], NULL);  ucl_btree_dadson(n[5],  n[1]);
+  ucl_btree_constructor(n[3], NULL);  ucl_btree_dadbro(n[1],  n[3]);
+  ucl_btree_constructor(n[2], NULL);  ucl_btree_dadson(n[3],  n[2]);
+  ucl_btree_constructor(n[4], NULL);  ucl_btree_dadbro(n[3],  n[4]);
+  ucl_btree_constructor(n[10], NULL); ucl_btree_dadbro(n[5],  n[10]);
+  ucl_btree_constructor(n[7], NULL);  ucl_btree_dadson(n[10], n[7]);
+  ucl_btree_constructor(n[6], NULL);  ucl_btree_dadson(n[7],  n[6]);
+  ucl_btree_constructor(n[9], NULL);  ucl_btree_dadbro(n[7],  n[9]);
+  ucl_btree_constructor(n[8], NULL);  ucl_btree_dadson(n[9],  n[8]);
+  ucl_btree_constructor(n[12], NULL); ucl_btree_dadbro(n[10], n[12]);
+  ucl_btree_constructor(n[11], NULL); ucl_btree_dadson(n[12], n[11]);
   
   /*
     printf("\n");

@@ -5,18 +5,81 @@
 		    List of things to do
 		    --------------------
 
-(more or less in priority order)
 
-* Write the depth first iterator for the tree. 
-* Write the depth first iterator for the binary tree?
+0.9
+---
 
-* Design the graph container.
-* Test the graph container. 
-* Document the graph container.
-* Add algorithms to the graph container. 
-* Document algorithms for the graph container.
+* Do what  is needed  to build and  install the  static stub
+  library but not the static library.
 
-* Write the levelorder iterator for the tree container?
+* Understand why in hell when upgrading the Slackware packge
+  'doinst.sh' is executed twice.
+
+## ------------------------------------------------------------
+
+Candidates
+----------
+
+* Look for soft heaps. 
+* Look for Splay trees.
+
+
+Vector
+------
+
+* Erase by range of slot pointers.
+
+
+Graph
+-----
+
+* Tests.
+* Path-between-nodes existence predicate after DFS. 
+* Add algorithms
+
+   - connected  graph predicate  (DFS-not-honor  on a  node,
+     then check if all the nodes have been touched);
+
+   - acyclic graph predicate;
+
+   - linearisation  of  nodes  for  DAGs  (directed  acyclic
+     graphs):  build a string  of nodes  in which  the order
+     left-to-right  honors  the  link  horders  (based  upon
+     DFS-honor);
+
+   ... see the book on graph algorithms
+
+* Document algorithms.
+
+
+Tree
+----
+
+* Write the levelorder iterator for the tree container? Also
+  known as breadth first.
+
+* Write  the "string"  iterator  for the  tree. An  iterator
+  whose value  is the string of  nodes from the  root to the
+  currently selected one.
+
+
+Binary tree
+-----------
+
+* Write the "string" iterator for the binary tree?
+
+
+Hash table
+----------
+
+* Complete the module with reallocation policy functions and
+  configuration of resizing.
+
+
+Heap
+----
+
+* Tests for merge.
 
 
 ### end of file

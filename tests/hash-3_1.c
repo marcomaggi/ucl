@@ -8,78 +8,82 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
-   
-   $Id: hash-3_1.c,v 1.1.1.1 2003/12/10 15:49:32 marco Exp $
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
 */
 
+#if 0
+#  define UCL_DEBUGGING
+#endif
 #include "hashtest.h"
 
 void
 test (void)
 {
-  ucl_hash_t		hash_struct;
-  ucl_hash_t *		hash;
-  ucl_voidptr_t *	ptr;
+  ucl_hash_t 		hash;
   ucl_hash_entry_t *	entPtr;
   ucl_value_t		val, key, val1, key1;
   ucl_iterator_t	iterator;
   int			i;
+  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
 
 
-  hash = &hash_struct;
-
-  ptr = ucl_hash_constructor(hash, BUCKETS, ucl_intcmp, hash_num);
-  assert(ptr);
-
+  ucl_hash_constructor(hash, compar, hash_num);
   assert(ucl_hash_size(hash) == 0);
 
+  ucl_debug("number of elements %d", NUMBER);
+
+  /* fill the hash table with NUMBER elements */
   for (i=0; i<NUMBER; ++i)
     {
       entPtr = alloc_link();
       assert(entPtr);
       
       key.integer = i;
-      val.integer = i;
+      val.integer = i - NUMBER - 10; /* from -1010 -10 */
+/*       ucl_debug("val %d", val.integer); */
       
       ucl_hash_setkey(entPtr, key);
       ucl_hash_setval(entPtr, val);
       
       ucl_hash_insert(hash, entPtr);
       
-      assert(ucl_hash_size(hash) == i+1);
+      assert(ucl_hash_size(hash) == (size_t)(i+1));
     }
   assert(ucl_hash_size(hash) == NUMBER);
-  assert(i == 1000);
+  assert(i == NUMBER);
   
+  /* iterate over all the NUMBER elements */
   i=0;
-  for (ucl_hash_iterator(hash, &iterator);
-       ucl_iterator_more(&iterator);
-       ucl_iterator_next(&iterator)) {
-    entPtr = ucl_iterator_ptr(&iterator);
+  for (ucl_hash_iterator(hash, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      entPtr = ucl_iterator_ptr(iterator);
     
-    key1 = ucl_hash_getkey(entPtr);
-    val1 = ucl_hash_getval(entPtr);
+      key1 = ucl_hash_getkey(entPtr);
+      val1 = ucl_hash_getval(entPtr);
     
-    assert(key1.integer < NUMBER);
-    assert(val1.integer < NUMBER);
-    ++i;
-  }
+      ucl_debug("i %d, key %d, int %d, next %p",
+		i, key1.integer, val1.integer, entPtr->next_entry_in_list_p);
+      /*     assert(key1.integer < NUMBER); */
+      assert(-NUMBER-10 <= val1.integer && val1.integer <= -10); 
+      ++i;
+    }
   
   assert(i == NUMBER);
   
@@ -94,12 +98,12 @@ test (void)
       val1 = ucl_hash_getval(entPtr);
       
       assert(key1.integer == i);
-      assert(val1.integer == i);
+      assert(val1.integer == i - NUMBER - 10);
 		
       ucl_hash_extract(hash, entPtr);
       free(entPtr);
 		
-      assert(ucl_hash_size(hash) == NUMBER-i-1);
+      assert(ucl_hash_size(hash) == (size_t)(NUMBER-i-1));
     }
   assert(ucl_hash_size(hash) == 0);
 
@@ -107,9 +111,3 @@ test (void)
 }
 
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/

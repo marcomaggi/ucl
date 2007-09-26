@@ -8,24 +8,23 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: list-2_4.c,v 1.1.1.1 2003/12/10 16:59:36 marco Exp $
 */
 
 #include "listtest.h"
@@ -34,47 +33,38 @@ void
 test (void)
 {
   ucl_list_t		list;
-  ucl_list_t *		listPtr;
   int			i, j;
-  ucl_list_link_t *	linkPtr;
+  ucl_list_link_t *	link_p;
   ucl_value_t		val;
 
-  listPtr = &list;
+  ucl_list_constructor(list);
 
-  ucl_list_constructor(listPtr);
-
-  fill(listPtr, NUMBER, DELTA);
+  fill(list, NUMBER, DELTA);
 
   for (i=0; i<NUMBER; ++i)
     {
-      linkPtr = ucl_list_front(listPtr);
-      val = ucl_list_getval(linkPtr);
+      link_p = ucl_list_front(list);
+      val = ucl_list_getval(link_p);
       assert( val.integer == i + DELTA );
 
-      ucl_list_popfront(listPtr);
-      free(linkPtr);
-      assert(ucl_list_size(listPtr) == (NUMBER-1)-i);
+      ucl_list_popfront(list);
+      free(link_p);
+      assert(ucl_list_size(list) == (size_t)((NUMBER-1)-i));
 
       for (j=0; j < NUMBER-i-1; ++j)
 	{
-	  linkPtr = ucl_list_index(listPtr, j);
-	  assert(linkPtr != NULL);
+	  link_p = ucl_list_index(list, j);
+	  assert(link_p != NULL);
 
-	  val = ucl_list_getval(linkPtr);
+	  val = ucl_list_getval(link_p);
 	  assert(val.integer == j+i+DELTA+1);
 	}
     }
       
-  assert(ucl_list_size(listPtr) == 0);
+  assert(ucl_list_size(list) == 0);
 
-  clean_list(listPtr);
-  ucl_list_destructor(listPtr);
+  clean_list(list);
+  ucl_list_destructor(list);
 }
 
 /* end of file */
-/*
-  Local Variables:
-  mode: c
-  page-delimiter: "^$"
-  End:
-*/

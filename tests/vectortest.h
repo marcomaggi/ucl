@@ -8,35 +8,30 @@
    
    
    
-   Copyright (c) 2003 Marco Maggi
+   Copyright (c) 2003, 2004 Marco Maggi
    
-   This is free software; you  can redistribute it and/or modify it under
-   the terms of the GNU Lesser General Public License as published by the
-   Free Software  Foundation; either version  2.1 of the License,  or (at
-   your option) any later version.
+   This is free  software you can redistribute it  and/or modify it under
+   the terms of  the GNU General Public License as  published by the Free
+   Software Foundation; either  version 2, or (at your  option) any later
+   version.
    
-   This library  is distributed in the  hope that it will  be useful, but
-   WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+   This  file is  distributed in  the hope  that it  will be  useful, but
+   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
    MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-   Lesser General Public License for more details.
+   General Public License for more details.
    
-   You  should have  received a  copy of  the GNU  Lesser  General Public
-   License along  with this library; if  not, write to  the Free Software
-   Foundation, Inc.,  59 Temple Place,  Suite 330, Boston,  MA 02111-1307
-   USA
+   You  should have received  a copy  of the  GNU General  Public License
+   along with this file; see the file COPYING.  If not, write to the Free
+   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
+   02111-1307, USA.
    
-   $Id: vectortest.h,v 1.1.1.2 2003/12/10 13:54:57 marco Exp $
 */
 
 
 #ifndef __VECTORTEST_H
 #define __VECTORTEST_H 1
 
-
-
 #include <stdio.h>
-#include <assert.h>
-
 #include "ucl.h"
 
 #define NUMBER	1000
@@ -44,20 +39,48 @@
 
 UCL_BEGIN_C_DECL
 
-extern void test UCL_ARGS((void));
-extern void fill UCL_ARGS((ucl_vector_t *vectptr, int number, int first));
-extern void clean UCL_ARGS((ucl_vector_t *vectPtr));
-extern int intcmp UCL_ARGS((const int *a, const int *b));
+extern void test (void);
+extern void fill (ucl_vector_t vectptr, int number, int first);
+extern void clean (ucl_vector_t vectPtr);
+extern int intcmp (const int *a, const int *b);
+
+/* ------------------------------------------------------------ */
+
+void
+fill (ucl_vector_t vect_p, int number, int first)
+{
+  int	i;
+  int *	ptr;
+
+  for (i=0; i < number; ++i)
+    {
+      ucl_vector_enlarge(vect_p);
+
+      ptr = ucl_vector_index_to_new_slot(vect_p, ucl_vector_size(vect_p));
+      ptr = ucl_vector_insert(vect_p, ptr);
+      *ptr = i + first;
+    }
+}
+void
+clean (ucl_vector_t vect_p)
+{
+  int *	ptr;
+
+  while(ucl_vector_size(vect_p))
+    {
+      ptr = ucl_vector_index_to_slot(vect_p, 0);
+      ucl_vector_erase(vect_p, ptr);
+      ucl_vector_restrict(vect_p);
+    }
+}
+int
+intcmp (const int *a, const int *b)
+{
+  return ((*a == *b)? 0 : ((*a > *b)? 1 : -1));
+}
 
 UCL_END_C_DECL
 
 #endif /* __VECTORTEST_H */
 
-
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/
