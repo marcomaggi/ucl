@@ -1240,11 +1240,6 @@ ucl_graph_node_set_mark (ucl_graph_node_t * node_p, const ucl_value_t mark)
 
 /* ------------------------------------------------------------ */
 
-static inline void
-ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p)
-{
-  node_p->next_node_p = (ucl_graph_node_t *)next_p;
-}
 static inline ucl_graph_node_t *
 ucl_graph_get_next_node (const ucl_graph_node_t * node_p)
 {
@@ -1321,6 +1316,8 @@ ucl_decl void ucl_graph_merge_upon_input_link (ucl_graph_link_t * in, ucl_graph_
 ucl_decl void ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_link_t * out);
 ucl_decl ucl_bool_t ucl_graph_nodes_are_linked (ucl_graph_node_t * src_p, ucl_graph_node_t * dst_p);
 ucl_decl ucl_bool_t ucl_graph_nodes_are_connected (ucl_graph_node_t * a, ucl_graph_node_t * b);
+
+ucl_decl void ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p);
 
 #endif
 

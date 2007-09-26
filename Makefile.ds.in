@@ -136,7 +136,7 @@ $$(eval $$(call ds-c-test-programs,$(1),$$($(1)_test_OBJECTS)))
 test-$(1)-clean: $(1)_test_programs-clean
 
 test-$(1): $(1)_test_programs-all
-	$$(foreach f,$$($(1)_test_programs_TARGETS),LD_LIBRARY_PATH=$$(builddir)/library.d $$(f);)
+	@$$(foreach f,$$($(1)_test_programs_TARGETS),LD_LIBRARY_PATH=$$(builddir)/library.d $$(f);)
 
 test:		test-$(1)
 test-clean:	test-$(1)-clean

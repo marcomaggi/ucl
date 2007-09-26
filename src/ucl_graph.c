@@ -156,6 +156,16 @@ ucl_graph_nodes_are_connected (ucl_graph_node_t * a, ucl_graph_node_t * b)
   return 0;
 }
 
+/* ------------------------------------------------------------ */
+
+stub(2007-09-26-11-37-57) void
+ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p)
+{
+  node_p->next_node_p = (ucl_graph_node_t *)next_p;
+}
+
+/* ------------------------------------------------------------ */
+
 
 /** ------------------------------------------------------------
  ** Unlink two nodes.
