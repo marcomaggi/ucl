@@ -5788,12 +5788,12 @@ be completely contained in the allocated vector memory.
 @subsubsection Range/block conversion
 
 
-@deftypefun ucl_block_t ucl_vector_block_from_range (ucl_vector_t @var{self}, ucl_range_t @var{range})
+@deftypefun ucl_block_t ucl_vector_block_from_range (const ucl_vector_t @var{self}, const ucl_range_t @var{range})
 Return a block referencing the slots selected by a range.
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_block (ucl_vector_t @var{self}, ucl_block_t @var{block})
+@deftypefun ucl_range_t ucl_vector_range_from_block (const ucl_vector_t @var{self}, const ucl_block_t @var{block})
 Return the range of slots referenced by a block.
 @end deftypefun
 

@@ -991,8 +991,8 @@ ucl_decl ucl_bool_t ucl_vector_range_is_valid		(const ucl_vector_t self, ucl_ran
 /* data getters and setters */
 ucl_decl ucl_block_t ucl_vector_get_memory_block	(const ucl_vector_t self);
 ucl_decl ucl_block_t ucl_vector_get_data_block		(const ucl_vector_t self);
-ucl_decl ucl_block_t ucl_vector_block_from_range	(ucl_vector_t self, ucl_range_t range);
-ucl_decl ucl_range_t ucl_vector_range_from_block	(ucl_vector_t self, ucl_block_t block);
+ucl_decl ucl_block_t ucl_vector_block_from_range	(const ucl_vector_t self, const ucl_range_t range);
+ucl_decl ucl_range_t ucl_vector_range_from_block	(const ucl_vector_t self, const ucl_block_t block);
 ucl_decl ucl_block_t ucl_vector_get_free_block_at_end	(ucl_vector_t self, size_t requested_slots);
 ucl_decl ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t self, size_t requested_slots);
 

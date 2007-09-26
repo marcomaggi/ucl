@@ -896,7 +896,7 @@ ucl_vector_sorted (ucl_vector_t self)
 /* ------------------------------------------------------------ */
 
 stub(2006-11-19-13-08-03) ucl_block_t
-ucl_vector_block_from_range (ucl_vector_t self, ucl_range_t range)
+ucl_vector_block_from_range (const ucl_vector_t self, const ucl_range_t range)
 {
   ucl_block_t	block;
 
@@ -908,7 +908,7 @@ ucl_vector_block_from_range (ucl_vector_t self, ucl_range_t range)
   return block;
 }
 stub(2006-11-19-13-12-13) ucl_range_t
-ucl_vector_range_from_block(ucl_vector_t self, ucl_block_t block)
+ucl_vector_range_from_block(const ucl_vector_t self, const ucl_block_t block)
 {
   ucl_range_t	range;
 
