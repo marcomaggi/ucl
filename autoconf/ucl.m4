@@ -71,6 +71,22 @@ AC_MSG_WARN([cannot link to stub static Useless Containers Library])
 
 AC_SUBST([UCL_STUB_LIBS],[${UCL_STUB_LIBS}])
 
+AC_ARG_ENABLE([ucl-stub],
+    AC_HELP_STRING([--disable-ucl-stub], [Disable UCL linking with stub mechanism (default: ENabled).]), [
+        if test "$enableval" = yes ; then
+            UCL_ENABLE_STUB=yes
+        else
+            UCL_ENABLE_STUB=no
+        fi
+],[UCL_ENABLE_STUB=yes])
+
+AC_SUBST([UCL_ENABLE_STUB])
+
+if test "${UCL_ENABLE_STUB}" = 'yes' ; then
+    AC_MSG_NOTICE([enabled UCL linking with the stub mechanism])
+    AC_DEFINE([UCL_ENABLE_STUB],[1],[enables UCL linking with the stub mechanism])
+fi
+
 ])
 
 ### end of file

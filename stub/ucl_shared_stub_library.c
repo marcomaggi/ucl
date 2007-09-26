@@ -81,7 +81,8 @@ static const ucl_graph_stub_table_t ucl_graph_stub_table = {
   ucl_graph_depth_first_search,
   ucl_graph_finalise_dfs_handle,
   ucl_graph_nodes_are_linked,
-  ucl_graph_nodes_are_connected
+  ucl_graph_nodes_are_connected,
+  ucl_graph_set_next_node
 };
 
 /* Functions stub table for the "hash" module. */

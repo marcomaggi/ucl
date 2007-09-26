@@ -243,6 +243,7 @@ typedef void       ucl_graph_depth_first_search_proto_t (ucl_graph_dfs_t * searc
 typedef void       ucl_graph_finalise_dfs_handle_proto_t (ucl_graph_dfs_t * search_handle);
 typedef ucl_bool_t ucl_graph_nodes_are_linked_proto_t (ucl_graph_node_t * src_p, ucl_graph_node_t * dst_p);
 typedef ucl_bool_t ucl_graph_nodes_are_connected_proto_t (ucl_graph_node_t * a, ucl_graph_node_t * b);
+typedef void       ucl_graph_set_next_node_proto_t (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p);
 
 /* Stub table type declaration for the "graph" module.
    A struct holding a pointer for each function in the module. */
@@ -266,6 +267,7 @@ typedef struct ucl_graph_stub_table_t {
   ucl_graph_finalise_dfs_handle_proto_t * stub_ucl_graph_finalise_dfs_handle;
   ucl_graph_nodes_are_linked_proto_t  * stub_ucl_graph_nodes_are_linked;
   ucl_graph_nodes_are_connected_proto_t * stub_ucl_graph_nodes_are_connected;
+  ucl_graph_set_next_node_proto_t     * stub_ucl_graph_set_next_node;
 } ucl_graph_stub_table_t;
 
 /* Stub table macros definition for the "graph" module.
@@ -294,6 +296,7 @@ extern const ucl_graph_stub_table_t * ucl_graph_stub_table_p;
 #define ucl_graph_finalise_dfs_handle  ((ucl_graph_stub_table_p)->stub_ucl_graph_finalise_dfs_handle)
 #define ucl_graph_nodes_are_linked  ((ucl_graph_stub_table_p)->stub_ucl_graph_nodes_are_linked)
 #define ucl_graph_nodes_are_connected  ((ucl_graph_stub_table_p)->stub_ucl_graph_nodes_are_connected)
+#define ucl_graph_set_next_node    ((ucl_graph_stub_table_p)->stub_ucl_graph_set_next_node)
 
 #endif /* defined UCL_ENABLE_STUB */
 
