@@ -121,7 +121,12 @@ typedef ucl_valcmp_t	ucl_keycmp_t;
 
 /* ------------------------------------------------------------ */
 
-typedef size_t	ucl_hashfun_t	(ucl_value_t key);
+typedef size_t	ucl_hashfun_t	(void * data, ucl_value_t key);
+
+typedef struct ucl_hashcmp_t {
+  void *		data;
+  ucl_hashfun_t *	func;
+} ucl_hashcmp_t;
 
 /* ------------------------------------------------------------ */
 
@@ -146,7 +151,7 @@ ucl_decl ucl_valcmp_fun_t	ucl_intcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_uintcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_strcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_ptrintcmp;
-ucl_decl size_t     ucl_hash_string    (const ucl_value_t val);
+ucl_decl size_t     ucl_hash_string	(void * data, const ucl_value_t val);
 ucl_decl unsigned   ucl_interface_major_version (void);
 ucl_decl unsigned   ucl_interface_minor_version (void);
 
@@ -1063,7 +1068,7 @@ typedef struct ucl_hash_entry_t {
 
 typedef struct ucl_hash_struct_t {
   ucl_vector_t		buckets;
-  ucl_hashfun_t *	hash;
+  ucl_hashcmp_t		hash;
   ucl_valcmp_t		compar;
   size_t		size;
   size_t		number_of_used_buckets;
@@ -1103,7 +1108,7 @@ ucl_hash_getval (const ucl_hash_entry_t * entry_p)
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashfun_t *hash);
+ucl_decl void ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
 ucl_decl void ucl_hash_insert    (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 ucl_decl void ucl_hash_extract   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 ucl_decl ucl_hash_entry_t * ucl_hash_find (const ucl_hash_t this, const ucl_value_t key);

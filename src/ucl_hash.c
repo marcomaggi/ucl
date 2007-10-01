@@ -64,7 +64,7 @@ static ucl_iterator_next_t	iterator_next;
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-10-40) void
-ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashfun_t *hash)
+ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash)
 {
   assert(this); assert(hash); assert(compar.func);
 
@@ -102,9 +102,10 @@ ucl_hash_register_allocator (ucl_hash_t this, ucl_memory_allocator_t allocator)
 static entry_t **
 compute_bucket_pointer_for_key (const ucl_hash_t this, const ucl_value_t key)
 {
-  size_t bucket_index;
+  size_t	bucket_index;
+  ucl_hashcmp_t	hash = this->hash;
   
-  bucket_index = (this->hash(key)) % ucl_vector_size(this->buckets);
+  bucket_index = (hash.func(hash.data, key)) % ucl_vector_size(this->buckets);
   return ucl_vector_index_to_slot(this->buckets, bucket_index);
 }
 static void
@@ -263,9 +264,11 @@ ucl_hash_enlarge (ucl_hash_t this)
   entry_t **	new_bucket_p;
   entry_t *	entry_p;
   iterator_t	iterator;
+  ucl_hashcmp_t	hash;
 
 
   assert(this);
+  hash = this->hash;
   ucl_vector_enlarge(this->buckets);
 
   /* Reset to  NULL all the  new buckets. The  padding of the  vector is
@@ -334,7 +337,7 @@ ucl_hash_enlarge (ucl_hash_t this)
 
 	  entry_p->to_be_processed_during_rehashing = NO;
 
-	  bucket_index = this->hash(entry_p->key) % ucl_vector_size(this->buckets);
+	  bucket_index = hash.func(hash.data, entry_p->key) % ucl_vector_size(this->buckets);
 	  new_bucket_p = ucl_vector_index_to_slot(this->buckets, bucket_index),
 	  append_entry_to_the_end(new_bucket_p, entry_p);
 	}

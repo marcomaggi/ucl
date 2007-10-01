@@ -109,7 +109,7 @@ ucl_ptrintcmp (void * data, const ucl_value_t a, const ucl_value_t b)
 
 /* This comes from the C++ book of Bjarne Srtoustrup. */
 stub(2005-09-23-18-10-10) size_t
-ucl_hash_string (const ucl_value_t val)
+ucl_hash_string (void * data UCL_UNUSED, const ucl_value_t val)
 {
   size_t	num=0, len;
   const char *	p = val.str;

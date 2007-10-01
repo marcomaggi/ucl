@@ -1347,11 +1347,35 @@ An alias for @code{ucl_valcmp_t}.
 @section Hash functions
 
 
+@deftp {Struct Typedef} ucl_hashcmp_t
+Structure holding the hash function; notice that @code{hashcmp} stands
+for ``hash computation'', not ``hash comparison''. Fields:
 
-@deftypefn {Function Typedef} size_t ucl_hashfun_t (ucl_value_t @var{key})
-Type of hash functions used by the hash table. See the hash table
-description for more details (@ref{hash} the hash table container).
+@table @code
+@item void * data
+pointer to a context to be handed as first argument to the function;
+
+@item ucl_hashfun_t * func
+pointer to the function that computes the hash value.
+@end table
+@end deftp
+
+
+@deftypefn {Function Typedef} size_t ucl_hashfun_t (void * @var{data}, ucl_value_t @var{key})
+Type of hash functions used by the hash table. The @var{data} argument
+is a custom value that can be selected for each container, the @var{key}
+value is the key used to store a value.
+
+The return value must be an unsigned integer representing the
+``position'' of the key in a vector, the hash container code will take
+care of mapping the @code{size_t} value to an index in the vector of
+buckets.
+
+See the hash table description for more details (@ref{hash} the hash
+table container).
 @end deftypefn
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ---------------------------------------------------------------------
 @node containers
@@ -3300,16 +3324,10 @@ table entry are of type @code{ucl_value_t} (@ref{typedefs}).
 @end deftp
 
 
-@deftypefn {Function Typedef} size_t ucl_hashfun_t (ucl_value_t @var{val})
-The prototype of the hash function.  The hash container code will take
-care of mapping the @code{size_t} value to an index in the vector of
-buckets.
-@end deftypefn
-
 The hash was inspired by the book on C++ by Bjarne Stroustrup and the
-hash structure in the @acronym{TCL} (Tool Command Language) source code,
-by John Ousterhout and others (@url{http://www.tcl.tk/} for more about
-@acronym{TCL}).
+hash structure in the @tcl{} (Tool Command Language) source code, by
+John Ousterhout and others (@url{http://www.tcl.tk/} for more about
+@tcl{}). However, no code comes from @tcl{}.
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -3397,8 +3415,8 @@ the initial number of buckets;
 @item ucl_valcmp_t @var{keycmp}
 the function+context used to compare keys;
 
-@item ucl_hashfun_t * @var{hash}
-pointer to the hash function.
+@item ucl_hashcmp_t @var{hash}
+the hash computation structure, @ref{typedefs hash}.
 @end table
 
 Returns @null{} if an error allocating the vector of buckets occurred.

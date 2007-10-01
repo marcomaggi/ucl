@@ -97,7 +97,7 @@ typedef const char * ucl_patch_version_proto_t (void);
 typedef int        ucl_intcmp_proto_t         (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
 typedef int        ucl_uintcmp_proto_t        (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
 typedef int        ucl_ptrintcmp_proto_t      (void * data, const ucl_value_t a, const ucl_value_t b);
-typedef size_t     ucl_hash_string_proto_t    (const ucl_value_t val);
+typedef size_t     ucl_hash_string_proto_t    (void * data UCL_UNUSED, const ucl_value_t val);
 typedef unsigned   ucl_interface_major_version_proto_t (void);
 typedef unsigned   ucl_interface_minor_version_proto_t (void);
 typedef int        ucl_strcmp_proto_t         (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
@@ -307,7 +307,7 @@ extern const ucl_graph_stub_table_t * ucl_graph_stub_table_p;
 /* Function type declarations for the "hash" module.
    A typedef for each function in the module. */
 
-typedef void       ucl_hash_constructor_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashfun_t *hash);
+typedef void       ucl_hash_constructor_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
 typedef void       ucl_hash_insert_proto_t    (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 typedef void       ucl_hash_extract_proto_t   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 typedef ucl_hash_entry_t * ucl_hash_find_proto_t (const ucl_hash_t this, const ucl_value_t key);

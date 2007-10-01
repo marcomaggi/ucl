@@ -37,9 +37,10 @@ test (void)
   ucl_iterator_t	iterator;
   int			i;
   ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_hashcmp_t		H = { NULL, hash_num };
 
 
-  ucl_hash_constructor(hash, compar, hash_num);
+  ucl_hash_constructor(hash, compar, H);
   
   assert(ucl_hash_size(hash) == 0);
   

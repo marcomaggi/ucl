@@ -37,6 +37,7 @@ test (void)
   ucl_value_t		val, key, val1, key1;
   unsigned		i;
   ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_hashcmp_t		H = { NULL, ucl_hash_string };
 
 
   static const char *strs[] = {
@@ -45,7 +46,7 @@ test (void)
   };
 
 
-  ucl_hash_constructor(hash, compar, ucl_hash_string);
+  ucl_hash_constructor(hash, compar, H);
   assert(ucl_hash_size(hash) == 0);
 
   /* insert */

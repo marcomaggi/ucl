@@ -42,7 +42,7 @@ UCL_BEGIN_C_DECL
 
 extern void test (void);
 extern ucl_hash_entry_t * alloc_link (void);
-extern size_t hash_num (ucl_value_t val);
+extern size_t hash_num (void * data, ucl_value_t val);
 
 /* ------------------------------------------------------------ */
 
@@ -62,7 +62,7 @@ alloc_link(void)
 }
 
 size_t
-hash_num(ucl_value_t val)
+hash_num(void * data UCL_UNUSED, ucl_value_t val)
 {
   return (size_t) val.integer;
 }
