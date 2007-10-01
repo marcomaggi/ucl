@@ -156,6 +156,10 @@ tree_REVISION_ID=$(arch revisions | lastof)
 tree_REVISION=${tree_REVISION_ID##*-}
 
 case "${tree_BRANCH}" in
+    devel)
+        tree_REVISION_LEVEL=d
+        tree_VERSION=${tree_MAJOR_MINOR_VERSION}.0
+        ;;
     alpha)
         tree_REVISION_LEVEL=a
         tree_VERSION=${tree_MAJOR_MINOR_VERSION}.0

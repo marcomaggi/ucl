@@ -628,6 +628,8 @@ ds-nop:
 
 clean:		ds-nop-clean
 realclean:	ds-nop-realclean
+ds-nop-clean:
+ds-nop-realclean:
 
 ## ------------------------------------------------------------
 
@@ -1756,19 +1758,19 @@ $$(eval $$(call ds-srcdir,$(1),$(2)))
 $$(eval $$(call ds-builddir,$(1),$$(call ds-ornull,$(4),$$(builddir)/objects.d)))
 
 vpath	%.h		$$($(1)_SRCDIR)
-vpath	%.$(OBJEXT)	$$($(1)_BUILDDIR)
+vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
 
 $$(eval $$(call ds-cc-compile,$(1)_CC_COMPILE,-I$$($(1)_SRCDIR)))
 
 $(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.c))
-$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$(OBJEXT))))
+$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$$(OBJEXT))))
 
 $(1)_CLEANFILES		= $$($(1)_TARGETS)
 $(1)_REALCLEANFILES	= $$($(1)_CLEANFILES)
 
 $$(eval $$(call ds-module-no-install,$(1),bin))
 
-$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
+$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 
@@ -1781,19 +1783,19 @@ $$(eval $$(call ds-srcdir,$(1),$(2)))
 $$(eval $$(call ds-builddir,$(1),$$(call ds-ornull,$(4),$$(builddir)/objects.d)))
 
 vpath	%.h		$$($(1)_SRCDIR)
-vpath	%.$(OBJEXT)	$$($(1)_BUILDDIR)
+vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
 
 $$(eval $$(call ds-cc-compile,$(1)_CC_COMPILE,-I$$($(1)_SRCDIR)))
 
 $(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.c))
-$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$(OBJEXT))))
+$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$$(OBJEXT))))
 
 $(1)_CLEANFILES		= $$($(1)_TARGETS)
 $(1)_REALCLEANFILES	= $$($(1)_CLEANFILES)
 
 $$(eval $$(call ds-module-no-install,$(1),ds-nop))
 
-$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
+$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 
@@ -2184,7 +2186,7 @@ dist:
 		--exclude=archives              --exclude=\*.ps			\
 		--exclude=\*.dvi                --exclude=tmp			\
 		--exclude=\*.gz                 --exclude=\*.tar                \
-		--exclude=\*.so                 --exclude=\*.$(OBJEXT)          \
+		--exclude=\*.so                 --exclude=\*.$$(OBJEXT)         \
 		--exclude=\*.a                  --exclude=\*.rpm                \
 		--exclude=\*.deb                --exclude=.emacs\*		\
 		--exclude=\*~                   --exclude=TAGS                  \

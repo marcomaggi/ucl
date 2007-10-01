@@ -32,6 +32,12 @@
 ## ------------------------------------------------------------
 
 AC_DEFUN([DS_BEGIN],[
+AC_SYS_INTERPRETER
+AC_SYS_LARGEFILE
+AC_SYS_LONG_FILE_NAMES
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
 DS_DIRECTORIES
 
 AC_ARG_ENABLE([versioned-layout],
@@ -289,6 +295,7 @@ AC_PATH_PROG([GDB],[GDB],:)
 AC_PROG_CC_C99
 
 # Headers and C compiler features.
+AC_INCLUDES_DEFAULT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([assert.h])
 AC_CHECK_HEADERS([limits.h])
@@ -410,13 +417,17 @@ AC_SUBST([ds_config_ENABLE_STUB])
 #  Variables definitions are put in "Makefile.variables.in".
 
 AC_DEFUN([DS_C_LANGUAGE_LIBRARY],[
+DS_C_LANGUAGE_LIBRARY_STUB(m4_translit($1,-,_),$2,$3,$1)
+])
 
-AC_SUBST([$1_LIBRARY_ID],[$1$2.$3])
+AC_DEFUN([DS_C_LANGUAGE_LIBRARY_STUB],[
+
+AC_SUBST([$1_LIBRARY_ID],[$4$2.$3])
 AC_SUBST([$1_INTERFACE_VERSION],[$2.$3])
 AC_SUBST([$1_INTERFACE_MAJOR_VERSION],[$2])
 AC_SUBST([$1_INTERFACE_MINOR_VERSION],[$3])
 
-AC_DEFINE([$1_LIBRARY_ID],[$1$2.$3],[the library identifier])
+AC_DEFINE([$1_LIBRARY_ID],[$4$2.$3],[the library identifier])
 AC_DEFINE([$1_INTERFACE_VERSION],[$2.$3],[library interface version])
 AC_DEFINE([$1_INTERFACE_MAJOR_VERSION],[$2],[library interface major version])
 AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
@@ -424,11 +435,11 @@ AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
 $1_SHARED_LIBRARY_NAME=lib${$1_LIBRARY_ID}.so
 $1_STATIC_LIBRARY_NAME=lib${$1_LIBRARY_ID}.a
 
-$1_stub_SHARED_LIBRARY_ID=$1stub$2.$3
+$1_stub_SHARED_LIBRARY_ID=$4stub$2.$3
 $1_stub_SHARED_LIBRARY_NAME=lib${$1_stub_SHARED_LIBRARY_ID}.so
-$1_stub_SHARED_LIBRARY_LINK_NAME=lib$1stub$2.so
-$1_stub_SHARED_LIBRARY_LINK_ID=$1stub$2
-$1_stub_STATIC_LIBRARY_ID=$1staticstub$2.$3
+$1_stub_SHARED_LIBRARY_LINK_NAME=lib$4stub$2.so
+$1_stub_SHARED_LIBRARY_LINK_ID=$4stub$2
+$1_stub_STATIC_LIBRARY_ID=$4staticstub$2.$3
 $1_stub_STATIC_LIBRARY_NAME=lib${$1_stub_STATIC_LIBRARY_ID}.a
 
 AC_SUBST([$1_SHARED_LIBRARY_NAME])
