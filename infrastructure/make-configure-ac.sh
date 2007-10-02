@@ -305,6 +305,14 @@ for item in preinstall postinstall preremoval postremoval ; do
     fi
 done
 
+item=${tree_NAME_LOWERCASE}
+if test -f meta/${item}.pc.in ; then
+    verbose 'adding "%s" script as config file' ${item}.pc
+    printf 'AC_CONFIG_FILES([meta.d/%s:meta/%s.in])\n' ${item}.pc ${item}.pc
+else
+    verbose '"%s" script not found' ${item}.pc.in
+fi
+
 for section in bin doc dev ; do
     for file in doinst.sh slack-desc ; do
         pathname=meta/slackware/${section}/${file}.in

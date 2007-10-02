@@ -272,18 +272,6 @@ $(eval $(call ds-c-program-no-install,showsize,showsize,$(showsize_TARGETS)))
 showsize : showsize_program-all
 	@LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR) $(showsize_program_BUILDDIR)/showsize
 
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## GNU Autoconf macros.
-## ------------------------------------------------------------
-
-autoconf_macros_INSTLST	= $(srcdir)/autoconf/ucl.m4
-autoconf_macros_INSTDIR	= $(datadir)/aclocal
-
-$(eval $(call ds-module,autoconf_macros,bin))
-
 
 ### end of file
 # Local Variables:

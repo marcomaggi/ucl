@@ -17,6 +17,8 @@ include Makefile.ds
 $(eval $(call ds-texinfo-documentation))
 $(eval $(call ds-uninstall-scripts))
 $(eval $(call ds-meta-scripts))
+$(eval $(call ds-pkg-config))
+$(eval $(call ds-autoconf))
 $(eval $(call ds-config-inspection-script))
 $(eval $(call ds-source-distribution))
 $(eval $(call ds-binary-distribution))

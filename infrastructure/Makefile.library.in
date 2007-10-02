@@ -1285,6 +1285,91 @@ endef
 
 #page
 ## ------------------------------------------------------------
+## Predefined modules: pkg-config meta data files.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#	$(eval $(call ds-pkg-config,<NAMES>))
+#
+# Description:
+#
+#  Add a module to install the meta data files for pkg-config.
+#  More than one meta file can be selected by setting the
+#  <NAMES> parameter to the list of file names with the ".pc"
+#  extension stripped.
+#
+#  Each of the file names will be "$(builddir)/meta.d/<NAME>.pc",
+#  and it should be produced by "configure" by putting the line
+#
+#	AC_CONFIG_FILES(meta.d/<NAME>.pc:meta/<NAME>.pc.in)
+#
+#  in the "configure.ac" file. It is fine if the files do not
+#  not exist. If <NAMES> is not used: by default an attempt
+#  is done to use "$(PACKAGE_NAME_LOWERCASE).pc".
+
+define ds-pkg-config
+$$(eval $$(call ds-srcdir,ds_pkg_config,$$(srcdir)/meta))
+$$(eval $$(call ds-builddir,ds_pkg_config,$$(builddir)/meta.d))
+
+ds_pkg_config_NAMES	= $$(addsuffix .pc,$$(call ds-ornull,$2,$$(PACKAGE_NAME_LOWERCASE)))
+ds_pkg_config_SOURCES	= $$(call ds-glob,ds_pkg_config,$$(addsuffix .in,$$(ds_pkg_config_NAMES)))
+ds_pkg_config_INSTLST	= $$(call ds-replace-dir,$$(ds_pkg_config_BUILDDIR),$$(ds_pkg_config_SOURCES:.in=))
+ds_pkg_config_INSTDIR	= $$(libdir)/pkgconfig
+
+ifneq ($$(strip $$(ds_pkg_config_SOURCES)),)
+$$(eval $$(call ds-module,ds_pkg_config,bin,DATA))
+endif
+
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Predefined modules: GNU Autoconf macro files.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#	$(eval $(call ds-autoconf,<NAMES>))
+#
+# Description:
+#
+#  Add a module to install macro files GNU Autoconf. These
+#  files are meant to be included in foreign packages that
+#  depend on this pakcage.
+#
+#  More than one macro file can be selected by setting the
+#  <NAMES> parameter to the list of file names with the ".m4"
+#  extension stripped.
+#
+#  The files are searched in the directory "$(srcdir)/autoconf".
+#  It is fine if the files do not not exist. If <NAMES> is not
+#  used: by default an attempt is done to install
+#  "$(PACKAGE_NAME_LOWERCASE).m4".
+
+define ds-autoconf
+$$(eval $$(call ds-srcdir,ds_autoconf,$$(srcdir)/autoconf))
+
+ds_autoconf_NAMES	= $$(addsuffix .m4,$$(call ds-ornull,$2,$$(PACKAGE_NAME_LOWERCASE)))
+ds_autoconf_INSTLST	= $$(call ds-glob,ds_autoconf,$$(ds_autoconf_NAMES))
+ds_autoconf_INSTDIR	= $$(datadir)/aclocal
+
+ifneq ($$(strip $$(ds_autoconf_INSTLST)),)
+$$(eval $$(call ds-module,ds_autoconf,dev,DATA))
+endif
+
+endef
+
+## ------------------------------------------------------------
+
+
+
+
+
+#page
+## ------------------------------------------------------------
 ## Predefined modules: uninstall scripts.
 ## ------------------------------------------------------------
 
