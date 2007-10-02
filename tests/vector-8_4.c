@@ -35,7 +35,7 @@ test (void)
 {
   ucl_vector_t	a, b;
   ucl_range_t	range_a, range_b;
-  ucl_valcmp_t	compar = { NULL, ucl_ptrintcmp };
+  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
 
 
   /* equal */

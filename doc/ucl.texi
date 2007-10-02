@@ -1377,7 +1377,7 @@ Ranges of values.
 Structure holding a policy for values comparison. Fields:
 
 @table @code
-@item void * data
+@item ucl_value_t data
 pointer to a context to be handed as first argument to the function;
 
 @item ucl_valcmp_fun_t * func
@@ -1387,7 +1387,7 @@ pointer to the function that compares two values of type
 @end deftp
 
 
-@deftypefn {Function Typedef} int ucl_valcmp_fun_t (void * @var{data}, ucl_value_t @var{a}, ucl_value_t @var{b})
+@deftypefn {Function Typedef} int ucl_valcmp_fun_t (ucl_value_t @var{data}, ucl_value_t @var{a}, ucl_value_t @var{b})
 The type of functions used to compare values of type
 @code{ucl_value_t}. Functions of this type are used by the associative
 containers.
@@ -1436,7 +1436,7 @@ Structure holding the hash function; notice that @code{hashcmp} stands
 for ``hash computation'', not ``hash comparison''. Fields:
 
 @table @code
-@item void * data
+@item ucl_value_t data
 pointer to a context to be handed as first argument to the function;
 
 @item ucl_hashfun_t * func
@@ -1445,7 +1445,7 @@ pointer to the function that computes the hash value.
 @end deftp
 
 
-@deftypefn {Function Typedef} size_t ucl_hashfun_t (void * @var{data}, ucl_value_t @var{key})
+@deftypefn {Function Typedef} size_t ucl_hashfun_t (ucl_value_t @var{data}, ucl_value_t @var{key})
 Type of hash functions used by the hash table. The @var{data} argument
 is a custom value that can be selected for each container, the @var{key}
 value is the key used to store a value.
@@ -6446,7 +6446,7 @@ number.
 The following functions match the @code{ucl_valcmp_fun_t} prototype.
 
 
-@deftypefun int ucl_intcmp (void * data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+@deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Compare the @code{num} fields of two values. @var{data} must be @null{}.
 
 Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
@@ -6454,7 +6454,7 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 @end deftypefun
 
 
-@deftypefun int ucl_intcmp (void * data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+@deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Compare the @code{unum} fields of two values. @var{data} must be
 @null{}.
 
@@ -6463,13 +6463,13 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 @end deftypefun
 
 
-@deftypefun int ucl_strcmp (void * data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+@deftypefun int ucl_strcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Wrapper for @function{strcmp}. Compare the @code{str} fields of @var{a}
 and @code{b}. @var{data} must be @null{}.
 @end deftypefun
 
 
-@deftypefun int ucl_ptrintcmp (void * data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+@deftypefun int ucl_ptrintcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Interpret the @code{ptr} fields of @var{a} and @var{b} as pointers of
 type @code{int}: compare the two referenced numbers by invoking
 @function{ucl_intcmp}.
@@ -6520,12 +6520,11 @@ Turn on/off debugging. The default is on.
 
 
 @defmac ucl_debug (@var{string}, ...)
-If the preprocessor symbol @code{UCL_DEBUGGING} is defined: the macro
-expands to @function{ucl_debug_print} with @var{funcname} set to
-@code{__func__} and the other parameters left untouched.
+If the preprocessor symbol @code{UCL_DEBUGGING} is defined to @code{1}:
+the macro expands to @function{ucl_debug_print} with @var{funcname} set
+to @code{__func__} and the other parameters left untouched.
 
-If @code{UCL_DEBUGGING} is undefined: the macro expands to the empty
-string.
+Else: the macro expands to the empty string.
 @end defmac
 
 

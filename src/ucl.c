@@ -81,22 +81,22 @@ ucl_interface_minor_version (void)
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-58) int
-ucl_intcmp (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_intcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return ((a.num == b.num)? 0 : ((a.num > b.num)? 1 : -1));
 }
 stub(2005-09-23-18-09-58) int
-ucl_uintcmp (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_uintcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return ((a.unum == b.unum)? 0 : ((a.unum > b.unum)? 1 : -1));
 }
 stub(2007-09-14-17-49-16) int
-ucl_strcmp (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_strcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return strcmp(a.str, b.str);
 }
 stub(2005-09-23-18-10-03) int
-ucl_ptrintcmp (void * data, const ucl_value_t a, const ucl_value_t b)
+ucl_ptrintcmp (ucl_value_t data, const ucl_value_t a, const ucl_value_t b)
 {
   ucl_value_t	A, B;
 
@@ -109,7 +109,7 @@ ucl_ptrintcmp (void * data, const ucl_value_t a, const ucl_value_t b)
 
 /* This comes from the C++ book of Bjarne Srtoustrup. */
 stub(2005-09-23-18-10-10) size_t
-ucl_hash_string (void * data UCL_UNUSED, const ucl_value_t val)
+ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
 {
   size_t	num=0, len;
   const char *	p = val.str;
@@ -121,6 +121,8 @@ ucl_hash_string (void * data UCL_UNUSED, const ucl_value_t val)
     }
   return num;
 }
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------

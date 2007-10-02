@@ -27,7 +27,7 @@
    
 */
 
-#define UCL_DEBUGGING
+#define UCL_DEBUGGING		0
 #include "vectortest.h"
 #define SIZE		966
 #define STEP_UP		884

@@ -94,13 +94,13 @@ typedef const char * ucl_version_proto_t      (void);
 typedef const char * ucl_major_version_proto_t (void);
 typedef const char * ucl_minor_version_proto_t (void);
 typedef const char * ucl_patch_version_proto_t (void);
-typedef int        ucl_intcmp_proto_t         (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
-typedef int        ucl_uintcmp_proto_t        (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
-typedef int        ucl_ptrintcmp_proto_t      (void * data, const ucl_value_t a, const ucl_value_t b);
-typedef size_t     ucl_hash_string_proto_t    (void * data UCL_UNUSED, const ucl_value_t val);
+typedef int        ucl_intcmp_proto_t         (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
+typedef int        ucl_uintcmp_proto_t        (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
+typedef int        ucl_ptrintcmp_proto_t      (ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
+typedef size_t     ucl_hash_string_proto_t    (ucl_value_t data UCL_UNUSED, const ucl_value_t val);
 typedef unsigned   ucl_interface_major_version_proto_t (void);
 typedef unsigned   ucl_interface_minor_version_proto_t (void);
-typedef int        ucl_strcmp_proto_t         (void * data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
+typedef int        ucl_strcmp_proto_t         (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
 typedef void       ucl_quicksort_proto_t      (void *const pbase, size_t total_elems, size_t size, ucl_valcmp_t cmp);
 
 /* Stub table type declaration for the "base" module.

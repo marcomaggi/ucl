@@ -38,7 +38,7 @@ test (void)
   int			size;
   ucl_map_link_t *	link_p;
   ucl_value_t		key, val;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
   static int test1[] = { 0, 1, 2, 3, 4, 10 };
 

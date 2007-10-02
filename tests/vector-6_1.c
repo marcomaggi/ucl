@@ -40,7 +40,7 @@ test (void)
   int		i;
   int *		ptr;
   ucl_vector_t	vector;
-  ucl_valcmp_t	compar = { NULL, ucl_ptrintcmp };
+  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
 
 
   ucl_vector_initialise(vector, sizeof(int));

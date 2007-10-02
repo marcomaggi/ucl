@@ -41,7 +41,7 @@ typedef ucl_valcmp_t		valcmp_t;
 typedef ucl_heap_t		heap_t;
 typedef ucl_heap_node_t		node_t;
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 #  include <stdio.h>
 
 static void	printnode	(node_t *node_p);
@@ -221,7 +221,7 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
   this->next_p = next_p;
   ++(this->size);
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
   printnode(root_p);
   printnode(next_p);
   printlevel(root_p);
@@ -261,7 +261,7 @@ ucl_heap_extract (ucl_heap_t this)
   link_p	= this->root_p;
   first		= 1;
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
   printf("---------------------\n");
   printlevel(this->root_p);
   printf("root ");
@@ -289,7 +289,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      bro(link_p) = NULL;
 	    }
 	  */
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	  printf("both NULLs\n");fflush(0);
   	  printlevel(this->root_p);
 #endif
@@ -305,7 +305,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      this->next_p = NULL;
 	    }
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	  printf("next %p ", this->next_p);
   	  printnode(this->next_p);fflush(0);
 #endif
@@ -326,7 +326,7 @@ ucl_heap_extract (ucl_heap_t this)
       if (first)
 	{
 	  tmp_p	= dad_p;
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	  printf("extracting %d\n", tmp_p->val.integer);fflush(0);
 #endif
 	  dad(link_p) = dad_p = NULL;
@@ -334,7 +334,7 @@ ucl_heap_extract (ucl_heap_t this)
       
       if (v)
 	{
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	  printf("going left\n");fflush(0);
 #endif
 	  link_p = links.son_p;
@@ -367,7 +367,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      dad(link_p) = dad_p;
 	      fromleft = 1;
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	      assertnode(dad_p);
 
 	      printf("new link\ndad is ");
@@ -378,7 +378,7 @@ ucl_heap_extract (ucl_heap_t this)
 	}
       else
 	{
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	  printf("going right\n");fflush(0);
 #endif
 	  link_p = links.bro_p;
@@ -411,7 +411,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      dad(link_p) = dad_p;
 	      fromleft = 0;
 	      
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 	      assertnode(dad_p);
 
 	      printf("new link\ndad is ");
@@ -454,7 +454,7 @@ ucl_heap_merge (ucl_heap_t this, ucl_heap_t other)
  ** Debug functions.
  ** ----------------------------------------------------------*/
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 void
 printlevel (node_t *root_p)
 {

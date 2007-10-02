@@ -39,7 +39,7 @@ test (void)
   int			i, j;
   ucl_iterator_t	iterator;
   int			co;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
 
   ucl_map_constructor(map, UCL_ALLOW_MULTIPLE_OBJECTS, compar);

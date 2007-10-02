@@ -39,7 +39,7 @@ test (void)
   ucl_value_t		key, val;
   ucl_iterator_t	iterator;
   int			i;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
   /*
     int			i, j;

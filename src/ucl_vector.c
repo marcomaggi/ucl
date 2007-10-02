@@ -36,7 +36,7 @@
  ** Header files.
  ** ----------------------------------------------------------*/
 
-/* #define UCL_DEBUGGING		0 */
+#define UCL_DEBUGGING		0
 #include "ucl_defines.h"
 
 /* stub module name vector */
@@ -1351,7 +1351,7 @@ ucl_vector_append_more (ucl_vector_t target, ...)
 {
   ucl_vector_struct_t *		source;
   va_list			ap;
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
   int				source_counter = 0;
 #endif
 

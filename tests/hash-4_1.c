@@ -36,8 +36,8 @@ test (void)
   ucl_hash_entry_t *	entPtr;
   ucl_value_t		val, key, val1, key1;
   unsigned		i;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
-  ucl_hashcmp_t		H = { NULL, ucl_hash_string };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_hashcmp_t		H = { { .ptr = NULL}, ucl_hash_string };
 
 
   static const char *strs[] = {

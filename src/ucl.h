@@ -110,10 +110,10 @@ typedef union ucl_value_t {
 
 /* ------------------------------------------------------------ */
 
-typedef int	ucl_valcmp_fun_t(void * data, const ucl_value_t a, const ucl_value_t b);
+typedef int ucl_valcmp_fun_t(ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
 
 typedef struct ucl_valcmp_t {
-  void *		data;
+  ucl_value_t		data;
   ucl_valcmp_fun_t *	func;
 } ucl_valcmp_t;
 
@@ -121,10 +121,10 @@ typedef ucl_valcmp_t	ucl_keycmp_t;
 
 /* ------------------------------------------------------------ */
 
-typedef size_t	ucl_hashfun_t	(void * data, ucl_value_t key);
+typedef size_t	ucl_hashfun_t	(ucl_value_t data, ucl_value_t key);
 
 typedef struct ucl_hashcmp_t {
-  void *		data;
+  ucl_value_t		data;
   ucl_hashfun_t *	func;
 } ucl_hashcmp_t;
 
@@ -151,7 +151,7 @@ ucl_decl ucl_valcmp_fun_t	ucl_intcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_uintcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_strcmp;
 ucl_decl ucl_valcmp_fun_t	ucl_ptrintcmp;
-ucl_decl size_t     ucl_hash_string	(void * data, const ucl_value_t val);
+ucl_decl ucl_hashfun_t		ucl_hash_string;
 ucl_decl unsigned   ucl_interface_major_version (void);
 ucl_decl unsigned   ucl_interface_minor_version (void);
 
@@ -386,11 +386,11 @@ typedef struct ucl_ascii_list_struct_t {
  ** Debug module.
  ** ----------------------------------------------------------*/
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
 #  define ucl_debug(...)	ucl_debug_print(__func__,__VA_ARGS__)
 #else
 #  define ucl_debug(...)	/* empty */
-#endif /* defined UCL_DEBUGGING */
+#endif
 
 #ifndef UCL_ENABLE_STUB
 

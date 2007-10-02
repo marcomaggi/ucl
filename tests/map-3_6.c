@@ -37,7 +37,7 @@ test (void)
   ucl_map_link_t *	link_p;
   ucl_value_t		key, val;
   int			i;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
 
   ucl_map_constructor(map, 0, compar);

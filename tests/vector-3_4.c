@@ -27,7 +27,7 @@
    
 */
 
-#define UCL_DEBUGGING
+#define UCL_DEBUGGING	0
 #include "vectortest.h"
 #define SIZE		966
 #define STEP_UP		884
@@ -45,7 +45,7 @@ test (void)
   ucl_vector_t	vector;
   int *		p;
   size_t	i;
-  ucl_valcmp_t	compar = { NULL, ucl_ptrintcmp };
+  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
 
 
   ucl_vector_initialise(vector, sizeof(int));

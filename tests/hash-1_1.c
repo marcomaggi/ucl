@@ -32,8 +32,8 @@ void
 test (void)
 {
   ucl_hash_t	hash;
-  ucl_hashcmp_t	H = { NULL, ucl_hash_string };
-  ucl_valcmp_t	compar = { NULL, ucl_intcmp };
+  ucl_hashcmp_t	H = { { .ptr = NULL}, ucl_hash_string };
+  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_intcmp };
 
   ucl_hash_constructor(hash, compar, H);
   ucl_hash_destructor(hash);

@@ -39,8 +39,8 @@ test (void)
   ucl_value_t		val, key, val1, key1;
   ucl_iterator_t	iterator;
   int			i;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
-  ucl_hashcmp_t		H = { NULL, hash_num };
+  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_hashcmp_t		H = { { .ptr = NULL}, hash_num };
 
 
   ucl_hash_constructor(hash, compar, H);
