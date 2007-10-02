@@ -30,6 +30,10 @@ Marco Maggi
 @acronym{TCL}
 @end macro
 
+@macro pkgconfig{}
+@command{pkg-config}
+@end macro
+
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @macro function{NAME}
@@ -281,6 +285,7 @@ High level functions
 @menu
 * overview using::              Using the library.
 * overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
+* overview pkgconfig::          Using pkgconfig to load @ucl{}.
 * overview error::              Error handling.
 * overview size::               Structures size.
 * overview const::              Constification.
@@ -349,7 +354,7 @@ $ ucl-config --pkgincludedir
 $ ucl-config --libdir
 /usr/local/lib
 
-$ ucl-config --shared-library-id
+$ ucl-config --library-id
 ucl2.0
 
 $ ucl-config --stub-static-library-id
@@ -475,6 +480,85 @@ function and its friends; so to use the stub mechanism you have to link
 with the @code{dl} library. The linking test for
 @code{-luclstaticstub2.0} makes explicit use of the @code{-ldl} option
 to the linker as fifth argument to @code{AC_CHECK_LIB}.
+
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@c ------------------------------------------------------------
+@node overview pkgconfig
+@section Using pkgconfig to load @ucl{}
+
+
+@noindent
+@pkgconfig{} is a program (a compiled executable) that inspects a
+database of package meta informations and prints to its standard output
+channel informations about installed packages and libraries.  The @ucl{}
+installs a meta data file for use with @pkgconfig{}, it should be:
+
+@example
+$@{libdir@}/pkgconfig/ucl.pc
+@end example
+
+For the full list of available informations look in the file itself, and
+remember that the value of all the variables set in the meta file can be
+printed with:
+
+@example
+$ pkg-config ucl --variable=<VARNAME>
+@end example
+
+@noindent
+an example of output for the important variables is:
+
+@example
+$ pkg-config ucl --variable=PACKAGE_XVERSION
+0.8a3
+
+$ pkg-config ucl --variable=PACKAGE_VERSION
+0.8.0
+
+$ pkg-config ucl --variable=library_interface_version
+2.0
+
+$ pkg-config ucl --variable=pkgincludedir
+/usr/local/include/ucl/0.8a3
+
+$ pkg-config ucl --variable=libdir
+/usr/local/lib
+
+$ pkg-config ucl --variable=library_id
+ucl2.0
+
+$ pkg-config ucl --variable=stub_static_library_id
+uclstaticstub2.0
+@end example
+
+Since the suggested method to link with the @ucl{} is the stub
+mechanism, the @option{--libs} option outputs something like:
+
+@example
+$ pkg-config ucl --libs
+-L/usr/local/lib -ldl -luclstaticstub2.0
+@end example
+
+@noindent
+while the list of preprocessor options is:
+
+@example
+$ pkg-config ucl --cflags
+-DUCL_ENABLE_STUB=1 -I/usr/local/include/ucl/0.8a3
+@end example
+
+Notice that:
+
+@example
+$ pkg-config ucl --modversion
+2.0
+@end example
+
+@noindent
+because what matters is the version of the library interface, not the
+package distribution version.
 
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
