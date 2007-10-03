@@ -6635,6 +6635,9 @@ dati in C}. McGraw--Hill, 1993.
 @noindent
 Bjarne Stroustroup. @emph{C++}. Addison-Wesley, 1997.
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 @c ------------------------------------------------------------
 
 @include gpl.texiinc

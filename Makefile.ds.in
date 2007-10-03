@@ -109,7 +109,7 @@ $(ucl_stub_LINK) : $(builddir)/library.d/$(ucl_stub_SHARED_LIBRARY_NAME)
 static_stublib_PREREQUISITES	= $(static_stublib_SRCDIR)/ucl_stub.h $(ucl_SRCDIR)/ucl.h
 
 $(eval $(call ds-c-sources,static_stublib,$(srcdir)/stub,ucl_static_stub_library.c))
-$(eval $(call ds-c-static-library,static_stublib,$(ucl_stub_STATIC_LIBRARY_ID),$(static_stublib_TARGETS)))
+$(eval $(call ds-c-aux-static-library,static_stublib,$(ucl_stub_STATIC_LIBRARY_ID),$(static_stublib_TARGETS)))
 
 endif
 
@@ -126,7 +126,8 @@ $$(eval $$(call ds-cc-build-program-no-libs,$(1)_test_programs_CC_BUILD,\
 
 $(1)_test_OBJECTS			= $$(filter $$(shared_tests_BUILDDIR)/$(1)-%,$$(shared_tests_TARGETS))
 $(1)_test_programs_BUILDDIR		= $$(shared_tests_BUILDDIR)
-$(1)_test_programs_PREREQUISITES	= $$(shared_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h
+$(1)_test_programs_PREREQUISITES	= $$(shared_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
+					  $$(ucl_shared_library_TARGETS)
 $(1)_test_programs_COMMON_OBJECTS	= $$(shared_tests_common_TARGETS)
 
 $$(eval $$(call ds-c-test-programs,$(1),$$($(1)_test_OBJECTS)))
@@ -166,7 +167,8 @@ ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
 define ucl-container-tests-static
 $(1)_static_test_OBJECTS		= $$(filter $$(static_tests_BUILDDIR)/$(1)-%,$$(static_tests_TARGETS))
 $(1)_static_test_programs_BUILDDIR	= $$(static_tests_BUILDDIR)
-$(1)_static_test_programs_PREREQUISITES	= $$(static_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h
+$(1)_static_test_programs_PREREQUISITES	= $$(static_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
+					  $$(ucl_static_library_TARGETS)
 $(1)_static_test_programs_COMMON_OBJECTS= $$(static_tests_common_TARGETS) \
 		$$(builddir)/library.d/$$(ucl_STATIC_LIBRARY_NAME)
 
@@ -214,7 +216,8 @@ $$(eval $$(call ds-cc-build-program-no-libs,$(1)_stub_test_programs_CC_BUILD,\
 
 $(1)_stub_test_OBJECTS			= $$(filter $$(stub_tests_BUILDDIR)/$(1)-%,$$(stub_tests_TARGETS))
 $(1)_stub_test_programs_BUILDDIR	= $$(stub_tests_BUILDDIR)
-$(1)_stub_test_programs_PREREQUISITES	= $$(stub_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h
+$(1)_stub_test_programs_PREREQUISITES	= $$(stub_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
+					  $$(static_stublib_static_library_TARGETS)
 $(1)_stub_test_programs_COMMON_OBJECTS	= $$(stub_tests_common_TARGETS)
 $(1)_stub_test_programs_TAIL		= $$(builddir)/library.d/$$(ucl_stub_STATIC_LIBRARY_NAME)
 

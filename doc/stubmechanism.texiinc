@@ -363,7 +363,7 @@ extern const ucl_stub_table_t * ucl_stub_table_p;
 
 #else /* not defined UCL_ENABLE_STUB */
 
-extern void library_function_p (void);
+extern void ucl_function (void);
 
 #endif /* defined UCL_ENABLE_STUB */
 
@@ -379,6 +379,24 @@ pointer to the error string returned by @function{dlerror}.
 We can also unload the stub shared library by invoking
 @function{ucl_final_stub_table}: if the return value is zero we can go
 on, else the return value is the return value of @function{dlclose}.
+
+
+@appendixsubsubsec Debug messages
+
+
+@noindent
+The static stub library retrieves the value of the environment variable
+@env{UCL_DEBUG}, where @code{UCL} is replaced with the upper case
+identifier of the library. Supported values are:
+
+@table @asis
+@item @code{notice}
+debug messages are sent to @code{stderr} upon loading and unloading the
+shared library;
+
+@item the empty string
+nothing happens.
+@end table
 
 
 @appendixsubsubsec What to do

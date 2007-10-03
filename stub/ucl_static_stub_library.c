@@ -39,42 +39,88 @@ init_pointers (ucl_stub_table_t *table_p)
 
 }
 #include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
-static void *library_handle = NULL;
+#define LIBRARY_IDENTIFIER              "ucl"
+#define DEBUG_ENVIRONMENT_VARIABLE      "UCL_DEBUG"
+#define SHARED_LIBRARY_NAME             "libuclstub2.so"
+#define MAIN_STUB_TABLE_NAME            "ucl_stub_table"
+#define MAIN_STUB_TABLE_INIT_FUNCTION   ucl_init_stub_table
+#define MAIN_STUB_TABLE_FINAL_FUNCTION  ucl_final_stub_table
+
+static void *   library_handle    = NULL;
+static int      debug_notice_flag = 0;
+
+static void
+debug_init (void)
+{
+  const char * string = getenv(DEBUG_ENVIRONMENT_VARIABLE);
+
+  if (NULL != string)
+    {
+      debug_notice_flag = (0 == strcmp(string, "notice"));
+    }
+}
+static void
+debug_notice (const char *template, ...)
+{
+  va_list	ap;
+
+  if (debug_notice_flag)
+    {
+      va_start(ap, template);
+      fprintf(stderr, "%s debug: ", LIBRARY_IDENTIFIER);
+      vfprintf(stderr, template, ap);
+      fprintf(stderr, "\n");
+      va_end(ap);
+    }
+}
 
 const char *
-ucl_init_stub_table (void)
+MAIN_STUB_TABLE_INIT_FUNCTION (void)
 {
-  const char *	err;
-  void * table;
+  const char *  err;
+  void *        table;
+
+  debug_init();
+  debug_notice("loading stub library \"%s\"...", SHARED_LIBRARY_NAME);
 
   /* this requires glibc 2.2 or later, see dlopen(3) for details */
-  library_handle = dlopen("libuclstub2.so", RTLD_NOLOAD|RTLD_GLOBAL|RTLD_NOW);
+  library_handle = dlopen(SHARED_LIBRARY_NAME, RTLD_NOLOAD|RTLD_GLOBAL|RTLD_NOW);
   if (NULL == library_handle)
     {
       err = dlerror();
       if (err) return err;
-      library_handle = dlopen("libuclstub2.so", RTLD_GLOBAL|RTLD_NOW);
+      library_handle = dlopen(SHARED_LIBRARY_NAME, RTLD_GLOBAL|RTLD_NOW);
       err = dlerror();
       if (err) return err;
     }
-  table = dlsym(library_handle, "ucl_stub_table");
+  table = dlsym(library_handle, MAIN_STUB_TABLE_NAME);
   err = dlerror();
   if (err) { dlclose(library_handle); return err; }
 
+  debug_notice("successfully loaded stub library \"%s\"", SHARED_LIBRARY_NAME);
   init_pointers(table);
   return NULL;
 }
 int
-ucl_final_stub_table (void)
+MAIN_STUB_TABLE_FINAL_FUNCTION (void)
 {
   int	errcode;
 
   if (library_handle)
     {
+      debug_notice("unloading stub library \"%s\"...", SHARED_LIBRARY_NAME);
+
       errcode = dlclose(library_handle);
-      if (0 == errcode) { library_handle = NULL; }
-      return errcode;
+      if (0 == errcode)
+        library_handle = NULL;
+      else
+        return errcode;
+
+      debug_notice("successfully unloaded stub library \"%s\"...", SHARED_LIBRARY_NAME);
     }
   return 0;
 }

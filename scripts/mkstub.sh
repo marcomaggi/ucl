@@ -149,6 +149,12 @@ export MAIN_STUB_TABLE_FINAL_FUNCTION
 export MAIN_STUB_TABLE_RETRIEVE_FUNCTION
 
 
+# The name of an environment variable that, if set, will cause
+# the static stub library to print debug messages to stderr
+# upon loading shared library.
+export DEBUG_ENVIRONMENT_VARIABLE
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
@@ -238,53 +244,102 @@ function script_action_print_stub_static_library () {
     make_stub_library "${ARGV[@]}"
 
     printf '#include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
-static void *library_handle = NULL;
+#define LIBRARY_IDENTIFIER              "%s"
+#define DEBUG_ENVIRONMENT_VARIABLE      "%s"
+#define SHARED_LIBRARY_NAME             "%s"
+#define MAIN_STUB_TABLE_NAME            "%s"
+#define MAIN_STUB_TABLE_INIT_FUNCTION   %s
+#define MAIN_STUB_TABLE_FINAL_FUNCTION  %s
+
+static void *   library_handle    = NULL;
+static int      debug_notice_flag = 0;
+
+static void
+debug_init (void)
+{
+  const char * string = getenv(DEBUG_ENVIRONMENT_VARIABLE);
+
+  if (NULL != string)
+    {
+      debug_notice_flag = (0 == strcmp(string, "notice"));
+    }
+}
+static void
+debug_notice (const char *template, ...)
+{
+  va_list	ap;
+
+  if (debug_notice_flag)
+    {
+      va_start(ap, template);
+      fprintf(stderr, "%%s debug: ", LIBRARY_IDENTIFIER);
+      vfprintf(stderr, template, ap);
+      fprintf(stderr, "\\n");
+      va_end(ap);
+    }
+}
 
 const char *
-%s (void)
+MAIN_STUB_TABLE_INIT_FUNCTION (void)
 {
-  const char *	err;
-  void * table;
+  const char *  err;
+  void *        table;
+
+  debug_init();
+  debug_notice("loading stub library \\"%%s\\"...", SHARED_LIBRARY_NAME);
 
   /* this requires glibc 2.2 or later, see dlopen(3) for details */
-  library_handle = dlopen("%s", RTLD_NOLOAD|RTLD_GLOBAL|RTLD_NOW);
+  library_handle = dlopen(SHARED_LIBRARY_NAME, RTLD_NOLOAD|RTLD_GLOBAL|RTLD_NOW);
   if (NULL == library_handle)
     {
       err = dlerror();
       if (err) return err;
-      library_handle = dlopen("%s", RTLD_GLOBAL|RTLD_NOW);
+      library_handle = dlopen(SHARED_LIBRARY_NAME, RTLD_GLOBAL|RTLD_NOW);
       err = dlerror();
       if (err) return err;
     }
-  table = dlsym(library_handle, "%s");
+  table = dlsym(library_handle, MAIN_STUB_TABLE_NAME);
   err = dlerror();
   if (err) { dlclose(library_handle); return err; }
 
+  debug_notice("successfully loaded stub library \\"%%s\\"", SHARED_LIBRARY_NAME);
   init_pointers(table);
   return NULL;
 }
 int
-%s (void)
+MAIN_STUB_TABLE_FINAL_FUNCTION (void)
 {
   int	errcode;
 
   if (library_handle)
     {
+      debug_notice("unloading stub library \\"%%s\\"...", SHARED_LIBRARY_NAME);
+
       errcode = dlclose(library_handle);
-      if (0 == errcode) { library_handle = NULL; }
-      return errcode;
+      if (0 == errcode)
+        library_handle = NULL;
+      else
+        return errcode;
+
+      debug_notice("successfully unloaded stub library \\"%%s\\"...", SHARED_LIBRARY_NAME);
     }
   return 0;
 }
-'   "${MAIN_STUB_TABLE_INIT_FUNCTION}" \
-    "${script_option_SHARED_LIBRARY_NAME}" \
-    "${script_option_SHARED_LIBRARY_NAME}" \
-    "${MAIN_STUB_TABLE_NAME}" \
+'   "${LIBRARY}"                                \
+    "${DEBUG_ENVIRONMENT_VARIABLE}"             \
+    "${script_option_SHARED_LIBRARY_NAME}"      \
+    "${MAIN_STUB_TABLE_NAME}"                   \
+    "${MAIN_STUB_TABLE_INIT_FUNCTION}"          \
     "${MAIN_STUB_TABLE_FINAL_FUNCTION}"
 
     printf '\n\n/* end of file */\n'
 }
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
@@ -301,6 +356,8 @@ function fill_main_variables () {
         '%s_retrieve_main_stub_table_address' "${LIBRARY}")
     MAIN_STUB_TABLE_INIT_FUNCTION=$(printf '%s_init_stub_table' "${LIBRARY}")
     MAIN_STUB_TABLE_FINAL_FUNCTION=$(printf '%s_final_stub_table' "${LIBRARY}")
+
+    DEBUG_ENVIRONMENT_VARIABLE=$(printf '%s_DEBUG' "${upper_LIBRARY}")
 }
 function fill_module_variables () {
     MODULE=$(parse_source_file_get_module <"${FILENAME}") || exit $?
@@ -309,6 +366,8 @@ function fill_module_variables () {
     STUB_TABLE_POINTER=$(printf '%s_%s_stub_table_p' "${LIBRARY}" "${MODULE}")
     STUB_ENABLE_DEFINE=$(printf '%s_ENABLE_STUB' ${upper_LIBRARY})
 }
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
