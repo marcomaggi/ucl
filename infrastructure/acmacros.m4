@@ -56,7 +56,7 @@ ds_VARIABLES=
 AC_DEFUN([DS_END],[
 
 if test -n "${ds_VARIABLES}" ; then
-    echo "${ds_VARIABLES}" >${srcdir}/Makefile.variables.in
+    echo "${ds_VARIABLES}" >${srcdir}/configuration/Makefile.variables.in
 fi
 
 DS_CONFIG_FILES
@@ -83,10 +83,10 @@ ds_VARIABLES=$(printf '%s\n%s' "${ds_VARIABLES}" "$1")
 
 AC_DEFUN([DS_CONFIG_FILES],[
 AC_CONFIG_FILES([Makefile.library:${ds_top_srcdir}/infrastructure/Makefile.library.in])
-AC_CONFIG_FILES([Makefile.ds])
+AC_CONFIG_FILES([Makefile.ds:${srcdir}/configuration/Makefile.ds.in])
 AC_CONFIG_FILES([Makefile])
 if test -n "${ds_VARIABLES}" ; then
-AC_CONFIG_FILES([Makefile.variables])
+AC_CONFIG_FILES([Makefile.variables:${srcdir}/configuration/Makefile.variables.in])
 fi
 ])
 

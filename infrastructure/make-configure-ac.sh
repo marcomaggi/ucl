@@ -328,7 +328,16 @@ done
 
 ## ------------------------------------------------------------
 
-    printf 'm4_include([configure.ds])
+if test -f configure.ds ; then
+    printf 'm4_include([configure.ds])\n'
+elif test -f configuration/configure.ds ; then
+    printf 'm4_include([configuration/configure.ds])\n'
+else
+    warning 'could not find "configure.ds"'
+fi
+
+
+printf '
 
 ### end of file\n'
 } >configure.ac
