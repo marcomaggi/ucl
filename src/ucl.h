@@ -1411,9 +1411,9 @@ ucl_list_popback (ucl_list_t this)
 /* ------------------------------------------------------------ */
 
 static inline void
-ucl_map_extract (ucl_map_t this, ucl_map_link_t * link)
+ucl_map_extract (ucl_map_t this, ucl_map_link_t * _link)
 {
-  ucl_map_remove(this, link);
+  ucl_map_remove(this, _link);
 }
 
 /* ------------------------------------------------------------ */
