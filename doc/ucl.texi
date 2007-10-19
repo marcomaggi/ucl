@@ -408,12 +408,16 @@ in @file{aclocal.m4}. This macro file defines a function that can be
 invoked with:
 
 @example
-USELESS_CONTAINERS_LIBRARY
+USELESS_CONTAINERS_LIBRARY(2,0)
 @end example
 
 @noindent
-it finds and invokes @command{ucl-config} to acquire installation
-directories and library names. It defines the following symbols:
+it  finds  and invokes  @command{ucl-config}  to acquire  installation
+directories and  library names. The  macro accepts two  arguments: the
+major and minor interface version numbers that are needed; both of the
+arguments are optional, but it is recommended to specify them.
+
+@code{USELESS_CONTAINERS_LIBRARY} defines the following symbols:
 
 @table @code
 @item @@UCL_INCLUDEDIR@@

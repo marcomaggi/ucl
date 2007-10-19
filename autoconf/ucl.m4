@@ -23,12 +23,30 @@
 # Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
 # 02111-1307, USA.
 
-
-
 AC_DEFUN([USELESS_CONTAINERS_LIBRARY], [
+ucl_REQUESTED_MAJOR_VERSION=$1
+ucl_REQUESTED_MINOR_VERSION=$2
+
 AC_PATH_PROG([UCL_CONFIG],[ucl-config], :)
 if test "${UCL_CONFIG}" = ':' ; then
     AC_MSG_ERROR([missing Useless Containers Library (cannot find ucl-config)],1)
+fi
+
+ucl_AVAILABLE_MAJOR_VERSION=$("${UCL_CONFIG}" --library-interface-major-version)
+ucl_AVAILABLE_MINOR_VERSION=$("${UCL_CONFIG}" --library-interface-minor-version)
+
+if test -n "${ucl_REQUESTED_MAJOR_VERSION}" ; then
+    AC_MSG_NOTICE([requested UCL major version ${ucl_REQUESTED_MAJOR_VERSION}])
+
+    if test "${ucl_REQUESTED_MAJOR_VERSION}" -ne "${ucl_AVAILABLE_MAJOR_VERSION}" ; then
+        AC_MSG_ERROR([requested UCL major version number ${ucl_REQUESTED_MAJOR_VERSION} while available is ${ucl_AVAILABLE_MAJOR_VERSION}],[1])
+    fi
+    if test -n "${ucl_REQUESTED_MINOR_VERSION}" ; then
+        AC_MSG_NOTICE([requested UCL minor version ${ucl_REQUESTED_MINOR_VERSION}])
+        if test "${ucl_REQUESTED_MINOR_VERSION}" -gt "${ucl_AVAILABLE_MINOR_VERSION}" ; then
+            AC_MSG_ERROR([requested UCL minor version number ${ucl_REQUESTED_MINOR_VERSION} while available is ${ucl_AVAILABLE_MINOR_VERSION}],[1])
+        fi
+    fi
 fi
 
 UCL_INCLUDEDIR=$("${UCL_CONFIG}" --pkgincludedir)
