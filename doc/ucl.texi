@@ -6235,7 +6235,7 @@ If the vector is not empty: erase the last slot, else do nothing.
 @end deftypefun
 
 Notice that the ``top'' operations of the stack and queue are already
-implemented by @function{ucl_vector_first} and
+implemented by @function{ucl_vector_front} and
 @function{ucl_vector_back}.
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
