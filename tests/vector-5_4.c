@@ -63,6 +63,10 @@ test (void)
   ptr = ucl_vector_binary_search(vector, &j);
   assert(ptr == NULL);
 
+  j=-1;
+  ptr = ucl_vector_binary_search(vector, &j);
+  assert(ptr == NULL);
+
   ucl_vector_destructor(vector);
 }
 

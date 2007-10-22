@@ -38,6 +38,7 @@
 
 #define UCL_DEBUGGING		0
 #include "ucl_defines.h"
+#include <limits.h>
 
 /* stub module name vector */
 
@@ -1223,6 +1224,7 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
       if (0 == match) { return p; }
       else if (match < 0)
 	{
+	  if (0 == current_index) return NULL;
 	  upper_index_limit = current_index - 1;
 	  new_current_index = lower_index_limit +
 	    ((current_index - lower_index_limit) >> 1);
@@ -1232,6 +1234,7 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
 	}
       else /* match > 0 */
 	{
+	  if (UINT_MAX == current_index) return NULL;
 	  lower_index_limit = current_index + 1;
 	  new_current_index = current_index +
 	    ((upper_index_limit - current_index) >> 1);
