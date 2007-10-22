@@ -702,6 +702,9 @@ typedef ucl_range_t ucl_vector_range_from_block_proto_t (const ucl_vector_t self
 typedef ucl_block_t ucl_vector_get_free_block_at_end_proto_t (ucl_vector_t self, size_t requested_slots);
 typedef ucl_block_t ucl_vector_get_free_block_at_beginning_proto_t (ucl_vector_t self, size_t requested_slots);
 typedef void       ucl_vector_mark_as_used_proto_t (ucl_vector_t self, ucl_block_t used_block);
+typedef void       ucl_vector_update_number_of_step_up_slots_proto_t (ucl_vector_t self, size_t step_up);
+typedef void       ucl_vector_update_number_of_step_down_slots_proto_t (ucl_vector_t self, size_t step_down);
+typedef void       ucl_vector_update_number_of_padding_slots_proto_t (ucl_vector_t self, size_t padding);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -769,6 +772,9 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_get_free_block_at_end_proto_t * stub_ucl_vector_get_free_block_at_end;
   ucl_vector_get_free_block_at_beginning_proto_t * stub_ucl_vector_get_free_block_at_beginning;
   ucl_vector_mark_as_used_proto_t     * stub_ucl_vector_mark_as_used;
+  ucl_vector_update_number_of_step_up_slots_proto_t * stub_ucl_vector_update_number_of_step_up_slots;
+  ucl_vector_update_number_of_step_down_slots_proto_t * stub_ucl_vector_update_number_of_step_down_slots;
+  ucl_vector_update_number_of_padding_slots_proto_t * stub_ucl_vector_update_number_of_padding_slots;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -841,6 +847,9 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_get_free_block_at_end  ((ucl_vector_stub_table_p)->stub_ucl_vector_get_free_block_at_end)
 #define ucl_vector_get_free_block_at_beginning  ((ucl_vector_stub_table_p)->stub_ucl_vector_get_free_block_at_beginning)
 #define ucl_vector_mark_as_used    ((ucl_vector_stub_table_p)->stub_ucl_vector_mark_as_used)
+#define ucl_vector_update_number_of_step_up_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_step_up_slots)
+#define ucl_vector_update_number_of_step_down_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_step_down_slots)
+#define ucl_vector_update_number_of_padding_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_padding_slots)
 
 #endif /* defined UCL_ENABLE_STUB */
 

@@ -333,7 +333,7 @@ In the following we assume that the library is installed under the
 @file{/usr/local} hierarchy.
 
 A shell script is installed on the system to provide informations about
-version numbers and installation directory; it should be
+version numbers and installation directories; it should be
 @file{/usr/local/bin/ucl-config}. Run @command{ucl-config} without
 arguments for the usage screen. An example of output for the important
 options is:
@@ -5523,6 +5523,24 @@ Return the number of step down slots.
 
 @deftypefun size_t ucl_vector_number_of_padding_slots (ucl_vector_t @var{self})
 Return the number of padding slots.
+@end deftypefun
+
+
+@subsubsection Updating configuration functions
+
+
+@deftypefun void ucl_vector_update_number_of_step_up_slots (ucl_vector_t @var{self}, size_t @var{step_up})
+Update the number of the step up slots.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_update_number_of_step_down_slots (ucl_vector_t @var{self}, size_t @var{step_down})
+Update the number of the step down slots.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_update_number_of_padding_slots (ucl_vector_t @var{self}, size_t @var{padding})
+Update the number of the padding slots.
 @end deftypefun
 
 

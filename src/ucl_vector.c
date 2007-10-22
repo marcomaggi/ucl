@@ -357,7 +357,7 @@ ucl_vector_swallow_block (ucl_vector_t self, ucl_block_t block)
 
 
 /** ------------------------------------------------------------
- ** Inspection.
+ ** Inspection and configuration.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-16-34) size_t
@@ -380,6 +380,24 @@ stub(2006-03-03-20-59-23) ucl_bool_t
 ucl_vector_running (const ucl_vector_t self)
 {
   return (NULL != self->first_allocated_slot);
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2007-10-22-13-09-11) void
+ucl_vector_update_number_of_step_up_slots (ucl_vector_t self, size_t step_up)
+{
+  self->step_up = step_up * self->slot_dimension;
+}
+stub(2007-10-22-13-09-17) void
+ucl_vector_update_number_of_step_down_slots (ucl_vector_t self, size_t step_down)
+{
+  self->step_down = step_down * self->slot_dimension;
+}
+stub(2007-10-22-13-09-22) void
+ucl_vector_update_number_of_padding_slots (ucl_vector_t self, size_t padding)
+{
+  self->size_of_padding_area = padding * self->slot_dimension;
 }
 
 /* ------------------------------------------------------------ */

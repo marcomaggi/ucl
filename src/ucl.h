@@ -980,6 +980,11 @@ ucl_decl size_t ucl_vector_slot_dimension		(const ucl_vector_t self);
 ucl_decl size_t ucl_vector_size				(const ucl_vector_t self);
 ucl_decl ucl_bool_t ucl_vector_running			(const ucl_vector_t self);
 
+/* configuration update */
+ucl_decl void ucl_vector_update_number_of_step_up_slots		(ucl_vector_t self, size_t step_up);
+ucl_decl void ucl_vector_update_number_of_step_down_slots	(ucl_vector_t self, size_t step_down);
+ucl_decl void ucl_vector_update_number_of_padding_slots		(ucl_vector_t self, size_t padding);
+
 /* index conversion */
 ucl_decl void * ucl_vector_index_to_slot	(const ucl_vector_t self, ucl_vector_index_t idx);
 ucl_decl void * ucl_vector_index_to_new_slot	(const ucl_vector_t self, ucl_vector_index_t idx);

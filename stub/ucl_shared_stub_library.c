@@ -240,7 +240,10 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_range_from_block,
   ucl_vector_get_free_block_at_end,
   ucl_vector_get_free_block_at_beginning,
-  ucl_vector_mark_as_used
+  ucl_vector_mark_as_used,
+  ucl_vector_update_number_of_step_up_slots,
+  ucl_vector_update_number_of_step_down_slots,
+  ucl_vector_update_number_of_padding_slots
 };
 
 /* Library stub table.
