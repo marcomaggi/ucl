@@ -5641,6 +5641,10 @@ vector: that way the returned value can be used with
 @function{ucl_vector_insert} to append an element to the end of the
 vector.
 
+Calling @function{ucl_vector_enlarge} invalidates the return value of
+this function. We have to make room for the new slot before attempting
+to convert the index to the slot's pointer.
+
 Return a pointer to the selected slot, or @null{} if the selected index
 is out of range.
 @end deftypefun
