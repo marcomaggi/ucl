@@ -2445,7 +2445,7 @@ ds_slackware_REMOVEPKG		= $$(ds_slackware_PRECMD) $$(ds_slackware_REMOVEPKG_PROG
 # This should be an architecture tag, like 'i486'.
 # 'noarch' means that the package works for any
 # architecture
-ds_slackware_PACKAGE_ARCHITECTURE	?= noarch
+ds_slackware_PACKAGE_ARCHITECTURE	?= $(shell $(ds_main_INFRADIR)/config.guess | cut -f1 -d'-')
 # This should be the build number followed by
 # your initials ('mm' = Marco Maggi).
 ds_slackware_PACKAGE_TAG		?= 1mm
