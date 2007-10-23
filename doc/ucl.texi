@@ -5487,8 +5487,7 @@ units.
 
 @deftypefun void ucl_vector_constructor (ucl_vector_t @var{self})
 Allocate memory with the current @ucl{} allocator and initialise the
-fields of @var{self}.  An assertion is triggered if the initialisation
-values are non--sense.
+fields of @var{self}.
 @end deftypefun
 
 

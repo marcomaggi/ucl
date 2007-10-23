@@ -104,8 +104,7 @@
 
 #define ASSERT_INITIALISE_CONDITIONS(V)			\
 	assert(V);					\
-	assert((V)->slot_dimension);			\
-	assert((V)->size_of_padding_area < (size_t)((V)->last_used_slot-(V)->first_used_slot));
+	assert((V)->slot_dimension);
 
 #define ASSERT_INVARIANTS(V)				\
 	ASSERT_VECTOR_POINTER(V);			\
@@ -1529,11 +1528,22 @@ ucl_vector_equal (const ucl_vector_t a, const ucl_vector_t b)
 static inline void
 set_pointers_for_empty_vector	(ucl_vector_t self)
 {
+  ucl_byte_t *	potential_first_used_slot;
+
   /* do not assert emptyness here,  because this function may be used to
      force the emptyness state */
-  self->first_used_slot = self->first_allocated_slot + self->size_of_padding_area;
-  self->last_used_slot  = self->first_used_slot - self->slot_dimension;
-  ASSERT_FIRST_SLOT_IS_AT_PAD_OFFSET(self);
+  potential_first_used_slot = self->first_allocated_slot + self->size_of_padding_area;
+  if (potential_first_used_slot < self->last_allocated_slot)
+    {
+      self->first_used_slot = potential_first_used_slot;
+      self->last_used_slot  = self->first_used_slot - self->slot_dimension;
+      ASSERT_FIRST_SLOT_IS_AT_PAD_OFFSET(self);
+    }
+  else
+    {
+      self->first_used_slot = self->first_allocated_slot;
+      self->last_used_slot  = self->first_used_slot - self->slot_dimension;
+    }
   ASSERT_VECTOR_IS_EMPTY(self);
 }
 static inline ucl_bool_t
@@ -1681,9 +1691,11 @@ move_used_bytes_leave_requested_at_end (ucl_vector_t self, size_t bytes_requeste
 		ucl_question(bytes_requested_at_end > compute_bytes_at_end(self)));
       if (bytes_requested_at_end > compute_bytes_at_end(self))
 	{
-	  size_t	bytes_at_end_after_moving_on_padding = \
-	    number_of_free_bytes - self->size_of_padding_area;
+	  size_t	bytes_at_end_after_moving_on_padding;
 
+
+	  bytes_at_end_after_moving_on_padding = (number_of_free_bytes > self->size_of_padding_area)?
+	    (number_of_free_bytes - self->size_of_padding_area) : number_of_free_bytes;
 	  
 	  if (bytes_at_end_after_moving_on_padding > bytes_requested_at_end)
 	    {
