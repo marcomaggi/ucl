@@ -5979,6 +5979,20 @@ Return a value representing the size of the elements.
 @end deftypefun
 
 
+@deftypefun {void *} ucl_vector_increment_slot (const ucl_vector_t @var{self}, void * @var{slot})
+Interpret @var{slot} as a pointer to a slot of @var{self} and increment
+it so that it references the next element. This function does no bounds
+checking.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_vector_dencrement_slot (const ucl_vector_t @var{self}, void * @var{slot})
+Interpret @var{slot} as a pointer to a slot of @var{self} and decrement
+it so that it references the previous element. This function does no
+bounds checking.
+@end deftypefun
+
+
 @subsubsection Access to memory blocks
 
 

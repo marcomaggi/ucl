@@ -1470,6 +1470,20 @@ ucl_vector_back (const ucl_vector_t vector)
 {
   return ucl_vector_index_to_slot(vector, ucl_vector_last_index(vector));
 }
+static inline void *
+ucl_vector_increment_slot (const ucl_vector_t self, void * slot)
+{
+  ucl_byte_t *	p = slot;
+
+  return p + self->slot_dimension;
+}
+static inline void *
+ucl_vector_decrement_slot (const ucl_vector_t self, void * slot)
+{
+  ucl_byte_t *	p = slot;
+
+  return p - self->slot_dimension;
+}
 
 /* ------------------------------------------------------------ */
 
