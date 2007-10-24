@@ -1077,8 +1077,11 @@ sections dedicated to containers. Here common data types are described.
 * typedefs ranges::             Range selectors.
 * typedefs compar::             Comparison functions.
 * typedefs hash::               Hash functions.
+* typedefs callback::           Callback functions.
 @end menu
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node typedefs value
@@ -1462,6 +1465,125 @@ buckets.
 See the hash table description for more details (@ref{hash} the hash
 table container).
 @end deftypefn
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@c ------------------------------------------------------------
+@node typedefs callback
+@section Callback functions
+
+
+@deftp {Struct Typedef} ucl_callback_t
+Holds a function pointer and a state value. Public fields:
+
+@table @code
+@item ucl_callback_fun_t * func
+pointer to the callback function;
+@item ucl_value_t data
+the state value.
+@end table
+@end deftp
+
+
+@deftypefun void ucl_callback_fun_t (ucl_value_t @var{callback_data}, ucl_value_t @var{custom_data})
+Callback function type definition. @var{callback_data} is the value
+stored in the callback structure, representing the callback
+state. @var{custom_data} is an invocation specific value.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_callback_is_present (ucl_callback_t @var{cb})
+Return true if the @code{func} field of @var{cb} is not @null{}.
+@end deftypefun
+
+
+@deftypefun void ucl_callback_invoke (ucl_callback_t @var{cb}, ucl_value_t @var{data})
+If @function{ucl_callback_is_present} evaluates to true: invoke the
+function using @var{data} as invocation value; else do nothing.
+@end deftypefun
+
+
+@deftypefun ucl_callback_invoke_alone (ucl_callback_t @var{cb})
+Like @function{ucl_callback_invoke} but uses as invocation value a
+@code{ucl_value_t} value with the @code{ptr} field set to @null{}.
+@end deftypefun
+
+
+@subsection Example: callback initialisation
+
+
+@noindent
+To initialise a @code{ucl_callback_t} structure we can do:
+
+@example
+ucl_callback_t cb = @{
+  .func = pointer_to_function,
+  .data = @{ .ptr = pointer_to_data @}
+@};
+@end example
+
+@noindent
+to initialise to no--function and no--data:
+
+@example
+ucl_callback_t cb = UCL_CALLBACK_NULL_VALUE;
+@end example
+
+
+@subsection Example: callback invocation
+
+
+@noindent
+To invoke a callback we could do:
+
+@example
+ucl_callback_t  cb   = ...;
+ucl_value_t     data = @{ .num = 123 @};
+
+cb.func(cb.data, data);
+@end example
+
+@noindent
+but it is better to use @function{ucl_callback_invoke}:
+
+@example
+ucl_callback_t  cb   = ...;
+ucl_value_t     data = @{ .num = 123 @};
+
+ucl_callback_invoke(cb, data);
+@end example
+
+
+@subsection Example: callbacks with return value
+
+
+@noindent
+To make the callback return a value is annoying, but that is the way it
+is for a @code{double} return value:
+
+@example
+typedef struct environment_t @{
+  double        operand_1;
+  double        operand_2;
+  double        result;
+@} environment_t;
+
+void
+callback_function (ucl_value_t state, ucl_value_t custom)
+@{
+  environment_t *  envi = custom.ptr;
+
+  envi->result = something(state.num, envi->operand_1, envi->operand_2);
+@}
+
+
+ucl_callback_t  cb   = @{ ... @};
+environment_t   envi = @{ .operand_1 = 1.2, .operand_2 = 3.4 @};
+ucl_value_t     data = @{ .ptr = &envi @};
+
+ucl_callback_invoke(cb, data);
+@end example
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

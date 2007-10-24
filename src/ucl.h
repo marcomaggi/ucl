@@ -383,6 +383,43 @@ typedef struct ucl_ascii_list_struct_t {
 
 
 /** ------------------------------------------------------------
+ ** Callback.
+ ** ----------------------------------------------------------*/
+
+#define UCL_CALLBACK_NULL_VALUE		{ .func = NULL, .data = { .ptr = 0 } }
+
+typedef void ucl_callback_fun_t (ucl_value_t callback_data, ucl_value_t custom_data);
+
+typedef struct ucl_callback_t {
+  ucl_callback_fun_t *	func;
+  ucl_value_t		data;
+} ucl_callback_t;
+
+static inline ucl_bool_t
+ucl_callback_is_present (ucl_callback_t callback)
+{
+  return (NULL != (callback.func));
+}
+
+static inline void
+ucl_callback_invoke_alone (ucl_callback_t callback)
+{
+  static const ucl_value_t	custom_data = { .ptr = NULL };
+
+  if (ucl_callback_is_present(callback))
+    callback.func(callback.data, custom_data);
+}
+static inline void
+ucl_callback_invoke (ucl_callback_t callback, ucl_value_t custom_data)
+{
+  if (ucl_callback_is_present(callback))
+    callback.func(callback.data, custom_data);
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
  ** Debug module.
  ** ----------------------------------------------------------*/
 
