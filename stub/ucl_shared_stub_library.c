@@ -243,7 +243,17 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_mark_as_used,
   ucl_vector_update_number_of_step_up_slots,
   ucl_vector_update_number_of_step_down_slots,
-  ucl_vector_update_number_of_padding_slots
+  ucl_vector_update_number_of_padding_slots,
+  ucl_vector_for_each,
+  ucl_vector_for_each_multiple_from_array,
+  ucl_vector_for_each_multiple,
+  ucl_vector_map,
+  ucl_vector_for_each_in_range,
+  ucl_vector_map_range,
+  ucl_vector_iterator_range_forward,
+  ucl_vector_iterator_range_backward,
+  ucl_vector_map_multiple_from_array,
+  ucl_vector_map_multiple
 };
 
 /* Library stub table.

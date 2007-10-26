@@ -705,6 +705,16 @@ typedef void       ucl_vector_mark_as_used_proto_t (ucl_vector_t self, ucl_block
 typedef void       ucl_vector_update_number_of_step_up_slots_proto_t (ucl_vector_t self, size_t step_up);
 typedef void       ucl_vector_update_number_of_step_down_slots_proto_t (ucl_vector_t self, size_t step_down);
 typedef void       ucl_vector_update_number_of_padding_slots_proto_t (ucl_vector_t self, size_t padding);
+typedef void       ucl_vector_for_each_proto_t (ucl_callback_t callback, ucl_vector_t self);
+typedef void       ucl_vector_for_each_multiple_from_array_proto_t (ucl_callback_t callback, ucl_vector_array_t * vectors);
+typedef void       ucl_vector_for_each_multiple_proto_t (ucl_callback_t callback, ucl_vector_t first, ...);
+typedef void       ucl_vector_map_proto_t     (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t self);
+typedef void       ucl_vector_for_each_in_range_proto_t (ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
+typedef void       ucl_vector_map_range_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
+typedef void       ucl_vector_iterator_range_forward_proto_t (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
+typedef void       ucl_vector_iterator_range_backward_proto_t (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
+typedef void       ucl_vector_map_multiple_from_array_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_array_t * vectors);
+typedef void       ucl_vector_map_multiple_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -775,6 +785,16 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_update_number_of_step_up_slots_proto_t * stub_ucl_vector_update_number_of_step_up_slots;
   ucl_vector_update_number_of_step_down_slots_proto_t * stub_ucl_vector_update_number_of_step_down_slots;
   ucl_vector_update_number_of_padding_slots_proto_t * stub_ucl_vector_update_number_of_padding_slots;
+  ucl_vector_for_each_proto_t         * stub_ucl_vector_for_each;
+  ucl_vector_for_each_multiple_from_array_proto_t * stub_ucl_vector_for_each_multiple_from_array;
+  ucl_vector_for_each_multiple_proto_t * stub_ucl_vector_for_each_multiple;
+  ucl_vector_map_proto_t              * stub_ucl_vector_map;
+  ucl_vector_for_each_in_range_proto_t * stub_ucl_vector_for_each_in_range;
+  ucl_vector_map_range_proto_t        * stub_ucl_vector_map_range;
+  ucl_vector_iterator_range_forward_proto_t * stub_ucl_vector_iterator_range_forward;
+  ucl_vector_iterator_range_backward_proto_t * stub_ucl_vector_iterator_range_backward;
+  ucl_vector_map_multiple_from_array_proto_t * stub_ucl_vector_map_multiple_from_array;
+  ucl_vector_map_multiple_proto_t     * stub_ucl_vector_map_multiple;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -850,6 +870,16 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_update_number_of_step_up_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_step_up_slots)
 #define ucl_vector_update_number_of_step_down_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_step_down_slots)
 #define ucl_vector_update_number_of_padding_slots  ((ucl_vector_stub_table_p)->stub_ucl_vector_update_number_of_padding_slots)
+#define ucl_vector_for_each        ((ucl_vector_stub_table_p)->stub_ucl_vector_for_each)
+#define ucl_vector_for_each_multiple_from_array  ((ucl_vector_stub_table_p)->stub_ucl_vector_for_each_multiple_from_array)
+#define ucl_vector_for_each_multiple  ((ucl_vector_stub_table_p)->stub_ucl_vector_for_each_multiple)
+#define ucl_vector_map             ((ucl_vector_stub_table_p)->stub_ucl_vector_map)
+#define ucl_vector_for_each_in_range  ((ucl_vector_stub_table_p)->stub_ucl_vector_for_each_in_range)
+#define ucl_vector_map_range       ((ucl_vector_stub_table_p)->stub_ucl_vector_map_range)
+#define ucl_vector_iterator_range_forward  ((ucl_vector_stub_table_p)->stub_ucl_vector_iterator_range_forward)
+#define ucl_vector_iterator_range_backward  ((ucl_vector_stub_table_p)->stub_ucl_vector_iterator_range_backward)
+#define ucl_vector_map_multiple_from_array  ((ucl_vector_stub_table_p)->stub_ucl_vector_map_multiple_from_array)
+#define ucl_vector_map_multiple    ((ucl_vector_stub_table_p)->stub_ucl_vector_map_multiple)
 
 #endif /* defined UCL_ENABLE_STUB */
 

@@ -136,6 +136,14 @@ typedef struct ucl_link_t {
 
 /* ------------------------------------------------------------ */
 
+typedef struct ucl_array_of_pointers_t {
+  ucl_value_t	data;
+  size_t	number_of_slots;
+  void **	slots;
+} ucl_array_of_pointers_t;
+
+/* ------------------------------------------------------------ */
+
 
 /** ------------------------------------------------------------
  ** Base functions.
@@ -990,6 +998,11 @@ typedef struct ucl_vector_struct_t {
 
 typedef ucl_vector_struct_t ucl_vector_t[1];
 
+typedef struct ucl_vector_array_t {
+  size_t			number_of_vectors;
+  ucl_vector_struct_t **	vectors;
+} ucl_vector_array_t;
+
 /* ------------------------------------------------------------ */
 
 #ifndef UCL_ENABLE_STUB
@@ -1070,6 +1083,8 @@ ucl_decl ucl_bool_t ucl_vector_sorted	(ucl_vector_t self);
 /* iterating */
 ucl_decl void ucl_vector_iterator_forward	(const ucl_vector_t self, ucl_iterator_t iterator);
 ucl_decl void ucl_vector_iterator_backward	(const ucl_vector_t self, ucl_iterator_t iterator);
+ucl_decl void ucl_vector_iterator_range_forward	(const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
+ucl_decl void ucl_vector_iterator_range_backward(const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
 
 /* memory allocation */
 ucl_decl void ucl_vector_enlarge		(ucl_vector_t self);
@@ -1091,6 +1106,19 @@ ucl_decl void * ucl_vector_binary_search	(const ucl_vector_t self, const void * 
 ucl_decl int ucl_vector_compare_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb);
 ucl_decl int ucl_vector_compare (const ucl_vector_t a, const ucl_vector_t b);
 ucl_decl ucl_bool_t ucl_vector_equal   (const ucl_vector_t a, const ucl_vector_t b);
+
+/* function application */
+ucl_decl void ucl_vector_for_each		(ucl_callback_t callback, ucl_vector_t self);
+ucl_decl void ucl_vector_for_each_in_range	(ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
+ucl_decl void ucl_vector_for_each_multiple	(ucl_callback_t callback, ucl_vector_t first, ...);
+ucl_decl void ucl_vector_for_each_multiple_from_array	(ucl_callback_t callback, ucl_vector_array_t * vectors);
+
+ucl_decl void ucl_vector_map		(ucl_vector_t result, ucl_callback_t callback, ucl_vector_t self);
+ucl_decl void ucl_vector_map_range	(ucl_vector_t result, ucl_callback_t callback,
+					 ucl_range_t range, ucl_vector_t self);
+ucl_decl void ucl_vector_map_multiple	(ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...);
+ucl_decl void ucl_vector_map_multiple_from_array	(ucl_vector_t result, ucl_callback_t callback,
+							 ucl_vector_array_t * vectors);
 
 #endif
 

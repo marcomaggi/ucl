@@ -171,7 +171,11 @@ static void	move_used_bytes_leave_requested_at_end (ucl_vector_t this,
 /* Iterators advancing functions. */
 static ucl_iterator_next_t	iterator_forward_next;
 static ucl_iterator_next_t	iterator_backward_next;
-static void	iterator_next (ucl_iterator_t iterator, ucl_bool_t forward);
+static ucl_iterator_next_t	iterator_range_forward_next;
+static ucl_iterator_next_t	iterator_range_backward_next;
+static void iterator_next	(ucl_iterator_t iterator, ucl_bool_t forward);
+static void iterator_range_next	(ucl_iterator_t iterator, ucl_bool_t forward);
+
 
 /* Helper functions for "ucl_vector_insert()". */
 static ucl_byte_t *	\
@@ -945,7 +949,7 @@ ucl_vector_range_from_block(const ucl_vector_t self, const ucl_block_t block)
 
 
 /** ------------------------------------------------------------
- ** Iteration functions.
+ ** Whole vector iteration functions.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-17-33) void
@@ -1001,6 +1005,77 @@ iterator_next (ucl_iterator_t iterator, ucl_bool_t forward)
  end:
   ASSERT_INVARIANTS(self);
 }
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Range iteration functions.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-25-07-27-53) void
+ucl_vector_iterator_range_forward (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator)
+{
+  ASSERT_INVARIANTS(self);
+  assert(ucl_vector_range_is_valid(self, range));
+  iterator->container	= self;
+  iterator->iterator	= (ucl_vector_size(self) && ucl_range_size(range))?
+    ucl_vector_index_to_slot(self, ucl_range_min(range)) : NULL;
+  iterator->ptr1	= ucl_vector_index_to_slot(self, ucl_range_max(range));
+  iterator->next	= iterator_range_forward_next;
+}
+stub(2007-10-25-07-29-52) void
+ucl_vector_iterator_range_backward (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator)
+{
+  ASSERT_INVARIANTS(self);
+  assert(ucl_vector_range_is_valid(self, range));
+  iterator->container	= self;
+  iterator->iterator	= (ucl_vector_size(self) && ucl_range_size(range))?
+    ucl_vector_index_to_slot(self, ucl_range_max(range)) : NULL;
+  iterator->ptr1	= ucl_vector_index_to_slot(self, ucl_range_min(range));
+  iterator->next	= iterator_range_backward_next;
+}
+static void
+iterator_range_forward_next (ucl_iterator_t iterator)
+{
+  iterator_range_next(iterator, 1);
+}
+static void
+iterator_range_backward_next (ucl_iterator_t iterator)
+{
+  iterator_range_next(iterator, 0);
+}
+static void
+iterator_range_next (ucl_iterator_t iterator, ucl_bool_t forward)
+{
+  const ucl_vector_struct_t *	self = iterator->container;
+  ucl_byte_t *			current_p = iterator->iterator;
+  ucl_byte_t *			last_p = iterator->ptr1;
+
+  ASSERT_INVARIANTS(self);
+  if (forward)
+    {
+      if (current_p < last_p)
+	{
+	  iterator->iterator = current_p + self->slot_dimension;
+	  goto end;
+	}
+    }
+  else
+    {
+      if (current_p > last_p)
+	{
+	  iterator->iterator = current_p - self->slot_dimension;
+	  goto end;
+	}
+    }
+  iterator->iterator = NULL;
+ end:
+  ASSERT_INVARIANTS(self);
+}
+
+/* ------------------------------------------------------------ */
+
 
 /** ------------------------------------------------------------
  ** Memory functions.
@@ -1519,6 +1594,263 @@ ucl_vector_equal (const ucl_vector_t a, const ucl_vector_t b)
   return ((ucl_vector_size(a) == ucl_vector_size(b)) &&
 	  (ucl_vector_compare(a, b) == 0));
 }
+
+
+/** ------------------------------------------------------------
+ ** High level functions: for each.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-24-13-25-44) void
+ucl_vector_for_each (ucl_callback_t callback, ucl_vector_t self)
+{
+  ucl_iterator_t	I;
+  ucl_value_t		slot;
+
+
+  for (ucl_vector_iterator_forward(self, I); ucl_iterator_more(I); ucl_iterator_next(I))
+    {
+      slot.ptr = ucl_iterator_ptr(I);;
+      ucl_callback_invoke(callback, slot);
+    }
+}
+stub(2007-10-24-13-26-16) void
+ucl_vector_for_each_in_range (ucl_callback_t callback, ucl_range_t range, ucl_vector_t self)
+{
+  ucl_value_t	data;
+  void *	slot;
+
+
+  assert(ucl_vector_range_is_valid(self, range));
+  
+  slot = ucl_vector_index_to_slot(self, ucl_range_min(range));
+  for (size_t i = ucl_range_min(range);
+       i <= ucl_range_max(range);
+       ++i, slot = ucl_vector_increment_slot(self, slot))
+    {
+      data.ptr = slot;
+      ucl_callback_invoke(callback, data);
+    }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** High level functions: multiple for each.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-24-13-25-52) void
+ucl_vector_for_each_multiple_from_array (ucl_callback_t callback, ucl_vector_array_t * vectors)
+{
+  void *		slots[vectors->number_of_vectors];
+  ucl_iterator_t	iterators[vectors->number_of_vectors];
+  ucl_array_of_pointers_t slots_array = {
+    .number_of_slots	= vectors->number_of_vectors,
+    .slots		= slots
+  };
+  ucl_value_t		data = { .ptr = &slots_array };
+  size_t		i;
+
+
+  for (i=0; i<vectors->number_of_vectors; ++i)
+    ucl_vector_iterator_forward(vectors->vectors[i], iterators[i]);
+
+  for (slots_array.data.unum = 0;; ++slots_array.data.unum)
+    {
+      for (i=0; i<vectors->number_of_vectors; ++i)
+	if (! ucl_iterator_more(iterators[i]))
+	  goto exit;
+
+      for (i=0; i<slots_array.number_of_slots; ++i)
+	slots[i] = ucl_iterator_ptr(iterators[i]);
+
+      ucl_callback_invoke(callback, data);
+
+      for (i=0; i<vectors->number_of_vectors; ++i)
+	ucl_iterator_next(iterators[i]);
+    }
+ exit:
+  return;
+}
+stub(2007-10-24-13-26-01) void
+ucl_vector_for_each_multiple (ucl_callback_t callback, ucl_vector_t first, ...)
+{
+  size_t	counter = 1;
+  va_list	ap, save;
+
+
+#ifdef __va_copy
+  __va_copy(save, ap);
+#else
+  save = ap;
+#endif
+
+  /* Count how many vectors are there. */
+  {
+    ucl_vector_struct_t *	V;
+    
+    va_start(save, first);
+    for (V = va_arg(save, void *); V; V = va_arg(save, void *))
+      ++counter;
+    va_end(save);
+  }
+  
+  /* Store the vectors in an array, then do the iteration. */
+  {
+    ucl_vector_struct_t *	vectors[counter];  
+    ucl_vector_array_t		array = {
+      .number_of_vectors = counter,
+      .vectors		 = vectors
+    };
+
+
+    vectors[0] = first;
+    va_start(ap, first);
+    for (size_t i=1; i<counter; ++i)
+      vectors[i] = va_arg(ap, void *);
+    va_end(ap);
+
+    ucl_vector_for_each_multiple_from_array(callback, &array);
+  }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** High level functions: mapping.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-24-13-26-07) void
+ucl_vector_map (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t self)
+{
+  void *			slots[2];
+  ucl_array_of_pointers_t	slots_array = {
+    .number_of_slots	= 2,
+    .slots		= slots
+  };
+  ucl_value_t			data = { .ptr = &slots_array };
+  ucl_iterator_t		I;
+
+
+  for (ucl_vector_iterator_forward(self, I), slots_array.data.unum = 0;
+       ucl_iterator_more(I);
+       ucl_iterator_next(I), ++slots_array.data.unum)
+    {
+      slots[0] = ucl_vector_push_back(result);
+      slots[1] = ucl_iterator_ptr(I);
+      ucl_callback_invoke(callback, data);
+    }
+}
+stub(2007-10-24-13-26-25) void
+ucl_vector_map_range (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, ucl_vector_t self)
+{
+  void *			slots[2];
+  ucl_array_of_pointers_t	slots_array = {
+    .number_of_slots	= 2,
+    .slots		= slots
+  };
+  ucl_value_t			data = { .ptr = &slots_array };
+  ucl_iterator_t		I;
+
+
+  assert(ucl_vector_range_is_valid(self, range));
+  
+  for (ucl_vector_iterator_range_forward(self, range, I), slots_array.data.unum = ucl_range_min(range);
+       ucl_iterator_more(I);
+       ucl_iterator_next(I), ++slots_array.data.unum)
+    {
+      slots[0] = ucl_vector_push_back(result);
+      slots[1] = ucl_iterator_ptr(I);
+      ucl_callback_invoke(callback, data);
+    }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** High level functions: multiple map.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-26-07-45-30) void
+ucl_vector_map_multiple_from_array (ucl_vector_t result, ucl_callback_t callback, ucl_vector_array_t * vectors)
+{
+  size_t		number_of_slots = 1+vectors->number_of_vectors;
+  void *		slots[number_of_slots];
+  ucl_iterator_t	iterators[vectors->number_of_vectors];
+  ucl_array_of_pointers_t slots_array = {
+    .number_of_slots	= number_of_slots,
+    .slots		= slots
+  };
+  ucl_value_t		data = { .ptr = &slots_array };
+  size_t		i;
+
+
+  for (i=0; i<vectors->number_of_vectors; ++i)
+    ucl_vector_iterator_forward(vectors->vectors[i], iterators[i]);
+
+  for (slots_array.data.unum = 0;; ++slots_array.data.unum)
+    {
+      for (i=0; i<vectors->number_of_vectors; ++i)
+	if (! ucl_iterator_more(iterators[i]))
+	  goto exit;
+
+      slots[0] = ucl_vector_push_back(result);
+      for (i=0; i<vectors->number_of_vectors; ++i)
+	slots[1+i] = ucl_iterator_ptr(iterators[i]);
+
+      ucl_callback_invoke(callback, data);
+
+      for (i=0; i<vectors->number_of_vectors; ++i)
+	ucl_iterator_next(iterators[i]);
+    }
+ exit:
+  return;
+}
+stub(2007-10-26-07-45-36) void
+ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...)
+{
+  size_t	counter = 1;
+  va_list	ap, save;
+
+
+#ifdef __va_copy
+  __va_copy(save, ap);
+#else
+  save = ap;
+#endif
+
+  /* Count how many vectors are there. */
+  {
+    ucl_vector_struct_t *	V;
+    
+    va_start(save, first);
+    for (V = va_arg(save, void *); V; V = va_arg(save, void *))
+      ++counter;
+    va_end(save);
+  }
+  
+  /* Store the vectors in an array, then do the iteration. */
+  {
+    ucl_vector_struct_t *	vectors[counter];  
+    ucl_vector_array_t		array = {
+      .number_of_vectors = counter,
+      .vectors		 = vectors
+    };
+
+
+    vectors[0] = first;
+    va_start(ap, first);
+    for (size_t i=1; i<counter; ++i)
+      vectors[i] = va_arg(ap, void *);
+    va_end(ap);
+
+    ucl_vector_map_multiple_from_array(result, callback, &array);
+  }
+}
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
