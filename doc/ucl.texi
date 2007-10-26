@@ -5249,6 +5249,10 @@ Template Library).
 This container is heavyweight: its complexity is overkill for simple
 arrays with fixed size.
 
+In the following documentation, when describing valid values for vector
+indexes, we denote a range of values with @code{[min, max)}, where
+@code{[} means inclusive bound and @code{(} means exclusive bound.
+
 
 @deftp {Struct Typedef} ucl_vector_struct_t
 The data type of the base structure. It must be allocated by the user
@@ -5743,10 +5747,8 @@ else.
 Initialise the vector with: slot dimension one; initial size, step up
 and down all to 4096; pad size zero. This function does not call
 @function{ucl_vector_constructor}.
-@end deftypefun
 
-
-Example for @function{ucl_vector_initialise_buffer}:
+Example:
 
 @example
 ucl_vector_t    vector;
@@ -5754,20 +5756,22 @@ ucl_vector_t    vector;
 ucl_vector_initialise_buffer(vector);
 ucl_vector_constructor(vector);
 @end example
+@end deftypefun
 
 
 @deftypefun void ucl_vector_swallow_block (ucl_vector_t @var{self}, ucl_block_t @var{block})
 A replacement for @function{ucl_vector_constructor} that takes an
 already allocated block as data area; it is mandatory for the size of
-the block to be an integer multiple of the slot dimension. The vector is
-initialised to be full: all the slots are marked as used.
+the block to be an integer multiple of the slot's dimension registered
+in @var{self}. The vector is initialised to be full: all the slots are
+marked as used.
 
 The responsibility of the block memory is transferred to the vector, so
 the block must be freed only by calling
-@function{ucl_vector_destructor}.
-@end deftypefun
+@function{ucl_vector_destructor}; this means that the memory will be
+freed by the allocator registered in @var{self}.
 
-Example for @function{ucl_vector_swallow_block}:
+Example:
 
 @example
 ucl_vector_t    vector;
@@ -5780,6 +5784,7 @@ ucl_block_alloc(block, sizeof(int)*1000);
 ucl_vector_initialise(vector, sizeof(int));
 ucl_vector_swallow_block(vector, block);
 @end example
+@end deftypefun
 
 
 @deftypefun void ucl_vector_set_compar (ucl_vector_t @var{self}, ucl_valcmp_t @var{compar})
@@ -5793,30 +5798,20 @@ Register the function+context used to compare elements.
 @subsection Converting indexes to pointers
 
 
+@subsubsection Index to pointer conversion
+
+
 @deftypefun {void *} ucl_vector_index_to_slot (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
-Convert @var{index} into the corresponding pointer in the array.
-Return a pointer to the selected slot, or @null{} if the selected
-index is out of range.
-@end deftypefun
-
-
-@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
-Convert @var{index} into the corresponding pointer in the array.
-
-This is different from @function{ucl_vector_index_to_slot} in that the
-requested position can be one unit greater than the last position in the
-vector: that way the returned value can be used with
-@function{ucl_vector_insert} to append an element to the end of the
+Convert @var{index} into the corresponding pointer to a slot in the
 vector.
 
-Calling @function{ucl_vector_enlarge} invalidates the return value of
-this function. We have to make room for the new slot before attempting
-to convert the index to the slot's pointer.
-
 Return a pointer to the selected slot, or @null{} if the selected index
-is out of range.
-@end deftypefun
+is out of range. The range of valid values for @var{index} is @code{[0,
+size)}, where @code{size} is the return value of
+@function{ucl_vector_size}.
 
+Applying @function{ucl_vector_enlarge} or @function{ucl_vector_restrict}
+to @var{self} invalidates the return value of this function.
 
 Example:
 
@@ -5825,36 +5820,57 @@ ucl_vector_t    V;
 data_type_t *   ptr;
 data_type_t     val;
 
-...
+ucl_vector_initialise(V, sizeof(data_type_t));
+ucl_vector_constructor(V);
+fill_with_values(V);
 
 ptr = ucl_vector_index_to_slot(V, 13);
-val = *ptr;
+if (ptr)
+  val = *ptr;
+else
+  error();
 @end example
-
-
-@deftypefun ucl_vector_index_t ucl_vector_last_index (const ucl_vector_t @var{self})
-Return the index of the last element.
 @end deftypefun
 
 
-@deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
-Return the index corresponding to a pointer to slot. It is the inverse
-of @function{ucl_vector_index_to_slot}.
-@end deftypefun
+@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+Convert @var{index} into the corresponding pointer to a slot in the
+vector.
 
+This is different from @function{ucl_vector_index_to_slot} in that the
+requested position can be one unit greater than the last position in the
+vector: that way the returned value can be used with
+@function{ucl_vector_insert} to append an element to the end of the
+vector.
 
-@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
-Return true if the pointer is a valid slot pointer, else return false.
-@end deftypefun
+Return a pointer to the selected slot, or @null{} if the selected index
+is out of range. The range of valid values for @var{index} is @code{[0,
+size]}, where @code{size} is the return value of
+@function{ucl_vector_size}.
 
+Applying @function{ucl_vector_enlarge} or @function{ucl_vector_restrict}
+to @var{self} invalidates the return value of this function.  When
+adding a new slot: we have to make room for the new slot before
+attempting to convert the index to the slot's pointer.
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid_index (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
-Return true if @var{index} is a valid index for the vector.
-@end deftypefun
+Example:
 
+@example
+ucl_vector_t    V;
+data_type_t *   ptr;
+data_type_t     val;
 
-@deftypefun ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t @var{self}, ucl_range_t @var{range})
-Return true if the range is valid for the vector.
+ucl_vector_initialise(V, sizeof(data_type_t));
+ucl_vector_constructor(V);
+fill_with_values(V);
+
+ucl_vector_enlarge(V);
+ptr = ucl_vector_index_to_new_slot(V, 13);
+if (ptr)
+  val = *ptr;
+else
+  error();
+@end example
 @end deftypefun
 
 
@@ -5868,6 +5884,126 @@ to the first element in the array.
 A wrapper for @function{ucl_vector_index_to_slot} that returns a pointer
 to the last element in the array.
 @end deftypefun
+
+
+@subsubsection Pointer to index conversion
+
+
+@deftypefun ucl_vector_index_t ucl_vector_last_index (const ucl_vector_t @var{self})
+Return the index of the last element.
+@end deftypefun
+
+
+@deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
+Return the index corresponding to a pointer to slot. It is the inverse
+of @function{ucl_vector_index_to_slot}.
+@end deftypefun
+
+
+@subsubsection Validation
+
+
+@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
+Return true if the pointer is a valid slot pointer, else return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_vector_index_is_valid_index (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+Return true if @var{index} is a valid index for the vector.
+@end deftypefun
+
+
+@subsubsection Range functions
+
+
+@deftypefun ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t @var{self}, ucl_range_t @var{range})
+Return true if @var{range}, interpreted as inclusive range of indexes,
+is valid for @code{self}.
+@end deftypefun
+
+
+@deftypefun ucl_range_t ucl_vector_range (const ucl_vector_t @var{self})
+Return the inclusive range of indexes representing the whole vector.
+@end deftypefun
+
+
+@deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
+Return the inclusive range of indexes from @var{position} to the end of
+the vector. @var{position} must be a valid index for @var{self}.
+@end deftypefun
+
+
+Notice that to build the range of indexes from the beginning of a vector
+to a selected position we just need to do:
+
+@example
+ucl_range_t     range;
+
+ucl_range_set_min_max(range, 0, position);
+@end example
+
+
+@deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
+Return the inclusive range of indexes from the end of the vector to
+@var{position}. @var{position} must be greater or equal to the size of
+@var{self}.
+
+The returned range of indexes is invalid for @var{self}, but it can be
+used to append new elements to it; to add slots from the end to index 15
+included:
+
+@example
+ucl_vector_t    V;
+data_type_t *   ptr;
+ucl_range_t     range;
+
+ucl_vector_initialise(V, sizeof(data_type_t));
+ucl_vector_constructor(V);
+fill_with_10_values(V);
+
+range = ucl_vector_range_from_end_to_position(V, 15);
+
+for (size_t i=ucl_range_min(range); i<=ucl_range_max(range); ++i)
+  @{
+    ucl_vector_enlarge(V);
+    ptr  = ucl_vector_index_to_new_slot(V, i);
+    *ptr = ...;
+  @}
+@end example
+@end deftypefun
+
+
+@deftypefun ucl_range_t ucl_vector_range_from_end_with_span (const ucl_vector_t @var{self}, size_t @var{span})
+Return the inclusive range of indexes from the end of the vector with
+@var{span}.
+
+The returned range of indexes is invalid for @var{self}, but it can be
+used to append new elements to it; to add 5 slots to the end:
+
+@example
+ucl_vector_t    V;
+data_type_t *   ptr;
+ucl_range_t     range;
+
+ucl_vector_initialise(V, sizeof(data_type_t));
+ucl_vector_constructor(V);
+fill_with_values(V);
+
+range = ucl_vector_range_from_end_with_span(V, 5);
+
+for (size_t i=ucl_range_min(range); i<=ucl_range_max(range); ++i)
+  @{
+    ucl_vector_enlarge(V);
+    ptr  = ucl_vector_index_to_new_slot(V, i);
+    *ptr = ...;
+  @}
+@end example
+
+@noindent
+of course this is just an example, because it is much easiear to use
+@function{ucl_vector_push_back}.
+@end deftypefun
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -6118,9 +6254,10 @@ Quick sort the vector using the C library function
 
 
 @deftypefun ucl_bool_t ucl_vector_sorted (ucl_vector_t @var{self})
-Return true if the vector is sorted. This functions scans the whole
+Return true if the vector is sorted. This function scans the whole
 vector, so it is slow.
 @end deftypefun
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -6317,6 +6454,14 @@ An error reallocating memory does not corrupt the vector.
 @end deftypefun
 
 
+@deftypefun void ucl_vector_enlarge_for_range (ucl_vector_t @var{self}, ucl_range_t @var{range})
+Make sure that there is enough memory to hold the inclusive range of
+indexes described by @var{range}. This works despite @var{range} being:
+already a valid range of indexes, completely beyond the upper index
+limits, across the current upper index limit.
+@end deftypefun
+
+
 @deftypefun void ucl_vector_restrict (ucl_vector_t @var{self})
 Check if there are enough free slots in the allocated memory so that
 it's correct to restrict the array: if there aren't, nothing happens;
@@ -6377,6 +6522,7 @@ and comparison algorithm.
 
 Then @function{ucl_vector_front} or @function{ucl_vector_back} can be
 used to extract the element with lesser or greater key.
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

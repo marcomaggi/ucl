@@ -1046,7 +1046,13 @@ ucl_decl ucl_vector_index_t ucl_vector_slot_to_index	(const ucl_vector_t self, v
 /* index predicates */
 ucl_decl ucl_bool_t ucl_vector_pointer_is_valid_slot	(const ucl_vector_t self, void *_pointer_to_slot_p);
 ucl_decl ucl_bool_t ucl_vector_index_is_valid_index	(const ucl_vector_t self, ucl_vector_index_t idx);
+
+/* range of indexes */
 ucl_decl ucl_bool_t ucl_vector_range_is_valid		(const ucl_vector_t self, ucl_range_t range);
+ucl_decl ucl_range_t ucl_vector_range			(const ucl_vector_t self);
+ucl_decl ucl_range_t ucl_vector_range_from_position_to_end(const ucl_vector_t self, ucl_vector_index_t position);
+ucl_decl ucl_range_t ucl_vector_range_from_end_to_position(const ucl_vector_t self, ucl_vector_index_t position);
+ucl_decl ucl_range_t ucl_vector_range_from_end_with_span  (const ucl_vector_t self, size_t span);
 
 /* data getters and setters */
 ucl_decl ucl_block_t ucl_vector_get_memory_block	(const ucl_vector_t self);
@@ -1093,6 +1099,7 @@ ucl_decl void ucl_vector_set_memory_to_zero	(ucl_vector_t self);
 ucl_decl void ucl_vector_mark_all_slots_as_used	(ucl_vector_t self);
 ucl_decl void ucl_vector_mark_as_used		(ucl_vector_t self, ucl_block_t used_block);
 ucl_decl void ucl_vector_enlarge_for_slots	(ucl_vector_t self, size_t required_free_slots);
+ucl_decl void ucl_vector_enlarge_for_range	(ucl_vector_t self, ucl_range_t range);
 
 ucl_decl void ucl_vector_register_allocator	(ucl_vector_t self, ucl_memory_allocator_t allocator);
 ucl_decl void ucl_vector_swallow_block		(ucl_vector_t self, ucl_block_t block);

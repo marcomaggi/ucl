@@ -9,9 +9,6 @@
 0.9
 ---
 
-* Do what  is needed  to build and  install the  static stub
-  library but not the static library.
-
 * Understand why in hell when upgrading the Slackware packge
   'doinst.sh' is executed twice.
 

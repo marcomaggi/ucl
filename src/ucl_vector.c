@@ -476,7 +476,9 @@ ucl_vector_slot_to_index (const ucl_vector_t self, void *_pointer_to_slot_p)
   ucl_byte_t *		pointer_to_slot_p = _pointer_to_slot_p;
   return (pointer_to_slot_p - self->first_used_slot)/self->slot_dimension;
 }
+
 /* ------------------------------------------------------------ */
+
 stub(2005-09-23-18-16-51) ucl_bool_t
 ucl_vector_pointer_is_valid_slot (const ucl_vector_t self, void *_pointer_to_slot_p)
 {
@@ -491,12 +493,57 @@ ucl_vector_index_is_valid_index (const ucl_vector_t self, ucl_vector_index_t idx
 {
   return (idx < ucl_vector_size(self));
 }
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Range functions.
+ ** ----------------------------------------------------------*/
+
 stub(2005-09-23-18-16-56) ucl_bool_t
 ucl_vector_range_is_valid (const ucl_vector_t self, ucl_range_t range)
 {
   return (ucl_vector_index_is_valid_index(self, ucl_range_min(range)) &&
 	  ucl_vector_index_is_valid_index(self, ucl_range_max(range)));
 }
+stub(2007-10-26-11-54-39) ucl_range_t
+ucl_vector_range (const ucl_vector_t self)
+{
+  ucl_range_t	range;
+
+  ucl_range_set_min_size(range, 0, ucl_vector_size(self));
+  return range;
+}
+stub(2007-10-26-11-56-36) ucl_range_t
+ucl_vector_range_from_position_to_end (const ucl_vector_t self, ucl_vector_index_t position)
+{
+  ucl_range_t	range;
+
+  assert(ucl_vector_index_is_valid(self, position));
+  ucl_range_set_min_size(range, position, ucl_vector_size(self));
+  return range;
+}
+stub(2007-10-26-12-00-34) ucl_range_t
+ucl_vector_range_from_end_to_position (const ucl_vector_t self, ucl_vector_index_t position)
+{
+  ucl_range_t	range;
+
+  assert(ucl_vector_size(self) <= position);
+  ucl_range_set_min_size(range, ucl_vector_size(self), position);
+  return range;
+}
+stub(2007-10-26-12-08-18) ucl_range_t
+ucl_vector_range_from_end_with_span (const ucl_vector_t self, size_t span)
+{
+  ucl_range_t	range;
+  size_t	size = ucl_vector_size(self);
+
+  ucl_range_set_min_size(range, size, span);
+  return range;
+}
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -1144,6 +1191,20 @@ ucl_vector_enlarge_for_slots (ucl_vector_t self, size_t required_free_slots)
 	  / self->slot_dimension));
   ASSERT_INVARIANTS(self);
   ucl_debug("done");
+}
+stub(2007-10-26-12-20-00) void
+ucl_vector_enlarge_for_range (ucl_vector_t self, ucl_range_t range)
+{
+  size_t		size = ucl_vector_size(self);
+  ucl_vector_index_t	max  = ucl_range_max(range);
+
+
+  if (size <= max)
+    {
+      size_t	required_free_slots = max - size + 1;
+
+      ucl_vector_enlarge_for_slots(self, required_free_slots);
+    }
 }
 stub(2005-09-23-18-17-43) void
 ucl_vector_restrict (ucl_vector_t self)

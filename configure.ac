@@ -14,14 +14,14 @@
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
 
 
-AC_INIT([ucl], [0.9a61])
+AC_INIT([ucl], [0.9a62])
 AC_PREREQ(2.60)
 
 AC_SUBST([PACKAGE_VERSION],[0.9.0])
 AC_DEFINE([PACKAGE_VERSION],["0.9.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.9a61])
-AC_DEFINE([PACKAGE_XVERSION],["0.9a61"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.9a62])
+AC_DEFINE([PACKAGE_XVERSION],["0.9a62"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
@@ -29,8 +29,8 @@ AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 AC_SUBST([PACKAGE_VERSION_MINOR],[9])
 AC_DEFINE([PACKAGE_VERSION_MINOR],["9"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[61])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["61"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[62])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["62"],[package version patch number])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.9])
 AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.9"],[package version major.minor])

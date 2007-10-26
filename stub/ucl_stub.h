@@ -715,6 +715,11 @@ typedef void       ucl_vector_iterator_range_forward_proto_t (const ucl_vector_t
 typedef void       ucl_vector_iterator_range_backward_proto_t (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
 typedef void       ucl_vector_map_multiple_from_array_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_array_t * vectors);
 typedef void       ucl_vector_map_multiple_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...);
+typedef ucl_range_t ucl_vector_range_proto_t  (const ucl_vector_t self);
+typedef ucl_range_t ucl_vector_range_from_position_to_end_proto_t (const ucl_vector_t self, ucl_vector_index_t position);
+typedef ucl_range_t ucl_vector_range_from_end_to_position_proto_t (const ucl_vector_t self, ucl_vector_index_t position);
+typedef ucl_range_t ucl_vector_range_from_end_with_span_proto_t (const ucl_vector_t self, size_t span);
+typedef void       ucl_vector_enlarge_for_range_proto_t (ucl_vector_t self, ucl_range_t range);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -795,6 +800,11 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_iterator_range_backward_proto_t * stub_ucl_vector_iterator_range_backward;
   ucl_vector_map_multiple_from_array_proto_t * stub_ucl_vector_map_multiple_from_array;
   ucl_vector_map_multiple_proto_t     * stub_ucl_vector_map_multiple;
+  ucl_vector_range_proto_t            * stub_ucl_vector_range;
+  ucl_vector_range_from_position_to_end_proto_t * stub_ucl_vector_range_from_position_to_end;
+  ucl_vector_range_from_end_to_position_proto_t * stub_ucl_vector_range_from_end_to_position;
+  ucl_vector_range_from_end_with_span_proto_t * stub_ucl_vector_range_from_end_with_span;
+  ucl_vector_enlarge_for_range_proto_t * stub_ucl_vector_enlarge_for_range;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -880,6 +890,11 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_iterator_range_backward  ((ucl_vector_stub_table_p)->stub_ucl_vector_iterator_range_backward)
 #define ucl_vector_map_multiple_from_array  ((ucl_vector_stub_table_p)->stub_ucl_vector_map_multiple_from_array)
 #define ucl_vector_map_multiple    ((ucl_vector_stub_table_p)->stub_ucl_vector_map_multiple)
+#define ucl_vector_range           ((ucl_vector_stub_table_p)->stub_ucl_vector_range)
+#define ucl_vector_range_from_position_to_end  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_from_position_to_end)
+#define ucl_vector_range_from_end_to_position  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_from_end_to_position)
+#define ucl_vector_range_from_end_with_span  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_from_end_with_span)
+#define ucl_vector_enlarge_for_range  ((ucl_vector_stub_table_p)->stub_ucl_vector_enlarge_for_range)
 
 #endif /* defined UCL_ENABLE_STUB */
 

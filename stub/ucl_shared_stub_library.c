@@ -253,7 +253,12 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_iterator_range_forward,
   ucl_vector_iterator_range_backward,
   ucl_vector_map_multiple_from_array,
-  ucl_vector_map_multiple
+  ucl_vector_map_multiple,
+  ucl_vector_range,
+  ucl_vector_range_from_position_to_end,
+  ucl_vector_range_from_end_to_position,
+  ucl_vector_range_from_end_with_span,
+  ucl_vector_enlarge_for_range
 };
 
 /* Library stub table.
