@@ -6005,6 +6005,19 @@ of course this is just an example, because it is much easiear to use
 @end deftypefun
 
 
+@subsubsection Range/block conversion
+
+
+@deftypefun ucl_block_t ucl_vector_block_from_range (const ucl_vector_t @var{self}, const ucl_range_t @var{range})
+Return a block referencing the slots selected by a range.
+@end deftypefun
+
+
+@deftypefun ucl_range_t ucl_vector_range_from_block (const ucl_vector_t @var{self}, const ucl_block_t @var{block})
+Return the range of slots referenced by a block.
+@end deftypefun
+
+
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
@@ -6228,19 +6241,6 @@ function is meant to commit usage of blocks requested with
 @var{block} must be adjacent to the used slots inside the vector, its
 size must be an integer multiple of the slot dimension, its memory must
 be completely contained in the allocated vector memory.
-@end deftypefun
-
-
-@subsubsection Range/block conversion
-
-
-@deftypefun ucl_block_t ucl_vector_block_from_range (const ucl_vector_t @var{self}, const ucl_range_t @var{range})
-Return a block referencing the slots selected by a range.
-@end deftypefun
-
-
-@deftypefun ucl_range_t ucl_vector_range_from_block (const ucl_vector_t @var{self}, const ucl_block_t @var{block})
-Return the range of slots referenced by a block.
 @end deftypefun
 
 
@@ -6541,6 +6541,7 @@ some of them invoke the enlarge/restrict memory functions.
 * vector high append::          Appending data to a vector.
 * vector high insert::          Inserting into a vector.
 * vector high erase::           Removing from a vector.
+* vector high access::          Setters and getters.
 * vector high compare::         Comparing vectors.
 * vector high apply::           Applying functions.
 @end menu
@@ -6702,6 +6703,46 @@ Erase all the elements in the selected range.
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
+@node vector high access
+@subsubsection Setters and getters
+
+
+@deftypefun void ucl_vector_copy_range (ucl_vector_t @var{target}, ucl_vector_index_t @var{position}, ucl_vector_t @var{source}, ucl_range_t @var{source_range})
+Copy slots referenced by @var{source_range} in @var{source} to
+@var{position} in @var{target}. Data into @var{target} is overwritten.
+
+@var{position} must be a valid index for @var{target}.
+@var{source_range} must be valid for @var{source}. There must be enough
+slots after @var{position} in @var{target} to hold the whole range from
+@var{source}.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_set_block (ucl_vector_t @var{target}, ucl_vector_index_t @var{position}, ucl_block_t @var{source})
+Copy data from @var{source} into @var{target} at @var{position},
+overwriting data.
+
+@var{position} must be a valid index for @var{target} and enough slots
+must exist after it to accept the whol @var{source} block. The length of
+@var{source} must be an integer multiple of the slot's dimension in
+@var{target}.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_get_block (ucl_block_t @var{target}, ucl_vector_index_t @var{position}, ucl_vector_t @var{source})
+Copy data from @var{source} at @var{position} into @var{target},
+overwriting data.
+
+@var{position} must be a valid index for @var{target} and there must be
+enough slots in @var{target} to fill the block. The length of
+@var{source} must be an integer multiple of the slot's dimension in
+@var{target}.
+@end deftypefun
+
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@c ------------------------------------------------------------
 @node vector high compare
 @subsubsection Comparing vectors
 
@@ -6727,6 +6768,12 @@ lesser than the last element from @var{b}.
 @end table
 
 @var{a} can be equal to @var{b}.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_vector_equal_range (ucl_vector_t @var{a}, ucl_range_t @var{range_a}, ucl_vector_t @var{b}, ucl_range_t @var{range_b})
+Wrapper for @function{ucl_vector_compare_range} that returns true if the
+two ranges are equal.
 @end deftypefun
 
 

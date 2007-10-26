@@ -723,6 +723,9 @@ typedef void       ucl_vector_enlarge_for_range_proto_t (ucl_vector_t self, ucl_
 typedef void       ucl_vector_append_more_from_array_proto_t (ucl_vector_t target, const ucl_vector_array_t * vectors);
 typedef void       ucl_vector_insert_range_proto_t (ucl_vector_t V, ucl_vector_index_t offset, const ucl_vector_t A, ucl_range_t range);
 typedef void       ucl_vector_insert_block_proto_t (ucl_vector_t target, ucl_vector_index_t offset, const ucl_block_t block);
+typedef void       ucl_vector_copy_range_proto_t (ucl_vector_t target, ucl_vector_index_t position, ucl_vector_t source, ucl_range_t source_range);
+typedef void       ucl_vector_set_block_proto_t (ucl_vector_t target, ucl_vector_index_t position, ucl_block_t source);
+typedef void       ucl_vector_get_block_proto_t (ucl_block_t target, ucl_vector_index_t position, ucl_vector_t source);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -811,6 +814,9 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_append_more_from_array_proto_t * stub_ucl_vector_append_more_from_array;
   ucl_vector_insert_range_proto_t     * stub_ucl_vector_insert_range;
   ucl_vector_insert_block_proto_t     * stub_ucl_vector_insert_block;
+  ucl_vector_copy_range_proto_t       * stub_ucl_vector_copy_range;
+  ucl_vector_set_block_proto_t        * stub_ucl_vector_set_block;
+  ucl_vector_get_block_proto_t        * stub_ucl_vector_get_block;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -904,6 +910,9 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_append_more_from_array  ((ucl_vector_stub_table_p)->stub_ucl_vector_append_more_from_array)
 #define ucl_vector_insert_range    ((ucl_vector_stub_table_p)->stub_ucl_vector_insert_range)
 #define ucl_vector_insert_block    ((ucl_vector_stub_table_p)->stub_ucl_vector_insert_block)
+#define ucl_vector_copy_range      ((ucl_vector_stub_table_p)->stub_ucl_vector_copy_range)
+#define ucl_vector_set_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_set_block)
+#define ucl_vector_get_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_get_block)
 
 #endif /* defined UCL_ENABLE_STUB */
 

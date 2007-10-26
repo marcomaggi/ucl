@@ -261,7 +261,10 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_enlarge_for_range,
   ucl_vector_append_more_from_array,
   ucl_vector_insert_range,
-  ucl_vector_insert_block
+  ucl_vector_insert_block,
+  ucl_vector_copy_range,
+  ucl_vector_set_block,
+  ucl_vector_get_block
 };
 
 /* Library stub table.

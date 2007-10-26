@@ -9,8 +9,8 @@
 0.9
 ---
 
-* Understand why in hell when upgrading the Slackware packge
-  'doinst.sh' is executed twice.
+* Understand  why  in  hell  when  upgrading  the  Slackware
+  package 'doinst.sh' is executed twice.
 
 ## ------------------------------------------------------------
 
@@ -19,12 +19,6 @@ Candidates
 
 * Look for soft heaps. 
 * Look for Splay trees.
-
-
-Vector
-------
-
-* Erase by range of slot pointers.
 
 
 Graph

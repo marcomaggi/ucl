@@ -1089,6 +1089,12 @@ ucl_decl void ucl_vector_pop_front	(ucl_vector_t self);
 ucl_decl void ucl_vector_reset		(ucl_vector_t self);
 ucl_decl void ucl_vector_clean		(ucl_vector_t self);
 
+/* accessing */
+ucl_decl void ucl_vector_copy_range	(ucl_vector_t target, ucl_vector_index_t position,
+					 ucl_vector_t source, ucl_range_t source_range);
+ucl_decl void ucl_vector_set_block	(ucl_vector_t target, ucl_vector_index_t position, ucl_block_t source);
+ucl_decl void ucl_vector_get_block	(ucl_block_t target, ucl_vector_index_t position, ucl_vector_t source);
+
 /* sorting */
 ucl_decl void ucl_vector_quick_sort	(ucl_vector_t self);
 ucl_decl ucl_bool_t ucl_vector_sorted	(ucl_vector_t self);
@@ -1526,6 +1532,11 @@ ucl_vector_decrement_slot (const ucl_vector_t self, void * slot)
   ucl_byte_t *	p = slot;
 
   return p - self->slot_dimension;
+}
+static inline int
+ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb)
+{
+  return (0 == ucl_vector_compare_range(a, ra, b, rb));
 }
 
 /* ------------------------------------------------------------ */

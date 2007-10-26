@@ -1678,6 +1678,52 @@ ucl_vector_erase_range (ucl_vector_t self, ucl_range_t index_range)
 
 
 /** ------------------------------------------------------------
+ ** High level functions: accessors.
+ ** ----------------------------------------------------------*/
+
+stub(2007-10-26-21-32-41) void
+ucl_vector_copy_range (ucl_vector_t target, ucl_vector_index_t position, ucl_vector_t source, ucl_range_t source_range)
+{
+  ucl_block_t	block;
+
+
+  assert(target->slot_dimension == target->source->dimension);
+  assert(ucl_vector_index_is_valid(target, position));
+  assert(ucl_vector_range_is_valid(source, source_range));
+  assert((ucl_vector_size(target_range) - position) >= ucl_range_size(source_range));
+
+  block = ucl_vector_block_from_range(source, source_range);
+  ucl_vector_set_block(target, position, block);
+}
+stub(2007-10-26-21-32-52) void
+ucl_vector_set_block (ucl_vector_t target, ucl_vector_index_t position, ucl_block_t source)
+{
+  void *	slot;
+
+
+  assert(ucl_vector_index_is_valid(target, position));
+  assert((source.len / target->slot_dimension) <= (ucl_vector_size(target) - position));
+
+  slot = ucl_vector_index_to_slot(target, position);
+  memcpy(slot, source.ptr, source.len);
+}
+stub(2007-10-26-21-33-04) void
+ucl_vector_get_block (ucl_block_t target, ucl_vector_index_t position, ucl_vector_t source)
+{
+  void *	slot;
+
+
+  assert(ucl_vector_index_is_valid(source, position));
+  assert((target.len / source->slot_dimension) <= (ucl_vector_size(source) - position));
+
+  slot = ucl_vector_index_to_slot(source, position);
+  memcpy(target.ptr, slot, target.len);
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
  ** High level functions: comparing.
  ** ----------------------------------------------------------*/
 
