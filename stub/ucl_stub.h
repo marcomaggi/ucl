@@ -653,8 +653,8 @@ typedef size_t     ucl_vector_number_of_padding_slots_proto_t (const ucl_vector_
 typedef void *     ucl_vector_index_to_slot_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
 typedef void *     ucl_vector_index_to_new_slot_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
 typedef ucl_vector_index_t ucl_vector_last_index_proto_t (const ucl_vector_t self);
-typedef ucl_vector_index_t ucl_vector_slot_to_index_proto_t (const ucl_vector_t self, void *_pointer_to_slot_p);
-typedef ucl_bool_t ucl_vector_pointer_is_valid_slot_proto_t (const ucl_vector_t self, void *_pointer_to_slot_p);
+typedef ucl_vector_index_t ucl_vector_slot_to_index_proto_t (const ucl_vector_t self, const void *_pointer_to_slot_p);
+typedef ucl_bool_t ucl_vector_pointer_is_valid_slot_proto_t (const ucl_vector_t self, const void *_pointer_to_slot_p);
 typedef ucl_bool_t ucl_vector_index_is_valid_index_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
 typedef ucl_bool_t ucl_vector_range_is_valid_proto_t (const ucl_vector_t self, ucl_range_t range);
 typedef void *     ucl_vector_insert_proto_t  (ucl_vector_t self, void *_pointer_to_slot_p);
@@ -671,21 +671,21 @@ typedef void       ucl_vector_iterator_backward_proto_t (const ucl_vector_t self
 typedef void       ucl_vector_enlarge_proto_t (ucl_vector_t self);
 typedef void       ucl_vector_restrict_proto_t (ucl_vector_t self);
 typedef void       ucl_vector_set_memory_to_zero_proto_t (ucl_vector_t self);
-typedef size_t     ucl_vector_number_of_free_slots_proto_t (ucl_vector_t self);
+typedef size_t     ucl_vector_number_of_free_slots_proto_t (const ucl_vector_t self);
 typedef void *     ucl_vector_find_proto_t    (const ucl_vector_t self, const void * data_p);
 typedef void *     ucl_vector_sort_find_proto_t (const ucl_vector_t self, const void * data_p);
 typedef void *     ucl_vector_binary_search_proto_t (const ucl_vector_t self, const void * data_p);
 typedef void       ucl_vector_append_range_proto_t (ucl_vector_t target, const ucl_vector_t source, ucl_range_t range);
 typedef void       ucl_vector_append_proto_t  (ucl_vector_t target, const ucl_vector_t source);
-typedef void       ucl_vector_append_more_proto_t (ucl_vector_t target, ...);
-typedef void       ucl_vector_insert_vector_proto_t (ucl_vector_t T, ucl_vector_index_t offset, ucl_vector_t S);
+typedef void       ucl_vector_append_more_proto_t (ucl_vector_t target, const ucl_vector_t source, ...);
+typedef void       ucl_vector_insert_vector_proto_t (ucl_vector_t T, ucl_vector_index_t offset, const ucl_vector_t S);
 typedef void       ucl_vector_erase_range_proto_t (ucl_vector_t self, ucl_range_t index_range);
 typedef int        ucl_vector_compare_range_proto_t (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb);
 typedef int        ucl_vector_compare_proto_t (const ucl_vector_t a, const ucl_vector_t b);
 typedef ucl_bool_t ucl_vector_equal_proto_t   (const ucl_vector_t a, const ucl_vector_t b);
 typedef void       ucl_vector_mark_all_slots_as_used_proto_t (ucl_vector_t self);
 typedef void       ucl_vector_enlarge_for_slots_proto_t (ucl_vector_t self, size_t required_free_slots);
-typedef void       ucl_vector_append_block_proto_t (ucl_vector_t self, ucl_block_t block);
+typedef void       ucl_vector_append_block_proto_t (ucl_vector_t self, const ucl_block_t block);
 typedef void       ucl_vector_initialise_buffer_proto_t (ucl_vector_t self);
 typedef void       ucl_vector_swallow_block_proto_t (ucl_vector_t self, ucl_block_t block);
 typedef ucl_bool_t ucl_vector_running_proto_t (const ucl_vector_t self);
@@ -705,21 +705,24 @@ typedef void       ucl_vector_mark_as_used_proto_t (ucl_vector_t self, ucl_block
 typedef void       ucl_vector_update_number_of_step_up_slots_proto_t (ucl_vector_t self, size_t step_up);
 typedef void       ucl_vector_update_number_of_step_down_slots_proto_t (ucl_vector_t self, size_t step_down);
 typedef void       ucl_vector_update_number_of_padding_slots_proto_t (ucl_vector_t self, size_t padding);
-typedef void       ucl_vector_for_each_proto_t (ucl_callback_t callback, ucl_vector_t self);
-typedef void       ucl_vector_for_each_multiple_from_array_proto_t (ucl_callback_t callback, ucl_vector_array_t * vectors);
-typedef void       ucl_vector_for_each_multiple_proto_t (ucl_callback_t callback, ucl_vector_t first, ...);
-typedef void       ucl_vector_map_proto_t     (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t self);
-typedef void       ucl_vector_for_each_in_range_proto_t (ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
-typedef void       ucl_vector_map_range_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
+typedef void       ucl_vector_for_each_proto_t (ucl_callback_t callback, const ucl_vector_t self);
+typedef void       ucl_vector_for_each_multiple_from_array_proto_t (ucl_callback_t callback, const ucl_vector_array_t * vectors);
+typedef void       ucl_vector_for_each_multiple_proto_t (ucl_callback_t callback, const ucl_vector_t first, ...);
+typedef void       ucl_vector_map_proto_t     (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t self);
+typedef void       ucl_vector_for_each_in_range_proto_t (ucl_callback_t callback, ucl_range_t range, const ucl_vector_t self);
+typedef void       ucl_vector_map_range_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, const ucl_vector_t self);
 typedef void       ucl_vector_iterator_range_forward_proto_t (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
 typedef void       ucl_vector_iterator_range_backward_proto_t (const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
-typedef void       ucl_vector_map_multiple_from_array_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_array_t * vectors);
-typedef void       ucl_vector_map_multiple_proto_t (ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...);
+typedef void       ucl_vector_map_multiple_from_array_proto_t (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_array_t * vectors);
+typedef void       ucl_vector_map_multiple_proto_t (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t first, ...);
 typedef ucl_range_t ucl_vector_range_proto_t  (const ucl_vector_t self);
 typedef ucl_range_t ucl_vector_range_from_position_to_end_proto_t (const ucl_vector_t self, ucl_vector_index_t position);
 typedef ucl_range_t ucl_vector_range_from_end_to_position_proto_t (const ucl_vector_t self, ucl_vector_index_t position);
 typedef ucl_range_t ucl_vector_range_from_end_with_span_proto_t (const ucl_vector_t self, size_t span);
 typedef void       ucl_vector_enlarge_for_range_proto_t (ucl_vector_t self, ucl_range_t range);
+typedef void       ucl_vector_append_more_from_array_proto_t (ucl_vector_t target, const ucl_vector_array_t * vectors);
+typedef void       ucl_vector_insert_range_proto_t (ucl_vector_t V, ucl_vector_index_t offset, const ucl_vector_t A, ucl_range_t range);
+typedef void       ucl_vector_insert_block_proto_t (ucl_vector_t target, ucl_vector_index_t offset, const ucl_block_t block);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -805,6 +808,9 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_range_from_end_to_position_proto_t * stub_ucl_vector_range_from_end_to_position;
   ucl_vector_range_from_end_with_span_proto_t * stub_ucl_vector_range_from_end_with_span;
   ucl_vector_enlarge_for_range_proto_t * stub_ucl_vector_enlarge_for_range;
+  ucl_vector_append_more_from_array_proto_t * stub_ucl_vector_append_more_from_array;
+  ucl_vector_insert_range_proto_t     * stub_ucl_vector_insert_range;
+  ucl_vector_insert_block_proto_t     * stub_ucl_vector_insert_block;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -895,6 +901,9 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_range_from_end_to_position  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_from_end_to_position)
 #define ucl_vector_range_from_end_with_span  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_from_end_with_span)
 #define ucl_vector_enlarge_for_range  ((ucl_vector_stub_table_p)->stub_ucl_vector_enlarge_for_range)
+#define ucl_vector_append_more_from_array  ((ucl_vector_stub_table_p)->stub_ucl_vector_append_more_from_array)
+#define ucl_vector_insert_range    ((ucl_vector_stub_table_p)->stub_ucl_vector_insert_range)
+#define ucl_vector_insert_block    ((ucl_vector_stub_table_p)->stub_ucl_vector_insert_block)
 
 #endif /* defined UCL_ENABLE_STUB */
 

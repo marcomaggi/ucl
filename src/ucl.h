@@ -1025,7 +1025,7 @@ ucl_decl void ucl_vector_destructor	(ucl_vector_t self);
 ucl_decl size_t ucl_vector_number_of_step_up_slots	(const ucl_vector_t self);
 ucl_decl size_t ucl_vector_number_of_step_down_slots	(const ucl_vector_t self);
 ucl_decl size_t ucl_vector_number_of_padding_slots	(const ucl_vector_t self);
-ucl_decl size_t ucl_vector_number_of_free_slots		(ucl_vector_t self);
+ucl_decl size_t ucl_vector_number_of_free_slots		(const ucl_vector_t self);
 ucl_decl size_t ucl_vector_slot_dimension		(const ucl_vector_t self);
 ucl_decl size_t ucl_vector_size				(const ucl_vector_t self);
 ucl_decl ucl_bool_t ucl_vector_running			(const ucl_vector_t self);
@@ -1041,10 +1041,10 @@ ucl_decl void * ucl_vector_index_to_new_slot	(const ucl_vector_t self, ucl_vecto
 
 /* index getters */
 ucl_decl ucl_vector_index_t ucl_vector_last_index	(const ucl_vector_t self);
-ucl_decl ucl_vector_index_t ucl_vector_slot_to_index	(const ucl_vector_t self, void *_pointer_to_slot_p);
+ucl_decl ucl_vector_index_t ucl_vector_slot_to_index	(const ucl_vector_t self, const void *_pointer_to_slot_p);
 
 /* index predicates */
-ucl_decl ucl_bool_t ucl_vector_pointer_is_valid_slot	(const ucl_vector_t self, void *_pointer_to_slot_p);
+ucl_decl ucl_bool_t ucl_vector_pointer_is_valid_slot	(const ucl_vector_t self, const void *_pointer_to_slot_p);
 ucl_decl ucl_bool_t ucl_vector_index_is_valid_index	(const ucl_vector_t self, ucl_vector_index_t idx);
 
 /* range of indexes */
@@ -1059,20 +1059,27 @@ ucl_decl ucl_block_t ucl_vector_get_memory_block	(const ucl_vector_t self);
 ucl_decl ucl_block_t ucl_vector_get_data_block		(const ucl_vector_t self);
 ucl_decl ucl_block_t ucl_vector_block_from_range	(const ucl_vector_t self, const ucl_range_t range);
 ucl_decl ucl_range_t ucl_vector_range_from_block	(const ucl_vector_t self, const ucl_block_t block);
-ucl_decl ucl_block_t ucl_vector_get_free_block_at_end	(ucl_vector_t self, size_t requested_slots);
-ucl_decl ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t self, size_t requested_slots);
+ucl_decl ucl_block_t ucl_vector_get_free_block_at_end		(ucl_vector_t self, size_t requested_slots);
+ucl_decl ucl_block_t ucl_vector_get_free_block_at_beginning	(ucl_vector_t self, size_t requested_slots);
 
 /* inserting */
-ucl_decl void * ucl_vector_insert	(ucl_vector_t self, void *_pointer_to_slot_p);
-ucl_decl void * ucl_vector_insert_sort	(ucl_vector_t self, void *data_p);
+ucl_decl void *		ucl_vector_insert	(ucl_vector_t self, void *_pointer_to_slot_p);
+ucl_decl ucl_data_t	ucl_vector_push_back	(ucl_vector_t self);
+ucl_decl ucl_data_t	ucl_vector_push_front	(ucl_vector_t self);
+ucl_decl void *		ucl_vector_insert_sort	(ucl_vector_t self, void *data_p);
+
+/* appending */
 ucl_decl void ucl_vector_append_range	(ucl_vector_t target, const ucl_vector_t source, ucl_range_t range);
 ucl_decl void ucl_vector_append		(ucl_vector_t target, const ucl_vector_t source);
-ucl_decl void ucl_vector_append_more	(ucl_vector_t target, ...);
-ucl_decl void ucl_vector_append_block	(ucl_vector_t self, ucl_block_t block);
-ucl_decl void ucl_vector_insert_vector	(ucl_vector_t T, ucl_vector_index_t offset, ucl_vector_t S);
+ucl_decl void ucl_vector_append_more	(ucl_vector_t target, const ucl_vector_t source, ...);
+ucl_decl void ucl_vector_append_more_from_array (ucl_vector_t target, const ucl_vector_array_t * vectors);
+ucl_decl void ucl_vector_append_block	(ucl_vector_t self, const ucl_block_t block);
 
-ucl_decl ucl_data_t ucl_vector_push_back	(ucl_vector_t self);
-ucl_decl ucl_data_t ucl_vector_push_front	(ucl_vector_t self);
+/* high level insert */
+ucl_decl void ucl_vector_insert_vector	(ucl_vector_t target, ucl_vector_index_t offset, const ucl_vector_t source);
+ucl_decl void ucl_vector_insert_block	(ucl_vector_t target, ucl_vector_index_t offset, const ucl_block_t block);
+ucl_decl void ucl_vector_insert_range	(ucl_vector_t target, ucl_vector_index_t offset,
+					 const ucl_vector_t source, ucl_range_t range);
 
 /* erasing */
 ucl_decl void ucl_vector_erase		(ucl_vector_t self, void *_pointer_to_slot_p);
@@ -1115,17 +1122,18 @@ ucl_decl int ucl_vector_compare (const ucl_vector_t a, const ucl_vector_t b);
 ucl_decl ucl_bool_t ucl_vector_equal   (const ucl_vector_t a, const ucl_vector_t b);
 
 /* function application */
-ucl_decl void ucl_vector_for_each		(ucl_callback_t callback, ucl_vector_t self);
-ucl_decl void ucl_vector_for_each_in_range	(ucl_callback_t callback, ucl_range_t range, ucl_vector_t self);
-ucl_decl void ucl_vector_for_each_multiple	(ucl_callback_t callback, ucl_vector_t first, ...);
-ucl_decl void ucl_vector_for_each_multiple_from_array	(ucl_callback_t callback, ucl_vector_array_t * vectors);
+ucl_decl void ucl_vector_for_each		(ucl_callback_t callback, const ucl_vector_t self);
+ucl_decl void ucl_vector_for_each_in_range	(ucl_callback_t callback, ucl_range_t range, const ucl_vector_t self);
+ucl_decl void ucl_vector_for_each_multiple	(ucl_callback_t callback, const ucl_vector_t first, ...);
+ucl_decl void ucl_vector_for_each_multiple_from_array	(ucl_callback_t callback, const ucl_vector_array_t * vectors);
 
-ucl_decl void ucl_vector_map		(ucl_vector_t result, ucl_callback_t callback, ucl_vector_t self);
+ucl_decl void ucl_vector_map		(ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t self);
 ucl_decl void ucl_vector_map_range	(ucl_vector_t result, ucl_callback_t callback,
-					 ucl_range_t range, ucl_vector_t self);
-ucl_decl void ucl_vector_map_multiple	(ucl_vector_t result, ucl_callback_t callback, ucl_vector_t first, ...);
+					 ucl_range_t range, const ucl_vector_t self);
+ucl_decl void ucl_vector_map_multiple	(ucl_vector_t result, ucl_callback_t callback,
+					 const ucl_vector_t first, ...);
 ucl_decl void ucl_vector_map_multiple_from_array	(ucl_vector_t result, ucl_callback_t callback,
-							 ucl_vector_array_t * vectors);
+							 const ucl_vector_array_t * vectors);
 
 #endif
 

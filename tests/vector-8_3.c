@@ -27,9 +27,7 @@
    
 */
 
-#if 0
-#  define UCL_DEBUGGING  
-#endif
+#define UCL_DEBUGGING		0
 #include "vectortest.h"
 
 void
@@ -48,9 +46,12 @@ test (void)
 
   fill(target, 10, 0);
   fill(source, 10, 20);
+  ucl_debug("size of target %u", ucl_vector_size(target));
+  ucl_debug("size of source %u", ucl_vector_size(source));
 
   ucl_vector_insert_vector(target, 5, source);
 
+  ucl_debug("size of target after %u", ucl_vector_size(target));
   assert(ucl_vector_size(target) == 20);
 
   for (i=0, j=0; i<5; ++i, ++j)

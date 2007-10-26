@@ -5683,17 +5683,17 @@ Return true if the vector has been constructed.
 @subsubsection Inspection functions
 
 
-@deftypefun size_t ucl_vector_number_of_step_up_slots (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_step_up_slots (const ucl_vector_t @var{self})
 Return the number of stup up slots.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_number_of_step_down_slots (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_step_down_slots (const ucl_vector_t @var{self})
 Return the number of step down slots.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_number_of_padding_slots (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_padding_slots (const ucl_vector_t @var{self})
 Return the number of padding slots.
 @end deftypefun
 
@@ -5894,7 +5894,7 @@ Return the index of the last element.
 @end deftypefun
 
 
-@deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
+@deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
 Return the index corresponding to a pointer to slot. It is the inverse
 of @function{ucl_vector_index_to_slot}.
 @end deftypefun
@@ -5903,7 +5903,7 @@ of @function{ucl_vector_index_to_slot}.
 @subsubsection Validation
 
 
-@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{self}, void * @var{pointer_to_slot_p})
+@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
 Return true if the pointer is a valid slot pointer, else return false.
 @end deftypefun
 
@@ -6097,7 +6097,7 @@ ptr   = ucl_vector_insert_sort(vector, &data);
 @subsection Removing elements from a vector
 
 
-@deftypefun void ucl_vector_erase (ucl_vector_t @var{self}, void *@var{slot})
+@deftypefun void ucl_vector_erase (ucl_vector_t @var{self}, void * @var{slot})
 Erase an element at a selected position: the slot is overwritten by
 moving as less elements as possible. After the invocation: the pointer
 represented by the @var{slot} argument value, it's not guaranteed to be
@@ -6593,18 +6593,19 @@ In the following functions the @var{target} vector must be an already
 initialised an constructed vector.
 
 
-@deftypefun void ucl_vector_append_block (ucl_vector_t @var{target}, ucl_block_t @var{block})
-Append a block to the vector. The size of the block must be an integer
-multiple of the target vector slot dimension.
+@deftypefun void ucl_vector_append_block (ucl_vector_t @var{target}, const ucl_block_t @var{block})
+Append a block to the vector by copying data from @var{block} with
+@function{memcpy}. The size of the block must be an integer multiple of
+the target vector slot dimension.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
 @end deftypefun
 
 
 @deftypefun void ucl_vector_append (ucl_vector_t @var{target}, const ucl_vector_t @var{source})
-Append all the elements of @var{source} to the end of @var{target}; If
-@var{target} is empty: this operation is equivalent to duplicating
-@var{source}.
+Append all the elements of @var{source} to the end of @var{target} by
+copying data with @function{memcpy}. If @var{target} is empty: this
+operation is equivalent to duplicating @var{source}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
 @end deftypefun
@@ -6612,28 +6613,35 @@ Append all the elements of @var{source} to the end of @var{target}; If
 
 @deftypefun void ucl_vector_append_range (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, ucl_range_t @var{range})
 Append the elements of @var{source} referenced by @var{range} to the end
-of @var{target}.
+of @var{target} by copying data with @function{memcpy}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
 @end deftypefun
 
 
-@deftypefun void ucl_vector_append_more (ucl_vector_t @var{target}, ...)
+@deftypefun void ucl_vector_append_more (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, @dots{})
 Append elements from a set of vectors to the end of @var{target}. The
 @code{...} arguments are a list of @code{ucl_vector_t} values terminated
 by a @null{}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
-@end deftypefun
 
-
-Example invocation of @function{ucl_vector_append_more}:
+Example:
 
 @example
 ucl_vector_t    target, a, b, c, d;
+
 ...
 ucl_vector_append_more(target, a, b, c, d, NULL);
 @end example
+@end deftypefun
+
+
+@deftypefun void ucl_vector_append_more_from_array (ucl_vector_t @var{target}, const ucl_vector_array_t * @var{vectors})
+Like @function{ucl_vector_append_more} but takes source vectors from an
+array rather than from application parameters.
+@end deftypefun
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -6643,10 +6651,40 @@ ucl_vector_append_more(target, a, b, c, d, NULL);
 
 
 @deftypefun void ucl_vector_insert_vector (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, ucl_vector_t @var{source})
-Insert all the elements of @var{source} into @var{target} at @var{offset}.
+Insert all the elements of @var{source} into @var{target} at
+@var{offset}.
+
+@var{offset} must be a valid value for
+@function{ucl_vector_index_to_new_slot}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
 @end deftypefun
+
+
+@deftypefun void ucl_vector_insert_block (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, const ucl_block_t @var{block})
+Insert the data referenced by @var{block} into @var{target} at
+@var{offset}.
+
+The size of @var{block} must be an integer multiple of the slot's
+dimension of @var{target}. @var{offset} must be a valid value for
+@function{ucl_vector_index_to_new_slot}.
+
+@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+@end deftypefun
+
+
+@deftypefun void ucl_vector_insert_range (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, const ucl_vector_t @var{source}, ucl_range_t @var{range});
+Insert the data referenced by the inclusive @var{range} of indexes from
+@var{source} into @var{target} at @var{offset}.
+
+The size of @var{block} must be an integer multiple of the slot's
+dimension of @var{target}. @var{offset} must be a valid value for
+@function{ucl_vector_index_to_new_slot}.
+
+@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+@end deftypefun
+
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
