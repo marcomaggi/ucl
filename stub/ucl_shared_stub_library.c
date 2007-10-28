@@ -194,7 +194,7 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_last_index,
   ucl_vector_slot_to_index,
   ucl_vector_pointer_is_valid_slot,
-  ucl_vector_index_is_valid_index,
+  ucl_vector_index_is_valid,
   ucl_vector_range_is_valid,
   ucl_vector_insert,
   ucl_vector_insert_sort,

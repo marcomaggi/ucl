@@ -56,10 +56,10 @@ test (void)
   assert( ! ucl_vector_pointer_is_valid_slot(vector,
 					   ucl_vector_index_to_new_slot(vector,100)) );
 
-  assert( ucl_vector_index_is_valid_index(vector, 0) );
-  assert( ucl_vector_index_is_valid_index(vector, 10) );
-  assert( ucl_vector_index_is_valid_index(vector, 99) );
-  assert( ! ucl_vector_index_is_valid_index(vector, 100) );
+  assert( ucl_vector_index_is_valid(vector, 0) );
+  assert( ucl_vector_index_is_valid(vector, 10) );
+  assert( ucl_vector_index_is_valid(vector, 99) );
+  assert( ! ucl_vector_index_is_valid(vector, 100) );
 
   ucl_vector_destructor(vector);
 }

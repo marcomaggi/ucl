@@ -29,9 +29,6 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#if (ENABLED_ASSERTIONS == 0)
-#  define NDEBUG	1
-#endif
 
 #include <stdio.h>	/* sometimes useful for debugging */
 #include "ucl.h"

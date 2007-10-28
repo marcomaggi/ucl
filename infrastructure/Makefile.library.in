@@ -2448,12 +2448,12 @@ ds_slackware_REMOVEPKG		= $$(ds_slackware_PRECMD) $$(ds_slackware_REMOVEPKG_PROG
 ds_slackware_PACKAGE_ARCHITECTURE	?= $(shell $(ds_main_INFRADIR)/config.guess | cut -f1 -d'-')
 # This should be the build number followed by
 # your initials ('mm' = Marco Maggi).
-ds_slackware_PACKAGE_TAG		?= 1mm
-ds_slackware_PACKAGE_SPEC		?= -$$(ds_slackware_PACKAGE_ARCHITECTURE)-$$(ds_slackware_PACKAGE_TAG)
+ds_slackware_PACKAGE_TAG	?= 1mm
+ds_slackware_PACKAGE_SPEC	?= -$$(ds_slackware_PACKAGE_ARCHITECTURE)-$$(ds_slackware_PACKAGE_TAG)
 
 ds_slackware_PACKAGE_SUFFIX	= $$(ds_slackware_PACKAGE_SPEC).tgz
 ds_slackware_PACKAGE_BIN_FILE	= $$(PACKAGE_NAME)-$$(PACKAGE_XVERSION)$$(ds_slackware_PACKAGE_SUFFIX)
-ds_slackware_PACKAGE_DOC_FILE	= $$(PACKAGE_NAME)-doc-$$(PACKAGE_XVERSION)$$(ds_slackware_PACKAGE_SUFFIX)
+ds_slackware_PACKAGE_DOC_FILE	= $$(PACKAGE_NAME)-doc-$$(PACKAGE_XVERSION)-noarch-$$(ds_slackware_PACKAGE_TAG).tgz
 ds_slackware_PACKAGE_DEV_FILE	= $$(PACKAGE_NAME)-dev-$$(PACKAGE_XVERSION)$$(ds_slackware_PACKAGE_SUFFIX)
 
 ds_slackware_STORED_PACKAGE_BIN	= $$(ds_slackware_STOREDIR)/$$(ds_slackware_PACKAGE_BIN_FILE)

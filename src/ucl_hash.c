@@ -66,7 +66,9 @@ static ucl_iterator_next_t	iterator_next;
 stub(2005-09-23-18-10-40) void
 ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash)
 {
-  assert(this); assert(hash); assert(compar.func);
+  assert(this);
+  assert(hash.func);
+  assert(compar.func);
 
   ucl_vector_initialise(this->buckets, sizeof(entry_t **));
   ucl_vector_initialise_pad(this->buckets, 0);

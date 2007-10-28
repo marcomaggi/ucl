@@ -5908,7 +5908,7 @@ Return true if the pointer is a valid slot pointer, else return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid_index (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+@deftypefun ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
 Return true if @var{index} is a valid index for the vector.
 @end deftypefun
 

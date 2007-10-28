@@ -655,7 +655,7 @@ typedef void *     ucl_vector_index_to_new_slot_proto_t (const ucl_vector_t self
 typedef ucl_vector_index_t ucl_vector_last_index_proto_t (const ucl_vector_t self);
 typedef ucl_vector_index_t ucl_vector_slot_to_index_proto_t (const ucl_vector_t self, const void *_pointer_to_slot_p);
 typedef ucl_bool_t ucl_vector_pointer_is_valid_slot_proto_t (const ucl_vector_t self, const void *_pointer_to_slot_p);
-typedef ucl_bool_t ucl_vector_index_is_valid_index_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
+typedef ucl_bool_t ucl_vector_index_is_valid_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
 typedef ucl_bool_t ucl_vector_range_is_valid_proto_t (const ucl_vector_t self, ucl_range_t range);
 typedef void *     ucl_vector_insert_proto_t  (ucl_vector_t self, void *_pointer_to_slot_p);
 typedef void *     ucl_vector_insert_sort_proto_t (ucl_vector_t self, void *data_p);
@@ -746,7 +746,7 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_last_index_proto_t       * stub_ucl_vector_last_index;
   ucl_vector_slot_to_index_proto_t    * stub_ucl_vector_slot_to_index;
   ucl_vector_pointer_is_valid_slot_proto_t * stub_ucl_vector_pointer_is_valid_slot;
-  ucl_vector_index_is_valid_index_proto_t * stub_ucl_vector_index_is_valid_index;
+  ucl_vector_index_is_valid_proto_t   * stub_ucl_vector_index_is_valid;
   ucl_vector_range_is_valid_proto_t   * stub_ucl_vector_range_is_valid;
   ucl_vector_insert_proto_t           * stub_ucl_vector_insert;
   ucl_vector_insert_sort_proto_t      * stub_ucl_vector_insert_sort;
@@ -842,7 +842,7 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_last_index      ((ucl_vector_stub_table_p)->stub_ucl_vector_last_index)
 #define ucl_vector_slot_to_index   ((ucl_vector_stub_table_p)->stub_ucl_vector_slot_to_index)
 #define ucl_vector_pointer_is_valid_slot  ((ucl_vector_stub_table_p)->stub_ucl_vector_pointer_is_valid_slot)
-#define ucl_vector_index_is_valid_index  ((ucl_vector_stub_table_p)->stub_ucl_vector_index_is_valid_index)
+#define ucl_vector_index_is_valid  ((ucl_vector_stub_table_p)->stub_ucl_vector_index_is_valid)
 #define ucl_vector_range_is_valid  ((ucl_vector_stub_table_p)->stub_ucl_vector_range_is_valid)
 #define ucl_vector_insert          ((ucl_vector_stub_table_p)->stub_ucl_vector_insert)
 #define ucl_vector_insert_sort     ((ucl_vector_stub_table_p)->stub_ucl_vector_insert_sort)

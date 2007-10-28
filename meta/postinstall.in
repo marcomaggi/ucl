@@ -1,4 +1,7 @@
+#!@SHELL@
 # postinstall --
+#
+# Post installation script for UCL.
 
 set -e
 

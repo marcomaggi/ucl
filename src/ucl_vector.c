@@ -88,7 +88,7 @@
 		ASSERT_NOT_UNDERFLOW_POINTER(V, P);	\
 		ASSERT_NOT_NEW_OVERFLOW_POINTER(V, P);
 
-#define ASSERT_COMPAR_FUNCTION_IS_SET(V)		assert((V)->compar)
+#define ASSERT_COMPAR_FUNCTION_IS_SET(V)		assert((V)->compar.func)
 
 #define ASSERT_FIRST_SLOT_IS_AT_PAD_OFFSET(V)		\
 		assert((V)->first_used_slot ==		\
@@ -489,7 +489,7 @@ ucl_vector_pointer_is_valid_slot (const ucl_vector_t self, const void *_pointer_
 	  (((pointer_to_slot_p - self->first_used_slot)%self->slot_dimension)==0));
 }
 stub(2005-09-23-18-16-54) ucl_bool_t
-ucl_vector_index_is_valid_index (const ucl_vector_t self, ucl_vector_index_t idx)
+ucl_vector_index_is_valid (const ucl_vector_t self, ucl_vector_index_t idx)
 {
   return (idx < ucl_vector_size(self));
 }
@@ -504,8 +504,8 @@ ucl_vector_index_is_valid_index (const ucl_vector_t self, ucl_vector_index_t idx
 stub(2005-09-23-18-16-56) ucl_bool_t
 ucl_vector_range_is_valid (const ucl_vector_t self, ucl_range_t range)
 {
-  return (ucl_vector_index_is_valid_index(self, ucl_range_min(range)) &&
-	  ucl_vector_index_is_valid_index(self, ucl_range_max(range)));
+  return (ucl_vector_index_is_valid(self, ucl_range_min(range)) &&
+	  ucl_vector_index_is_valid(self, ucl_range_max(range)));
 }
 stub(2007-10-26-11-54-39) ucl_range_t
 ucl_vector_range (const ucl_vector_t self)
@@ -1681,16 +1681,17 @@ ucl_vector_erase_range (ucl_vector_t self, ucl_range_t index_range)
  ** High level functions: accessors.
  ** ----------------------------------------------------------*/
 
+#undef NDEBUG
 stub(2007-10-26-21-32-41) void
 ucl_vector_copy_range (ucl_vector_t target, ucl_vector_index_t position, ucl_vector_t source, ucl_range_t source_range)
 {
   ucl_block_t	block;
 
 
-  assert(target->slot_dimension == target->source->dimension);
+  assert(target->slot_dimension == target->slot_dimension);
   assert(ucl_vector_index_is_valid(target, position));
   assert(ucl_vector_range_is_valid(source, source_range));
-  assert((ucl_vector_size(target_range) - position) >= ucl_range_size(source_range));
+  assert((ucl_vector_size(target) - position) >= ucl_range_size(source_range));
 
   block = ucl_vector_block_from_range(source, source_range);
   ucl_vector_set_block(target, position, block);
