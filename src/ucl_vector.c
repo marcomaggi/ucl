@@ -1523,6 +1523,15 @@ ucl_vector_append_more (ucl_vector_t target, const ucl_vector_t source, ...)
 stub(2007-10-26-13-32-10) void
 ucl_vector_append_more_from_array (ucl_vector_t target, const ucl_vector_array_t * vectors)
 {
+  size_t	total_number_of_new_slots = 0;
+
+
+  for (size_t i=0; i<vectors->number_of_vectors; ++i)
+    {
+      total_number_of_new_slots += ucl_vector_size(vectors->vectors[i]);
+    }
+  ucl_vector_enlarge_for_slots(target, total_number_of_new_slots);
+
   for (size_t i=0; i<vectors->number_of_vectors; ++i)
     ucl_vector_append(target, vectors->vectors[i]);
 }
