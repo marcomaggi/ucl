@@ -254,6 +254,8 @@ ucl_vector_initialise (ucl_vector_t self, size_t slot_dimension)
   self->size_of_padding_area	= UCL_VECTOR_DEFAULT_PAD;
   self->slot_dimension		= slot_dimension;
 
+  /* This  is  a weird  setting,  but  it  is correctly  interpreted  by
+     'ucl_vector_constructor()'. */
   self->first_used_slot		= NULL;
   self->last_used_slot		= self->first_used_slot + UCL_VECTOR_DEFAULT_SIZE;
 
@@ -264,6 +266,8 @@ ucl_vector_initialise (ucl_vector_t self, size_t slot_dimension)
 stub(2005-09-23-18-16-19) void
 ucl_vector_initialise_size (ucl_vector_t self, size_t number_of_initial_slots)
 {
+  /* This  is  a weird  setting,  but  it  is correctly  interpreted  by
+     'ucl_vector_constructor()'. */
   self->last_used_slot	= self->first_used_slot + number_of_initial_slots;
 }
 stub(2005-09-23-18-16-21) void
@@ -319,7 +323,11 @@ ucl_vector_constructor (ucl_vector_t self)
   self->step_down		*= self->slot_dimension;
   self->size_of_padding_area	*= self->slot_dimension;
 
-  allocate_block(self, (self->last_used_slot-self->first_used_slot));
+  allocate_block(self,
+		 /* This is weird, but it is a correct
+		    interpretation of what 'ucl_vector_initialise()'
+		    and 'ucl_vector_initialise_size()' do. */
+		 (self->last_used_slot - self->first_used_slot));
   set_pointers_for_empty_vector(self);
   PRINT_SLOT_INSPECTION(self, "construction");
   PRINT_POINTER_INSPECTION(self, "construction");
