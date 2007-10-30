@@ -493,6 +493,11 @@ ucl_vector_index_is_valid (const ucl_vector_t self, ucl_vector_index_t idx)
 {
   return (idx < ucl_vector_size(self));
 }
+stub(2007-10-30-13-52-30) ucl_bool_t
+ucl_vector_index_is_valid_new (const ucl_vector_t self, ucl_vector_index_t idx)
+{
+  return (idx <= ucl_vector_size(self));
+}
 
 /* ------------------------------------------------------------ */
 
@@ -521,7 +526,7 @@ ucl_vector_range_from_position_to_end (const ucl_vector_t self, ucl_vector_index
   ucl_range_t	range;
 
   assert(ucl_vector_index_is_valid(self, position));
-  ucl_range_set_min_size(range, position, ucl_vector_size(self));
+  ucl_range_set_min_size(range, position, ucl_vector_size(self)-position);
   return range;
 }
 stub(2007-10-26-12-00-34) ucl_range_t

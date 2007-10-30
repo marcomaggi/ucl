@@ -1045,7 +1045,8 @@ ucl_decl ucl_vector_index_t ucl_vector_slot_to_index	(const ucl_vector_t self, c
 
 /* index predicates */
 ucl_decl ucl_bool_t ucl_vector_pointer_is_valid_slot	(const ucl_vector_t self, const void *_pointer_to_slot_p);
-ucl_decl ucl_bool_t ucl_vector_index_is_valid	(const ucl_vector_t self, ucl_vector_index_t idx);
+ucl_decl ucl_bool_t ucl_vector_index_is_valid		(const ucl_vector_t self, ucl_vector_index_t idx);
+ucl_decl ucl_bool_t ucl_vector_index_is_valid_new	(const ucl_vector_t self, ucl_vector_index_t idx);
 
 /* range of indexes */
 ucl_decl ucl_bool_t ucl_vector_range_is_valid		(const ucl_vector_t self, ucl_range_t range);

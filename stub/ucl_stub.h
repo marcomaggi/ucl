@@ -726,6 +726,7 @@ typedef void       ucl_vector_insert_block_proto_t (ucl_vector_t target, ucl_vec
 typedef void       ucl_vector_copy_range_proto_t (ucl_vector_t target, ucl_vector_index_t position, ucl_vector_t source, ucl_range_t source_range);
 typedef void       ucl_vector_set_block_proto_t (ucl_vector_t target, ucl_vector_index_t position, ucl_block_t source);
 typedef void       ucl_vector_get_block_proto_t (ucl_block_t target, ucl_vector_index_t position, ucl_vector_t source);
+typedef ucl_bool_t ucl_vector_index_is_valid_new_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -817,6 +818,7 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_copy_range_proto_t       * stub_ucl_vector_copy_range;
   ucl_vector_set_block_proto_t        * stub_ucl_vector_set_block;
   ucl_vector_get_block_proto_t        * stub_ucl_vector_get_block;
+  ucl_vector_index_is_valid_new_proto_t * stub_ucl_vector_index_is_valid_new;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -913,6 +915,7 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_copy_range      ((ucl_vector_stub_table_p)->stub_ucl_vector_copy_range)
 #define ucl_vector_set_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_set_block)
 #define ucl_vector_get_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_get_block)
+#define ucl_vector_index_is_valid_new  ((ucl_vector_stub_table_p)->stub_ucl_vector_index_is_valid_new)
 
 #endif /* defined UCL_ENABLE_STUB */
 

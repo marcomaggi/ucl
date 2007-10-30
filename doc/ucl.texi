@@ -5913,6 +5913,12 @@ Return true if @var{index} is a valid index for the vector.
 @end deftypefun
 
 
+@deftypefun ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+Return true if @var{index} is a valid index for a new slot of the
+vector.
+@end deftypefun
+
+
 @subsubsection Range functions
 
 
