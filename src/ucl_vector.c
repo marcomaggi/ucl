@@ -294,7 +294,7 @@ ucl_vector_initialise_buffer (ucl_vector_t self)
   ucl_vector_initialise(self, sizeof(ucl_byte_t));
   ucl_vector_initialise_size(self, UCL_VECTOR_BUFFER_PAGE_SIZE);
   ucl_vector_initialise_pad(self, 0);
-  ucl_vector_initialise_step_up(self, UCL_VECTOR_BUFFER_PAGE_SIZE);
+  ucl_vector_initialise_step_up(self,   UCL_VECTOR_BUFFER_PAGE_SIZE);
   ucl_vector_initialise_step_down(self, UCL_VECTOR_BUFFER_PAGE_SIZE);
   ASSERT_INITIALISE_CONDITIONS(self);
 }
@@ -318,6 +318,9 @@ stub(2005-09-23-18-16-28) void
 ucl_vector_constructor (ucl_vector_t self)
 {
   ASSERT_INITIALISE_CONDITIONS(self);
+
+  if (self->step_up >= self->step_down)
+    self->step_down = self->step_up + 1;
 
   self->step_up			*= self->slot_dimension;
   self->step_down		*= self->slot_dimension;
@@ -1138,28 +1141,43 @@ iterator_range_next (ucl_iterator_t iterator, ucl_bool_t forward)
 
 
 /** ------------------------------------------------------------
- ** Memory functions.
+ ** Memory functions: enlarging.
  ** ----------------------------------------------------------*/
 
+stub(2007-11-12-13-16-37) ucl_bool_t
+ucl_vector_will_enlarge (ucl_vector_t self)
+{
+  return
+    (self->first_used_slot == self->first_allocated_slot) &&
+    (self->last_used_slot  == self->last_allocated_slot);
+}
+static size_t
+compute_enlarged_size_in_bytes (ucl_vector_t self)
+{
+  size_t	number_of_allocated_bytes, rest;
+
+
+  number_of_allocated_bytes = compute_allocated_bytes(self);
+  ucl_debug("old size: %d", number_of_allocated_bytes);
+
+  rest = number_of_allocated_bytes % self->step_up;
+  number_of_allocated_bytes += (rest)? rest : self->step_up;
+  ucl_debug("new size: %d", number_of_allocated_bytes);
+  return number_of_allocated_bytes;
+}
+stub(2007-11-12-13-26-53) size_t
+ucl_vector_enlarged_size (ucl_vector_t self)
+{
+  return (compute_enlarged_size_in_bytes(self) / self->slot_dimension);
+}
 stub(2005-09-23-18-17-40) void
 ucl_vector_enlarge (ucl_vector_t self)
 {
   ASSERT_INVARIANTS(self);
 
-  if ((self->first_used_slot == self->first_allocated_slot) &&
-      (self->last_used_slot  == self->last_allocated_slot))
+  if (ucl_vector_will_enlarge(self))
     {
-      size_t	number_of_allocated_bytes, rest;
-
-
-      number_of_allocated_bytes = compute_allocated_bytes(self);
-      ucl_debug("old size: %d", number_of_allocated_bytes);
-
-      rest = number_of_allocated_bytes % self->step_up;
-      number_of_allocated_bytes += (rest)? rest : self->step_up;
-      ucl_debug("new size: %d", number_of_allocated_bytes);
-      
-      reallocate_block(self, number_of_allocated_bytes);
+      reallocate_block(self, compute_enlarged_size_in_bytes(self));
       ASSERT_INVARIANTS(self);
     }
 }
@@ -1219,40 +1237,71 @@ ucl_vector_enlarge_for_range (ucl_vector_t self, ucl_range_t range)
       ucl_vector_enlarge_for_slots(self, required_free_slots);
     }
 }
-stub(2005-09-23-18-17-43) void
-ucl_vector_restrict (ucl_vector_t self)
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Memory functions: restricting.
+ ** ----------------------------------------------------------*/
+
+stub(2007-11-12-13-18-22) ucl_bool_t
+ucl_vector_will_restrict (ucl_vector_t self)
+{
+  return (compute_free_bytes(self) >= self->step_down);
+}
+static size_t
+compute_restricted_size_in_bytes (ucl_vector_t self)
 {
   size_t	number_of_allocated_bytes, new_number_of_allocated_bytes;
-  size_t	number_of_free_bytes, number_of_used_bytes, rest;
+  size_t	number_of_used_bytes, rest;
 
-
-  ASSERT_INVARIANTS(self);
 
   number_of_allocated_bytes	= compute_allocated_bytes(self);
   number_of_used_bytes		= compute_used_bytes(self);
-  number_of_free_bytes		= compute_free_bytes(self);
 
-  if (number_of_free_bytes >= self->step_down)
+  new_number_of_allocated_bytes = number_of_allocated_bytes - self->step_down;
+  rest = number_of_allocated_bytes % self->step_up;
+  new_number_of_allocated_bytes += (rest)? rest : self->step_up;
+
+  /* The following  condition can be false when:  'step_up > step_down'.
+     This  is why  'step_down' is  normalised  to a  value greater  than
+     'step_up' by the constructor. */
+  assert(new_number_of_allocated_bytes < number_of_allocated_bytes);
+  return new_number_of_allocated_bytes;
+}
+stub(2007-11-12-13-34-28) size_t
+ucl_vector_restricted_size (ucl_vector_t self)
+{
+  return (compute_restricted_size_in_bytes(self) / self->slot_dimension);
+}
+stub(2005-09-23-18-17-43) void
+ucl_vector_restrict (ucl_vector_t self)
+{
+  ASSERT_INVARIANTS(self);
+
+
+  if (ucl_vector_will_restrict(self))
     {
-      new_number_of_allocated_bytes = \
-	number_of_allocated_bytes - self->step_down;
-      rest = number_of_allocated_bytes % self->step_up;
-      new_number_of_allocated_bytes += (rest)? rest : self->step_up;
+      size_t	number_of_allocated_bytes	= compute_allocated_bytes(self);
+      size_t	new_number_of_allocated_bytes	= compute_restricted_size_in_bytes(self);
 
-      /*
-	The following condition may not be true when: step_up > step_down.
-      */
-      if (new_number_of_allocated_bytes < number_of_allocated_bytes)
-	{
-	  move_used_bytes_leave_requested_at_end(self,
-		number_of_allocated_bytes - new_number_of_allocated_bytes);
-	  reallocate_block(self, number_of_allocated_bytes);
-	  move_used_bytes_at_pad_area_beginning(self);
-	}
-      
+
+      move_used_bytes_leave_requested_at_end(self, number_of_allocated_bytes - new_number_of_allocated_bytes);
+      reallocate_block(self, new_number_of_allocated_bytes);
+      move_used_bytes_at_pad_area_beginning(self);
+
       ASSERT_INVARIANTS(self);
     }
 }
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Memory functions: miscellaneous operations.
+ ** ----------------------------------------------------------*/
+
 stub(2005-09-23-18-17-47) void
 ucl_vector_set_memory_to_zero (ucl_vector_t self)
 {
@@ -1436,6 +1485,8 @@ ucl_vector_pop_front (ucl_vector_t self)
       ucl_vector_restrict(self);
     }
 }
+
+/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -2176,9 +2227,6 @@ compute_slots_at_beginning (const ucl_vector_t self)
 static void
 move_used_bytes_at_pad_area_beginning (ucl_vector_t self)
 {
-  ucl_debug_on();
-
-
   ASSERT_INVARIANTS(self);
   if (vector_is_empty(self))
     {
@@ -2202,7 +2250,6 @@ move_used_bytes_at_pad_area_beginning (ucl_vector_t self)
       move_used_bytes_at_byte_pointer(self, p);
       ASSERT_INVARIANTS(self);
     }
-  ucl_debug_off();
 }
 
 /* ------------------------------------------------------------ */

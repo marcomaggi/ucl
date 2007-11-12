@@ -44,9 +44,6 @@ test (void)
   int array[]   = { 10, 13, 5, 11, 15, 12 };
   int inorder[] = { 5, 10, 11, 12, 13, 15 };
 
-/*
-#define UCL_DEBUGGING
-*/
 
 #undef LITTLENUMBER
 #define LITTLENUMBER 6
@@ -65,11 +62,11 @@ test (void)
       
       ucl_map_insert(map, link_p);
       
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       printf("\n");
 #endif
     }
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
   printf("\n");
 #endif
   size = ucl_map_size(map);

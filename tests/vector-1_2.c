@@ -27,14 +27,15 @@
    
 */
 
-/* #define UCL_DEBUGGING */
+#define UCL_DEBUGGING		0
 #include "vectortest.h"
 
 static void	doit		(ucl_vector_t vector, size_t size,
 				 size_t step_up, size_t step_down,
 				 size_t pad);
 
-
+/* ------------------------------------------------------------ */
+
 void
 test (void)
 {
@@ -62,7 +63,9 @@ test (void)
 #define PAD		50
   doit(vector, SIZE, STEP_UP, STEP_DOWN, PAD);
 }
-
+
+/* ------------------------------------------------------------ */
+
 void
 doit (ucl_vector_t vector, size_t size, size_t step_up, size_t step_down, size_t pad)
 {

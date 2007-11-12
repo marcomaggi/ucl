@@ -122,21 +122,38 @@ test (void)
   /* ------------------------------------------------------------ */
   /* BACK/BACK */
 
-  /* Push numbers [(NUMBER-1), 0]. */
+  /* Push numbers [0, NUMBER-1). */
   for (i=0; i<NUMBER; ++i)
     {
       p = ucl_vector_push_back(vector);
       *p = i;
     }
 
-  /* Assert numbers [(NUMBER-1), 0]. */
+  /* Assert numbers [0, NUMBER). */
   for (i=0; i<NUMBER; ++i)
     {
       p = ucl_vector_index_to_slot(vector, i);
       assert(i == *p);
     }
 
-  /* Pop numbers [(NUMBER-1), 0]. */
+  /* Pop numbers [HALF_NUMBER, NUMBER). */
+  for (i=0; i<HALF_NUMBER; ++i)
+    {
+      ucl_vector_pop_back(vector);
+    }
+
+  assert(ucl_vector_size(vector) == HALF_NUMBER);
+
+  /* Assert numbers [0, HALF_NUMBER). */
+
+  for (i=0; i<HALF_NUMBER; ++i)
+    {
+      p = ucl_vector_index_to_slot(vector, i);
+      ucl_debug("got %d", *p);
+      assert(i == *p);
+    }
+
+  /* Pop numbers [(NUMBER-1), HALF_NUMBER+1]. */
   for (i=0; i<NUMBER; ++i)
     {
       ucl_vector_pop_back(vector);
@@ -156,21 +173,23 @@ test (void)
   /* Assert numbers [0, (NUMBER-1)]. */
   for (i=0; i<NUMBER; ++i)
     {
+      assert(ucl_vector_index_is_valid(vector, i));
       p = ucl_vector_index_to_slot(vector, i);
       assert(i == *p);
     }
 
   /* Pop numbers [0, HALF_NUMBER]. */
-  for (i=0; i<NUMBER-HALF_NUMBER; ++i)
+  for (i=0; i<HALF_NUMBER; ++i)
     {
       ucl_vector_pop_back(vector);
     }
 
   assert(ucl_vector_size(vector) == HALF_NUMBER);
 
-  /* Assert numbers [HALF_NUMBER, (NUMBER-1)]. */
-  for (i=HALF_NUMBER; i<NUMBER; ++i)
+  /* Assert numbers [0, HALF_NUMBER). */
+  for (i=0; i<HALF_NUMBER; ++i)
     {
+      assert(ucl_vector_index_is_valid(vector, i));
       p = ucl_vector_index_to_slot(vector, i);
       assert(i == *p);
     }

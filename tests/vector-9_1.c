@@ -51,7 +51,7 @@ test (void)
   assert(ucl_vector_number_of_free_slots(vector) == UCL_VECTOR_BUFFER_PAGE_SIZE);
 
   assert( ucl_vector_number_of_step_up_slots(vector) == UCL_VECTOR_BUFFER_PAGE_SIZE );
-  assert( ucl_vector_number_of_step_down_slots(vector) == UCL_VECTOR_BUFFER_PAGE_SIZE);
+  assert( ucl_vector_number_of_step_down_slots(vector) == UCL_VECTOR_BUFFER_PAGE_SIZE+1);
   assert( ucl_vector_number_of_padding_slots(vector) == 0);
   
   assert( ucl_vector_slot_dimension(vector) == sizeof(ucl_byte_t) );

@@ -108,9 +108,6 @@ test (void)
   assert( ucl_vector_number_of_free_slots(vector) == STEP_DOWN);
   ucl_vector_restrict(vector);
   ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
-  assert( ucl_vector_number_of_free_slots(vector) == \
-	  ucl_vector_number_of_step_down_slots(vector));
-
 
   ucl_vector_destructor(vector);
 }

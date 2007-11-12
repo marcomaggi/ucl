@@ -730,6 +730,10 @@ typedef void       ucl_vector_copy_range_proto_t (ucl_vector_t target, ucl_vecto
 typedef void       ucl_vector_set_block_proto_t (ucl_vector_t target, ucl_vector_index_t position, ucl_block_t source);
 typedef void       ucl_vector_get_block_proto_t (ucl_block_t target, ucl_vector_index_t position, ucl_vector_t source);
 typedef ucl_bool_t ucl_vector_index_is_valid_new_proto_t (const ucl_vector_t self, ucl_vector_index_t idx);
+typedef ucl_bool_t ucl_vector_will_enlarge_proto_t (ucl_vector_t self);
+typedef ucl_bool_t ucl_vector_will_restrict_proto_t (ucl_vector_t self);
+typedef size_t     ucl_vector_enlarged_size_proto_t (ucl_vector_t self);
+typedef size_t     ucl_vector_restricted_size_proto_t (ucl_vector_t self);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -822,6 +826,10 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_set_block_proto_t        * stub_ucl_vector_set_block;
   ucl_vector_get_block_proto_t        * stub_ucl_vector_get_block;
   ucl_vector_index_is_valid_new_proto_t * stub_ucl_vector_index_is_valid_new;
+  ucl_vector_will_enlarge_proto_t     * stub_ucl_vector_will_enlarge;
+  ucl_vector_will_restrict_proto_t    * stub_ucl_vector_will_restrict;
+  ucl_vector_enlarged_size_proto_t    * stub_ucl_vector_enlarged_size;
+  ucl_vector_restricted_size_proto_t  * stub_ucl_vector_restricted_size;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -919,6 +927,10 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_set_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_set_block)
 #define ucl_vector_get_block       ((ucl_vector_stub_table_p)->stub_ucl_vector_get_block)
 #define ucl_vector_index_is_valid_new  ((ucl_vector_stub_table_p)->stub_ucl_vector_index_is_valid_new)
+#define ucl_vector_will_enlarge    ((ucl_vector_stub_table_p)->stub_ucl_vector_will_enlarge)
+#define ucl_vector_will_restrict   ((ucl_vector_stub_table_p)->stub_ucl_vector_will_restrict)
+#define ucl_vector_enlarged_size   ((ucl_vector_stub_table_p)->stub_ucl_vector_enlarged_size)
+#define ucl_vector_restricted_size  ((ucl_vector_stub_table_p)->stub_ucl_vector_restricted_size)
 
 #endif /* defined UCL_ENABLE_STUB */
 

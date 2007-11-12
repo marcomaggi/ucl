@@ -33,7 +33,7 @@ void
 test (void)
 {
   ucl_heap_t		heap;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { .data = { .ptr = NULL }, .func = ucl_intcmp };
   
   ucl_heap_constructor(heap, compar);
   ucl_heap_destructor(heap);

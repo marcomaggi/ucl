@@ -27,6 +27,7 @@
    
 */
 
+#define UCL_DEBUGGING		0
 #include "maptest.h"
 
 void
@@ -40,8 +41,6 @@ test (void)
   ucl_iterator_t	iterator;
   ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
-
-/*  #define UCL_DEBUGGING */
 
   ucl_map_constructor(map, UCL_ALLOW_MULTIPLE_OBJECTS, compar);
 
@@ -70,7 +69,7 @@ test (void)
     {
       j = 0;
 
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       printf("search %d\n", i);
 #endif
       key.integer = i;
@@ -79,18 +78,18 @@ test (void)
 	   ucl_iterator_more(iterator);
 	   ucl_iterator_next(iterator))
 	{
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
   	  printf("iter %d\n", j);
 #endif
 	  link_p = ucl_iterator_ptr(iterator);
 	  key = ucl_map_getkey(link_p);
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       	  printf("found %d\n", key.integer);
 #endif
   	  assert(key.integer == i);
 	  ++j;
 	}
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       printf("end j %d\n", j);
       printf("end %d\n", i);
 #endif

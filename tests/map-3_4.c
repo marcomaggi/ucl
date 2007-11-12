@@ -27,6 +27,7 @@
    
 */
 
+#define UCL_DEBUGGING		0
 #include "maptest.h"
 
 void
@@ -40,9 +41,6 @@ test (void)
   ucl_map_link_t *	otherPtr;
   ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
 
-  /*
-#define UCL_DEBUGGING
-  */
 
   ucl_map_constructor(map, 0, compar);
 
@@ -71,14 +69,14 @@ test (void)
 	}
 
       key = ucl_map_getkey(link_p);
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       printf("key %d\n", key.integer);fflush(stdout);
 #endif
       val = ucl_map_getkey(otherPtr);
       assert(key.integer == val.integer+1);
 
       link_p = otherPtr;
-#ifdef UCL_DEBUGGING
+#if (UCL_DEBUGGING == 1)
       printf("other %p\n", link_p);fflush(stdout);
 #endif
     }

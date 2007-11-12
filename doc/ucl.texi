@@ -5728,6 +5728,10 @@ units.
 @deftypefun void ucl_vector_constructor (ucl_vector_t @var{self})
 Allocate memory with the current @ucl{} allocator and initialise the
 fields of @var{self}.
+
+If the @code{step_up} field holds a value greater than the
+@code{step_down} field: the @code{step_down} field is changed to
+@code{step_up+1}. @ref{vector memory} for details.
 @end deftypefun
 
 
@@ -6444,24 +6448,22 @@ selected by @var{range}. @var{range} must be a valid range for
 
 
 @noindent
-The allocation behaviour for a vector container is ruled by the
-arguments handed to the constructor (@ref{vector creation}). The rules
-are:
+The allocation policy for a vector container is ruled by the arguments
+handed to the initialisation functions (@ref{vector creation}). The
+rules are:
 
 @itemize @bullet
 @item
-an initial number of element slots is selected and an array of such size
-is allocated;
+an initial number of slots is selected and an array of such size is
+allocated;
 
 @item
 a number of slots to be kept free at the beginning of the array is
-selected, so it can be used to move elements during the insert
-operation, saving some time when new elements are added at the
-beginning;
+selected, so elements can be moved there when inserting new slots;
 
 @item
-the array is reallocated for enlarging when one of the two conditions
-are true:
+the function @function{ucl_vector_enlarge} enlarges the array when one
+of the two conditions are true:
 
 @itemize -
 @item
@@ -6483,25 +6485,71 @@ new_size = old_size + (rest)? rest : step_up
 @end example
 
 @item
-a ``step down'' number is selected: when the code has to determine if
-the array has to be reallocated for restriction, the operation is
-performed if there are at least that number of free slots; the new size
-is computed with the following formula (in units of slot size):
+a ``step down'' number is selected: when @function{ucl_vector_restrict}
+has to determine if the array has to be reallocated for restriction, the
+operation is performed if there are at least that number of free slots;
+the new size is computed with the following formula (in units of slot
+size):
 
 @example
 rest = old_size % step_up
 new_size = old_size - step_down
 new_size += (rest)? rest : step_up
 @end example
+
+@noindent
+example:
+
+@example
+old_size  = 20
+step_up   = 4
+step_down = 10
+
+rest     = 20 %  4 =  0
+new_size = 20 - 10 = 10
+new_size = 10 +  4 = 14
+@end example
+
+@noindent
+notice that if @code{step_up > step_down} it can result that
+@code{new_size >= old_size}, example:
+
+@example
+old_size  = 10
+step_up   = 4
+step_down = 2
+
+rest     = 10 % 4 = 2
+new_size = 10 - 2 = 8
+new_size =  8 + 2 = 10
+@end example
+
+@noindent
+another example:
+
+@example
+old_size  = 11
+step_up   = 4
+step_down = 2
+
+rest     = 11 % 4 = 3
+new_size = 11 - 2 = 9
+new_size =  9 + 3 = 12
+@end example
+
+@noindent
+that is why @function{ucl_vector_constructor} sets @code{step_down} to a
+value greater than @code{step_up}.
 @end itemize
 
 
-The step up and step down numbers provide the hysteresis required to
-minimise the number of reallocations; to have reallocation hysteresis,
-the step down number must be greater than the step up.
-
 By default the @ucl{} allocator is used (@ref{memory functions}), but it
-is possible to register an allocator specific for a vector.
+is possible to register a vector--specific allocator.
+
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@subsubsection Enlarging
 
 
 @deftypefun void ucl_vector_enlarge (ucl_vector_t @var{self})
@@ -6512,6 +6560,19 @@ nothing happens; else the array is reallocated and enlarged according to
 the reallocation rules.
 
 An error reallocating memory does not corrupt the vector.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_vector_will_enlarge (ucl_vector_t @var{self})
+Return true if the next call to @function{ucl_vector_enlarge} will
+reallocate the vector.
+@end deftypefun
+
+
+@deftypefun size_t ucl_vector_enlarged_size (ucl_vector_t @var{self})
+Return the number of allocated slots after a reallocation for
+enlarging. This function returns a meaningful value only when
+@function{ucl_vector_will_enlarge} returns true.
 @end deftypefun
 
 
@@ -6535,6 +6596,11 @@ limits, across the current upper index limit.
 @end deftypefun
 
 
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@subsubsection Restricting
+
+
 @deftypefun void ucl_vector_restrict (ucl_vector_t @var{self})
 Check if there are enough free slots in the allocated memory so that
 it's correct to restrict the array: if there aren't, nothing happens;
@@ -6543,6 +6609,22 @@ reallocation rules.
 
 An error reallocating memory does not corrupt the vector.
 @end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_vector_will_restrict (ucl_vector_t @var{self})
+Return true if the next call to @function{ucl_vector_restrict} will
+reallocate the vector.
+@end deftypefun
+
+
+@deftypefun size_t ucl_vector_restricted_size (ucl_vector_t @var{self})
+Return the number of allocated slots after a reallocation for
+restricting. This function returns a meaningful value only when
+@function{ucl_vector_will_restrict} returns true.
+@end deftypefun
+
+
+@subsubsection Miscellaneous functions
 
 
 @deftypefun void ucl_vector_set_memory_to_zero (ucl_vector_t @var{self})
@@ -6561,8 +6643,14 @@ reallocation.
 @deftypefun void ucl_vector_register_allocator (ucl_vector_t @var{self}, ucl_memory_allocator_t @var{allocator})
 Register a new allocator. If this function is not used: the default
 allocator is set.
+
+It is safe to call this function only between a call to
+@function{ucl_vector_initialise} and a call to
+@function{ucl_vector_constructor}.
 @end deftypefun
 
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node vector as pqueue

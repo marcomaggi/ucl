@@ -39,7 +39,7 @@ test (void)
   int			i;
   ucl_heap_node_t *	node_p;
   ucl_value_t		val;
-  ucl_valcmp_t		compar = { NULL, ucl_intcmp };
+  ucl_valcmp_t		compar = { .data = { .ptr = NULL }, .func = ucl_intcmp };
 
   static int lst1[NUMBER] = { 4, 7, 2, 3, 0, 8, 6, 1, 5, 9, 10, 11, 12, 13, 14 };
   static int lst2[NUMBER] = { 0, 2, 3, 4, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };

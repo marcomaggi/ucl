@@ -431,7 +431,12 @@ ucl_callback_invoke (ucl_callback_t callback, ucl_value_t custom_data)
  ** Debug module.
  ** ----------------------------------------------------------*/
 
+#ifndef UCL_DEBUGGING
+#  define UCL_DEBUGGING		0
+#endif
+
 #if (UCL_DEBUGGING == 1)
+#  warning UCL debugging is on
 #  define ucl_debug(...)	ucl_debug_print(__func__,__VA_ARGS__)
 #else
 #  define ucl_debug(...)	/* empty */
@@ -1107,6 +1112,10 @@ ucl_decl void ucl_vector_iterator_range_forward	(const ucl_vector_t self, ucl_ra
 ucl_decl void ucl_vector_iterator_range_backward(const ucl_vector_t self, ucl_range_t range, ucl_iterator_t iterator);
 
 /* memory allocation */
+ucl_decl ucl_bool_t ucl_vector_will_enlarge	(ucl_vector_t self);
+ucl_decl ucl_bool_t ucl_vector_will_restrict	(ucl_vector_t self);
+ucl_decl size_t     ucl_vector_enlarged_size	(ucl_vector_t self);
+ucl_decl size_t     ucl_vector_restricted_size	(ucl_vector_t self);
 ucl_decl void ucl_vector_enlarge		(ucl_vector_t self);
 ucl_decl void ucl_vector_restrict		(ucl_vector_t self);
 ucl_decl void ucl_vector_set_memory_to_zero	(ucl_vector_t self);
