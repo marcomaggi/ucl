@@ -36,8 +36,14 @@ test (void)
   ucl_hash_entry_t *	entPtr;
   ucl_value_t		val, key, val1, key1;
   unsigned		i;
-  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
-  ucl_hashcmp_t		H = { { .ptr = NULL}, ucl_hash_string };
+  ucl_hashcmp_t		key_hash_function = {
+    .data = { .ptr = NULL},
+    .func = ucl_hash_string
+  };
+  ucl_valcmp_t		key_comparison_function = {
+    .data = { .ptr = NULL},
+    .func = ucl_strcmp
+  };
 
 
   static const char *strs[] = {
@@ -46,7 +52,8 @@ test (void)
   };
 
 
-  ucl_hash_constructor(hash, compar, H);
+  ucl_hash_initialise(hash, key_comparison_function, key_hash_function);
+  ucl_hash_constructor(hash);
   assert(ucl_hash_size(hash) == 0);
 
   /* insert */
@@ -130,14 +137,35 @@ test (void)
     }
 
   assert(ucl_hash_size(hash) == 0);
+
+  /* insert */
+
+  for (i=0; i<10; ++i)
+    {
+      entPtr = alloc_link();
+      assert(entPtr);
+
+      key.str = (char *)strs[i];
+      val.str = (char *)strs[i];
+
+      ucl_hash_setkey(entPtr, key);
+      ucl_hash_setval(entPtr, val);
+
+      ucl_hash_insert(hash, entPtr);
+
+      assert(ucl_hash_size(hash) == i+1);
+    }
+  assert(ucl_hash_size(hash) == 10);
+
+  /* destroy */
+
+  while (entPtr = ucl_hash_first(hash))
+    {
+      ucl_hash_extract(hash, entPtr);
+      free(entPtr);
+    }
 
   ucl_hash_destructor(hash);
 }
 
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/

@@ -95,7 +95,8 @@ static const ucl_hash_stub_table_t ucl_hash_stub_table = {
   ucl_hash_enlarge,
   ucl_hash_iterator,
   ucl_hash_destructor,
-  ucl_hash_register_allocator
+  ucl_hash_initialise,
+  ucl_hash_first
 };
 
 /* Functions stub table for the "heap" module. */

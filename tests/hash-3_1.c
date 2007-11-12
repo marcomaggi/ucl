@@ -26,9 +26,7 @@
    02111-1307, USA.
 */
 
-#if 0
-#  define UCL_DEBUGGING
-#endif
+#define UCL_DEBUGGING	0
 #include "hashtest.h"
 
 void
@@ -39,11 +37,18 @@ test (void)
   ucl_value_t		val, key, val1, key1;
   ucl_iterator_t	iterator;
   int			i;
-  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
-  ucl_hashcmp_t		H = { { .ptr = NULL}, hash_num };
+  ucl_hashcmp_t		key_hash_function = {
+    .data = { .ptr = NULL},
+    .func = hash_num
+  };
+  ucl_valcmp_t		key_comparison_function = {
+    .data = { .ptr = NULL},
+    .func = ucl_intcmp
+  };
 
 
-  ucl_hash_constructor(hash, compar, H);
+  ucl_hash_initialise(hash, key_comparison_function, key_hash_function);
+  ucl_hash_constructor(hash);
   assert(ucl_hash_size(hash) == 0);
 
   ucl_debug("number of elements %d", NUMBER);

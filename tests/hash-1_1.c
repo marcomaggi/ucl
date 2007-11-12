@@ -32,10 +32,17 @@ void
 test (void)
 {
   ucl_hash_t	hash;
-  ucl_hashcmp_t	H = { { .ptr = NULL}, ucl_hash_string };
-  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_hashcmp_t	key_hash_function = {
+    .data = { .ptr = NULL},
+    .func = ucl_hash_string
+  };
+  ucl_valcmp_t	key_comparison_function = {
+    .data = { .ptr = NULL},
+    .func = ucl_intcmp
+  };
 
-  ucl_hash_constructor(hash, compar, H);
+  ucl_hash_initialise(hash, key_comparison_function, key_hash_function);
+  ucl_hash_constructor(hash);
   ucl_hash_destructor(hash);
 }
 

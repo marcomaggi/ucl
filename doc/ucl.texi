@@ -3541,8 +3541,8 @@ the keys.
 
 
 @deftp {Struct Typedef} ucl_hash_struct_t
-The base structure. Two interesting fields are: @code{dim}, the number
-of allocated buckets; @code{used}, the number of used buckets.
+The base structure. The vector of buckets is available as the field
+@code{ucl_vector_t buckets}.
 @end deftp
 
 
@@ -3574,9 +3574,9 @@ A vector of pointers is allocated by the constructor; the hash table
 module makes use of a @code{ucl_vector_t}. Each pointer, called
 ``bucket'' in this document, can be @null{} (empty bucket) or
 referencing an entry structure. Entry structures are chained in a linked
-list. The vector is implemented as @ucl{} vector but the linked list is
-not a @ucl{} list: it is implemented with pointers in entry structures
-(@ref{vector}).
+list. The vector is implemented as @ucl{} vector (@ref{vector}) but the
+linked list is not a @ucl{} list: it is implemented with pointers in
+entry structures.
 
 Let's say that the vector has @code{dim} buckets.
 
@@ -3635,24 +3635,67 @@ used to enlarge (and you have the code).
 @subsection Creating and destroying hash tables
 
 
-@deftypefun {void *} ucl_hash_constructor (@var{self}, @var{dim}, @var{keycmp}, @var{hash})
-Initialise a hash table. Arguments:
+@noindent
+The construction of a hash table is split in two steps, to allow custom
+configuration of the vector of buckets. A simple construction, using the
+default values, for a table using strings as keys goes like this:
 
-@table @code
-@item ucl_hash_t @var{self}
-pointer to the already allocated structure;
+@example
+ucl_hash_t      table;
+ucl_valcmp_t    key_comparison_function = @{
+  .data = @{ .ptr = NULL @},
+  .func = ucl_strcmp
+@};
+ucl_valcmp_t    key_hash_function       = @{
+  .data = @{ .ptr = NULL @},
+  .func = ucl_hash_string
+@};
 
-@item size_t @var{dim}
-the initial number of buckets;
+ucl_hash_initialise(table, key_comparison_function, key_hash_function);
+ucl_hash_constructor(table);
+@end example
 
-@item ucl_valcmp_t @var{keycmp}
-the function+context used to compare keys;
+@noindent
+to configure a custom initial size and step up parameter for the vector
+of buckets:
 
-@item ucl_hashcmp_t @var{hash}
-the hash computation structure, @ref{typedefs hash}.
-@end table
+@example
+ucl_hash_t      table;
+ucl_valcmp_t    key_comparison_function = @{
+  .data = @{ .ptr = NULL @},
+  .func = ucl_strcmp
+@};
+ucl_valcmp_t    key_hash_function       = @{
+  .data = @{ .ptr = NULL @},
+  .func = ucl_hash_string
+@};
 
-Returns @null{} if an error allocating the vector of buckets occurred.
+ucl_hash_initialise(table, key_comparison_function, key_hash_function);
+ucl_vector_initialise_size(table->buckets, 256);
+ucl_vector_initialise_step_up(table->buckets, 256);
+ucl_hash_constructor(table);
+@end example
+
+
+@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_valcmp_t @var{keycmp}, ucl_hashcmp_t @var{hash})
+Initialise the hash table referenced by @var{self}.
+
+The initial number of buckets is set to the preprocessor symbol
+@code{UCL_HASH_DEFAULT_SIZE}, which defaults to @code{16}.  The vector
+of buckets is initialised to use the default @ucl{} memory allocator.
+
+@var{keycmp} is the function+context used to compare keys.
+
+@var{hash} is the function+context used to compute the hash value of
+keys, @ref{typedefs hash}.
+@end deftypefun
+
+
+@deftypefun void ucl_hash_constructor (ucl_hash_t @var{self})
+Build the hash table referenced by @var{self}.
+
+Notice that this function configures the padding area of the vector of
+buckets to be of size zero.
 @end deftypefun
 
 
@@ -3662,10 +3705,21 @@ must be extracted from the table.
 @end deftypefun
 
 
-@deftypefun void ucl_hash_register_allocator (ucl_hash_t @var{self}, ucl_memory_allocator_t @var{allocator})
-Register a new allocator. If this function is not used: the default
-allocator is set.
-@end deftypefun
+Example of destruction, using the standard @function{free} function to
+release the memory allocated for the entry:
+
+@example
+ucl_hash_t              table;
+ucl_hash_entry_t *      entry_p;
+
+while (entry_p = ucl_hash_first(table))
+  @{
+      ucl_hash_extract(table, entry_p);
+      free(entry_p);
+  @}
+ucl_hash_destructor(table);
+@end example
+
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -3737,7 +3791,7 @@ key     = ...;
 entry_p = ucl_hash_find(hash, key);
 if (NULL != entry_p)
   @{
-    ucl_hash_extract(hash, ent_p);
+    ucl_hash_extract(hash, entry_p);
 
     key1  = ucl_hash_getkey(entry_p);
     /* destroy key1 if needed */
@@ -3762,9 +3816,19 @@ pointer to the entry or @null{} if the key was not found.
 @end deftypefun
 
 
+@deftypefun {ucl_hash_entry_t *} ucl_hash_first (const ucl_hash_t @var{self})
+Return a pointer to the first entry in the table: the first link in the
+list of the first non--@null{} bucket. If the has table is empty: return
+@null{}.
+@end deftypefun
+
+
 @deftypefun size_t ucl_hash_size (const ucl_hash_t @var{self})
 Return a value representing the number of entries in the table.
 @end deftypefun
+
+
+@subsubsection Key functions
 
 
 @deftypefun void ucl_hash_setkey (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newkey})
@@ -3776,6 +3840,9 @@ overwritten.
 @deftypefun ucl_value_t ucl_hash_getkey (const ucl_hash_entry_t *@var{ent_p})
 Return the key stored in an entry structure.
 @end deftypefun
+
+
+@subsubsection Value functions
 
 
 @deftypefun void ucl_hash_setval (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newval})

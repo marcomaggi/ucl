@@ -1200,14 +1200,16 @@ ucl_hash_getval (const ucl_hash_entry_t * entry_p)
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
+ucl_decl void ucl_hash_initialise  (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
+ucl_decl void ucl_hash_constructor (ucl_hash_t this);
+ucl_decl void ucl_hash_destructor  (ucl_hash_t this);
+
 ucl_decl void ucl_hash_insert    (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 ucl_decl void ucl_hash_extract   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
-ucl_decl ucl_hash_entry_t * ucl_hash_find (const ucl_hash_t this, const ucl_value_t key);
+ucl_decl ucl_hash_entry_t * ucl_hash_find  (const ucl_hash_t this, const ucl_value_t key);
+ucl_decl ucl_hash_entry_t * ucl_hash_first (const ucl_hash_t this);
 ucl_decl void ucl_hash_enlarge   (ucl_hash_t this);
 ucl_decl void ucl_hash_iterator  (const ucl_hash_t this, ucl_iterator_t iterator);
-ucl_decl void ucl_hash_destructor (ucl_hash_t this);
-ucl_decl void ucl_hash_register_allocator (ucl_hash_t this, ucl_memory_allocator_t allocator);
 
 #endif
 

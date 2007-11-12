@@ -307,14 +307,15 @@ extern const ucl_graph_stub_table_t * ucl_graph_stub_table_p;
 /* Function type declarations for the "hash" module.
    A typedef for each function in the module. */
 
-typedef void       ucl_hash_constructor_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
+typedef void       ucl_hash_constructor_proto_t (ucl_hash_t this);
 typedef void       ucl_hash_insert_proto_t    (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 typedef void       ucl_hash_extract_proto_t   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 typedef ucl_hash_entry_t * ucl_hash_find_proto_t (const ucl_hash_t this, const ucl_value_t key);
 typedef void       ucl_hash_enlarge_proto_t   (ucl_hash_t this);
 typedef void       ucl_hash_iterator_proto_t  (const ucl_hash_t this, ucl_iterator_t iterator);
 typedef void       ucl_hash_destructor_proto_t (ucl_hash_t this);
-typedef void       ucl_hash_register_allocator_proto_t (ucl_hash_t this, ucl_memory_allocator_t allocator);
+typedef void       ucl_hash_initialise_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
+typedef ucl_hash_entry_t * ucl_hash_first_proto_t (const ucl_hash_t this);
 
 /* Stub table type declaration for the "hash" module.
    A struct holding a pointer for each function in the module. */
@@ -327,7 +328,8 @@ typedef struct ucl_hash_stub_table_t {
   ucl_hash_enlarge_proto_t            * stub_ucl_hash_enlarge;
   ucl_hash_iterator_proto_t           * stub_ucl_hash_iterator;
   ucl_hash_destructor_proto_t         * stub_ucl_hash_destructor;
-  ucl_hash_register_allocator_proto_t * stub_ucl_hash_register_allocator;
+  ucl_hash_initialise_proto_t         * stub_ucl_hash_initialise;
+  ucl_hash_first_proto_t              * stub_ucl_hash_first;
 } ucl_hash_stub_table_t;
 
 /* Stub table macros definition for the "hash" module.
@@ -345,7 +347,8 @@ extern const ucl_hash_stub_table_t * ucl_hash_stub_table_p;
 #define ucl_hash_enlarge           ((ucl_hash_stub_table_p)->stub_ucl_hash_enlarge)
 #define ucl_hash_iterator          ((ucl_hash_stub_table_p)->stub_ucl_hash_iterator)
 #define ucl_hash_destructor        ((ucl_hash_stub_table_p)->stub_ucl_hash_destructor)
-#define ucl_hash_register_allocator  ((ucl_hash_stub_table_p)->stub_ucl_hash_register_allocator)
+#define ucl_hash_initialise        ((ucl_hash_stub_table_p)->stub_ucl_hash_initialise)
+#define ucl_hash_first             ((ucl_hash_stub_table_p)->stub_ucl_hash_first)
 
 #endif /* defined UCL_ENABLE_STUB */
 

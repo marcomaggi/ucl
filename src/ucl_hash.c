@@ -63,8 +63,8 @@ static ucl_iterator_next_t	iterator_next;
  ** Construction.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-10-40) void
-ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash)
+stub(2007-11-12-10-03-54) void
+ucl_hash_initialise (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash)
 {
   assert(this);
   assert(hash.func);
@@ -73,11 +73,19 @@ ucl_hash_constructor (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash)
   ucl_vector_initialise(this->buckets, sizeof(entry_t **));
   ucl_vector_initialise_pad(this->buckets, 0);
   ucl_vector_initialise_size(this->buckets, UCL_HASH_DEFAULT_SIZE);
+
+  this->hash	= hash;
+  this->compar	= compar;
+}
+stub(2005-09-23-18-10-40) void
+ucl_hash_constructor (ucl_hash_t this)
+{
+  assert(this);
+
+  ucl_vector_initialise_pad(this->buckets, 0);
   ucl_vector_constructor(this->buckets);
   ucl_vector_mark_all_slots_as_used(this->buckets);
   ucl_vector_set_memory_to_zero(this->buckets);
-  this->hash	= hash;
-  this->compar	= compar;
   this->size	= 0;
   this->number_of_used_buckets = 0;
 }
@@ -87,11 +95,6 @@ ucl_hash_destructor (ucl_hash_t this)
   assert(this);
   ucl_vector_destructor(this->buckets);
   ucl_struct_clean(this, ucl_hash_struct_t);
-}
-stub(2006-10-05-14-31-08) void
-ucl_hash_register_allocator (ucl_hash_t this, ucl_memory_allocator_t allocator)
-{
-  ucl_vector_register_allocator(this->buckets, allocator);
 }
 
 /* ------------------------------------------------------------ */
@@ -249,6 +252,24 @@ ucl_hash_find (const ucl_hash_t this, const ucl_value_t key)
       entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
     }
   return entry_in_list_p;
+}
+stub(2007-11-12-10-33-25) ucl_hash_entry_t *
+ucl_hash_first (const ucl_hash_t this)
+{
+  ucl_iterator_t	I;
+  entry_t *		slot;
+
+
+  assert(this);
+  if (0 == ucl_hash_size(this))
+    return NULL;
+
+  for (ucl_vector_iterator_forward(this->buckets, I); ucl_iterator_more(I); ucl_iterator_next(I))
+    {
+      slot = ucl_iterator_ptr(I);
+      if (slot) return *((entry_t **)slot);
+    }
+  return NULL;
 }
 
 /* ------------------------------------------------------------ */
