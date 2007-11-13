@@ -33,7 +33,7 @@ void
 test (void)
 {
   ucl_hash_t 		hash;
-  ucl_hash_entry_t *	entPtr;
+  ucl_hash_entry_t *	entry_p;
   ucl_value_t		val, key, val1, key1;
   unsigned		i;
   ucl_hashcmp_t		key_hash_function = {
@@ -60,16 +60,16 @@ test (void)
 
   for (i=0; i<10; ++i)
     {
-      entPtr = alloc_link();
-      assert(entPtr);
+      entry_p = alloc_link();
+      assert(entry_p);
 
       key.str = (char *)strs[i];
       val.str = (char *)strs[i];
 
-      ucl_hash_setkey(entPtr, key);
-      ucl_hash_setval(entPtr, val);
+      ucl_hash_setkey(entry_p, key);
+      ucl_hash_setval(entry_p, val);
 
-      ucl_hash_insert(hash, entPtr);
+      ucl_hash_insert(hash, entry_p);
 
       assert(ucl_hash_size(hash) == i+1);
     }
@@ -81,17 +81,17 @@ test (void)
     {
       key.str = (char *)strs[i];
 
-      entPtr = ucl_hash_find(hash, key);
-      assert(entPtr);
+      entry_p = ucl_hash_find(hash, key);
+      assert(entry_p);
 
-      key1 = ucl_hash_getkey(entPtr);
-      val1 = ucl_hash_getval(entPtr);
+      key1 = ucl_hash_getkey(entry_p);
+      val1 = ucl_hash_getval(entry_p);
 
       assert(key1.str == strs[i]);
       assert(val1.str == strs[i]);
 
-      ucl_hash_extract(hash, entPtr);
-      free(entPtr);
+      ucl_hash_extract(hash, entry_p);
+      free(entry_p);
 
       assert(ucl_hash_size(hash) == 10-i-1);
     }
@@ -101,16 +101,16 @@ test (void)
 
   for (i=0; i<10; ++i)
     {
-      entPtr = alloc_link();
-      assert(entPtr);
+      entry_p = alloc_link();
+      assert(entry_p);
 
       key.str = (char *)strs[i];
       val.str = (char *)strs[i];
 
-      ucl_hash_setkey(entPtr, key);
-      ucl_hash_setval(entPtr, val);
+      ucl_hash_setkey(entry_p, key);
+      ucl_hash_setval(entry_p, val);
 
-      ucl_hash_insert(hash, entPtr);
+      ucl_hash_insert(hash, entry_p);
 
       assert(ucl_hash_size(hash) == i+1);
     }
@@ -121,17 +121,17 @@ test (void)
   for (i=0; i<10; ++i)
     {
       key.str = (char *)strs[i];
-      entPtr = ucl_hash_find(hash, key);
-      assert(entPtr);
+      entry_p = ucl_hash_find(hash, key);
+      assert(entry_p);
 
-      key1 = ucl_hash_getkey(entPtr);
-      val1 = ucl_hash_getval(entPtr);
+      key1 = ucl_hash_getkey(entry_p);
+      val1 = ucl_hash_getval(entry_p);
 
       assert(key1.str == strs[i]);
       assert(val1.str == strs[i]);
 
-      ucl_hash_extract(hash, entPtr);
-      free(entPtr);
+      ucl_hash_extract(hash, entry_p);
+      free(entry_p);
 
       assert(ucl_hash_size(hash) == 10-i-1);
     }
@@ -142,16 +142,16 @@ test (void)
 
   for (i=0; i<10; ++i)
     {
-      entPtr = alloc_link();
-      assert(entPtr);
+      entry_p = alloc_link();
+      assert(entry_p);
 
       key.str = (char *)strs[i];
       val.str = (char *)strs[i];
 
-      ucl_hash_setkey(entPtr, key);
-      ucl_hash_setval(entPtr, val);
+      ucl_hash_setkey(entry_p, key);
+      ucl_hash_setval(entry_p, val);
 
-      ucl_hash_insert(hash, entPtr);
+      ucl_hash_insert(hash, entry_p);
 
       assert(ucl_hash_size(hash) == i+1);
     }
@@ -159,10 +159,10 @@ test (void)
 
   /* destroy */
 
-  while (entPtr = ucl_hash_first(hash))
+  while ((entry_p = ucl_hash_first(hash)))
     {
-      ucl_hash_extract(hash, entPtr);
-      free(entPtr);
+      ucl_hash_extract(hash, entry_p);
+      free(entry_p);
     }
 
   ucl_hash_destructor(hash);
