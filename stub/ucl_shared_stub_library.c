@@ -96,7 +96,8 @@ static const ucl_hash_stub_table_t ucl_hash_stub_table = {
   ucl_hash_iterator,
   ucl_hash_destructor,
   ucl_hash_initialise,
-  ucl_hash_first
+  ucl_hash_first,
+  ucl_hash_restrict
 };
 
 /* Functions stub table for the "heap" module. */
@@ -270,7 +271,8 @@ static const ucl_vector_stub_table_t ucl_vector_stub_table = {
   ucl_vector_will_enlarge,
   ucl_vector_will_restrict,
   ucl_vector_enlarged_size,
-  ucl_vector_restricted_size
+  ucl_vector_restricted_size,
+  ucl_vector_mark_allocated_range_as_used
 };
 
 /* Library stub table.

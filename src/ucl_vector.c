@@ -428,6 +428,23 @@ ucl_vector_mark_all_slots_as_used (ucl_vector_t self)
   self->first_used_slot = self->first_allocated_slot;
   self->last_used_slot  = self->last_allocated_slot;
 }
+stub(2007-11-13-10-36-00) void
+ucl_vector_mark_allocated_range_as_used (ucl_vector_t self, ucl_range_t range)
+{
+  void *	potential_first_used_slot;
+  void *	potential_last_used_slot;
+
+
+  potential_first_used_slot = self->first_allocated_slot + ucl_range_min(range) * self->slot_dimension;
+  potential_last_used_slot  = self->first_allocated_slot + ucl_range_max(range) * self->slot_dimension;
+  assert((ucl_byte_t *)potential_first_used_slot <= (ucl_byte_t *)potential_last_used_slot);
+  assert((ucl_byte_t *)potential_first_used_slot >= (ucl_byte_t *)self->first_allocated_slot);
+  assert((ucl_byte_t *)potential_first_used_slot <= (ucl_byte_t *)self->last_allocated_slot);
+  assert((ucl_byte_t *)potential_last_used_slot  >= (ucl_byte_t *)self->first_allocated_slot);
+  assert((ucl_byte_t *)potential_last_used_slot  <= (ucl_byte_t *)self->last_allocated_slot);
+  self->first_used_slot = potential_first_used_slot;
+  self->last_used_slot  = potential_last_used_slot;
+}
 stub(2006-03-04-08-08-21) void
 ucl_vector_reset (ucl_vector_t self)
 {
@@ -1177,6 +1194,8 @@ ucl_vector_enlarge (ucl_vector_t self)
 
   if (ucl_vector_will_enlarge(self))
     {
+      /* NOTE: the hash table expects  that the used bytes are not moved
+	 around when reallocating. */
       reallocate_block(self, compute_enlarged_size_in_bytes(self));
       ASSERT_INVARIANTS(self);
     }
@@ -1287,6 +1306,9 @@ ucl_vector_restrict (ucl_vector_t self)
       size_t	new_number_of_allocated_bytes	= compute_restricted_size_in_bytes(self);
 
 
+      /* NOTE: the hash table relies  on this operation; it expects that
+	 the   used   bytes   are   placed   at   the   beginning   when
+	 reallocating. */
       move_used_bytes_leave_requested_at_end(self, number_of_allocated_bytes - new_number_of_allocated_bytes);
       reallocate_block(self, new_number_of_allocated_bytes);
       move_used_bytes_at_pad_area_beginning(self);
@@ -1346,8 +1368,7 @@ reallocate_block (ucl_vector_t self, size_t new_number_of_allocated_bytes)
   self->first_allocated_slot	= p;
   self->first_used_slot		= p + offset_of_first_used_slot;
   self->last_used_slot		= p + offset_of_last_used_slot;
-  self->last_allocated_slot	= p + \
-    new_number_of_allocated_bytes - self->slot_dimension;
+  self->last_allocated_slot	= p + new_number_of_allocated_bytes - self->slot_dimension;
   ASSERT_INVARIANTS(self);
 }
 

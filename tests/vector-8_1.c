@@ -85,17 +85,17 @@ test (void)
   ucl_range_set_min_size(range, (TARGET_SIZE-SOURCE_FIRST), RANGE_SIZE);
   assert( ucl_vector_range_is_valid(source, range) );
 
-#if (defined UCL_DEBUGGING && 1)
+#if (UCL_DEBUGGING == 1)
   ucl_debug("target vector:");
-  for (i=0; i<ucl_vector_size(target); ++i)
+  for (i=0; i<(int)ucl_vector_size(target); ++i)
     {
       p = ucl_vector_index_to_slot(target, i);
       ucl_debug("%d %d", *p, i);
     }
 #endif
-#if (defined UCL_DEBUGGING && 1)
+#if (UCL_DEBUGGING == 1)
   ucl_debug("source vector:");
-  for (i=0; i<ucl_vector_size(source); ++i)
+  for (i=0; i<(int)ucl_vector_size(source); ++i)
     {
       p = ucl_vector_index_to_slot(source, i);
       ucl_debug("%d %d", *p, i);
@@ -108,9 +108,9 @@ test (void)
 
   assert(ucl_vector_size(target) == (TARGET_SIZE+RANGE_SIZE));
 
-#if (defined UCL_DEBUGGING && 1)
+#if (UCL_DEBUGGING == 1)
   ucl_debug("target vector:");
-  for (i=0; i<ucl_vector_size(target); ++i)
+  for (i=0; i<(int)ucl_vector_size(target); ++i)
     {
       p = ucl_vector_index_to_slot(target, i);
       ucl_debug("%d %d", *p, i);

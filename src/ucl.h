@@ -520,6 +520,18 @@ ucl_iterator_ptr (ucl_iterator_t iterator_p)
 #  define UCL_HASH_DEFAULT_SIZE		16
 #endif
 
+#ifndef UCL_HASH_MINIMUM_SIZE
+#  define UCL_HASH_MINIMUM_SIZE		16
+#endif
+
+#ifndef UCL_HASH_DEFAULT_STEP_UP
+#  define UCL_HASH_DEFAULT_STEP_UP	16
+#endif
+
+#ifndef UCL_HASH_DEFAULT_STEP_DOWN
+#  define UCL_HASH_DEFAULT_STEP_DOWN	((UCL_HASH_DEFAULT_STEP_UP)+1)
+#endif
+
 /* ------------------------------------------------------------ */
 
 
@@ -1118,13 +1130,15 @@ ucl_decl size_t     ucl_vector_enlarged_size	(ucl_vector_t self);
 ucl_decl size_t     ucl_vector_restricted_size	(ucl_vector_t self);
 ucl_decl void ucl_vector_enlarge		(ucl_vector_t self);
 ucl_decl void ucl_vector_restrict		(ucl_vector_t self);
-ucl_decl void ucl_vector_set_memory_to_zero	(ucl_vector_t self);
-ucl_decl void ucl_vector_mark_all_slots_as_used	(ucl_vector_t self);
-ucl_decl void ucl_vector_mark_as_used		(ucl_vector_t self, ucl_block_t used_block);
 ucl_decl void ucl_vector_enlarge_for_slots	(ucl_vector_t self, size_t required_free_slots);
 ucl_decl void ucl_vector_enlarge_for_range	(ucl_vector_t self, ucl_range_t range);
 
+/* miscellaneous memory related */
 ucl_decl void ucl_vector_register_allocator	(ucl_vector_t self, ucl_memory_allocator_t allocator);
+ucl_decl void ucl_vector_set_memory_to_zero	(ucl_vector_t self);
+ucl_decl void ucl_vector_mark_all_slots_as_used	(ucl_vector_t self);
+ucl_decl void ucl_vector_mark_as_used		(ucl_vector_t self, ucl_block_t used_block);
+ucl_decl void ucl_vector_mark_allocated_range_as_used (ucl_vector_t self, ucl_range_t range);
 ucl_decl void ucl_vector_swallow_block		(ucl_vector_t self, ucl_block_t block);
 
 /* searching */
@@ -1218,6 +1232,7 @@ ucl_decl void ucl_hash_extract   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 ucl_decl ucl_hash_entry_t * ucl_hash_find  (const ucl_hash_t this, const ucl_value_t key);
 ucl_decl ucl_hash_entry_t * ucl_hash_first (const ucl_hash_t this);
 ucl_decl void ucl_hash_enlarge   (ucl_hash_t this);
+ucl_decl void ucl_hash_restrict  (ucl_hash_t this);
 ucl_decl void ucl_hash_iterator  (const ucl_hash_t this, ucl_iterator_t iterator);
 
 #endif

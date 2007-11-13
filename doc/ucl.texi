@@ -3570,42 +3570,76 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 
 
 @noindent
-A vector of pointers is allocated by the constructor; the hash table
-module makes use of a @code{ucl_vector_t}. Each pointer, called
-``bucket'' in this document, can be @null{} (empty bucket) or
-referencing an entry structure. Entry structures are chained in a linked
-list. The vector is implemented as @ucl{} vector (@ref{vector}) but the
-linked list is not a @ucl{} list: it is implemented with pointers in
-entry structures.
+A @ucl{} vector of pointers is allocated by the constructor; each
+pointer, called ``bucket'' in this document, can be @null{} (empty
+bucket) or referencing an entry structure. Entry structures are chained
+in a linked list.
 
-Let's say that the vector has @code{dim} buckets.
+@example
+            buckets
+
+             ----         -----     -----
+            |  o-+------>|entry|-->|entry|
+            |----|        -----     -----
+empty  .....|NULL|
+buckets  .  |----|        -----
+         .  |  o-+------>|entry|
+         .  |----|        -----    -----
+         .  |  o-+--------------->|entry|
+         .  |----|                 -----
+          ..|NULL|
+             ----
+@end example
+
 
 The @ucl{} way of managing a vector is to allocate a block of memory,
 with hysteresis, and consider a sub--block of it as ``in use'', that is:
-as holding the collected data. We do not manage the vector of buckets in
-this way: we consider all the @code{dim} elements, the buckets, to be in
-use, even when the bucket is set to @null{}.
+as holding the collected data. When the hash table is constructed all
+the slots are marked as used, even when the bucket is set to
+@null{}. Reallocations can cause some of the slots to be unused, but if
+we never reallocate the vector all the memory is used to hold buckets.
 
 
-@subsubsection Elements insertion
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+@subsubsection Elements insertion and removal
 
 @noindent
 When inserting a new entry in the table, the hash function converts the
-keys to integers in the range 0@dots{}@code{dim}-1, selecting a bucket;
-then the bucket is examined: if it's @null{}, it's set to the entry
-pointer; if it's not @null{}, the referenced entry is appended to
-the new entry and the bucket is set to a pointer to the new entry.
+keys to integers in the range @code{[0, number_of_buckets)}, selecting a
+bucket; then the bucket is examined:
+
+@itemize
+@item
+if it's @null{}, it's set to the entry pointer:
 
 @example
-            ---
- ----   ...|new|               ----
-|    | .    ---               |    |
- ----  v  ---     ---          ----     ---     ---     ---
-|    |-->|en1|-->|en2|   ->   |    |-->|new|-->|en1|-->|en2|
- ----     ---     ---          ----     ---     ---     ---
-|    |                        |    |
- ----                          ----
+before the insertion           after the insertion
+
+   ----                           ----
+  |    |                         |    |
+   ----     -----                 ----     -----
+  |NULL|   |entry|               |  o-+-->|entry|
+   ----     -----                 ----     -----
+  |    |                         |    |
+   ----                           ----
 @end example
+
+@item
+if it's not @null{}, the referenced entry is appended to the new entry
+and the bucket is set to a pointer to the new entry:
+
+@example
+           ---
+ ---   ...|new|               ---
+|   | .    ---               |   |
+ ---  v  ---     ---          ---     ---     ---     ---
+| o-+-->|en1|-->|en2|   ->   | o-+-->|new|-->|en1|-->|en2|
+ ---     ---     ---          ---     ---     ---     ---
+|   |                        |   |
+ ---                          ---
+@end example
+@end itemize
 
 It's obvious how the extraction operation works.
 
@@ -3613,22 +3647,37 @@ If the keys are such that the hash function distributes entries
 uniformly over all the buckets, the time spent to find an entry is (more
 or less) constant.
 
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 @subsubsection Resizing
 
+
 @noindent
-When we request to enlarge the hash table, say to @code{newdim}, the
-vector is always enlarged: we are considering all the elements in use,
-so there is no hysteresis.
+Enlarging or restricting the hash table means enlarging or restricting
+te vector of buckets. This happens with rules similar, but not equal, to
+the ones for the @code{ucl_vector_t} structure; the differences are:
 
-Now the hash function converts keys in indexes in the range
-0@dots{}@code{newdim}-1, so all the entries already in the table are in
-the wrong position. They must be extracted and rehashed. This is
-expensive.
+@itemize
+@item
+when enlarging all the allocated slots are marked as used, so each
+allocated slot becomes a bucket;
 
-Can the vector be restricted? Sure! But all the entries must be rehashed
-with a lesser @code{dim} before the reallocation. This operation is
-currently not supported, but the algorithm is not different from the one
-used to enlarge (and you have the code).
+@item
+when restricting the number of used slots is artificially reduced by the
+amount of slots selected with the ``step down'' parameter of the @ucl{}
+vector;
+
+@item
+when restricting the number of used slots cannot become smaller than the
+amount selected by the preprocessor symbol @code{UCL_HASH_MINIMUM_SIZE},
+which defaults to @code{16}.
+@end itemize
+
+Enlarging and restricting changes the number of buckets, so it requires
+a rehashing of all the entries in the table: this is expensive.
+
+
+@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
 @node hash creation
@@ -3676,13 +3725,27 @@ ucl_vector_initialise_step_up(table->buckets, 256);
 ucl_hash_constructor(table);
 @end example
 
+@noindent
+the custimisations must go between @function{ucl_hash_initialise} and
+@function{ucl_hash_constructor}.
+
 
 @deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_valcmp_t @var{keycmp}, ucl_hashcmp_t @var{hash})
-Initialise the hash table referenced by @var{self}.
+Initialise the hash table referenced by @var{self}.  The @ucl{} vector
+of buckets is initialised to use the default @ucl{} memory allocator and
+with the following preprocessor symbols:
 
-The initial number of buckets is set to the preprocessor symbol
-@code{UCL_HASH_DEFAULT_SIZE}, which defaults to @code{16}.  The vector
-of buckets is initialised to use the default @ucl{} memory allocator.
+@table @code
+@item UCL_HASH_DEFAULT_SIZE
+the initial number of buckets, it defaults to @code{16};
+
+@item UCL_HASH_DEFAULT_STEP_UP
+the step up parameter, it defaults to @code{16};
+
+@item UCL_HASH_DEFAULT_STEP_DOWN
+the step down parameter, it defaults to
+@code{((UCL_HASH_DEFAULT_STEP_UP) + 1)};
+@end table
 
 @var{keycmp} is the function+context used to compare keys.
 
@@ -3700,22 +3763,29 @@ buckets to be of size zero.
 
 
 @deftypefun void ucl_hash_destructor (ucl_hash_t @var{self})
-Destroys a hash table. Before invoking this function all the entries
-must be extracted from the table.
+Destroys a hash table.
+
+@strong{Note}: before invoking this function all the entries must be
+extracted from the table.
 @end deftypefun
 
 
 Example of destruction, using the standard @function{free} function to
-release the memory allocated for the entry:
+release the memory allocated for the entries:
 
 @example
 ucl_hash_t              table;
 ucl_hash_entry_t *      entry_p;
+ucl_value_t             key, val;
 
-while (entry_p = ucl_hash_first(table))
+while ((entry_p = ucl_hash_first(table)))
   @{
-      ucl_hash_extract(table, entry_p);
-      free(entry_p);
+    ucl_hash_extract(table, entry_p);
+    key = ucl_hash_getval(entry_p);
+    /* free 'key' if needed */
+    val = ucl_hash_getval(entry_p);
+    /* free 'val' if needed */
+    free(entry_p);
   @}
 ucl_hash_destructor(table);
 @end example
@@ -3874,6 +3944,15 @@ expensive operation because it requires rehashing all the entries.
 If an error occurs reallocating the vector: the table is not corrupted.
 @end deftypefun
 
+
+@deftypefun void ucl_hash_restrict (ucl_hash_t @var{self})
+Restrict the table using the underlying @ucl{} vector module.  This is
+an expensive operation because it requires rehashing all the entries.
+
+If an error occurs reallocating the vector: the table is not corrupted.
+@end deftypefun
+
+
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 @c ------------------------------------------------------------
@@ -3893,7 +3972,7 @@ Example:
 @example
 ucl_hash_t          hash;
 ucl_hash_entry_t *  entry_p;
-ucl_value_t         key, value;
+ucl_value_t         key, val;
 ucl_iterator_t      iterator;
 
 hash  = ...;
@@ -3904,6 +3983,7 @@ for (ucl_hash_iterator(hash, iterator);
   @{
     entry_p = ucl_iterator_ptr(iterator);
     key     = ucl_hash_getkey(entry_p);
+    val     = ucl_hash_getval(entry_p);
     ...
   @}
 @end example
@@ -5799,6 +5879,13 @@ self->last_used_slot  = self->last_allocated_slot;
 @end example
 
 This is for special vector usage.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_mark_allocated_range_as_used (ucl_vector_t @var{self}, ucl_range_t @var{range})
+Mark a range of slots as used. This destroys the previous concept of
+used slots. Notice that @var{range} is relative to the allocated slots,
+not to the previously used slots.
 @end deftypefun
 
 

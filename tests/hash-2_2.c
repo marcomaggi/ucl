@@ -27,18 +27,101 @@
    
 */
 
-#if (0)
-#  define UCL_DEBUGGING
-#endif
+#define UCL_DEBUGGING		0
 #include "hashtest.h"
+
+#undef NUMBER
+#define NUMBER			100
+#undef HALF_NUMBER
+#define HALF_NUMBER		(NUMBER/2)
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Helper functions: insertiona and removal.
+ ** ----------------------------------------------------------*/
+
+static void
+insert_elements_in_range (ucl_hash_t table, int begin, int end)
+{
+  ucl_hash_entry_t *	entry_p;
+  ucl_value_t		key, val;
+
+
+  for (int i=begin; i<end; ++i)
+    {
+      entry_p = alloc_link();
+      assert(entry_p);
+	  
+      key.num = i;
+      val.num = i;
+      ucl_hash_setkey(entry_p, key);
+      ucl_hash_setval(entry_p, val);
+      ucl_hash_insert(table, entry_p);
+    }
+}
+static void
+extract_elements_in_range (ucl_hash_t table, int begin, int end)
+{
+  ucl_hash_entry_t *	entry_p;
+  ucl_value_t		key;
+
+
+  for (int i=begin; i<end; ++i)
+    {
+      key.num = i;
+      entry_p = ucl_hash_find(table, key);
+      assert(entry_p);
+      ucl_hash_extract(table, entry_p);
+      free(entry_p);
+    }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Helper functions: finding.
+ ** ----------------------------------------------------------*/
+
+static void
+find_elements (ucl_hash_t table, int upper_limit)
+{
+  ucl_hash_entry_t *	entry_p;
+  ucl_value_t		key, val;
+
+
+  ucl_debug("finding elements from 0 to %d", upper_limit);
+  for (int i=0; i<upper_limit; ++i)
+    {
+      key.num = i;
+      entry_p = ucl_hash_find(table, key);
+#if (UCL_DEBUGGING == 1)
+      if (! entry_p)
+	ucl_debug("not found %d", i);
+#endif
+      assert(entry_p);
+      key = ucl_hash_getkey(entry_p);
+      val = ucl_hash_getval(entry_p);
+      assert(key.num == i);
+      assert(val.num == i);
+    }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Test.
+ ** ----------------------------------------------------------*/
 
 void
 test (void)
 {
-  ucl_hash_t 		hash;
-  ucl_hash_entry_t *	entPtr;
-  ucl_value_t		val, key, val1, key1;
-  unsigned		i, j, beg, end;
+  ucl_hash_t 		table;
+  ucl_hash_entry_t *	entry_p;
+  int			j, beg, end;
   ucl_hashcmp_t		key_hash_function = {
     .data = { .ptr = NULL},
     .func = hash_num
@@ -49,90 +132,94 @@ test (void)
   };
 
 
-  ucl_hash_initialise(hash, key_comparison_function, key_hash_function);
-  ucl_hash_constructor(hash);
-#undef NUMBER
-#define NUMBER 20
+  ucl_hash_initialise(table, key_comparison_function, key_hash_function);
+  ucl_hash_constructor(table);
 
+/*   ucl_debug_off(); */
+
+  /* ------------------------------------------------------------ */
+
+  ucl_debug("testing enlarging");
   for (j=1; j<NUMBER; ++j)
     {
       beg = (j-1) * NUMBER;
       end = j     * NUMBER;
-      for (i=beg; i<end; ++i)
-	{
-	  entPtr = alloc_link();
-	  assert(entPtr);
-	  
-	  key.unum = i;
-	  val.unum = i;
-		    
-	  ucl_hash_setkey(entPtr, key);
-	  ucl_hash_setval(entPtr, val);
+      ucl_debug("inserting elements in [%d, %d)", beg, end);
+      insert_elements_in_range(table, beg, end);
 
-	  ucl_hash_insert(hash, entPtr);
-	  assert(ucl_hash_size(hash) == i+1);
-	}
+      assert(ucl_hash_size(table) == (size_t)end);
 
-      assert(ucl_hash_size(hash) == end);
-
-      for (i=beg; i<end; ++i)
-	{
-	  key.unum = i;
-	  
-	  entPtr = ucl_hash_find(hash, key);
-	  assert(entPtr);
-		    
-	  key1 = ucl_hash_getkey(entPtr);
-	  val1 = ucl_hash_getval(entPtr);
-		    
-	  assert(key1.unum == i);
-	  assert(val1.unum == i);
-	}
-      ucl_debug("post\n");      
-      ucl_hash_enlarge(hash); 
-      ucl_debug("post2\n");      
-      for (i=beg; i<end; ++i)
-	{
-	  key.unum = i;
-	  
-	  entPtr = ucl_hash_find(hash, key);
-	  assert(entPtr);
-	  
-	  key1 = ucl_hash_getkey(entPtr);
-	  val1 = ucl_hash_getval(entPtr);
-	  
-	  assert(key1.unum == i);
-	  assert(val1.unum == i);
-	}
+      find_elements(table, end); /* find the elements BEFORE rehashing */
+      ucl_hash_enlarge(table); 
+      find_elements(table, end); /* find the elements AFTER rehashing */
     }
 
-  j = ucl_hash_size(hash);
-  for (i=0; i<j; ++i)
+  /* ------------------------------------------------------------ */
+
+  ucl_debug("\n\n\ntesting restriction");
+  ucl_debug_on();
+  for (j=(NUMBER-1); j>1; --j)
     {
-      key.unum = i;
-      
-      entPtr = ucl_hash_find(hash, key);
-      assert(entPtr);
-      
-      key1 = ucl_hash_getkey(entPtr);
-      val1 = ucl_hash_getval(entPtr);
-      
-      assert(key1.unum == i);
-      assert(val1.unum == i);
-      
-      ucl_hash_extract(hash, entPtr);
-      free(entPtr);
-      assert(ucl_hash_size(hash) == j-i-1);
+      beg = (j-1) * NUMBER;
+      end = j     * NUMBER;
+      ucl_debug("extracting elements in [%d, %d)", beg, end);
+      extract_elements_in_range(table, beg, end);
+
+      assert(ucl_hash_size(table) == (size_t)beg);
+
+      find_elements(table, beg-1); /* find the elements BEFORE rehashing */
+      ucl_hash_restrict(table); 
+      find_elements(table, beg-1); /* find the elements AFTER rehashing */
     }
-  assert(ucl_hash_size(hash) == 0);
+  extract_elements_in_range(table, 0, NUMBER);
+  assert(ucl_hash_size(table) == 0);
+  ucl_hash_restrict(table); 
+  assert(ucl_hash_size(table) == 0);
+
+  /* ------------------------------------------------------------ */
+
+  ucl_debug("testing enlarging/restricting");
+  insert_elements_in_range(table, 0, 1000);
+  assert(ucl_hash_size(table) == 1000);
+
+  find_elements(table, 100); /* find the elements BEFORE rehashing */
+  ucl_hash_enlarge(table); 
+  find_elements(table, 100); /* find the elements AFTER rehashing */
+
+  extract_elements_in_range(table, 800, 1000);
+  assert(ucl_hash_size(table) == 800);
+
+  find_elements(table, 800); /* find the elements BEFORE rehashing */
+  ucl_hash_restrict(table); 
+  find_elements(table, 800); /* find the elements AFTER rehashing */
+
+  assert(ucl_hash_size(table) == 800);
+
+  insert_elements_in_range(table, 800, 900);
+  assert(ucl_hash_size(table) == 900);
+
+  find_elements(table, 900); /* find the elements BEFORE rehashing */
+  ucl_hash_enlarge(table); 
+  find_elements(table, 900); /* find the elements AFTER rehashing */
+
+  extract_elements_in_range(table, 400, 900);
+  assert(ucl_hash_size(table) == 400);
+
+  find_elements(table, 400); /* find the elements BEFORE rehashing */
+  ucl_hash_restrict(table); 
+  find_elements(table, 400); /* find the elements AFTER rehashing */
+
+  assert(ucl_hash_size(table) == 400);
+
+  /* ------------------------------------------------------------ */
   
-  ucl_hash_destructor(hash);
+  /* Destroy the table. */
+  while ((entry_p = ucl_hash_first(table)))
+    {
+      ucl_hash_extract(table, entry_p);
+      free(entry_p);
+    }
+  ucl_hash_destructor(table);
 }
 
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/

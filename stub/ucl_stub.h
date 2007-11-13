@@ -316,6 +316,7 @@ typedef void       ucl_hash_iterator_proto_t  (const ucl_hash_t this, ucl_iterat
 typedef void       ucl_hash_destructor_proto_t (ucl_hash_t this);
 typedef void       ucl_hash_initialise_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
 typedef ucl_hash_entry_t * ucl_hash_first_proto_t (const ucl_hash_t this);
+typedef void       ucl_hash_restrict_proto_t  (ucl_hash_t this);
 
 /* Stub table type declaration for the "hash" module.
    A struct holding a pointer for each function in the module. */
@@ -330,6 +331,7 @@ typedef struct ucl_hash_stub_table_t {
   ucl_hash_destructor_proto_t         * stub_ucl_hash_destructor;
   ucl_hash_initialise_proto_t         * stub_ucl_hash_initialise;
   ucl_hash_first_proto_t              * stub_ucl_hash_first;
+  ucl_hash_restrict_proto_t           * stub_ucl_hash_restrict;
 } ucl_hash_stub_table_t;
 
 /* Stub table macros definition for the "hash" module.
@@ -349,6 +351,7 @@ extern const ucl_hash_stub_table_t * ucl_hash_stub_table_p;
 #define ucl_hash_destructor        ((ucl_hash_stub_table_p)->stub_ucl_hash_destructor)
 #define ucl_hash_initialise        ((ucl_hash_stub_table_p)->stub_ucl_hash_initialise)
 #define ucl_hash_first             ((ucl_hash_stub_table_p)->stub_ucl_hash_first)
+#define ucl_hash_restrict          ((ucl_hash_stub_table_p)->stub_ucl_hash_restrict)
 
 #endif /* defined UCL_ENABLE_STUB */
 
@@ -734,6 +737,7 @@ typedef ucl_bool_t ucl_vector_will_enlarge_proto_t (ucl_vector_t self);
 typedef ucl_bool_t ucl_vector_will_restrict_proto_t (ucl_vector_t self);
 typedef size_t     ucl_vector_enlarged_size_proto_t (ucl_vector_t self);
 typedef size_t     ucl_vector_restricted_size_proto_t (ucl_vector_t self);
+typedef void       ucl_vector_mark_allocated_range_as_used_proto_t (ucl_vector_t self, ucl_range_t range);
 
 /* Stub table type declaration for the "vector" module.
    A struct holding a pointer for each function in the module. */
@@ -830,6 +834,7 @@ typedef struct ucl_vector_stub_table_t {
   ucl_vector_will_restrict_proto_t    * stub_ucl_vector_will_restrict;
   ucl_vector_enlarged_size_proto_t    * stub_ucl_vector_enlarged_size;
   ucl_vector_restricted_size_proto_t  * stub_ucl_vector_restricted_size;
+  ucl_vector_mark_allocated_range_as_used_proto_t * stub_ucl_vector_mark_allocated_range_as_used;
 } ucl_vector_stub_table_t;
 
 /* Stub table macros definition for the "vector" module.
@@ -931,6 +936,7 @@ extern const ucl_vector_stub_table_t * ucl_vector_stub_table_p;
 #define ucl_vector_will_restrict   ((ucl_vector_stub_table_p)->stub_ucl_vector_will_restrict)
 #define ucl_vector_enlarged_size   ((ucl_vector_stub_table_p)->stub_ucl_vector_enlarged_size)
 #define ucl_vector_restricted_size  ((ucl_vector_stub_table_p)->stub_ucl_vector_restricted_size)
+#define ucl_vector_mark_allocated_range_as_used  ((ucl_vector_stub_table_p)->stub_ucl_vector_mark_allocated_range_as_used)
 
 #endif /* defined UCL_ENABLE_STUB */
 
