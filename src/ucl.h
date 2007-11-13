@@ -1223,17 +1223,30 @@ ucl_hash_getval (const ucl_hash_entry_t * entry_p)
 
 #ifndef UCL_ENABLE_STUB
 
+/* construction and destruction */
 ucl_decl void ucl_hash_initialise  (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
 ucl_decl void ucl_hash_constructor (ucl_hash_t this);
 ucl_decl void ucl_hash_destructor  (ucl_hash_t this);
 
+/* insertion and removal */
 ucl_decl void ucl_hash_insert    (ucl_hash_t this, ucl_hash_entry_t *entry_p);
 ucl_decl void ucl_hash_extract   (ucl_hash_t this, ucl_hash_entry_t *entry_p);
+
+/* searching */
 ucl_decl ucl_hash_entry_t * ucl_hash_find  (const ucl_hash_t this, const ucl_value_t key);
 ucl_decl ucl_hash_entry_t * ucl_hash_first (const ucl_hash_t this);
+
+/* memory */
 ucl_decl void ucl_hash_enlarge   (ucl_hash_t this);
 ucl_decl void ucl_hash_restrict  (ucl_hash_t this);
+
+/* iteration */
 ucl_decl void ucl_hash_iterator  (const ucl_hash_t this, ucl_iterator_t iterator);
+
+/* statistics */
+ucl_decl size_t ucl_hash_number_of_used_buckets  (const ucl_hash_t self);
+ucl_decl size_t ucl_hash_bucket_chain_length	 (const ucl_hash_t this, ucl_vector_index_t position);
+ucl_decl double ucl_hash_average_search_distance (const ucl_hash_t this);
 
 #endif
 
@@ -1564,6 +1577,14 @@ static inline int
 ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb)
 {
   return (0 == ucl_vector_compare_range(a, ra, b, rb));
+}
+
+/* ------------------------------------------------------------ */
+
+static inline size_t
+ucl_hash_number_of_buckets (const ucl_hash_t self)
+{
+  return ucl_vector_size(self->buckets);
 }
 
 /* ------------------------------------------------------------ */

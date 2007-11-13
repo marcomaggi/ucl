@@ -30,6 +30,8 @@
 #define UCL_DEBUGGING		0
 #include "hashtest.h"
 
+#define DISPLAY_AVERAGE_SEARCH_DISTANCE		0
+
 #undef NUMBER
 #define NUMBER			100
 #undef HALF_NUMBER
@@ -157,7 +159,7 @@ test (void)
   /* ------------------------------------------------------------ */
 
   ucl_debug("\n\n\ntesting restriction");
-  ucl_debug_on();
+/*   ucl_debug_on(); */
   for (j=(NUMBER-1); j>1; --j)
     {
       beg = (j-1) * NUMBER;
@@ -176,15 +178,54 @@ test (void)
   ucl_hash_restrict(table); 
   assert(ucl_hash_size(table) == 0);
 
+#if 0
+  ucl_debug("length of chain %u: %u",
+	    10, ucl_hash_bucket_chain_length(table, 10));
+#endif
+
   /* ------------------------------------------------------------ */
 
+  ucl_debug("\n\n------------------------------------------------------------");
   ucl_debug("testing enlarging/restricting");
+  ucl_vector_update_number_of_step_up_slots(table->buckets, 1000);
+  ucl_vector_update_number_of_step_down_slots(table->buckets, 1000);
+  ucl_hash_restrict(table);
+
+  ucl_debug("before the insertion: size %u, number of buckets %u, used buckets %u",
+	    ucl_hash_size(table),
+	    ucl_hash_number_of_buckets(table),
+	    ucl_hash_number_of_used_buckets(table));
   insert_elements_in_range(table, 0, 1000);
   assert(ucl_hash_size(table) == 1000);
 
-  find_elements(table, 100); /* find the elements BEFORE rehashing */
+#if (DISPLAY_AVERAGE_SEARCH_DISTANCE == 1)
+  fprintf(stderr, "average search distance %f\n", ucl_hash_average_search_distance (table));
+#endif
+
+  ucl_debug("after the insertion: size %u, number of buckets %u, used buckets %u",
+	    ucl_hash_size(table),
+	    ucl_hash_number_of_buckets(table),
+	    ucl_hash_number_of_used_buckets(table));
+
+  ucl_vector_update_number_of_step_up_slots(table->buckets, 100);
+  ucl_vector_update_number_of_step_down_slots(table->buckets, 100);
+
+  find_elements(table, 1000); /* find the elements BEFORE rehashing */
   ucl_hash_enlarge(table); 
-  find_elements(table, 100); /* find the elements AFTER rehashing */
+  find_elements(table, 1000); /* find the elements AFTER rehashing */
+
+  ucl_debug("after the enlarging: size %u, number of buckets %u, used buckets %u",
+	    ucl_hash_size(table),
+	    ucl_hash_number_of_buckets(table),
+	    ucl_hash_number_of_used_buckets(table));
+
+#if (DISPLAY_AVERAGE_SEARCH_DISTANCE == 1)
+  fprintf(stderr, "average search distance %f\n", ucl_hash_average_search_distance (table));
+#endif
+#if 0
+  ucl_debug("length of chain %u: %u",
+	    10, ucl_hash_bucket_chain_length(table, 10));
+#endif
 
   extract_elements_in_range(table, 800, 1000);
   assert(ucl_hash_size(table) == 800);
@@ -192,6 +233,11 @@ test (void)
   find_elements(table, 800); /* find the elements BEFORE rehashing */
   ucl_hash_restrict(table); 
   find_elements(table, 800); /* find the elements AFTER rehashing */
+
+  ucl_debug("after the restriction: size %u, number of buckets %u, used buckets %u",
+	    ucl_hash_size(table),
+	    ucl_hash_number_of_buckets(table),
+	    ucl_hash_number_of_used_buckets(table));
 
   assert(ucl_hash_size(table) == 800);
 

@@ -3898,6 +3898,29 @@ Return a value representing the number of entries in the table.
 @end deftypefun
 
 
+@deftypefun size_t ucl_hash_number_of_buckets (const ucl_hash_t @var{self})
+Return the number of buckets.
+@end deftypefun
+
+
+@deftypefun size_t ucl_hash_number_of_used_buckets (const ucl_hash_t @var{self})
+Return the number of used buckets.
+@end deftypefun
+
+
+@deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_t @var{this}, ucl_vector_index_t @var{position})
+Return the number of entries in the chain refereces by bucket at
+@var{position}. @var{position} must be a valid bucket index: a
+non--negative integer in the range @code{[0,
+ucl_hash_number_of_buckets(@var{this}))}.
+@end deftypefun
+
+
+@deftypefun double ucl_hash_average_search_distance (const ucl_hash_t @var{this})
+Return the average number of entries per bucket.
+@end deftypefun
+
+
 @subsubsection Key functions
 
 

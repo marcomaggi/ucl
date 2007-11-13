@@ -60,13 +60,6 @@ Binary tree
 * Write the "string" iterator for the binary tree?
 
 
-Hash table
-----------
-
-* Complete the module with reallocation policy functions and
-  configuration of resizing.
-
-
 Heap
 ----
 

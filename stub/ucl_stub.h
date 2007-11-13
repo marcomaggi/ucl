@@ -317,6 +317,9 @@ typedef void       ucl_hash_destructor_proto_t (ucl_hash_t this);
 typedef void       ucl_hash_initialise_proto_t (ucl_hash_t this, ucl_valcmp_t compar, ucl_hashcmp_t hash);
 typedef ucl_hash_entry_t * ucl_hash_first_proto_t (const ucl_hash_t this);
 typedef void       ucl_hash_restrict_proto_t  (ucl_hash_t this);
+typedef size_t     ucl_hash_number_of_used_buckets_proto_t (const ucl_hash_t this);
+typedef size_t     ucl_hash_bucket_chain_length_proto_t (const ucl_hash_t this, ucl_vector_index_t position);
+typedef double     ucl_hash_average_search_distance_proto_t (const ucl_hash_t this);
 
 /* Stub table type declaration for the "hash" module.
    A struct holding a pointer for each function in the module. */
@@ -332,6 +335,9 @@ typedef struct ucl_hash_stub_table_t {
   ucl_hash_initialise_proto_t         * stub_ucl_hash_initialise;
   ucl_hash_first_proto_t              * stub_ucl_hash_first;
   ucl_hash_restrict_proto_t           * stub_ucl_hash_restrict;
+  ucl_hash_number_of_used_buckets_proto_t * stub_ucl_hash_number_of_used_buckets;
+  ucl_hash_bucket_chain_length_proto_t * stub_ucl_hash_bucket_chain_length;
+  ucl_hash_average_search_distance_proto_t * stub_ucl_hash_average_search_distance;
 } ucl_hash_stub_table_t;
 
 /* Stub table macros definition for the "hash" module.
@@ -352,6 +358,9 @@ extern const ucl_hash_stub_table_t * ucl_hash_stub_table_p;
 #define ucl_hash_initialise        ((ucl_hash_stub_table_p)->stub_ucl_hash_initialise)
 #define ucl_hash_first             ((ucl_hash_stub_table_p)->stub_ucl_hash_first)
 #define ucl_hash_restrict          ((ucl_hash_stub_table_p)->stub_ucl_hash_restrict)
+#define ucl_hash_number_of_used_buckets  ((ucl_hash_stub_table_p)->stub_ucl_hash_number_of_used_buckets)
+#define ucl_hash_bucket_chain_length  ((ucl_hash_stub_table_p)->stub_ucl_hash_bucket_chain_length)
+#define ucl_hash_average_search_distance  ((ucl_hash_stub_table_p)->stub_ucl_hash_average_search_distance)
 
 #endif /* defined UCL_ENABLE_STUB */
 

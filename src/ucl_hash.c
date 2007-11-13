@@ -285,90 +285,90 @@ stub(2005-09-23-18-10-51) void
 ucl_hash_enlarge (ucl_hash_t this)
 {
   assert(this);
+  ucl_debug("enter: old size %u", ucl_vector_size(this->buckets));
 
-  if (ucl_vector_will_enlarge(this->buckets))
-    {
-      ucl_vector_enlarge(this->buckets);
 
-      /* Set to NULL all the new  buckets. Here we rely on the fact that
-	 the  vector  module  does  not  move  around  used  slots  when
-	 reallocating. So the new slots are appended at the end. */
-      {
-	entry_t **	bucket_p = ucl_vector_back(this->buckets);
+  ucl_vector_enlarge_for_slots(this->buckets, ucl_vector_number_of_step_up_slots(this->buckets));
 
-	memset(++bucket_p, '\0', sizeof(void *) * ucl_vector_number_of_free_slots(this->buckets));
-	ucl_vector_mark_all_slots_as_used(this->buckets);
-      }
+  /* Set to NULL all the new buckets.  Here we rely on the fact that the
+     vector module does not move around used slots when reallocating. So
+     the new slots are appended at the end. */
+  {
+    entry_t **	bucket_p = ucl_vector_back(this->buckets);
+
+    memset(++bucket_p, '\0', sizeof(void *) * ucl_vector_number_of_free_slots(this->buckets));
+    ucl_vector_mark_all_slots_as_used(this->buckets);
+  }
       
-      /* Mark all the entries to be processed while rehashing. */
+  /* Mark all the entries to be processed while rehashing. */
+  {
+    iterator_t	iterator;
+    entry_t *	entry_p;
+
+    for (ucl_hash_iterator(this, iterator);
+	 ucl_iterator_more(iterator);
+	 ucl_iterator_next(iterator))
       {
-	iterator_t	iterator;
-	entry_t *	entry_p;
-
-	for (ucl_hash_iterator(this, iterator);
-	     ucl_iterator_more(iterator);
-	     ucl_iterator_next(iterator))
-	  {
-	    entry_p = ucl_iterator_ptr(iterator);
-	    entry_p->to_be_processed_during_rehashing = YES;
-	  }
+	entry_p = ucl_iterator_ptr(iterator);
+	entry_p->to_be_processed_during_rehashing = YES;
       }
+  }
       
-      /* Traverse the vector of buckets and the linked lists of entries,
-	 rehashing each of them.
+  /* Traverse the vector of buckets and the linked lists of entries,
+     rehashing each of them.
 
-	 For each bucket: extract each entry one after the other and:
+     For each bucket: extract each entry one after the other and:
 	 
-	 - mark it as already processed in the rehashing operation;
-	 - compute the new bucket index;
-	 - append the  entry to the  linked list, after all  the entries
-	   that have to be processed.
+     - mark it as already processed in the rehashing operation;
+     - compute the new bucket index;
+     - append the  entry to the  linked list, after all  the entries
+     that have to be processed.
 
-	 That  way,   while  rehashing,  each  linked   list  will  have
-	 already-processed  entries  at  the  end,  and  to-be-processed
-	 entries at  the beginning; when traversing such  a linked list:
-	 the first  entry marked as  already processed marks the  end of
-	 to-be-processed entries.
+     That  way,   while  rehashing,  each  linked   list  will  have
+     already-processed  entries  at  the  end,  and  to-be-processed
+     entries at  the beginning; when traversing such  a linked list:
+     the first  entry marked as  already processed marks the  end of
+     to-be-processed entries.
 
-	 *  ------
-	 * |bucket| 
-	 *  ------    -----------    -----------    -------------    -------------
-         * |bucket|->|entry TO BE|->|entry TO BE|->|entry ALREADY|->|entry ALREADY|->NULL
-	 *  ------   |rehashed   |  |rehashed   |  |rehashed     |  |rehashed     |
-	 * |bucket|   -----------    ----------- ^  -------------    -------------
-	 *  ------                               |
-	 *                                       | the next rehashed entry goes here
-	 *                                 --------------
-	 *                                |rehashed entry|
-	 *                                 --------------
-	 */
+     *  ------
+     * |bucket| 
+     *  ------    -----------    -----------    -------------    -------------
+     * |bucket|->|entry TO BE|->|entry TO BE|->|entry ALREADY|->|entry ALREADY|->NULL
+     *  ------   |rehashed   |  |rehashed   |  |rehashed     |  |rehashed     |
+     * |bucket|   -----------    ----------- ^  -------------    -------------
+     *  ------                               |
+     *                                       | the next rehashed entry goes here
+     *                                 --------------
+     *                                |rehashed entry|
+     *                                 --------------
+     */
+  {
+    iterator_t	iterator;
+    ucl_hashcmp_t	hash = this->hash;
+    size_t		bucket_index;
+    entry_t **	bucket_p;
+    entry_t **	new_bucket_p;
+    entry_t *	entry_p;
+
+
+    for (ucl_vector_iterator_forward(this->buckets, iterator);
+	 ucl_iterator_more(iterator);
+	 ucl_iterator_next(iterator))
       {
-	iterator_t	iterator;
-	ucl_hashcmp_t	hash = this->hash;
-	size_t		bucket_index;
-	entry_t **	bucket_p;
-	entry_t **	new_bucket_p;
-	entry_t *	entry_p;
-
-
-	for (ucl_vector_iterator_forward(this->buckets, iterator);
-	     ucl_iterator_more(iterator);
-	     ucl_iterator_next(iterator))
+	bucket_p = ucl_iterator_ptr(iterator);
+	while ((entry_p = *bucket_p) && (entry_p->to_be_processed_during_rehashing))
 	  {
-	    bucket_p = ucl_iterator_ptr(iterator);
-	    while ((entry_p = *bucket_p) && (entry_p->to_be_processed_during_rehashing))
-	      {
-		*bucket_p = entry_p->next_entry_in_list_p;
+	    *bucket_p = entry_p->next_entry_in_list_p;
 
-		entry_p->to_be_processed_during_rehashing = NO;
+	    entry_p->to_be_processed_during_rehashing = NO;
 
-		bucket_index = hash.func(hash.data, entry_p->key) % ucl_vector_size(this->buckets);
-		new_bucket_p = ucl_vector_index_to_slot(this->buckets, bucket_index);
-		append_entry_to_the_end(new_bucket_p, entry_p);
-	      }
+	    bucket_index = hash.func(hash.data, entry_p->key) % ucl_vector_size(this->buckets);
+	    new_bucket_p = ucl_vector_index_to_slot(this->buckets, bucket_index);
+	    append_entry_to_the_end(new_bucket_p, entry_p);
 	  }
       }
-    }
+  }
+  ucl_debug("leaving: new size %u\n", ucl_vector_size(this->buckets));
 }
 
 /* ------------------------------------------------------------ */
@@ -577,5 +577,65 @@ iterator_next (ucl_iterator_t iterator)
       iterator->iterator = NULL;
     }
 }
+
+
+/** ------------------------------------------------------------
+ ** Statistics.
+ ** ----------------------------------------------------------*/
+
+stub(2007-11-13-12-44-55) size_t
+ucl_hash_number_of_used_buckets (const ucl_hash_t this)
+{
+  ucl_iterator_t	iterator;
+  size_t		number_of_used_buckets = 0;
+  entry_t **		bucket_p;
+
+
+  for (ucl_vector_iterator_forward(this->buckets, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      bucket_p = ucl_iterator_ptr(iterator);
+      if (NULL != *bucket_p)
+	++number_of_used_buckets;
+    }
+  return number_of_used_buckets;
+}
+stub(2007-11-13-13-16-16) size_t
+ucl_hash_bucket_chain_length (const ucl_hash_t this, ucl_vector_index_t position)
+{
+  entry_t **	bucket_p;
+  size_t	number_of_entries_in_chain = 0;
+
+
+  bucket_p = ucl_vector_index_to_slot(this->buckets, position);
+  if (*bucket_p)
+    {
+      entry_t *		entry_p = *bucket_p;
+
+      ++number_of_entries_in_chain;
+      while (entry_p->next_entry_in_list_p)
+	{
+	  ++number_of_entries_in_chain;
+	  entry_p = entry_p->next_entry_in_list_p;
+	}
+    }
+  
+  return number_of_entries_in_chain;
+}
+stub(2007-11-13-13-27-52) double
+ucl_hash_average_search_distance (const ucl_hash_t this)
+{
+  size_t	number_of_buckets = ucl_hash_number_of_buckets(this);
+  double	average_search_distance = 0.0;
+
+  
+  for (size_t i=0; i<number_of_buckets; ++i)
+    {
+      average_search_distance += (double)ucl_hash_bucket_chain_length(this, i);
+    }
+  return average_search_distance/((double)number_of_buckets);
+}
+
 
 /* end of file */
