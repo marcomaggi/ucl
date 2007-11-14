@@ -2257,18 +2257,24 @@ move_used_bytes_at_pad_area_beginning (ucl_vector_t self)
   else
     {
       ucl_byte_t *	p;
+      size_t		number_of_free_bytes = compute_free_bytes(self);
 
 
-      if (self->size_of_padding_area < compute_free_bytes(self))
+      if (0 < number_of_free_bytes)
 	{
-	  p = self->first_allocated_slot + self->size_of_padding_area;
+	  if (self->size_of_padding_area < number_of_free_bytes)
+	    {
+	      p = self->first_allocated_slot + self->size_of_padding_area;
+	    }
+	  else
+	    {
+	      /* Leave half of the free  slots at the beginning and half
+		 at the end. */
+	      p = self->first_allocated_slot +
+		(self->slot_dimension * (compute_free_slots(self) >> 1));
+	    }
+	  move_used_bytes_at_byte_pointer(self, p);
 	}
-      else
-	{
-	  p = self->first_allocated_slot + \
-	    (self->slot_dimension * (compute_free_slots(self) >> 1));
-	}
-      move_used_bytes_at_byte_pointer(self, p);
       ASSERT_INVARIANTS(self);
     }
 }
