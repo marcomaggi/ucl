@@ -5,23 +5,22 @@
 #       sh ${ds_top_srcdir}/infrastructure/make-configure-ac.sh
 #
 # in the top source directory of this (sub)project. The script
-# makes use of GNU Arch to retrieve the project name and version
-# number, and does basic source tree inspection to find known
-# configuration files (for example under the "meta" directory).
+# makes use of GNU Arch or GIT to retrieve the project name and
+# version number, and does basic source tree inspection to find
+# known configuration files (for example under the "meta"
+# directory).
 #
 # The real GNU Autoconf configuration script is in "configure.ds",
 # which is loaded in this file. A set of macros is also loaded
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
-
-
-AC_INIT([ucl], [0.9a75])
+AC_INIT([ucl],[0.9b0])
 AC_PREREQ(2.60)
 
 AC_SUBST([PACKAGE_VERSION],[0.9.0])
 AC_DEFINE([PACKAGE_VERSION],["0.9.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.9a75])
-AC_DEFINE([PACKAGE_XVERSION],["0.9a75"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.9b0])
+AC_DEFINE([PACKAGE_XVERSION],["0.9b0"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
@@ -29,21 +28,20 @@ AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 AC_SUBST([PACKAGE_VERSION_MINOR],[9])
 AC_DEFINE([PACKAGE_VERSION_MINOR],["9"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[75])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["75"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[0])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["0"],[package version patch number])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.9])
 AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.9"],[package version major.minor])
 
 AC_SUBST([PACKAGE_NAME_LOWERCASE],[ucl])
 AC_DEFINE([PACKAGE_NAME_LOWERCASE],["ucl"],[package name in lower case chars])
-
 AC_CONFIG_AUX_DIR([infrastructure])
 m4_include([infrastructure/acmacros.m4])
 
 AC_CONFIG_FILES([meta.d/ucl-config:meta/ucl-config.in])
 AC_CONFIG_FILES([meta.d/postinstall:meta/postinstall.in])
-AC_CONFIG_FILES([meta.d/ucl.pc:meta/ucl.pc.in])
+AC_CONFIG_FILES([meta.d/ucl.pc:meta/.in])
 AC_CONFIG_FILES([meta.d/slackware/bin/doinst.sh:meta/slackware/bin/doinst.sh.in])
 AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in])
 AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:meta/slackware/doc/slack-desc.in])
