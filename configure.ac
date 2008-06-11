@@ -13,14 +13,14 @@
 # The real GNU Autoconf configuration script is in "configure.ds",
 # which is loaded in this file. A set of macros is also loaded
 # from "${ds_top_srcdir}/infrastructure/acmacros.m4".
-AC_INIT([ucl],[0.9b1])
+AC_INIT([ucl],[0.9b2])
 AC_PREREQ(2.60)
 
 AC_SUBST([PACKAGE_VERSION],[0.9.0])
 AC_DEFINE([PACKAGE_VERSION],["0.9.0"],[full package version])
 
-AC_SUBST([PACKAGE_XVERSION],[0.9b1])
-AC_DEFINE([PACKAGE_XVERSION],["0.9b1"],[full extended package version])
+AC_SUBST([PACKAGE_XVERSION],[0.9b2])
+AC_DEFINE([PACKAGE_XVERSION],["0.9b2"],[full extended package version])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR],[0])
 AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
@@ -28,8 +28,8 @@ AC_DEFINE([PACKAGE_VERSION_MAJOR],["0"],[package version major number])
 AC_SUBST([PACKAGE_VERSION_MINOR],[9])
 AC_DEFINE([PACKAGE_VERSION_MINOR],["9"],[package version minor number])
 
-AC_SUBST([PACKAGE_VERSION_PATCH],[1])
-AC_DEFINE([PACKAGE_VERSION_PATCH],["1"],[package version patch number])
+AC_SUBST([PACKAGE_VERSION_PATCH],[2])
+AC_DEFINE([PACKAGE_VERSION_PATCH],["2"],[package version patch number])
 
 AC_SUBST([PACKAGE_VERSION_MAJOR_MINOR],[0.9])
 AC_DEFINE([PACKAGE_VERSION_MAJOR_MINOR],["0.9"],[package version major.minor])

@@ -1898,10 +1898,15 @@ endef
 #  The variable '<IDENTIFIER>_shared_library_CC_BUILD' can
 #  be used to select the command line for the C compiler; it
 #  defaults to '$(CC_BUILD_LIBRARY)'.
+#
+#  The variable '<IDENTIFIER>_shared_library_ENV' can be used to
+#  set environment variables to build the library (for example
+#  LD_LIBRARY_PATH).
 
 define ds-c-shared-library
 ifeq ($$(strip $$(ds_config_ENABLE_SHARED)),yes)
 
+$(1)_shared_library_ENV		?=
 $(1)_shared_library_CC_BUILD	?= $$(CC_BUILD_LIBRARY)
 $(1)_shared_library_BUILDDIR	?= $$(builddir)/library.d
 $(1)_shared_library_LIBRARY	= $$($(1)_shared_library_BUILDDIR)/lib$(2).so
@@ -1922,7 +1927,7 @@ $(1)-realclean:	$(1)_shared_library-realclean
 $$(eval $$(call ds-module,$(1)_shared_library,bin,LIB))
 
 $$($(1)_shared_library_LIBRARY) : $$($(1)_shared_library_OBJECTS)
-	$$($(1)_shared_library_CC_BUILD) $$(@) $$(^) $4
+	$$($(1)_shared_library_ENV) $$($(1)_shared_library_CC_BUILD) $$(@) $$(^) $4
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
 endif
@@ -2047,8 +2052,13 @@ endef
 #  The variable '<IDENTIFIER>_program_CC_BUILD' can be used to
 #  select the command line for the C compiler; it defaults to
 #  '$(CC_BUILD_PROGRAM)'.
+#
+#  The variable '<IDENTIFIER>_program_ENV' can be used to set
+#  environment variables to build the program (for example
+#  LD_LIBRARY_PATH).
 
 define ds-c-program
+$(1)_program_ENV		?=
 $(1)_program_CC_BUILD		?= $$(CC_BUILD_PROGRAM)
 $(1)_program_BUILDDIR		?= $$(builddir)/bin.d
 $(1)_program_EXECUTABLE		= $$($(1)_program_BUILDDIR)/$(2)
@@ -2069,7 +2079,7 @@ clean:		$(1)_program-clean
 realclean:	$(1)_program-realclean
 
 $$($(1)_program_EXECUTABLE): $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_BUILD) $$(@) $$(^) $4
+	$$($(1)_program_ENV) $$($(1)_program_CC_BUILD) $$(@) $$(^) $4
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
 endif
@@ -2089,8 +2099,13 @@ endef
 #  The variable '<IDENTIFIER>_program_CC_BUILD' can be used to
 #  select the command line for the C compiler; it defaults to
 #  '$(CC_BUILD_PROGRAM)'.
+#
+#  The variable '<IDENTIFIER>_program_ENV' can be used to
+#  set environment variables to build the library (for example
+#  LD_LIBRARY_PATH).
 
 define ds-c-program-no-install
+$(1)_program_ENV		?=
 $(1)_program_CC_BUILD		?= $$(CC_BUILD_PROGRAM)
 $(1)_program_BUILDDIR		?= $$(builddir)/bin.d
 $(1)_program_EXECUTABLE		= $$($(1)_program_BUILDDIR)/$(2)
@@ -2109,7 +2124,7 @@ clean:		$(1)_program-clean
 realclean:	$(1)_program-realclean
 
 $$($(1)_program_EXECUTABLE): $$($(1)_program_OBJECTS)
-	$$($(1)_program_CC_BUILD) $$(@) $$(^) $4
+	$$($(1)_program_ENV) $$($(1)_program_CC_BUILD) $$(@) $$(^) $4
 	$$(STRIP) $$(@)
 endef
 
@@ -2134,8 +2149,13 @@ endef
 #  The variable '<IDENTIFIER>_test_program_COMMON_OBJECTS' can be
 #  used to select object prerequisites for the programs that are
 #  linked in.
+#
+#  The variable '<IDENTIFIER>_test_programs_ENV' can be used to
+#  set environment variables to build the programs (for example
+#  LD_LIBRARY_PATH).
 
 define ds-c-test-programs
+$(1)_test_programs_ENV		?=
 $(1)_test_programs_CC_BUILD	?= $$(CC_BUILD_PROGRAM)
 $(1)_test_programs_BUILDDIR	?= $$(builddir)/tests.d
 
@@ -2152,8 +2172,8 @@ $$(eval $$(call ds-module-no-install,$(1)_test_programs,ds-nop))
 $$($(1)_test_programs_TARGETS): % : %.$$(OBJEXT)	\
 		$$($(1)_test_programs_COMMON_OBJECTS)	\
 		$$($(1)_test_programs_PREREQUISITES)
-	$$($(1)_test_programs_CC_BUILD) $$(@) $$(<) $$($(1)_test_programs_COMMON_OBJECTS) \
-		 $$($(1)_test_programs_TAIL) $3
+	$$($(1)_test_programs_ENV) $$($(1)_test_programs_CC_BUILD) $$(@) $$(<) \
+		$$($(1)_test_programs_COMMON_OBJECTS) $$($(1)_test_programs_TAIL) $3
 endef
 
 ## ------------------------------------------------------------
@@ -2268,6 +2288,7 @@ dist:
 	$$(TAR) \
 		--directory=$$(ds_top_srcdir) --create --file=- --dereference	\
 		--exclude=RCS                   --exclude=CVS                   \
+		--exclude=.git			--exclude=.git\*		\
 		--exclude=archives              --exclude=\*.ps			\
 		--exclude=\*.dvi                --exclude=tmp			\
 		--exclude=\*.gz                 --exclude=\*.tar                \
