@@ -10,24 +10,22 @@
    
    Copyright (c) 2007 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
 
-#define UCL_DEBUGGING		0
+#define DEBUGGING		1
 #include "vectortest.h"
 
 #define NUMBER_OF_NUMBERS	5
@@ -100,10 +98,10 @@ test (void)
 
   initialise(V);
 
-  ucl_debug("inserting block at beginning ");
+  debug("inserting block at beginning ");
   ucl_vector_insert_block(V, 0, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<NUMBER_OF_NUMBERS; ++i)
     {
@@ -120,28 +118,28 @@ test (void)
 
   initialise(V);
 
-  ucl_debug("inserting block in the middle");
+  debug("inserting block in the middle");
   ucl_vector_insert_block(V, 7, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<7; ++i)
     {
-      ucl_debug("elm %d", vector_ref(V, i));
+      debug("elm %d", vector_ref(V, i));
       assert(i == vector_ref(V, i));
     }
   for (i=7, j=0; i<(7+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("+elm %d", vector_ref(V, i));
+      debug("+elm %d", vector_ref(V, i));
       assert(numbers[j] == vector_ref(V, i));
     }
   for (i=7+NUMBER_OF_NUMBERS, j=7; i<(SIZE_OF_VECTOR+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("++elm %d", vector_ref(V, i));
+      debug("++elm %d", vector_ref(V, i));
       assert(j == vector_ref(V, i));
     }
 
-  ucl_debug("finished");
+  debug("finished");
 
   ucl_vector_destructor(V);
 
@@ -149,10 +147,10 @@ test (void)
 
   initialise(V);
 
-  ucl_debug("inserting block at end ");
+  debug("inserting block at end ");
   ucl_vector_insert_block(V, SIZE_OF_VECTOR, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<SIZE_OF_VECTOR; ++i)
     {
@@ -169,10 +167,10 @@ test (void)
 
   initialise2(V);
 
-  ucl_debug("inserting block at beginning ");
+  debug("inserting block at beginning ");
   ucl_vector_insert_block(V, 0, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<NUMBER_OF_NUMBERS; ++i)
     {
@@ -189,28 +187,28 @@ test (void)
 
   initialise2(V);
 
-  ucl_debug("inserting block in the middle");
+  debug("inserting block in the middle");
   ucl_vector_insert_block(V, 7, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<7; ++i)
     {
-      ucl_debug("elm %d", vector_ref(V, i));
+      debug("elm %d", vector_ref(V, i));
       assert(i == vector_ref(V, i));
     }
   for (i=7, j=0; i<(7+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("+elm %d", vector_ref(V, i));
+      debug("+elm %d", vector_ref(V, i));
       assert(numbers[j] == vector_ref(V, i));
     }
   for (i=7+NUMBER_OF_NUMBERS, j=7; i<(SIZE_OF_VECTOR+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("++elm %d", vector_ref(V, i));
+      debug("++elm %d", vector_ref(V, i));
       assert(j == vector_ref(V, i));
     }
 
-  ucl_debug("finished");
+  debug("finished");
 
   ucl_vector_destructor(V);
 
@@ -218,10 +216,10 @@ test (void)
 
   initialise2(V);
 
-  ucl_debug("inserting block at end ");
+  debug("inserting block at end ");
   ucl_vector_insert_block(V, SIZE_OF_VECTOR, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<SIZE_OF_VECTOR; ++i)
     {
@@ -238,10 +236,10 @@ test (void)
 
   initialise3(V);
 
-  ucl_debug("inserting block at beginning ");
+  debug("inserting block at beginning ");
   ucl_vector_insert_block(V, 0, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<NUMBER_OF_NUMBERS; ++i)
     {
@@ -258,28 +256,28 @@ test (void)
 
   initialise3(V);
 
-  ucl_debug("inserting block in the middle");
+  debug("inserting block in the middle");
   ucl_vector_insert_block(V, 7, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<7; ++i)
     {
-      ucl_debug("elm %d", vector_ref(V, i));
+      debug("elm %d", vector_ref(V, i));
       assert(i == vector_ref(V, i));
     }
   for (i=7, j=0; i<(7+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("+elm %d", vector_ref(V, i));
+      debug("+elm %d", vector_ref(V, i));
       assert(numbers[j] == vector_ref(V, i));
     }
   for (i=7+NUMBER_OF_NUMBERS, j=7; i<(SIZE_OF_VECTOR+NUMBER_OF_NUMBERS); ++i, ++j)
     {
-      ucl_debug("++elm %d", vector_ref(V, i));
+      debug("++elm %d", vector_ref(V, i));
       assert(j == vector_ref(V, i));
     }
 
-  ucl_debug("finished");
+  debug("finished");
 
   ucl_vector_destructor(V);
 
@@ -287,10 +285,10 @@ test (void)
 
   initialise3(V);
 
-  ucl_debug("inserting block at end ");
+  debug("inserting block at end ");
   ucl_vector_insert_block(V, SIZE_OF_VECTOR, block);
   assert(ucl_vector_size(V) == SIZE_OF_VECTOR+NUMBER_OF_NUMBERS);
-  ucl_debug("inserted");
+  debug("inserted");
 
   for (i=0; i<SIZE_OF_VECTOR; ++i)
     {

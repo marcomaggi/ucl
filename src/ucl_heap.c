@@ -1,5 +1,4 @@
-/* ucl_heap.c --
-   
+/*    
    Part of: Useless Container Library
    Contents: heap implementation
    Date: Fri Feb 28, 2003
@@ -10,20 +9,18 @@
    
    Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
 
@@ -32,7 +29,7 @@
  ** Header files and type declarations.
  ** ----------------------------------------------------------*/
 
-#include "ucl_defines.h"
+#include "internal.h"
 
 /* stub module name heap */
 
@@ -41,7 +38,7 @@ typedef ucl_valcmp_t		valcmp_t;
 typedef ucl_heap_t		heap_t;
 typedef ucl_heap_node_t		node_t;
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 #  include <stdio.h>
 
 static void	printnode	(node_t *node_p);
@@ -221,7 +218,7 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
   this->next_p = next_p;
   ++(this->size);
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
   printnode(root_p);
   printnode(next_p);
   printlevel(root_p);
@@ -261,7 +258,7 @@ ucl_heap_extract (ucl_heap_t this)
   link_p	= this->root_p;
   first		= 1;
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
   printf("---------------------\n");
   printlevel(this->root_p);
   printf("root ");
@@ -289,7 +286,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      bro(link_p) = NULL;
 	    }
 	  */
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	  printf("both NULLs\n");fflush(0);
   	  printlevel(this->root_p);
 #endif
@@ -305,7 +302,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      this->next_p = NULL;
 	    }
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	  printf("next %p ", this->next_p);
   	  printnode(this->next_p);fflush(0);
 #endif
@@ -326,7 +323,7 @@ ucl_heap_extract (ucl_heap_t this)
       if (first)
 	{
 	  tmp_p	= dad_p;
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	  printf("extracting %d\n", tmp_p->val.integer);fflush(0);
 #endif
 	  dad(link_p) = dad_p = NULL;
@@ -334,7 +331,7 @@ ucl_heap_extract (ucl_heap_t this)
       
       if (v)
 	{
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	  printf("going left\n");fflush(0);
 #endif
 	  link_p = links.son_p;
@@ -367,7 +364,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      dad(link_p) = dad_p;
 	      fromleft = 1;
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	      assertnode(dad_p);
 
 	      printf("new link\ndad is ");
@@ -378,7 +375,7 @@ ucl_heap_extract (ucl_heap_t this)
 	}
       else
 	{
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	  printf("going right\n");fflush(0);
 #endif
 	  link_p = links.bro_p;
@@ -411,7 +408,7 @@ ucl_heap_extract (ucl_heap_t this)
 	      dad(link_p) = dad_p;
 	      fromleft = 0;
 	      
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 	      assertnode(dad_p);
 
 	      printf("new link\ndad is ");
@@ -454,7 +451,7 @@ ucl_heap_merge (ucl_heap_t this, ucl_heap_t other)
  ** Debug functions.
  ** ----------------------------------------------------------*/
 
-#if (UCL_DEBUGGING == 1)
+#if (DEBUGGING == 1)
 void
 printlevel (node_t *root_p)
 {

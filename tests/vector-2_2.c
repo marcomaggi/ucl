@@ -10,23 +10,22 @@
    
    Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
 
+#define DEBUGGING		0
 #include "vectortest.h"
 
 void
@@ -45,7 +44,7 @@ test (void)
     {
       ucl_vector_enlarge(vector);
 
-      ucl_debug("pre - i=%d, size %d, last index %d", i,
+      debug("pre - i=%d, size %d, last index %d", i,
 		ucl_vector_size(vector), ucl_vector_last_index(vector));
       ptr = ucl_vector_index_to_new_slot(vector, ucl_vector_size(vector));
       assert(ptr != NULL);
@@ -55,12 +54,12 @@ test (void)
 
       for (j=0; j<=i; ++j)
 	{
-	  ucl_debug("idx %d val %d ptr %p %p",
+	  debug("idx %d val %d ptr %p %p",
 		    j, *(unsigned *)ucl_vector_index(vector,j),
 		    ucl_vector_index_to_slot(vector,j), ptr);
 	}
 
-      ucl_debug("size %d, last index %d, slot %p back %p value %d back value %d",
+      debug("size %d, last index %d, slot %p back %p value %d back value %d",
 		ucl_vector_size(vector), ucl_vector_last_index(vector),
 		ptr, ucl_vector_back(vector), *ptr, *(unsigned *)ucl_vector_back(vector));
       assert(ptr == ucl_vector_back(vector));

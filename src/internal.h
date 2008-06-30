@@ -1,15 +1,15 @@
-/*    
+/*
    Part of: Useless Containers Library
-   Contents: memory allocator
-   Date: Fri Nov 12, 2004
-   
+   Contents: preprocessor symbols
+   Date: Wed Nov  3, 2004
+     
    Abstract
-   
-	This  module  declares  the  functions  used  to  handle  memory
-	allocation.
-   
-   Copyright (c) 2004, 2005 Marco Maggi
-   
+     
+	This header  file must  be included in  all the source  files of
+	UCL.
+
+   Copyright (c) 2004, 2005, 2007, 2008 Marco Maggi
+     
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -28,50 +28,33 @@
 
 
 /** ------------------------------------------------------------
- ** Header files.
+ ** Headers.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-
-/* stub module name memory */
+#include <stdio.h>	/* sometimes useful for debugging */
+#include "ucl.h"
+#include "debug.h"
 
 /* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
- ** Allocator.
+ ** Stub stuff.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-14-52) void
-ucl_memory_alloc (void * dummy UCL_UNUSED, void * qq, size_t dim)
-{
-  void **	pp = qq;
-  void *	p;
+/* "stub"  is used  to declare  the  timestamp for  stub functions;  the
+   timestamp establishes the order in which the functions will appear in
+   the stub tables: do not change them. */
+#define stub(TIMESTAMP)		/* empty */
 
-
-  if (0 == dim)
-    {
-      if (NULL != *pp)
-	{
-	  free(*pp);
-	  *pp = NULL;
-	}
-    }
-  else
-    {
-      p = (NULL == *pp)? calloc(1, dim) : realloc(*pp, dim);
-      if (NULL == p)
-	{
-	  perror(strerror(errno));
-	  exit(EXIT_FAILURE);
-	}
-      *pp = p;
-    }
-}
+/* "attibute" is used to declare GCC function declaration attributes; it
+   is read  by the  headers building script  and added to  the prototype
+   declaration.  To  know more about  attributes read the GCC  info node
+   "Function Attributes". */
+#define attribute(TIMESTAMP)	/* empty */
 
 /* end of file */

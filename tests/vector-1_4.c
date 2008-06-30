@@ -10,24 +10,22 @@
    
    Copyright (c) 2003, 2004, 2005 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
 
-#define UCL_DEBUGGING		0
+#define DEBUGGING		0
 #include "vectortest.h"
 #define SIZE		966
 #define STEP_UP		884
@@ -149,7 +147,7 @@ test (void)
   for (i=0; i<HALF_NUMBER; ++i)
     {
       p = ucl_vector_index_to_slot(vector, i);
-      ucl_debug("got %d", *p);
+      debug("got %d", *p);
       assert(i == *p);
     }
 

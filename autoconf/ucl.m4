@@ -4,24 +4,37 @@
 # 
 # Abstract
 # 
-# 
+#       This file must be included in your "configure.ac" by
+#       putting:
+#
+#               m4_include(ucl.m4)
+#
+#       in your "aclocal.m4" file.  It defines the single
+#       macro 'USELESS_CONTAINERS_LIBRARY', which must be
+#       invoked with the requested major and minor version
+#       numbers as arguments:
+#
+#               USELESS_CONTAINERS_LIBRARY(1,0)
+#
+#       for interface version "1.0".
 # 
 # Copyright (c) 2007 Marco Maggi
 # 
-# This is free  software you can redistribute it  and/or modify it under
-# the terms of  the GNU General Public License as  published by the Free
-# Software Foundation; either  version 2, or (at your  option) any later
+# This  program  is free  software:  you  can redistribute  it
+# and/or modify it  under the terms of the  GNU General Public
+# License as published by the Free Software Foundation, either
+# version  3 of  the License,  or (at  your option)  any later
 # version.
 # 
-# This  file is  distributed in  the hope  that it  will be  useful, but
-# WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-# MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
-# General Public License for more details.
+# This  program is  distributed in  the hope  that it  will be
+# useful, but  WITHOUT ANY WARRANTY; without  even the implied
+# warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+# PURPOSE.   See  the  GNU  General Public  License  for  more
+# details.
 # 
-# You  should have received  a copy  of the  GNU General  Public License
-# along with this file; see the file COPYING.  If not, write to the Free
-# Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-# 02111-1307, USA.
+# You should  have received a  copy of the GNU  General Public
+# License   along   with    this   program.    If   not,   see
+# <http://www.gnu.org/licenses/>.
 
 AC_DEFUN([USELESS_CONTAINERS_LIBRARY], [
 ucl_REQUESTED_MAJOR_VERSION=$1
@@ -52,6 +65,9 @@ fi
 UCL_INCLUDEDIR=$("${UCL_CONFIG}" --pkgincludedir)
 AC_SUBST([UCL_INCLUDEDIR],[${UCL_INCLUDEDIR}])
 AC_MSG_NOTICE([UCL include directory ${UCL_INCLUDEDIR}])
+
+UCL_CPPFLAGS="-I${UCL_INCLUDEDIR}"
+AC_SUBST([UCL_CPPFLAGS],[${UCL_CPPFLAGS}])
 
 UCL_LIBDIR=$("${UCL_CONFIG}" --libdir)
 AC_MSG_NOTICE([UCL library directory ${UCL_LIBDIR}])

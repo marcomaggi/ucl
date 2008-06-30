@@ -32,6 +32,9 @@
 ## ------------------------------------------------------------
 
 AC_DEFUN([DS_BEGIN],[
+
+AC_USE_SYSTEM_EXTENSIONS
+#AC_DEFINE([_GNU_SOURCE],[1],[GNU libc symbol, see its documentation])
 AC_SYS_INTERPRETER
 AC_SYS_LARGEFILE
 AC_SYS_LONG_FILE_NAMES
@@ -267,39 +270,45 @@ AC_DEFUN([DS_C_LANGUAGE],[
 
 AC_CONFIG_HEADERS(config.h)
 
-AC_ARG_ENABLE([assert],
-    AC_HELP_STRING([--disable-assert],[disable assertions]),[
-        if test "$enableval" = yes ; then
-            ds_config_ENABLE_ASSERTIONS=yes
-        else
-            ds_config_ENABLE_ASSERTIONS=no
-        fi],[ds_config_ENABLE_ASSERTIONS=yes])
-AC_DEFINE_UNQUOTED([ds_config_ENABLE_ASSERTIONS],
-    [$ds_config_ENABLE_ASSERTIONS],[turns off assertions])
-AC_SUBST([ds_config_ENABLE_ASSERTIONS])
-
-AC_DEFINE([_GNU_SOURCE],[1],[GNU libc symbol, see its documentation])
+## This is replaced by AC_HEADER_ASSERT below
+# AC_ARG_ENABLE([assert],
+#     AC_HELP_STRING([--disable-assert],[disable assertions]),[
+#         if test "$enableval" = yes ; then
+#             ds_config_ENABLE_ASSERTIONS=yes
+#         else
+#             ds_config_ENABLE_ASSERTIONS=no
+#         fi],[ds_config_ENABLE_ASSERTIONS=yes])
+# AC_DEFINE_UNQUOTED([ds_config_ENABLE_ASSERTIONS],
+#     [$ds_config_ENABLE_ASSERTIONS],[turns off assertions])
+# AC_SUBST([ds_config_ENABLE_ASSERTIONS])
 
 ## ------------------------------------------------------------
 ## Compiler stuff.
 
-# Programs.
 AC_PROG_CC
+#AC_PROG_CC_STDC
+AC_PROG_CC_C99
 AC_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_RANLIB
 AC_PATH_PROG([AR],[ar],:)
 AC_PATH_PROG([STRIP], [strip],:)
 AC_PATH_PROG([GDB],[GDB],:)
-#AC_PROG_CC_STDC
-AC_PROG_CC_C99
 
-# Headers and C compiler features.
-AC_INCLUDES_DEFAULT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h])
-AC_CHECK_HEADERS([limits.h])
-AC_CHECK_HEADERS([dlfcn.h])
+AC_HEADER_ASSERT
+AC_HEADER_TIME
+AC_HEADER_DIRENT
+AC_HEADER_STDBOOL
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADER([sys/time.h])
+AC_CHECK_HEADER([math.h])
+AC_CHECK_HEADER([complex.h])
+AC_CHECK_HEADER([stdint.h])
+AC_CHECK_HEADER([limits.h])
+AC_CHECK_HEADER([unistd.h])
+AC_CHECK_HEADER([dlfcn.h])
+
 AC_C_BIGENDIAN
 AC_C_CHAR_UNSIGNED
 AC_C_CONST
@@ -313,6 +322,8 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memmove memset strerror strchr])
+
+AC_FUNC_ALLOCA
 
 AC_SUBST([NO_MINUS_C_MINUS_O])
 AC_ARG_VAR([GNU_C_FLAGS],[fixed GNU C compiler flags])
@@ -337,6 +348,28 @@ AC_SUBST(LDFLAGS_DL)
 
 ## ------------------------------------------------------------
 
+AC_ARG_ENABLE([pthreads],
+    AC_HELP_STRING([--enable-pthreads],[enable linking with the POSIX threads library (default: DISabled)]),
+    [if test "$enableval" = yes ; then ds_config_ENABLE_PTHREADS=yes ; else ds_config_ENABLE_PTHREADS=no ; fi],
+    [ds_config_ENABLE_PTHREADS=no])
+AC_SUBST([ds_config_ENABLE_PTHREADS])
+
+AC_MSG_CHECKING([whether we will link with pthreads])
+if test "$ds_config_ENABLE_PTHREADS" = yes ; then
+AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([cannot find pthread.h],1)])
+AC_CHECK_LIB([pthread],[pthread_mutex_lock],,[AC_MSG_ERROR([cannot find pthread.h],1)])
+AC_DEFINE([_REENTRANT],[1],[attempt to turn on reentrant functions])
+C_DEFAULT="${C_DEFAULT} -pthread"
+AC_MSG_RESULT(yes)
+else
+AC_MSG_RESULT(no)
+fi
+
+
+## ------------------------------------------------------------
+
+AC_SUBST([C_DEFAULT])
+
 AC_CACHE_SAVE
 ])
 
@@ -353,22 +386,22 @@ AC_CACHE_SAVE
 AC_DEFUN([DS_C_LANGUAGE_COMMON_LIBRARY],[
 
 AC_ARG_ENABLE([shared],
-    AC_HELP_STRING([--enable-shared],[enable shared library (default: ENabled)]),[
-        if test "$enableval" = yes ; then
-            ds_config_ENABLE_SHARED=yes
-        else
-            ds_config_ENABLE_SHARED=no
-        fi],[ds_config_ENABLE_SHARED=yes])
+    AC_HELP_STRING([--enable-shared],[enable shared library (default: ENabled)]),
+    [if test "$enableval" = yes ; then ds_config_ENABLE_SHARED=yes ; else ds_config_ENABLE_SHARED=no ; fi],
+    [ds_config_ENABLE_SHARED=yes])
 AC_SUBST([ds_config_ENABLE_SHARED])
 
+AC_MSG_CHECKING([whether we will build shared libraries])
+AC_MSG_RESULT([$ds_config_ENABLE_SHARED])
+
 AC_ARG_ENABLE([static],
-    AC_HELP_STRING([--enable-static],[enable static library (default: DISabled)]),[
-        if test "$enableval" = yes ; then
-            ds_config_ENABLE_STATIC=yes
-        else
-            ds_config_ENABLE_STATIC=no
-        fi],[ds_config_ENABLE_STATIC=no])
+    AC_HELP_STRING([--enable-static],[enable static library (default: DISabled)]),
+    [if test "$enableval" = yes ; then ds_config_ENABLE_STATIC=yes ; else ds_config_ENABLE_STATIC=no ; fi],
+    [ds_config_ENABLE_STATIC=no])
 AC_SUBST([ds_config_ENABLE_STATIC])
+
+AC_MSG_CHECKING([whether we will build static libraries])
+AC_MSG_RESULT([$ds_config_ENABLE_STATIC])
 
 ])
 
@@ -435,6 +468,9 @@ AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
 $1_SHARED_LIBRARY_NAME=lib${$1_LIBRARY_ID}.so
 $1_STATIC_LIBRARY_NAME=lib${$1_LIBRARY_ID}.a
 
+$1_SHARED_LIBRARY_LINK_NAME=lib$4$2.so
+$1_SHARED_LIBRARY_LINK_ID=$4$2
+
 $1_stub_SHARED_LIBRARY_ID=$4stub$2.$3
 $1_stub_SHARED_LIBRARY_NAME=lib${$1_stub_SHARED_LIBRARY_ID}.so
 $1_stub_SHARED_LIBRARY_LINK_NAME=lib$4stub$2.so
@@ -442,12 +478,17 @@ $1_stub_SHARED_LIBRARY_LINK_ID=$4stub$2
 $1_stub_STATIC_LIBRARY_ID=$4staticstub$2.$3
 $1_stub_STATIC_LIBRARY_NAME=lib${$1_stub_STATIC_LIBRARY_ID}.a
 
-AC_SUBST([$1_SHARED_LIBRARY_NAME])
 AC_SUBST([$1_STATIC_LIBRARY_NAME])
+
+AC_SUBST([$1_SHARED_LIBRARY_NAME])
+AC_SUBST([$1_SHARED_LIBRARY_LINK_NAME])
+AC_SUBST([$1_SHARED_LIBRARY_LINK_ID])
+
 AC_SUBST([$1_stub_SHARED_LIBRARY_ID])
 AC_SUBST([$1_stub_SHARED_LIBRARY_NAME])
 AC_SUBST([$1_stub_SHARED_LIBRARY_LINK_NAME])
 AC_SUBST([$1_stub_SHARED_LIBRARY_LINK_ID])
+
 AC_SUBST([$1_stub_STATIC_LIBRARY_ID])
 AC_SUBST([$1_stub_STATIC_LIBRARY_NAME])
 
@@ -460,8 +501,10 @@ $1_LIBRARY_ID                   = @$1_LIBRARY_ID@
 $1_INTERFACE_VERSION            = @$1_INTERFACE_VERSION@
 $1_INTERFACE_MAJOR_VERSION      = @$1_INTERFACE_MAJOR_VERSION@
 $1_INTERFACE_MINOR_VERSION      = @$1_INTERFACE_MINOR_VERSION@
-$1_SHARED_LIBRARY_NAME          = @$1_SHARED_LIBRARY_NAME@
 $1_STATIC_LIBRARY_NAME          = @$1_STATIC_LIBRARY_NAME@
+$1_SHARED_LIBRARY_NAME          = @$1_SHARED_LIBRARY_NAME@
+$1_SHARED_LIBRARY_LINK_NAME     = @$1_SHARED_LIBRARY_LINK_NAME@
+$1_SHARED_LIBRARY_LINK_id       = @$1_SHARED_LIBRARY_LINK_ID@
 
 $1_stub_SHARED_LIBRARY_ID       = @$1_stub_SHARED_LIBRARY_ID@
 $1_stub_SHARED_LIBRARY_NAME     = @$1_stub_SHARED_LIBRARY_NAME@

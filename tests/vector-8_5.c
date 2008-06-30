@@ -10,28 +10,24 @@
    
    Copyright (c) 2005 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
 
 
 
-#if 0
-#  define UCL_DEBUGGING  
-#endif
+#define DEBUGGING		0
 #include "vectortest.h"
 
 void dump_vector (ucl_vector_t self, const char *title);
@@ -50,33 +46,30 @@ test (void)
   ucl_vector_initialise_pad(vector, 35);
   ucl_vector_constructor(vector);
 
-  ucl_debug_off();
   fill(vector, 10, 0);
-  ucl_debug_on();
 
   dump_vector(vector, "before");
 
   ucl_range_set_min_max(range, 2, 4); /* from "2" to "4", inclusive */
 
   assert( ucl_vector_range_is_valid(vector, range) );
-  ucl_debug("erasing range (vector slot size %d, range slot size %d)",
+  debug("erasing range (vector slot size %d, range slot size %d)",
 	    ucl_vector_size(vector), ucl_range_size(range));
   ucl_vector_erase_range(vector, range);
-  ucl_debug_on();
-  ucl_debug("size after %d", ucl_vector_size(vector));
+  debug("size after %d", ucl_vector_size(vector));
   dump_vector(vector, "after");
   assert( ucl_vector_size(vector) == 7 );
 
   for (i=0; i<2; ++i)
     {
       p = ucl_vector_index_to_slot(vector, i);
-      ucl_debug("test value %d expected %d index %d", *p, i, i);
+      debug("test value %d expected %d index %d", *p, i, i);
       assert(*p == i);
     }
   for (j=5; (size_t)i<ucl_vector_size(vector); ++i, ++j)
     {
       p = ucl_vector_index_to_slot(vector, i);
-      ucl_debug("test2 value %d expected %d index %d", *p, j, i);
+      debug("test2 value %d expected %d index %d", *p, j, i);
       assert(*p == j);
     }
 
@@ -88,11 +81,11 @@ dump_vector (ucl_vector_t self, const char *title UCL_UNUSED)
   int		i;
   ucl_byte_t *	p;
 
-  ucl_debug(title);
+  debug(title);
   for (i=0; (size_t)i<ucl_vector_size(self); ++i)
     {
       p = ucl_vector_index_to_slot(self, i);
-      ucl_debug("dump value %d index %d", *p, i);
+      debug("dump value %d index %d", *p, i);
     }
 }
 

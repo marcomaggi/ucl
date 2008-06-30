@@ -52,15 +52,6 @@ static const ucl_circular_stub_table_t ucl_circular_stub_table = {
   ucl_circular_find
 };
 
-/* Functions stub table for the "debug" module. */
-
-static const ucl_debug_stub_table_t ucl_debug_stub_table = {
-  ucl_debug_on,
-  ucl_debug_print,
-  ucl_debug_off,
-  ucl_question
-};
-
 /* Functions stub table for the "graph" module. */
 
 static const ucl_graph_stub_table_t ucl_graph_stub_table = {
@@ -285,7 +276,6 @@ const ucl_stub_table_t ucl_stub_table = {
   &ucl_btree_stub_table,
   &ucl_base_stub_table,
   &ucl_circular_stub_table,
-  &ucl_debug_stub_table,
   &ucl_graph_stub_table,
   &ucl_hash_stub_table,
   &ucl_heap_stub_table,

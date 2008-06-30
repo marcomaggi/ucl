@@ -182,43 +182,6 @@ extern const ucl_circular_stub_table_t * ucl_circular_stub_table_p;
 #endif /* defined UCL_ENABLE_STUB */
 
 /* ------------------------------------------------------------ 
-   Module "debug".
-   ------------------------------------------------------------ */
-
-/* Function type declarations for the "debug" module.
-   A typedef for each function in the module. */
-
-typedef void       ucl_debug_on_proto_t       (void);
-typedef void       ucl_debug_print_proto_t    (const char *function, const char *template, ...);
-typedef void       ucl_debug_off_proto_t      (void);
-typedef const char * ucl_question_proto_t     (ucl_bool_t expr);
-
-/* Stub table type declaration for the "debug" module.
-   A struct holding a pointer for each function in the module. */
-
-typedef struct ucl_debug_stub_table_t {
-  ucl_debug_on_proto_t                * stub_ucl_debug_on;
-  ucl_debug_print_proto_t             * stub_ucl_debug_print;
-  ucl_debug_off_proto_t               * stub_ucl_debug_off;
-  ucl_question_proto_t                * stub_ucl_question;
-} ucl_debug_stub_table_t;
-
-/* Stub table macros definition for the "debug" module.
-   A preprocessor macro for each function in the module,
-   used to invoke the function through the stub table. */
-
-#ifdef UCL_ENABLE_STUB
-
-extern const ucl_debug_stub_table_t * ucl_debug_stub_table_p;
-
-#define ucl_debug_on               ((ucl_debug_stub_table_p)->stub_ucl_debug_on)
-#define ucl_debug_print            ((ucl_debug_stub_table_p)->stub_ucl_debug_print)
-#define ucl_debug_off              ((ucl_debug_stub_table_p)->stub_ucl_debug_off)
-#define ucl_question               ((ucl_debug_stub_table_p)->stub_ucl_question)
-
-#endif /* defined UCL_ENABLE_STUB */
-
-/* ------------------------------------------------------------ 
    Module "graph".
    ------------------------------------------------------------ */
 
@@ -957,7 +920,6 @@ typedef struct ucl_stub_table_t {
   const ucl_btree_stub_table_t *                    btree;
   const ucl_base_stub_table_t *                     base;
   const ucl_circular_stub_table_t *                 circular;
-  const ucl_debug_stub_table_t *                    debug;
   const ucl_graph_stub_table_t *                    graph;
   const ucl_hash_stub_table_t *                     hash;
   const ucl_heap_stub_table_t *                     heap;

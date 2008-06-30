@@ -15,7 +15,7 @@ Marco Maggi
 @end macro
 
 @macro copyrightyears{}
-2001, 2002, 2003, 2004, 2005, 2006, 2007
+2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 @end macro
 
 @macro ucl{}
@@ -87,15 +87,15 @@ Documentation License''.
 @noindent
 The Useless Containers Library (@acronym{UCL}) provides a set of
 containers that can hold the basic set of C language types and untyped
-pointers. This document describes to version @version{}.
+pointers.  This document describes to version @version{}.
 
 This software is Copyright @copyright{} @copyrightyears{} @author{}.
 The @ucl{} is licensed under the terms of the GNU General Public
-License. See the node ``Package License'' for details.
+License.  See the node ``Package License'' for details.
 
 This manual is Copyright @copyright{} @copyrightyears{} @author{}.  This
 manual is licensed under the terms of the @acronym{GNU} Free
-Documentation License. See the node ``Documentation License'' for
+Documentation License.  See the node ``Documentation License'' for
 further details.
 
 @menu
@@ -105,7 +105,6 @@ further details.
 * containers::                  The data structures. 
 * iterators::                   Container iteration.
 * generic::                     Generic functions.
-* debug::                       Debug functions.
 * stub::                        The stubs mechanism.
 
 Appendices
@@ -272,6 +271,7 @@ High level functions
 * vector high append::          Appending data to a vector.
 * vector high insert::          Inserting into a vector.
 * vector high erase::           Removing from a vector.
+* vector high access::          Setters and getters.
 * vector high compare::         Comparing vectors.
 * vector high apply::           Applying functions.
 
@@ -296,14 +296,14 @@ High level functions
 
 
 @noindent
-This container library may be thought of as ``low level''. Methods are
-provided to handle collected data, but none of the containers can be
-used without wrapping it in a module whose functions ``know'' how to
-deal with the type of collected data.
+This container library may be thought of as ``low level''.  Methods are
+provided to handle collected data, but no container can be used without
+wrapping it in a module whose functions ``know'' how to deal with the
+type of collected data.
 
 The containers have to be used as ``leaves'' in the graph of
-dependencies of a whole application. They provide a service: collecting
-data. For example: if we need to store a data structure in a linked
+dependencies of a whole application; they provide a service: collecting
+data.  For example: if we need to store a data structure in a linked
 list, we don't have to think that the structure ``is a'' list link, but
 rather that, temporarily, the structure is ``referenced by'' a list
 link.
@@ -328,17 +328,17 @@ officially it supports only the @gnu{} infrastructure: requires the
 
 
 @noindent
-The recommended way to use the library is to link it using the stub
-mechanims, @ref{stub mechanism} for details. @ref{library version} to
-understand version numbers.
+@ref{stub mechanism} the recommended way to use the library is to link
+it using the stub mechanism.  @ref{library version} to understand
+version numbers.
 
 In the following we assume that the library is installed under the
 @file{/usr/local} hierarchy.
 
 A shell script is installed on the system to provide informations about
 version numbers and installation directories; it should be
-@file{/usr/local/bin/ucl-config}. Run @command{ucl-config} without
-arguments for the usage screen. An example of output for the important
+@file{/usr/local/bin/ucl-config}.  Run @command{ucl-config} without
+arguments for the usage screen.  An example of output for the important
 options is:
 
 @example
@@ -407,7 +407,7 @@ m4_include(ucl.m4)
 @end example
 
 @noindent
-in @file{aclocal.m4}. This macro file defines a function that can be
+in @file{aclocal.m4}.  This macro file defines a function that can be
 invoked with:
 
 @example
@@ -416,7 +416,7 @@ USELESS_CONTAINERS_LIBRARY(2,0)
 
 @noindent
 it  finds  and invokes  @command{ucl-config}  to acquire  installation
-directories and  library names. The  macro accepts two  arguments: the
+directories and  library names.  The  macro accepts two  arguments: the
 major and minor interface version numbers that are needed; both of the
 arguments are optional, but it is recommended to specify them.
 
@@ -431,8 +431,14 @@ the directory under which header files are installed, example:
 the directory under which shared and static libraries are installed,
 example: @file{/usr/local/lib};
 
+@item @@UCL_CPPFLAGS@@
+the preprocessor option @option{-I} with the value of
+@code{@@UCL_INCLUDEDIR@@} appended, example:
+@code{-I/usr/local/include/ucl/0.8a3}; this value should be appended to
+the value of the @var{CPPFLAGS} variable in your @file{Makefile};
+
 @item @@UCL_LDFLAGS@@
-the linker option @code{-L} with the value of @code{@@UCL_LIBDIR@@}
+the linker option @option{-L} with the value of @code{@@UCL_LIBDIR@@}
 appended, example: @file{-L/usr/local/lib}; this value should be
 appended to the value of the @code{LDFLAGS} variable in your
 @file{Makefile};
@@ -441,18 +447,19 @@ appended to the value of the @code{LDFLAGS} variable in your
 the identifier of the shared or static library, example: @code{ucl2.0};
 
 @item @@UCL_LIBS@@
-the linker option @code{-l} with the value of @code{@@UCL_LIBRARY_ID@@}
-appended, example: @code{-lucl2.0}; this value must be appended to the
-command line of the linking command for libraries and programs that
-directly use the @ucl{}; for example: it could be appended to the value
-of the @code{LIBS} variable in your @file{Makefile};
+the linker option @option{-l} with the value of
+@code{@@UCL_LIBRARY_ID@@} appended, example: @code{-lucl2.0}; this value
+must be appended to the command line of the linking command for
+libraries and programs that directly use the @ucl{}; for example: it
+could be appended to the value of the @code{LIBS} variable in your
+@file{Makefile};
 
 @item @@UCL_STUB_STATIC_LIBRARY_ID@@
 the identifier of the static stub library, example:
 @code{uclstaticstub2.0};
 
 @item @@UCL_STUB_LIBS@@
-the linker option @code{-l} with the value of
+the linker option @option{-l} with the value of
 @code{@@UCL_STUB_STATIC_LIBRARY_ID@@} appended, example:
 @code{-luclstaticstub2.0}; this value must be appended to the command
 line of the linking command for libraries and programs that use the
@@ -484,7 +491,7 @@ checking for ucl_init_stub_table in -luclstaticstub2.0... yes
 
 Notice that the static stub library requires the @function{dlopen}
 function and its friends; so to use the stub mechanism you have to link
-with the @code{dl} library. The linking test for
+with the @code{dl} library.  The linking test for
 @code{-luclstaticstub2.0} makes explicit use of the @code{-ldl} option
 to the linker as fifth argument to @code{AC_CHECK_LIB}.
 
@@ -577,9 +584,9 @@ package distribution version.
 
 @noindent
 The design of methods tries to be the one that maximises the number of
-functions that cannot fail. This sometimes leads to ``strange'' or
+functions that cannot fail.  This sometimes leads to ``strange'' or
 ``dangerous'' methods: functions that will cause the application to
-crash if an argument is incorrect. But, in these cases, the library
+crash if an argument is incorrect.  But, in these cases, the library
 provides a function to test the argument separately: to assert the
 precondition.
 
@@ -597,7 +604,7 @@ and make use of it only if the test result is good.
 @noindent
 Under the tests directory of the source tree there is a small program
 that links to the library and prints the size of the @ucl{} data
-structures. On a @code{i686-pc-linux-gnu} the output is:
+structures.  On a @code{i686-pc-linux-gnu} the output is:
 
 @example
 Size of common data types:
@@ -663,7 +670,7 @@ the_function (data_type_t * p)
 
 @noindent
 that is: functions that do not modify the arguments, but whose return
-value must be modifiable. To write them like this:
+value must be modifiable.  To write them like this:
 
 @example
 void data_type_t *
@@ -701,7 +708,7 @@ the_function (const data_type_t * p)
 @}
 @end example
 
-It is not beautiful. But the ugliness is only in the @ucl{} code, the
+It is not beautiful.  But the ugliness is only in the @ucl{} code, the
 user does not see it.
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -713,14 +720,14 @@ user does not see it.
 
 @noindent
 The @ucl{} tries to avoid as much as possible the responsibility to
-allocate and free memory. Dynamic structures based on trees or linked
+allocate and free memory.  Dynamic structures based on trees or linked
 lists don't call any memory allocation function: the responsibility to
 allocate @ucl{} data structures is delegated to the user's code.
 
 This makes the library a little more complex to use, but it also makes
 the library code simpler by reducing the error cases that have to be
-dealt with. Also, the user's code can implement a custom allocator and
-feed memory blocks to the @ucl{} functions. This may come in handy
+dealt with.  Also, the user's code can implement a custom allocator and
+feed memory blocks to the @ucl{} functions.  This may come in handy
 because the @ucl{} makes use of a lot of little data structures.
 
 The library makes use of a default allocator that reverts to the
@@ -743,8 +750,8 @@ functions.
 
 
 @deftp {Struct Typedef} ucl_memory_allocator_t
-Type of the memory allocator. We may build structures of this type to
-select a memory allocation policy. Fields description follows.
+Type of the memory allocator.  We may build structures of this type to
+select a memory allocation policy.  Fields description follows.
 
 @table @code
 @item void * data
@@ -760,7 +767,7 @@ Pointer to a function used to allocate/reallocate/free a memory block.
 
 @deftypefun void ucl_memory_alloc_fun_t (void * @var{data}, void * @var{pp}, size_t @var{dim})
 Function prototype declaration for the function that allocates memory
-blocks. @var{data} is the value of the @code{data} field in the
+blocks.  @var{data} is the value of the @code{data} field in the
 allocator data structure; @var{pp} is internally cast to @code{void **}
 and is a pointer to the variable that holds the pointer to handle;
 @var{dim} is the dimension, in bytes, of the memory block.
@@ -796,7 +803,7 @@ stored in @code{*@var{pp}}.
 
 This function must work like @function{malloc}, @function{realloc} and
 @function{free} with the fundamental difference that: in case of error
-it must not return. What it does instead of returning is not the
+it must not return.  What it does instead of returning is not the
 business of @ucl{}; the default allocator will terminate the process
 with an invocation to @function{exit} with code @code{EXIT_FAILURE}.
 @end deftypefun
@@ -838,7 +845,7 @@ allocator.alloc(allocator.data, &p, 0);
 
 
 @deftypefun void ucl_memory_alloc (void * @var{data}, void * @var{q}, size_t @var{dim})
-Allocate, reallocate or free a block of memory. @var{data} is ignored:
+Allocate, reallocate or free a block of memory.  @var{data} is ignored:
 it is perfectly correct to invoke this function with @var{data} set to
 @null{}.
 @end deftypefun
@@ -886,7 +893,7 @@ This module offers a set of preprocessor macros to handle memory blocks.
 
 
 @deftp {Struct Typedef} ucl_block_t
-The type of memory block. Fields description follows.
+The type of memory block.  Fields description follows.
 
 @table @code
 @item size_t len
@@ -899,7 +906,7 @@ Pointer to the memory block.
 
 
 @deftp {Struct Typedef} ucl_const_block_t
-The type of memory block. Fields description follows.
+The type of memory block.  Fields description follows.
 
 @table @code
 @item size_t len
@@ -944,11 +951,11 @@ This module offers a set of preprocessor macros to handle
 
 
 @deftp {Struct Typedef} ucl_ascii_t
-The type of string. Fields description follows.
+The type of string.  Fields description follows.
 
 @table @code
 @item size_t len
-The number of characters in the block. This does not include the
+The number of characters in the block.  This does not include the
 terminating null character.
 
 @item char * ptr
@@ -958,11 +965,11 @@ Pointer to the memory block.
 
 
 @deftp {Struct Typedef} ucl_const_ascii_t
-The type of string. Fields description follows.
+The type of string.  Fields description follows.
 
 @table @code
 @item size_t len
-The number of characters in the block. This does not include the
+The number of characters in the block.  This does not include the
 terminating null character.
 
 @item const char * ptr
@@ -972,7 +979,7 @@ Pointer to the memory block.
 
 
 @deftp {Struct Typedef} ucl_ascii_list_t
-Holds an array of @code{char *}. Fields:
+Holds an array of @code{char *}.  Fields:
 
 @table @code
 @item size_t len
@@ -1006,7 +1013,7 @@ Allocate a memory block using the @var{allocator} and stores pointer
 and size in the block structure.
 
 @var{dim} is the number of characters that can be stored in the buffer,
-with the exclusion of the terminating null one. The size of the
+with the exclusion of the terminating null one.  The size of the
 allocated block is @code{@var{dim}+1}.
 
 The @code{len} field of @var{block} is set to @var{dim}.
@@ -1073,7 +1080,7 @@ ucl_struct_alloc(p, a_t);
 
 @noindent
 The types of container structures and links/nodes are described in the
-sections dedicated to containers. Here common data types are described.
+sections dedicated to containers.  Here common data types are described.
 
 @menu
 * typedefs value::              Collected values and others.
@@ -1092,7 +1099,7 @@ sections dedicated to containers. Here common data types are described.
 
 
 @deftp {Union Typedef} ucl_value_t
-The data type of objects that can be stored in the containers. It's a
+The data type of objects that can be stored in the containers.  It's a
 @code{union} with the following members:
 
 @table @code
@@ -1132,7 +1139,7 @@ Alias for @code{const char *}.
 
 
 @deftp {Struct Typedef} ucl_array_of_pointers_t
-Array of pointers. Public fields:
+Array of pointers.  Public fields:
 
 @table @code
 @item void ** slots
@@ -1157,7 +1164,7 @@ to some function like a callback.
 @noindent
 Let's say that we want to preallocate a set of structures to be used
 with the @ucl{}, for example: @code{ucl_list_link_t}, the structure
-representing a node in the @ucl{}'s doubly linked list. We allocate them
+representing a node in the @ucl{}'s doubly linked list.  We allocate them
 with code like:
 
 @example
@@ -1176,7 +1183,7 @@ for (size_t i=0; i<NUMBER_OF_PREALLOCATED_STRUCTS; ++i)
 
 @noindent
 it can be convenient to put the links in a linked list and extract them
-at usage time. We do not want to use the @code{ucl_list_t} container,
+at usage time.  We do not want to use the @code{ucl_list_t} container,
 because it is overkill for this application, so we can use the following
 special type.
 
@@ -1380,7 +1387,7 @@ Return true if the ranges are equal.
 
 @deftp {Struct Typedef} ucl_range_t
 Data type used to describe a range of elements in a sequence, by
-selecting the indexes. The fields are of type @code{size_t}.
+selecting the indexes.  The fields are of type @code{size_t}.
 @end deftp
 
 
@@ -1404,7 +1411,7 @@ Ranges of values.
 
 
 @deftp {Struct Typedef} ucl_valcmp_t
-Structure holding a policy for values comparison. Fields:
+Structure holding a policy for values comparison.  Fields:
 
 @table @code
 @item ucl_value_t data
@@ -1419,7 +1426,7 @@ pointer to the function that compares two values of type
 
 @deftypefn {Function Typedef} int ucl_valcmp_fun_t (ucl_value_t @var{data}, ucl_value_t @var{a}, ucl_value_t @var{b})
 The type of functions used to compare values of type
-@code{ucl_value_t}. Functions of this type are used by the associative
+@code{ucl_value_t}.  Functions of this type are used by the associative
 containers.
 
 The behaviour of the function must be the one of the standard function
@@ -1428,12 +1435,12 @@ The behaviour of the function must be the one of the standard function
 
 The function has the responsibility to provide the comparison policy:
 whether to use the @code{num} or @code{ptr} union members and when a
-value is greater than the other. Needless to say, the function has to
+value is greater than the other.  Needless to say, the function has to
 know which one is the data type of values referenced/stored in the
 @code{ucl_value_t} unions.
 
 @var{data} is a pointer to a context that can be used to compare
-values. Its meaning is defined by the function.
+values.  Its meaning is defined by the function.
 @end deftypefn
 
 
@@ -1463,7 +1470,7 @@ An alias for @code{ucl_valcmp_t}.
 
 @deftp {Struct Typedef} ucl_hashcmp_t
 Structure holding the hash function; notice that @code{hashcmp} stands
-for ``hash computation'', not ``hash comparison''. Fields:
+for ``hash computation'', not ``hash comparison''.  Fields:
 
 @table @code
 @item ucl_value_t data
@@ -1476,7 +1483,7 @@ pointer to the function that computes the hash value.
 
 
 @deftypefn {Function Typedef} size_t ucl_hashfun_t (ucl_value_t @var{data}, ucl_value_t @var{key})
-Type of hash functions used by the hash table. The @var{data} argument
+Type of hash functions used by the hash table.  The @var{data} argument
 is a custom value that can be selected for each container, the @var{key}
 value is the key used to store a value.
 
@@ -1497,7 +1504,7 @@ table container).
 
 
 @deftp {Struct Typedef} ucl_callback_t
-Holds a function pointer and a state value. Public fields:
+Holds a function pointer and a state value.  Public fields:
 
 @table @code
 @item ucl_callback_fun_t * func
@@ -1509,9 +1516,9 @@ the state value.
 
 
 @deftypefun void ucl_callback_fun_t (ucl_value_t @var{callback_data}, ucl_value_t @var{custom_data})
-Callback function type definition. @var{callback_data} is the value
+Callback function type definition.  @var{callback_data} is the value
 stored in the callback structure, representing the callback
-state. @var{custom_data} is an invocation specific value.
+state.  @var{custom_data} is an invocation specific value.
 @end deftypefun
 
 
@@ -1649,7 +1656,7 @@ The @ucl{} btree container provides an implementation of a binary tree.
 
 
 @deftp {Struct Typedef} ucl_btree_node_t
-The data type of the nodes. Nodes must be allocated and freed by the
+The data type of the nodes.  Nodes must be allocated and freed by the
 user's code.
 @end deftp
 
@@ -1670,12 +1677,12 @@ brother, a son and a parent:
 
 @noindent
 each node data structure is just a collection of pointers used to keep
-trace of the tree hierarchy. There's no data field: to use a tree to
+trace of the tree hierarchy.  There's no data field: to use a tree to
 store data we have to include the btree node structure in another
 structure; that's what the @ucl{} map container does.
 
 Each of the three pointers in the structure can be @null{}: that
-means that the node has no parent, brother or son. Functions and macros
+means that the node has no parent, brother or son.  Functions and macros
 are provided: to append nodes to other nodes; to extract nodes from the
 tree; to traverse the hierarchy and to find particularly interesting
 nodes.
@@ -1687,15 +1694,15 @@ nodes.
 
 @deftypefun void ucl_btree_constructor (ucl_btree_node_t * @var{self}, const ucl_btree_node_t * @var{dad})
 Initialise an already allocated btree structure referenced by
-@var{self}. @var{dad} is a pointer to the parent node of @var{self}, or
-@null{} if @var{self} has no parent node.  We can use this function to
+@var{self}.  @var{dad} is a pointer to the parent node of @var{self}, or
+@null{} if @var{self} has no parent node.   We can use this function to
 initialise a new node and append it to an existing btree in a single
 step.
 @end deftypefun
 
 
 @deftypefun void ucl_btree_destructor (ucl_btree_node_t * @var{self})
-Reset all the node fields to @null{}. It's a wrapper for
+Reset all the node fields to @null{}.  It's a wrapper for
 @function{ucl_struct_clean}.
 @end deftypefun
 
@@ -1810,7 +1817,7 @@ son.
 
 
 @noindent
-It's a matter of setting pointers to @null{}. Care must be taken not
+It's a matter of setting pointers to @null{}.  Care must be taken not
 to loose reference to subtrees.
 
 We just use the @function{ucl_btree_setdad}, @function{ucl_btree_setbro}
@@ -1839,7 +1846,7 @@ ucl_btree_setdad(b, NULL);
 
 
 @deftypefun {ucl_btree_node_t *} ucl_btree_find_leftmost (const ucl_btree_node_t * @var{self})
-Find the leftmost node in the subtree of the supplied node. To do this,
+Find the leftmost node in the subtree of the supplied node.  To do this,
 we traverse the tree choosing always the son of the current node.
 
 Example:
@@ -1862,7 +1869,7 @@ or to @var{self} itself if it has no son.
 
 
 @deftypefun {ucl_btree_node_t *} ucl_btree_find_rightmost (const ucl_btree_node_t * @var{self})
-Find the rightmost node in the subtree of the supplied node. To do this,
+Find the rightmost node in the subtree of the supplied node.  To do this,
 we traverse the tree choosing always the brother of the current node.
 
 Example:
@@ -1885,7 +1892,7 @@ or to @var{self} itself if it has no brother.
 
 
 @deftypefun {ucl_btree_node_t *} ucl_btree_find_deepest_son (const ucl_btree_node_t * @var{self})
-Find the deepest leftmost son in a subtree. This is different from
+Find the deepest leftmost son in a subtree.  This is different from
 @function{ucl_btree_find_leftmost}.
 
 Example:
@@ -1928,8 +1935,8 @@ or @var{self} itself if it has no son.
 
 @noindent
 Forward inorder iteration: visit all the nodes from the leftmost to the
-rightmost. Backward inorder iteration: visit all the nodes from the
-rightmost to the leftmost. Example: given the tree:
+rightmost.  Backward inorder iteration: visit all the nodes from the
+rightmost to the leftmost.  Example: given the tree:
    
 @example
       5-------10----12
@@ -1953,7 +1960,7 @@ the iteration, or @null{} if the iteration is over.
 
 @deftypefun {ucl_btree_node_t *} ucl_btree_step_inorder_backward (const ucl_btree_node_t * @var{self})
 Advance a backward inorder iteration.  Given a node in a btree, this
-function performs a single step. Return a pointer to the next node in
+function performs a single step.  Return a pointer to the next node in
 the iteration, or @null{} if the iteration is over.
 @end deftypefun
 
@@ -1963,7 +1970,7 @@ the iteration, or @null{} if the iteration is over.
 @noindent
 To perform a complete forward inorder iteration, we have to start from the
 leftmost node (@code{0} in the picture), already visited, and begin from
-there. Example:
+there.  Example:
 
 @example
 ucl_btree_node_t *        cur;
@@ -2034,7 +2041,7 @@ end}.
 @noindent
 To perform a complete backward iteration, we have to start from the
 rightmost node (@code{12} in the picture), already visited, and begin
-from there. Example:
+from there.  Example:
 
 @example
 ucl_btree_node_t *        cur;
@@ -2108,7 +2115,7 @@ end}.
 
 @noindent
 Preorder iteration: visit the current node then the son then the
-brother. Example:
+brother.  Example:
 
 @example
       5-------10----12
@@ -2119,7 +2126,7 @@ brother. Example:
 @end example
 
 @noindent  
-the order is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8, 12, 11. It's a worm that
+the order is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8, 12, 11.  It's a worm that
 always ``turns right''.
 
 
@@ -2132,7 +2139,7 @@ preorder iteration, or @null{} if the iteration is over.
 
 To perform a complete iteration, we have to start from the top node of
 the tree (@code{5} in the example), already visited, and begin from
-there. Example:
+there.  Example:
 
 @example
 ucl_btree_node_t *    cur;
@@ -2152,7 +2159,7 @@ the parent pointer field.
 
 To restrict the iteration to a subtree of a tree: we cannot loop until
 the function returns @null{}, because the top node of a subtree has a
-non--@null{} value in the parent pointer field. With reference to the
+non--@null{} value in the parent pointer field.  With reference to the
 tree in the figure: we select the top node (number 10) and we visit it;
 then we step to the next (number 7) and visit it; then we enter the loop
 until the iterator reaches the top node (number 10 again).
@@ -2183,7 +2190,7 @@ while (cur != end);
 
 @noindent
 Postorder iteration: visit the son, then the brother, then the parent
-node. Example:
+node.  Example:
 
 @example
       5-------10----12
@@ -2204,7 +2211,7 @@ postorder iteration, or @null{} if the iteration is over.
 
 
 To perform a complete iteration, we have to select the deepest leftmost
-son in the tree (@code{2} in the example) and begin from there. Example:
+son in the tree (@code{2} in the example) and begin from there.  Example:
 
 @example
 ucl_btree_node_t *        cur;
@@ -2220,11 +2227,11 @@ while (cur != NULL);
 @end example
 
 To restrict the iteration to a subtree of a tree, we have to check when
-the iterator reaches the top node. Example:
+the iterator reaches the top node.  Example:
 
 To restrict the iteration to a subtree of a tree: we cannot loop until
 the function returns @null{}, because the top node of a subtree has a
-non--@null{} value in the parent pointer field. With reference to the
+non--@null{} value in the parent pointer field.  With reference to the
 tree in the figure: we select the top node (number 10); then we moev to
 the deepest son (number ) and we visit it; then we step to the next
 (number 7) and visit it; then we enter the loop until the iterator
@@ -2259,7 +2266,7 @@ while (cur != end);
 
 
 @noindent
-Level order iteration: visit the tree level by level. Example:
+Level order iteration: visit the tree level by level.  Example:
 
 @example  
       5-------10----12
@@ -2270,7 +2277,7 @@ Level order iteration: visit the tree level by level. Example:
 @end example
 
 @noindent
-the order is: 5, 1, 10, 0, 3, 7, 12, 2, 4, 6, 9, 11, 8. We need a moving
+the order is: 5, 1, 10, 0, 3, 7, 12, 2, 4, 6, 9, 11, 8.  We need a moving
 cursor that always ``turns right'' keeping the count of the level.
 
 
@@ -2281,7 +2288,7 @@ the levelorder iteration, or @null{} if the iteration is over.
 
 
 To perform a complete iteration, we just call this function until it
-returns @null{}. Example:
+returns @null{}.  Example:
 
 @example
 ucl_btree_node_t *        cur;
@@ -2313,14 +2320,14 @@ while (cur != NULL);
 @end menu
 
 @noindent
-The circular container provides a circular double linked list. It's
+The circular container provides a circular double linked list.  It's
 implemented as a chain of little node structures; a pointer to the
-@emph{current} position is stored in a base structure. The current
+@emph{current} position is stored in a base structure.  The current
 position marker can be moved forward and backward as a cursor.
 
 
 @deftp {Struct Typedef} ucl_circular_struct_t
-Base structure of the container. It must be allocated by the user's
+Base structure of the container.  It must be allocated by the user's
 code.
 @end deftp
 
@@ -2331,7 +2338,7 @@ A one--element array of @code{ucl_circular_struct_t}.
 
 
 @deftp Struct ucl_circular_link_t
-The data type of the nodes. Nodes must be allocated and freed by the
+The data type of the nodes.  Nodes must be allocated and freed by the
 user's code.
 @end deftp
 
@@ -2348,7 +2355,7 @@ and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
 
 
 @deftypefun void ucl_circular_constructor (ucl_circular_t @var{self})
-Initialises an already allocated structure. Set all the fields of
+Initialises an already allocated structure.  Set all the fields of
 @var{self} so that the structure represents an empty circular list.
 @end deftypefun
 
@@ -2406,7 +2413,7 @@ while (ucl_circular_size(circ))
 
 
 @deftypefun void ucl_circular_insert (ucl_circular_t @var{self}, ucl_circular_link_t *@var{link_p})
-Insert an element at the current position. To do this the user's code
+Insert an element at the current position.  To do this the user's code
 has to allocate a new circular link structure, store the value into it
 and hand a pointer to the node to this function.
 
@@ -2471,14 +2478,14 @@ if (NULL != link_p)
 
 @deftypefun void ucl_circular_forward (ucl_circular_t @var{self}, int @var{times})
 Move forwards the current position, @var{times} is the forward offset:
-it can be a positive or negative integer. If the container is empty or
+it can be a positive or negative integer.  If the container is empty or
 the offset is zero nothing happens.
 @end deftypefun
 
 
 @deftypefun void ucl_circular_backward (ucl_circular_t @var{self}, int @var{times})
 A wrapper for @function{ucl_circular_forward}: move backwards the
-current position, @var{times} is the backward offset. If the container
+current position, @var{times} is the backward offset.  If the container
 is empty or the offset is zero nothing happens.
 @end deftypefun
 
@@ -2577,20 +2584,20 @@ ucl_circular_setval(link_p, val);
 
 
 @noindent
-A graph is a network of (not so) little structures. The elements of the
-graph are nodes and links. Both node and link structures should be
+A graph is a network of (not so) little structures.  The elements of the
+graph are nodes and links.  Both node and link structures should be
 allocated using an equivalent of @function{calloc}, or reset to zero
 before being inserted in a graph.
 
 
 @deftp {Struct Typedef} ucl_graph_node_t
-The type of the node structure. It should be treated as opaque even if
+The type of the node structure.  It should be treated as opaque even if
 it is not.
 @end deftp
 
 
 @deftp {Struct Typedef} ucl_graph_link_t
-The type of the link structure. It should be treated as opaque even if
+The type of the link structure.  It should be treated as opaque even if
 it is not.
 @end deftp
 
@@ -2603,7 +2610,7 @@ it is not.
 
 @noindent
 @ucl{} does not enforce a collection of node structures: it is
-responsibility of the user to put nodes somewhere. For convenience: the
+responsibility of the user to put nodes somewhere.  For convenience: the
 node structure has a ``next node'' field that allows us to put nodes
 into a simply linked list, but it is not mandatory to use it.
 
@@ -2669,8 +2676,8 @@ node, one of incoming links of the destination node.
 
 
 @deftypefun void ucl_graph_link (@var{source_node}, @var{link}, @var{dest_node})
-Insert a link between two nodes. The source and destination node
-structures cannot be exchanged: the link is directed. Arguments:
+Insert a link between two nodes.  The source and destination node
+structures cannot be exchanged: the link is directed.  Arguments:
 
 @table @code
 @item ucl_graph_node_t * @var{source_node}
@@ -2721,7 +2728,7 @@ matter what is the direction.
 
 
 @deftypefun void ucl_graph_unlink (ucl_graph_link_t * @var{link_p})
-Remove a link from the graph. After this function has been called, it is
+Remove a link from the graph.  After this function has been called, it is
 safe to free the memory of the link.
 @end deftypefun
 
@@ -2748,7 +2755,7 @@ allocator.alloc(allocator.data, &link_p, 0);
 
 @noindent
 To erase a node from a graph we have to remove all the links between it
-and the other nodes. To do it:
+and the other nodes.  To do it:
 
 @example
 ucl_memory_allocator_t  allocator;
@@ -2844,7 +2851,7 @@ Erase a node from a graph finalising all the links.
 
 The node structure itself is not finalised: its link fields are set to
 @null{}, the value field is left untouched, the structure memory is
-not freed. @var{node} can still be used as argument to
+not freed.  @var{node} can still be used as argument to
 @function{ucl_graph_get_next_node}.
 
 @table @code
@@ -2903,11 +2910,11 @@ Erase a node from a graph.
 
 The node structure itself is not finalised: its link fields are set to
 @null{}, the value field is left untouched, the structure memory is
-not freed. @var{node} can still be used as argument to
+not freed.  @var{node} can still be used as argument to
 @function{ucl_graph_get_next_node}.
 
 All the unlinked links are chained together in a simply linked list that
-can be handled later. A pointer to the first link is returned.
+can be handled later.  A pointer to the first link is returned.
 @end deftypefun
 
 
@@ -3037,7 +3044,7 @@ free_memory_of(in);
 
 
 @noindent
-Nodes can be chained in a simply linked list. The @code{next_node_p}
+Nodes can be chained in a simply linked list.  The @code{next_node_p}
 field of @code{ucl_graph_node_t} is a pointer that can be used to
 reference the ``next node''; if it is @null{} no next node exists.
 
@@ -3046,13 +3053,13 @@ reference the ``next node''; if it is @null{} no next node exists.
 
 
 @deftypefun void ucl_graph_set_next_node (ucl_graph_node_t * @var{node}, const ucl_graph_node_t * @var{next})
-Store @var{next} into the ``next node'' field of @var{node}. @var{next}
+Store @var{next} into the ``next node'' field of @var{node}.  @var{next}
 can be @null{} to represent the end of the linked list.
 @end deftypefun
 
 
 @deftypefun {ucl_graph_node_t *} ucl_graph_get_next_node (const ucl_graph_node_t * @var{node})
-Return the pointer stored in the ``next node'' field of @var{node}. The
+Return the pointer stored in the ``next node'' field of @var{node}.  The
 return value can be @null{} if no next node exists.
 @end deftypefun
 
@@ -3084,7 +3091,7 @@ ucl_graph_set_next_node(C, NULL);
 
 
 @deftypefun {ucl_graph_node_t *} ucl_graph_remove_next_node (ucl_graph_node_t * @var{node})
-Extract the node next to @var{node} and return its pointer. If, before
+Extract the node next to @var{node} and return its pointer.  If, before
 the invocation of this function, the scenario is:
 
 @example
@@ -3109,8 +3116,8 @@ after the invocation of this function the scenario is:
 
 
 @deftypefun void ucl_graph_insert_next_node (ucl_graph_node_t * @var{node}, ucl_graph_node_t * @var{next})
-Insert @var{next} in the list as next node of @var{node}. The old next
-node becomes the next node of @var{next}. This function works even when
+Insert @var{next} in the list as next node of @var{node}.  The old next
+node becomes the next node of @var{next}.  This function works even when
 @var{node} is the last of the list and when @var{next} is @null{}.
 
 If, before the invocation of this function, the scenario is:
@@ -3176,7 +3183,7 @@ UCL_GRAPH_NODE_LIST_LOOP(first_p, next_p)
 
 @defmac UCL_GRAPH_NODE_LIST_DELETE_LOOP (@var{first}, @var{iter_node}, @var{tmp_node})
 Iterates over the list of nodes in a way that allows to delete the
-current node from the list. @var{first} is a pointer to the first node
+current node from the list.  @var{first} is a pointer to the first node
 of the list, @var{iter_node} is the iterator variable, @var{tmp_node} is
 a variable used to store a temporary value.
 @end defmac
@@ -3290,14 +3297,14 @@ Return a pointer to the first incoming or outgoing link of @var{node}.
 @deftypefun {ucl_graph_link_t *} ucl_graph_last_output_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_last_input_link (ucl_graph_link_t * @var{link})
 Traverse toward the end the list of incoming or outgoing links, starting
-at @var{link}. Return the last link.
+at @var{link}.  Return the last link.
 @end deftypefun
 
 
 @deftypefun {ucl_graph_link_t *} ucl_graph_first_output_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_first_input_link (ucl_graph_link_t * @var{link})
 Traverse toward the beginning the list of incoming or outgoing links,
-starting at @var{link}. Return the first link.
+starting at @var{link}.  Return the first link.
 @end deftypefun
 
 
@@ -3307,13 +3314,13 @@ starting at @var{link}. Return the first link.
 
 @deftypefun {ucl_graph_link_t *} ucl_graph_prev_input_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_prev_output_link (ucl_graph_link_t * @var{link})
-Return a pointer to the previous link in the chain. The return value is
+Return a pointer to the previous link in the chain.  The return value is
 @null{} if @var{link} is the first link.
 @end deftypefun
 
 @deftypefun {ucl_graph_link_t *} ucl_graph_next_input_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_next_output_link (ucl_graph_link_t * @var{link})
-Return a pointer to the next link in the chain. The return value is
+Return a pointer to the next link in the chain.  The return value is
 @null{} if @var{link} is the last link.
 @end deftypefun
 
@@ -3339,7 +3346,7 @@ Return the number of incoming or outgoing links.
 @noindent
 Depth first search (@dfs{}) is an iteration over the nodes of a graph
 that starts from a selected node and visits a node only once; the result
-of the iteration is a string of nodes. The iteration is analogous to the
+of the iteration is a string of nodes.  The iteration is analogous to the
 preorder iteration in trees (the worm that always turns right in the
 labyrinth).
 
@@ -3429,7 +3436,7 @@ infer properties of the graph.
 
 @noindent
 The @dfs{} is implemented as a recursive process that puts touched nodes
-on a stack. The stack is the result of the iteration.  A @dfs{} is not
+on a stack.  The stack is the result of the iteration.  A @dfs{} is not
 reentrant because nodes are marked by setting a field in
 @code{ucl_graph_node_t} structures: while a @dfs{} is performed the
 graph must be locked for mutual exclusion.
@@ -3440,7 +3447,7 @@ undefined.
 
 @deftp {Struct Typedef} ucl_graph_dfs_t
 Type of structure that holds the result of a @dfs{}, both directed and
-not. Public fields:
+not.  Public fields:
 
 @table @code
 @item ucl_vector_t visited_nodes
@@ -3451,7 +3458,7 @@ elements are instances of @code{ucl_graph_dfs_item_t}.
 
 
 @deftp {Struct Typedef} ucl_graph_dfs_item_t
-Represents a node touched by the iteration. Public fields:
+Represents a node touched by the iteration.  Public fields:
 
 @table @code
 @item ucl_graph_node_t * node_p
@@ -3473,7 +3480,7 @@ Initialise an already allocated search handle.
 
 
 @deftypefun void ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * @var{search_handle})
-Finalise a search handle. All the memory is released. A @dfs{} must
+Finalise a search handle.  All the memory is released.  A @dfs{} must
 @strong{always} be finalised with a call to this function.
 @end deftypefun
 
@@ -3541,7 +3548,7 @@ the keys.
 
 
 @deftp {Struct Typedef} ucl_hash_struct_t
-The base structure. The vector of buckets is available as the field
+The base structure.  The vector of buckets is available as the field
 @code{ucl_vector_t buckets}.
 @end deftp
 
@@ -3552,7 +3559,7 @@ A one--element array of @code{ucl_hash_struct_t}.
 
 
 @deftp {Struct Typedef} ucl_hash_entry_t
-The type of table elements. Both the key and the value stored in a hash
+The type of table elements.  Both the key and the value stored in a hash
 table entry are of type @code{ucl_value_t} (@ref{typedefs}).
 @end deftp
 
@@ -3560,7 +3567,7 @@ table entry are of type @code{ucl_value_t} (@ref{typedefs}).
 The hash was inspired by the book on C++ by Bjarne Stroustrup and the
 hash structure in the @tcl{} (Tool Command Language) source code, by
 John Ousterhout and others (@url{http://www.tcl.tk/} for more about
-@tcl{}). However, no code comes from @tcl{}.
+@tcl{}).  However, no code comes from @tcl{}.
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -3572,7 +3579,7 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 @noindent
 A @ucl{} vector of pointers is allocated by the constructor; each
 pointer, called ``bucket'' in this document, can be @null{} (empty
-bucket) or referencing an entry structure. Entry structures are chained
+bucket) or referencing an entry structure.  Entry structures are chained
 in a linked list.
 
 @example
@@ -3594,9 +3601,9 @@ buckets  .  |----|        -----
 
 The @ucl{} way of managing a vector is to allocate a block of memory,
 with hysteresis, and consider a sub--block of it as ``in use'', that is:
-as holding the collected data. When the hash table is constructed all
+as holding the collected data.  When the hash table is constructed all
 the slots are marked as used, even when the bucket is set to
-@null{}. Reallocations can cause some of the slots to be unused, but if
+@null{}.  Reallocations can cause some of the slots to be unused, but if
 we never reallocate the vector all the memory is used to hold buckets.
 
 
@@ -3654,7 +3661,7 @@ or less) constant.
 
 @noindent
 Enlarging or restricting the hash table means enlarging or restricting
-te vector of buckets. This happens with rules similar, but not equal, to
+te vector of buckets.  This happens with rules similar, but not equal, to
 the ones for the @code{ucl_vector_t} structure; the differences are:
 
 @itemize
@@ -3686,7 +3693,7 @@ a rehashing of all the entries in the table: this is expensive.
 
 @noindent
 The construction of a hash table is split in two steps, to allow custom
-configuration of the vector of buckets. A simple construction, using the
+configuration of the vector of buckets.  A simple construction, using the
 default values, for a table using strings as keys goes like this:
 
 @example
@@ -3799,7 +3806,7 @@ ucl_hash_destructor(table);
 
 
 @deftypefun void ucl_hash_insert (ucl_hash_t @var{self}, ucl_hash_entry_t * @var{ent_p})
-Insert a new entry in the table. The entry structure must be allocated
+Insert a new entry in the table.  The entry structure must be allocated
 and filled with key and value by the user's code.
 
 Inserting an entry with a key that already exists in the table will
@@ -3840,9 +3847,9 @@ if (NULL == entry_p)
 
 
 @deftypefun void ucl_hash_extract (ucl_hash_t @var{self}, ucl_hash_entry_t *@var{ent_p})
-Extract an entry from the table. @var{ent_p}, a pointer to the entry to
+Extract an entry from the table.  @var{ent_p}, a pointer to the entry to
 be removed, must be the return value of a previous invocation to
-@function{ucl_hash_find}. The entry structure is not destroyed nor
+@function{ucl_hash_find}.  The entry structure is not destroyed nor
 freed, just extracted.
 @end deftypefun
 
@@ -3881,14 +3888,14 @@ if (NULL != entry_p)
 
 
 @deftypefun {ucl_hash_entry_t *} ucl_hash_find (const ucl_hash_t @var{self}, const ucl_value_t @var{key})
-Search in the table an entry associated with the selected key. Return a
+Search in the table an entry associated with the selected key.  Return a
 pointer to the entry or @null{} if the key was not found.
 @end deftypefun
 
 
 @deftypefun {ucl_hash_entry_t *} ucl_hash_first (const ucl_hash_t @var{self})
 Return a pointer to the first entry in the table: the first link in the
-list of the first non--@null{} bucket. If the has table is empty: return
+list of the first non--@null{} bucket.  If the has table is empty: return
 @null{}.
 @end deftypefun
 
@@ -3910,7 +3917,7 @@ Return the number of used buckets.
 
 @deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_t @var{this}, ucl_vector_index_t @var{position})
 Return the number of entries in the chain refereces by bucket at
-@var{position}. @var{position} must be a valid bucket index: a
+@var{position}.  @var{position} must be a valid bucket index: a
 non--negative integer in the range @code{[0,
 ucl_hash_number_of_buckets(@var{this}))}.
 @end deftypefun
@@ -3925,7 +3932,7 @@ Return the average number of entries per bucket.
 
 
 @deftypefun void ucl_hash_setkey (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newkey})
-Store a new key in an entry structure. The old key, if present, is
+Store a new key in an entry structure.  The old key, if present, is
 overwritten.
 @end deftypefun
 
@@ -3939,7 +3946,7 @@ Return the key stored in an entry structure.
 
 
 @deftypefun void ucl_hash_setval (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newval})
-Store a new value in an entry structure. The old value, if present, is
+Store a new value in an entry structure.  The old value, if present, is
 overwritten.
 @end deftypefun
 
@@ -3956,7 +3963,7 @@ Return the value stored in an entry structure.
 
 
 @noindent
-At present the hash table is not enlarged automatically. The decision is
+At present the hash table is not enlarged automatically.  The decision is
 delegated to the user's code.
 
 
@@ -3984,8 +3991,8 @@ If an error occurs reallocating the vector: the table is not corrupted.
 
 
 @deftypefun void ucl_hash_iterator (const ucl_hash_t @var{self}, ucl_iterator_t @var{iterator})
-Initialise the table iterator. The iterator pointer references the
-entries in the table. The order in which the entries are visited is
+Initialise the table iterator.  The iterator pointer references the
+entries in the table.  The order in which the entries are visited is
 unknown.
 @end deftypefun
 
@@ -4020,7 +4027,7 @@ for (ucl_hash_iterator(hash, iterator);
 
 @deftypefun size_t ucl_hash_string (const ucl_value_t @var{val})
 Return an unsigned integer representing the hash value for the string
-in @var{val}. The @code{str} member of @var{val} must be a pointer to a
+in @var{val}.  The @code{str} member of @var{val} must be a pointer to a
 @null{}--terminated string of characters.
 
 The hashing algorithm comes from a C++ book by Bjarne Stroustrup
@@ -4046,10 +4053,10 @@ The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 
 @noindent
 The heap container allows us to insert a bunch of values and extract
-them sorted, from the lesser to the greater. The concepts of ``lesser''
+them sorted, from the lesser to the greater.  The concepts of ``lesser''
 and ``greater'' are established by a user--provided function.
 
-The heap is implemented as a binary tree. The heap node structure is
+The heap is implemented as a binary tree.  The heap node structure is
 compatible with the link structure of the @code{ucl_list_t} container
 (@ref{list}), so it's possible to sort a list converting it to a heap
 and then rebuilding it, using list links as heap nodes directly.
@@ -4078,14 +4085,14 @@ The type of heap nodes.
 
 
 @deftypefun void ucl_heap_constructor (ucl_heap_t @var{self}, ucl_valcmp_t @var{valcmp})
-Initialise the heap structure to represent an empty heap. @var{self} is
+Initialise the heap structure to represent an empty heap.  @var{self} is
 a pointer to an already allocated heap structure, @var{valcmp} is the
 function+context used to compare values.
 @end deftypefun
 
 
 @deftypefun void ucl_heap_destructor (ucl_heap_t @var{self})
-Reset a heap structure to represent an empty heap. Before invoking this
+Reset a heap structure to represent an empty heap.  Before invoking this
 function all the nodes must be extracted and freed by the user's code.
 @end deftypefun
 
@@ -4114,7 +4121,7 @@ while (ucl_heap_size(heap))
 
 
 @deftypefun void ucl_heap_insert (ucl_heap_t @var{self}, ucl_heap_node_t *@var{node})
-Insert a new node in the heap. @var{node} is a pointer to an already
+Insert a new node in the heap.  @var{node} is a pointer to an already
 allocated heap node structure.
 @end deftypefun
 
@@ -4143,7 +4150,7 @@ ucl_heap_insert(heap, node_p);
 
 @deftypefun {ucl_heap_node_t *} ucl_heap_extract (ucl_heap_t @var{self})
 Extract a node from the heap; return a pointer to it, or @null{} if the
-heap is empty. The extracted node is the one with the smallest value.
+heap is empty.  The extracted node is the one with the smallest value.
 @end deftypefun
 
 
@@ -4176,7 +4183,7 @@ the heap.
 
 
 @deftypefun void ucl_heap_setval (ucl_heap_node_t * @var{node_p}, const ucl_value_t @code{newval})
-Store a new value in a heap node. The old value is overwritten.
+Store a new value in a heap node.  The old value is overwritten.
 @end deftypefun
 
 
@@ -4187,7 +4194,7 @@ Return a copy of the value stored in a heap node.
 
 @deftypefun void ucl_heap_merge (ucl_heap_t @var{this}, ucl_heap_t @var{other})
 Merge two heaps: nodes from @var{other} are extracted and inserted into
-@var{this}. When the function returns @var{other} is empty.
+@var{this}.  When the function returns @var{other} is empty.
 @end deftypefun
 
 
@@ -4212,7 +4219,7 @@ linked list: elements are stored in little structures chained together
 with pointers that allow the user's code to iterate forward and backward.
 
 @deftp {Struct Typedef} ucl_list_struct_t
-The data type of the base structure. It must be allocated by the user's
+The data type of the base structure.  It must be allocated by the user's
 code.
 @end deftp
 
@@ -4221,7 +4228,7 @@ One--element array of @code{ucl_list_struct_t}.
 @end deftp
 
 @deftp {Struct Typedef} ucl_list_link_t
-The data type of the nodes. Nodes must be allocated and freed by the
+The data type of the nodes.  Nodes must be allocated and freed by the
 user's code.
 @end deftp
 
@@ -4242,13 +4249,13 @@ Initialise an already allocated structure to represent an empty list.
 
 @deftypefun void ucl_list_destructor (ucl_list_t @var{self})
 Reset the structure to represent an empty list.  The structure itself is
-not deallocated. Before calling this the user's code has to make sure
+not deallocated.  Before calling this the user's code has to make sure
 that all the links are extracted from the list.
 
 All the structure fields are reset to zero.  This concept of
 ``destruction'' is still in development in the head of the author, so it
 may change in future releases; it's better, though, to have the code
-invoke a destructor, so if things will change we have it in place. It
+invoke a destructor, so if things will change we have it in place.  It
 may even be replaced by a do--nothing @code{#define}.
 @end deftypefun
 
@@ -4285,7 +4292,7 @@ popping elements from the front or from the back makes no difference.
 
 @deftypefun void ucl_list_insertafter (@var{self}, @var{link_p}, @var{new_p})
 Insert the ink referenced by @var{new_p} after the one referenced by
-@var{link_p}. If @var{link_p} is the last in the chain, then @var{new_p}
+@var{link_p}.  If @var{link_p} is the last in the chain, then @var{new_p}
 becomes the last in the chain.
 
 This function can't be used to insert an element in an empty list.
@@ -4308,7 +4315,7 @@ pointer to a new list link.
 
 @deftypefun void ucl_list_insertbefore (@var{self}, @var{link_p}, @var{new_p})
 Insert the link referenced by @var{new_p} before the one referenced by
-@var{link_p}. If @var{link_p} is the first in the chain, then
+@var{link_p}.  If @var{link_p} is the first in the chain, then
 @var{new_p} becomes the first in the chain.
 
 This function can't be used to insert an element in an empty list.
@@ -4330,13 +4337,13 @@ pointer to a new list link.
 
 
 @deftypefun void ucl_list_pushfront (ucl_list_t @var{self}, ucl_list_link_t *@var{link_p})
-Insert a link at the beginning of the list. This function can be used to
+Insert a link at the beginning of the list.  This function can be used to
 insert an element in an empty list.
 @end deftypefun
 
 
 @deftypefun void ucl_list_pushback (ucl_list_t @var{self}, ucl_list_link_t *@var{link_p})
-Insert a link at the end of the list. This function can be used to
+Insert a link at the end of the list.  This function can be used to
 insert an element in an empty list.
 @end deftypefun
 
@@ -4348,7 +4355,7 @@ insert an element in an empty list.
 
 
 @deftypefun void ucl_list_extract (ucl_list_t @var{self}, ucl_list_link_t * @var{link_p})
-Extract the link referenced by @var{link_p}. @var{link_p} must be the
+Extract the link referenced by @var{link_p}.  @var{link_p} must be the
 return value of a previous invocation of @function{ucl_list_index}.
 @end deftypefun
 
@@ -4372,13 +4379,13 @@ ucl_list_extract(this, link_p);
 
 
 @deftypefun void ucl_list_popfront (ucl_list_t @var{self})
-Remove an element at the beginning of the list. This is a wrapper for
+Remove an element at the beginning of the list.  This is a wrapper for
 @function{ucl_list_extract}.
 @end deftypefun
 
 
 @deftypefun void ucl_list_popback (ucl_list_t @var{self})
-Remove an element at the end of the list. This is a wrapper for
+Remove an element at the end of the list.  This is a wrapper for
 @function{ucl_list_extract}.
 @end deftypefun
 
@@ -4396,7 +4403,7 @@ Return the number of elements in the container.
 
 
 @deftypefun {ucl_list_link_t *} ucl_list_index (ucl_list_t @var{self}, size_t @var{index})
-Convers a position in a pointer to the corresponding list link.  Return
+Convers a position in a pointer to the corresponding list link.   Return
 a pointer to the selected link, or @null{} if the index is out of range.
 @end deftypefun
 
@@ -4501,7 +4508,7 @@ array; it's implemented as an AVL tree.
 
 
 @deftp {Struct Typedef} ucl_map_struct_t
-Base structure for the container. It must be allocated by the user's
+Base structure for the container.  It must be allocated by the user's
 code.
 @end deftp
 
@@ -4510,7 +4517,7 @@ One--element array of @code{ucl_map_struct_t}.
 @end deftp
 
 @deftp {Struct Typedef} ucl_map_link_t
-The data type of the nodes. Nodes must be allocated and freed by the
+The data type of the nodes.  Nodes must be allocated and freed by the
 user's code.
 @end deftp
 
@@ -4556,7 +4563,7 @@ lesser.
 
 Clearly there are two sub--types of map container: the one that allows
 multiple values to be associated to the same key, and the one that
-doesn't. We call the first a @dfn{multimap} and the second a @dfn{simple
+doesn't.  We call the first a @dfn{multimap} and the second a @dfn{simple
 map}.
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -4567,7 +4574,7 @@ map}.
 
 
 @deftypefun void ucl_map_constructor (@var{self}, @var{flags}, @var{keycmp})
-Initialise an already allocated map structure. Arguments:
+Initialise an already allocated map structure.  Arguments:
 
 @table @code
 @item ucl_map_t  @var{self}
@@ -4591,11 +4598,11 @@ the map behaves like a multimap.
 
 
 @deftypefun void ucl_map_destructor (ucl_map_t @var{self})
-Destroy a map structure, the structure itself is not deallocated. The
+Destroy a map structure, the structure itself is not deallocated.  The
 elements are reset to zero.
 
 Before invoking this function the user's code has to extract all the nodes
-from the map.  If the elements are not extracted before this function is
+from the map.   If the elements are not extracted before this function is
 invoked, at least memory leakage will happen.
 @end deftypefun
 
@@ -4612,7 +4619,7 @@ map.
 
 An invocation to this function always succeeds if @var{self} references
 a multimap, but it can lead to an error if @var{self} is a simple map
-and an element with the same key already exists. If such a condition
+and an element with the same key already exists.  If such a condition
 occurs, this function @strong{silently does nothing}; it's our
 responsibility to use @function{ucl_map_find} to check for the element
 existence.
@@ -4650,8 +4657,8 @@ user's code.
 @deftypefun {ucl_map_link_t *} ucl_map_remove (ucl_map_t @var{self}, ucl_map_link_t * @var{link_p})
 @deftypefunx {ucl_map_link_t *} ucl_map_extract (ucl_map_t @var{self}, ucl_map_link_t * @var{link_p})
 Remove from the map the key/value pair in the element referenced by
-@var{link_p}. This must be the return value of a previous invocation of
-@function{ucl_map_find}. This function only removes the link from the
+@var{link_p}.  This must be the return value of a previous invocation of
+@function{ucl_map_find}.  This function only removes the link from the
 map: it's our responsibility to free the key, the value and the link
 structure itself.
 
@@ -4723,7 +4730,7 @@ simple maps.
 
 @deftypefun {ucl_map_link_t *} ucl_map_find (const ucl_map_t @var{self}, const ucl_value_t @var{key});
 Return a pointer to the (first found) element associated with
-@var{key}. The return value is @null{} if such an element doesn't
+@var{key}.  The return value is @null{} if such an element doesn't
 exist.
 
 For a multimap, this function returns a pointer to the first element
@@ -4797,7 +4804,7 @@ to acquire the keys and values.
 @deftypefunx void ucl_map_iterator_postorder (const ucl_map_t @var{self}, ucl_iterator_t @var{iterator})
 @deftypefunx void ucl_map_iterator_levelorder (const ucl_map_t @var{self}, ucl_iterator_t @var{iterator})
 Initalise an inorder, preorder, postorder or levelorder
-iteration. @ref{btree iteration}, for details.
+iteration.  @ref{btree iteration}, for details.
 @end deftypefun
 
 
@@ -4825,10 +4832,10 @@ starting with the last element.
 @noindent
 It's possible to compose map iterators to implement set operations: the
 keys from a map are used as set elements, the values are not
-considered. A set operation is implemented as an iterator that visits
+considered.  A set operation is implemented as an iterator that visits
 one by one the result of the operation itself.
 
-The key values must be of the same data type. That means that the
+The key values must be of the same data type.  That means that the
 compare function used by both the maps, must accept the same type of
 values and return the same values when called with the same arguments.
 
@@ -4853,20 +4860,20 @@ If the sequences are not visited with the in--order iterator, the result
 is not defined.
 
 The set iterators are used in the same fashion of all the other
-iterators in the @acronym{UCL} (@ref{iterators}). The value retrieved
+iterators in the @acronym{UCL} (@ref{iterators}).  The value retrieved
 with @function{ucl_iterator_ptr} is the pointer to the referenced map
 link.
 
 
 @deftypefun void ucl_map_iterator_union (@var{it1}, @var{it2}, @var{iter})
 Initialise the iteration over all the elements from both the
-sequences. Elements present in both sequences are included twice.
+sequences.  Elements present in both sequences are included twice.
 @end deftypefun
 
 
 @deftypefun void ucl_map_iterator_intersection (@var{it1}, @var{it2}, @var{iter})
 Initialise  the iteration  over all  the elements  present in  both the
-sequences. Elements included in only one sequence are discarded.
+sequences.  Elements included in only one sequence are discarded.
 @end deftypefun
 
 
@@ -4918,21 +4925,21 @@ There is no ``base struct'', like @code{ucl_list_t} and
 ``keep a grab'' on the structure itself.
 
 Instead, the tree is just a collection of nodes linked together, and we
-control the struct keeping a pointer to one of the nodes.  Which one
-doesn't matter. Nothing prevents us from storing somewhere a pointer to
+control the struct keeping a pointer to one of the nodes.   Which one
+doesn't matter.  Nothing prevents us from storing somewhere a pointer to
 the ``root node'', but this is not required.
 
 At any time we must take care of holding a pointer to at least one tree
-node; if we loose it, we will not be able to free the struct. Keeping
+node; if we loose it, we will not be able to free the struct.  Keeping
 two or more references to nodes is possible but dangerous: if we delete
 a subtree we may end up with a pointer to a memory block already freed.
 
-The referenced node is called ``current''. To handle the tree we use a
-``walking'' pattern. We can add/remove nodes relative to the ``current'' and
+The referenced node is called ``current''.  To handle the tree we use a
+``walking'' pattern.  We can add/remove nodes relative to the ``current'' and
 move step by step from the ``current'' to adjacent nodes.
 
 Care must be taken to distinguish between the node's classification from
-the ``logic'' point of view and the ``implementation'' point of view. A
+the ``logic'' point of view and the ``implementation'' point of view.  A
 tree is implemented with a binary tree.  Here we talk about the logic
 point of view; so: the ``dad'' of a node is the uplevel node in the
 hierarchy, the ``brother'' of a node is in the same level of the
@@ -5003,8 +5010,8 @@ functions.
 
 
 @deftypefun void ucl_tree_constructor (ucl_tree_node_t * @var{nod_p})
-A wrapper for @function{ucl_struct_clean}. Initialise to zero all the
-members of the structure referenced by @var{nod_p}. This is recommended
+A wrapper for @function{ucl_struct_clean}.  Initialise to zero all the
+members of the structure referenced by @var{nod_p}.  This is recommended
 before inserting a node into a tree.
 @end deftypefun
 
@@ -5108,7 +5115,7 @@ to a tree.
 
 @deftypefun void ucl_tree_set_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
 Link together the nodes referenced by @var{nod_p} and @var{son_p} so
-that one is the son of the other. The old reference to the son of
+that one is the son of the other.  The old reference to the son of
 @var{nod_p} is lost; the old reference to the dad of @var{son_p} is
 lost.
 @end deftypefun
@@ -5116,20 +5123,20 @@ lost.
 
 @deftypefun void ucl_tree_set_bro (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
 Link together the nodes referenced by @var{nod_p} and @var{bro_p} so
-that one is the brother of the other. The node referenced by @var{bro_p}
-becomes the right brother of the node referenced by @var{nod_p}. The old
+that one is the brother of the other.  The node referenced by @var{bro_p}
+becomes the right brother of the node referenced by @var{nod_p}.  The old
 references to the brothers of the two nodes are lost.
 @end deftypefun
 
 
-The following functions are used to insert subtrees in a tree. None of
-the nodes in the target tree are detached. The links in the new subtrees
+The following functions are used to insert subtrees in a tree.  None of
+the nodes in the target tree are detached.  The links in the new subtrees
 that are not interested by the relations in these functions, are left
 untouched.
 
 
 @deftypefun void ucl_tree_insert_dad (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{dad_p})
-Inserts a new dad for a node. The dad node becomes the father of the
+Inserts a new dad for a node.  The dad node becomes the father of the
 node and the first son of the old dad (if any).
 
 @example	
@@ -5168,7 +5175,7 @@ don't keep a reference to them.
 
 
 @deftypefun void ucl_tree_insert_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
-Insert a new child for a node. The node referenced by @var{son_p}
+Insert a new child for a node.  The node referenced by @var{son_p}
 becomes the last between the children of the node referenced by
 @var{nod_p}.
 
@@ -5202,7 +5209,7 @@ reference to it.
 
 
 @deftypefun void ucl_tree_insert_prev (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
-Insert a new brother for a node. The node referenced by @var{bro_p}
+Insert a new brother for a node.  The node referenced by @var{bro_p}
 becomes the left brother of the node referenced by @var{nod_p}.
 
 @example
@@ -5231,7 +5238,7 @@ don't keep a reference to them.
 
 
 @deftypefun void ucl_tree_insert_next (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
-Insert a new brother for a node. The node referenced by @var{bro_p}
+Insert a new brother for a node.  The node referenced by @var{bro_p}
 becomes the right brother of the node referenced by @var{nod_p}.
 
 @example
@@ -5276,7 +5283,7 @@ The referenced node and all its brothers are inserted in place of the
 extracted dad.
 
 Returns a pointer to the extracted node, or @null{} if the selected node
-has nod dad. All the pointers in the extracted node structure are reset
+has nod dad.  All the pointers in the extracted node structure are reset
 to @null{}.
 
 @example
@@ -5293,11 +5300,11 @@ to @null{}.
 
 @deftypefun {ucl_tree_node_t *} ucl_tree_extract_son (ucl_tree_node_t * @var{nod_p})
 Extract the son of the node referenced by @var{nod_p} from the tree.
-The son of the selected node is extracted from the hierarchy. All of its
+The son of the selected node is extracted from the hierarchy.  All of its
 children become children of the selected node.
 
 Return a pointer to the extracted node or @null{} if the selected node
-has no son. All the pointers in the extracted node structure are reset
+has no son.  All the pointers in the extracted node structure are reset
 to @null{}.
 
 @example
@@ -5318,11 +5325,11 @@ to @null{}.
 
 @deftypefun {ucl_tree_node_t *} ucl_tree_extract_prev (ucl_tree_node_t * @var{nod_p})
 Extract the left brother of the node referenced by @var{nod_p}.  The
-left brother of the selected node is extracted from the hierarchy. Its
+left brother of the selected node is extracted from the hierarchy.  Its
 children become left brothers of the selected node.
 
 Return a pointer to the extracted node, or @null{} if the selected node
-has no left brother.  All the pointers in the extracted node structure
+has no left brother.   All the pointers in the extracted node structure
 are reset to @null{}.
 
 @example
@@ -5342,12 +5349,12 @@ are reset to @null{}.
 
 
 @deftypefun {ucl_tree_node_t *} ucl_tree_extract_next (ucl_tree_node_t * @var{nod_p})
-Extract the right brother of the node referenced by @var{nod_p}.  The
-right brother of the selected node is extracted from the hierarchy. Its
+Extract the right brother of the node referenced by @var{nod_p}.   The
+right brother of the selected node is extracted from the hierarchy.  Its
 children become right brothers of the selected node.
 
 Return a pointer to the extracted node, or @null{} if the selected node
-has no right brother.  All the pointers in the extracted node structure
+has no right brother.   All the pointers in the extracted node structure
 are reset to @null{}.
 
 @example
@@ -5425,7 +5432,7 @@ indexes, we denote a range of values with @code{[min, max)}, where
 
 
 @deftp {Struct Typedef} ucl_vector_struct_t
-The data type of the base structure. It must be allocated by the user
+The data type of the base structure.  It must be allocated by the user
 code.
 @end deftp
 
@@ -5438,7 +5445,7 @@ An alias to @code{size_t}, used to represent indexes into the vector.
 @end deftp
 
 @deftp {Struct Typedef} ucl_vector_array_t
-Holds an array of vectors. Public slots:
+Holds an array of vectors.  Public slots:
 
 @table @code
 @item size_t number_of_vectors
@@ -5472,13 +5479,13 @@ ucl_vector_array_t    array = @{
 The vector structure can be allocated anywhere; the array is always
 dynamically allocated and it is described by four pointers:
 @code{first_allocated_slot}, @code{first_used_slot},
-@code{last_used_slot}, @code{last_allocated_slot}. All the pointers are
+@code{last_used_slot}, @code{last_allocated_slot}.  All the pointers are
 of byte type (usually @code{unsigned char}).
 
 A "slot" is a section of the allocated memory that can hold an element;
-the dimension of the slots is configured at initialisation time. A "free
+the dimension of the slots is configured at initialisation time.  A "free
 slot" is a slot that does not contain an element; free slots can be
-present at the beginning and end of the allocated memory. A "used slot"
+present at the beginning and end of the allocated memory.  A "used slot"
 is a slot that holds an element; used slots are always contiguous in the
 allocated memory.
 
@@ -5752,22 +5759,22 @@ declared in @file{ucl.h}, they are set at initialisation time and can be
 overridden before constructing the vector.
 
 @defmac UCL_VECTOR_DEFAULT_SIZE
-Default value for the @code{size} structure field. Value: 16.
+Default value for the @code{size} structure field.  Value: 16.
 @end defmac
 
 
 @defmac UCL_VECTOR_DEFAULT_STEP_UP
-Default value for the @code{step_up} structure field. Value: 8.
+Default value for the @code{step_up} structure field.  Value: 8.
 @end defmac
 
 
 @defmac UCL_VECTOR_DEFAULT_STEP_DOWN
-Default value for the @code{step_down} structure field. Value: 10.
+Default value for the @code{step_down} structure field.  Value: 10.
 @end defmac
 
 
 @defmac UCL_VECTOR_DEFAULT_PAD
-Default value for the @code{pad} structure field. Value: 3.
+Default value for the @code{pad} structure field.  Value: 3.
 @end defmac
 
 The declaration allows overriding, for example:
@@ -5799,7 +5806,7 @@ ucl_vector_constructor(V);
 @subsubsection Initialisation functions
 
 @deftypefun void ucl_vector_initialise (ucl_vector_t @var{self}, size_t @var{dim})
-Initialise the members of the structure with the default values. After
+Initialise the members of the structure with the default values.  After
 the invocation to this function, the user's code may override the default
 values by explicitly setting them before invoking the constructor.
 
@@ -5834,15 +5841,15 @@ fields of @var{self}.
 
 If the @code{step_up} field holds a value greater than the
 @code{step_down} field: the @code{step_down} field is changed to
-@code{step_up+1}. @ref{vector memory} for details.
+@code{step_up+1}.  @ref{vector memory} for details.
 @end deftypefun
 
 
 @deftypefun void ucl_vector_destructor (ucl_vector_t @var{self})
 Destroy the structure pointed by @var{self}, only if it has been built
-(it is safe to call this function on an already destroyed vector). The
-structure itself is not deallocated. Any block of dynamically allocated
-memory is freed.  All the structure fields are reset to zero.
+(it is safe to call this function on an already destroyed vector).  The
+structure itself is not deallocated.  Any block of dynamically allocated
+memory is freed.   All the structure fields are reset to zero.
 
 If the contained values need some sort of destruction, it is
 responsibility of the user's code to extract them before invoking this
@@ -5894,7 +5901,7 @@ Update the number of the padding slots.
 
 @deftypefun void ucl_vector_mark_all_slots_as_used (ucl_vector_t @var{self})
 Set the fields of @var{self} to describe a vector that uses all the
-allocated memory. This means:
+allocated memory.  This means:
 
 @example
 self->first_used_slot = self->first_allocated_slot;
@@ -5906,14 +5913,14 @@ This is for special vector usage.
 
 
 @deftypefun void ucl_vector_mark_allocated_range_as_used (ucl_vector_t @var{self}, ucl_range_t @var{range})
-Mark a range of slots as used. This destroys the previous concept of
-used slots. Notice that @var{range} is relative to the allocated slots,
+Mark a range of slots as used.  This destroys the previous concept of
+used slots.  Notice that @var{range} is relative to the allocated slots,
 not to the previously used slots.
 @end deftypefun
 
 
 @deftypefun void ucl_vector_reset (ucl_vector_t @var{self})
-Reset the internal fields so that the vector appears to be empty. The
+Reset the internal fields so that the vector appears to be empty.  The
 allocated slots memory is not touched.
 @end deftypefun
 
@@ -5926,7 +5933,7 @@ else.
 
 @deftypefun void ucl_vector_initialise_buffer (ucl_vector_t @var{self})
 Initialise the vector with: slot dimension one; initial size, step up
-and down all to 4096; pad size zero. This function does not call
+and down all to 4096; pad size zero.  This function does not call
 @function{ucl_vector_constructor}.
 
 Example:
@@ -5944,7 +5951,7 @@ ucl_vector_constructor(vector);
 A replacement for @function{ucl_vector_constructor} that takes an
 already allocated block as data area; it is mandatory for the size of
 the block to be an integer multiple of the slot's dimension registered
-in @var{self}. The vector is initialised to be full: all the slots are
+in @var{self}.  The vector is initialised to be full: all the slots are
 marked as used.
 
 The responsibility of the block memory is transferred to the vector, so
@@ -5987,7 +5994,7 @@ Convert @var{index} into the corresponding pointer to a slot in the
 vector.
 
 Return a pointer to the selected slot, or @null{} if the selected index
-is out of range. The range of valid values for @var{index} is @code{[0,
+is out of range.  The range of valid values for @var{index} is @code{[0,
 size)}, where @code{size} is the return value of
 @function{ucl_vector_size}.
 
@@ -6025,7 +6032,7 @@ vector: that way the returned value can be used with
 vector.
 
 Return a pointer to the selected slot, or @null{} if the selected index
-is out of range. The range of valid values for @var{index} is @code{[0,
+is out of range.  The range of valid values for @var{index} is @code{[0,
 size]}, where @code{size} is the return value of
 @function{ucl_vector_size}.
 
@@ -6076,7 +6083,7 @@ Return the index of the last element.
 
 
 @deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
-Return the index corresponding to a pointer to slot. It is the inverse
+Return the index corresponding to a pointer to slot.  It is the inverse
 of @function{ucl_vector_index_to_slot}.
 @end deftypefun
 
@@ -6116,7 +6123,7 @@ Return the inclusive range of indexes representing the whole vector.
 
 @deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
 Return the inclusive range of indexes from @var{position} to the end of
-the vector. @var{position} must be a valid index for @var{self}.
+the vector.  @var{position} must be a valid index for @var{self}.
 @end deftypefun
 
 
@@ -6132,7 +6139,7 @@ ucl_range_set_min_max(range, 0, position);
 
 @deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
 Return the inclusive range of indexes from the end of the vector to
-@var{position}. @var{position} must be greater or equal to the size of
+@var{position}.  @var{position} must be greater or equal to the size of
 @var{self}.
 
 The returned range of indexes is invalid for @var{self}, but it can be
@@ -6222,7 +6229,7 @@ The pointer to the slot must be the return value of a previous
 invocation to @function{ucl_vector_index_to_new_slot}.
 
 This function tries to move as less elements as possible to create an
-empty slot at the selected position. The return value is a pointer to
+empty slot at the selected position.  The return value is a pointer to
 the empty slot: it can be different from the value of the @var{target}
 argument.
 @end deftypefun
@@ -6230,7 +6237,7 @@ argument.
 
 @deftypefun {void *} ucl_vector_insert_sort (ucl_vector_t @var{self}, void * @var{data_p})
 Find the position in the vector in which an element must be inserted to
-keep the array sorted and create a new slot there. This function assumes
+keep the array sorted and create a new slot there.  This function assumes
 that:
 
 @enumerate
@@ -6253,7 +6260,7 @@ The return value is a pointer to the empty slot.
 
 The correct sequence of function calls required to insert a new element
 is: enlarge the vector, acquire the pointer, make a free slot, copy the
-value. Example of insertion:
+value.  Example of insertion:
 
 @example
 ucl_vector_t            vector;
@@ -6299,7 +6306,7 @@ ptr   = ucl_vector_insert_sort(vector, &data);
 
 @deftypefun void ucl_vector_erase (ucl_vector_t @var{self}, void * @var{slot})
 Erase an element at a selected position: the slot is overwritten by
-moving as less elements as possible. After the invocation: the pointer
+moving as less elements as possible.  After the invocation: the pointer
 represented by the @var{slot} argument value, it's not guaranteed to be
 a pointer to a valid slot in the vector.
 @end deftypefun
@@ -6364,14 +6371,14 @@ Return a value representing the size of the elements.
 
 @deftypefun {void *} ucl_vector_increment_slot (const ucl_vector_t @var{self}, void * @var{slot})
 Interpret @var{slot} as a pointer to a slot of @var{self} and increment
-it so that it references the next element. This function does no bounds
+it so that it references the next element.  This function does no bounds
 checking.
 @end deftypefun
 
 
 @deftypefun {void *} ucl_vector_dencrement_slot (const ucl_vector_t @var{self}, void * @var{slot})
 Interpret @var{slot} as a pointer to a slot of @var{self} and decrement
-it so that it references the previous element. This function does no
+it so that it references the previous element.  This function does no
 bounds checking.
 @end deftypefun
 
@@ -6420,7 +6427,7 @@ range with @function{ucl_vector_range_from_block}.
 @end deftypefun
 
 @deftypefun void ucl_vector_mark_as_used (ucl_vector_t @var{self}, ucl_block_t @var{block})
-Mark the range of free slots referenced by @var{block} as used. This
+Mark the range of free slots referenced by @var{block} as used.  This
 function is meant to commit usage of blocks requested with
 @function{ucl_vector_get_free_block_at_beginning} and
 @function{ucl_vector_get_free_block_at_end}.
@@ -6441,7 +6448,7 @@ Quick sort the vector using the C library function
 
 
 @deftypefun ucl_bool_t ucl_vector_sorted (ucl_vector_t @var{self})
-Return true if the vector is sorted. This function scans the whole
+Return true if the vector is sorted.  This function scans the whole
 vector, so it is slow.
 @end deftypefun
 
@@ -6539,14 +6546,14 @@ Initialise a backward iteration.
 
 @deftypefun void ucl_vector_iterator_range_forward (const ucl_vector_t @var{self}, ucl_range_t @var{range}, ucl_iterator_t @var{iterator})
 Initialise a forward iteration over the inclusive range of elements
-selected by @var{range}. @var{range} must be a valid range for
+selected by @var{range}.  @var{range} must be a valid range for
 @var{self}, we can test this with @function{ucl_vector_range_is_valid}.
 @end deftypefun
 
 
 @deftypefun void ucl_vector_iterator_range_backward (const ucl_vector_t @var{self}, ucl_range_t @var{range}, ucl_iterator_t @var{iterator})
 Initialise a backward iteration over the inclusive range of elements
-selected by @var{range}. @var{range} must be a valid range for
+selected by @var{range}.  @var{range} must be a valid range for
 @var{self}, we can test this with @function{ucl_vector_range_is_valid}.
 @end deftypefun
 
@@ -6559,7 +6566,7 @@ selected by @var{range}. @var{range} must be a valid range for
 
 @noindent
 The allocation policy for a vector container is ruled by the arguments
-handed to the initialisation functions (@ref{vector creation}). The
+handed to the initialisation functions (@ref{vector creation}).  The
 rules are:
 
 @itemize @bullet
@@ -6681,7 +6688,7 @@ reallocate the vector.
 
 @deftypefun size_t ucl_vector_enlarged_size (ucl_vector_t @var{self})
 Return the number of allocated slots after a reallocation for
-enlarging. This function returns a meaningful value only when
+enlarging.  This function returns a meaningful value only when
 @function{ucl_vector_will_enlarge} returns true.
 @end deftypefun
 
@@ -6700,7 +6707,7 @@ An error reallocating memory does not corrupt the vector.
 
 @deftypefun void ucl_vector_enlarge_for_range (ucl_vector_t @var{self}, ucl_range_t @var{range})
 Make sure that there is enough memory to hold the inclusive range of
-indexes described by @var{range}. This works despite @var{range} being:
+indexes described by @var{range}.  This works despite @var{range} being:
 already a valid range of indexes, completely beyond the upper index
 limits, across the current upper index limit.
 @end deftypefun
@@ -6729,7 +6736,7 @@ reallocate the vector.
 
 @deftypefun size_t ucl_vector_restricted_size (ucl_vector_t @var{self})
 Return the number of allocated slots after a reallocation for
-restricting. This function returns a meaningful value only when
+restricting.  This function returns a meaningful value only when
 @function{ucl_vector_will_restrict} returns true.
 @end deftypefun
 
@@ -6738,20 +6745,20 @@ restricting. This function returns a meaningful value only when
 
 
 @deftypefun void ucl_vector_set_memory_to_zero (ucl_vector_t @var{self})
-Set all the slots to zero. This does not change the vector size: it is
+Set all the slots to zero.  This does not change the vector size: it is
 not like extracting all the elements.
 @end deftypefun
 
 
 @deftypefun size_t ucl_vector_number_of_free_slots (ucl_vector_t @var{self})
-Returns the number of allocated but currently unused slots. It is the
+Returns the number of allocated but currently unused slots.  It is the
 number of elements that can be added without causing a memory
 reallocation.
 @end deftypefun
 
 
 @deftypefun void ucl_vector_register_allocator (ucl_vector_t @var{self}, ucl_memory_allocator_t @var{allocator})
-Register a new allocator. If this function is not used: the default
+Register a new allocator.  If this function is not used: the default
 allocator is set.
 
 It is safe to call this function only between a call to
@@ -6867,7 +6874,7 @@ initialised an constructed vector.
 
 @deftypefun void ucl_vector_append_block (ucl_vector_t @var{target}, const ucl_block_t @var{block})
 Append a block to the vector by copying data from @var{block} with
-@function{memcpy}. The size of the block must be an integer multiple of
+@function{memcpy}.  The size of the block must be an integer multiple of
 the target vector slot dimension.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
@@ -6876,7 +6883,7 @@ the target vector slot dimension.
 
 @deftypefun void ucl_vector_append (ucl_vector_t @var{target}, const ucl_vector_t @var{source})
 Append all the elements of @var{source} to the end of @var{target} by
-copying data with @function{memcpy}. If @var{target} is empty: this
+copying data with @function{memcpy}.  If @var{target} is empty: this
 operation is equivalent to duplicating @var{source}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
@@ -6892,7 +6899,7 @@ of @var{target} by copying data with @function{memcpy}.
 
 
 @deftypefun void ucl_vector_append_more (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, @dots{})
-Append elements from a set of vectors to the end of @var{target}. The
+Append elements from a set of vectors to the end of @var{target}.  The
 @code{...} arguments are a list of @code{ucl_vector_t} values terminated
 by a @null{}.
 
@@ -6938,7 +6945,7 @@ Insert the data referenced by @var{block} into @var{target} at
 @var{offset}.
 
 The size of @var{block} must be an integer multiple of the slot's
-dimension of @var{target}. @var{offset} must be a valid value for
+dimension of @var{target}.  @var{offset} must be a valid value for
 @function{ucl_vector_index_to_new_slot}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
@@ -6950,7 +6957,7 @@ Insert the data referenced by the inclusive @var{range} of indexes from
 @var{source} into @var{target} at @var{offset}.
 
 The size of @var{block} must be an integer multiple of the slot's
-dimension of @var{target}. @var{offset} must be a valid value for
+dimension of @var{target}.  @var{offset} must be a valid value for
 @function{ucl_vector_index_to_new_slot}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
@@ -6980,10 +6987,10 @@ Erase all the elements in the selected range.
 
 @deftypefun void ucl_vector_copy_range (ucl_vector_t @var{target}, ucl_vector_index_t @var{position}, ucl_vector_t @var{source}, ucl_range_t @var{source_range})
 Copy slots referenced by @var{source_range} in @var{source} to
-@var{position} in @var{target}. Data into @var{target} is overwritten.
+@var{position} in @var{target}.  Data into @var{target} is overwritten.
 
 @var{position} must be a valid index for @var{target}.
-@var{source_range} must be valid for @var{source}. There must be enough
+@var{source_range} must be valid for @var{source}.  There must be enough
 slots after @var{position} in @var{target} to hold the whole range from
 @var{source}.
 @end deftypefun
@@ -6994,7 +7001,7 @@ Copy data from @var{source} into @var{target} at @var{position},
 overwriting data.
 
 @var{position} must be a valid index for @var{target} and enough slots
-must exist after it to accept the whol @var{source} block. The length of
+must exist after it to accept the whol @var{source} block.  The length of
 @var{source} must be an integer multiple of the slot's dimension in
 @var{target}.
 @end deftypefun
@@ -7005,7 +7012,7 @@ Copy data from @var{source} at @var{position} into @var{target},
 overwriting data.
 
 @var{position} must be a valid index for @var{target} and there must be
-enough slots in @var{target} to fill the block. The length of
+enough slots in @var{target} to fill the block.  The length of
 @var{source} must be an integer multiple of the slot's dimension in
 @var{target}.
 @end deftypefun
@@ -7020,12 +7027,12 @@ enough slots in @var{target} to fill the block. The length of
 
 @deftypefun int ucl_vector_compare_range (ucl_vector_t @var{a}, ucl_range_t @var{range_a}, ucl_vector_t @var{b}, ucl_range_t @var{range_b})
 Compare two ranges of elements in two vectors, element by element, using
-the comparison function of @var{a}. If the size of the ranges is not
+the comparison function of @var{a}.  If the size of the ranges is not
 equal: only a number of elements equal to the lesser size is
-compared. The comparison stops at the first pair of elements for which
+compared.  The comparison stops at the first pair of elements for which
 the comparison function returns non--zero.
 
-Works somewhat like @function{strcmp}. Return:
+Works somewhat like @function{strcmp}.  Return:
 
 @table @code
 @item 0
@@ -7069,14 +7076,14 @@ are equal.
 @noindent
 The functions described in this section allow us to apply a function, in
 the form of a callback (@ref{typedefs callback}), to each element in a
-vector or to each element in a range over a vector. The ``for each''
+vector or to each element in a range over a vector.  The ``for each''
 kind leaves to the callback the responsibility to produce a result,
 while the ``map'' kind produces a vector holding processed elements.
 
 
 @deftypefun void ucl_vector_for_each (ucl_callback_t @var{cb}, ucl_vector_t @var{V})
 Apply the callback @var{cb} to each element in the vector
-@var{V}. The callback function is invoked with a pointer to the
+@var{V}.  The callback function is invoked with a pointer to the
 element's slot as custom value.
 
 Example of callback that sums the values in a vector:
@@ -7213,7 +7220,7 @@ in an array rather than a list of arguments.
 
 @deftypefun void ucl_vector_map (ucl_vector_t @var{R}, ucl_callback_t @var{cb}, ucl_vector_t @var{V})
 Apply the callback @var{cb} to each element in the vector @var{V} and
-store the result in the vector @var{R}. New slots are added to @var{R}
+store the result in the vector @var{R}.  New slots are added to @var{R}
 using @function{ucl_vector_push_back}.
 
 The callback function is invoked with a pointer to a
@@ -7383,7 +7390,7 @@ Advance the iteration.
 
 
 @deftypefun {void *} ucl_iterator_ptr (ucl_iterator_t @var{iterator})
-Return a pointer referencing the current value. If the iteration is
+Return a pointer referencing the current value.  If the iteration is
 already over: return @null{}.
 @end deftypefun
 
@@ -7458,7 +7465,7 @@ The following functions match the @code{ucl_valcmp_fun_t} prototype.
 
 
 @deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Compare the @code{num} fields of two values. @var{data} must be @null{}.
+Compare the @code{num} fields of two values.  @var{data} must be @null{}.
 
 Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
 greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
@@ -7466,7 +7473,7 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 
 
 @deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Compare the @code{unum} fields of two values. @var{data} must be
+Compare the @code{unum} fields of two values.  @var{data} must be
 @null{}.
 
 Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
@@ -7475,8 +7482,8 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 
 
 @deftypefun int ucl_strcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Wrapper for @function{strcmp}. Compare the @code{str} fields of @var{a}
-and @code{b}. @var{data} must be @null{}.
+Wrapper for @function{strcmp}.  Compare the @code{str} fields of @var{a}
+and @code{b}.  @var{data} must be @null{}.
 @end deftypefun
 
 
@@ -7492,7 +7499,7 @@ type @code{int}: compare the two referenced numbers by invoking
 
 @deftypefun void ucl_quicksort (void * @var{array}, size_t @var{count}, size_t @var{size}, ucl_valcmp_t @var{compar})
 Like the standard @function{qsort}, but makes use of the comparison
-function and context in @var{compar}.  @var{array} is an array of
+function and context in @var{compar}.   @var{array} is an array of
 @var{count} elements of size @var{size}.
 
 This is indeed the @function{qsort} function from the @gnu{} C Library
@@ -7502,43 +7509,6 @@ version 2.4, modified to use @var{compar}.
 
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-@c ------------------------------------------------------------
-@node debug
-@chapter Debug functions
-
-
-
-@deftypefun void ucl_debug_print (const char * @var{funcname}, const char * @var{template}, ...)
-Like @function{fprintf}: format @var{template} using the optional
-parameters, then write the result to @code{stderr}.  The string
-@code{funcname} is prepended to the output.
-
-The output is printed only if debugging is on.
-@end deftypefun
-
-
-@deftypefun {const char *} ucl_question (ucl_bool_t @var{expr})
-If @var{expr} is true return a pointer to the string @code{yes}, else
-return a pointer to the string @code{no}.
-@end deftypefun
-
-
-@deftypefun void ucl_debug_on (void)
-@deftypefunx void ucl_debug_off (void)
-Turn on/off debugging. The default is on.
-@end deftypefun
-
-
-@defmac ucl_debug (@var{string}, ...)
-If the preprocessor symbol @code{UCL_DEBUGGING} is defined to @code{1}:
-the macro expands to @function{ucl_debug_print} with @var{funcname} set
-to @code{__func__} and the other parameters left untouched.
-
-Else: the macro expands to the empty string.
-@end defmac
-
-
 
 @c ------------------------------------------------------------
 @node stub
@@ -7559,14 +7529,14 @@ and definitions in the @ucl{} header file.
 Initialise the stub table; to be called when using the stub library,
 before invoking any of the @ucl{} functions.
 
-Loads the @ucl{} library using the @code{dl} mechanism. If no error
+Loads the @ucl{} library using the @code{dl} mechanism.  If no error
 returns @null{}, else returns the error string returned by
 @function{dlerror}.
 @end deftypefun
 
 
 @deftypefun int ucl_final_stub_table (void)
-Unloads the @ucl{} library using the @code{dl} mechanism.  If no error
+Unloads the @ucl{} library using the @code{dl} mechanism.   If no error
 returns 0, else returns the error code returned by @function{dlclose}.
 @end deftypefun
 
@@ -7640,11 +7610,11 @@ gcc ourcode.o -lucl1.0
 
 
 @noindent
-Ellis Horowitz, Sartaj  Sahni and Susan Anderson--Freed. @emph{Strutture
-dati in C}. McGraw--Hill, 1993.
+Ellis Horowitz, Sartaj  Sahni and Susan Anderson--Freed.  @emph{Strutture
+dati in C}.  McGraw--Hill, 1993.
 
 @noindent
-Bjarne Stroustroup. @emph{C++}. Addison-Wesley, 1997.
+Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 
 
 @c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

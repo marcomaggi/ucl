@@ -8,8 +8,9 @@ Topics
 ------
 
    1. Overview
-   2. Usage
-   3. Make and install
+   2. License
+   3. Usage
+   4. Make and install
    A. Credits
    B. Bug reports
    C. Resources
@@ -43,63 +44,62 @@ system, requires  the GNU C  library and compiles  fine with
 the GNU C compiler ("-std=c99 -pedantic" switches).
 
 
-1.1 License
------------
+2 License
+---------
 
-Copyright (c) 2001-2007 Marco Maggi. 
+Copyright (c) 2001-2008 Marco Maggi. 
 
-This is free software  you can redistribute it and/or modify
-it  under the  terms of  the GNU  General Public  License as
-published by the Free Software Foundation; either version 2,
-or (at your option) any later version.
+This  program  is free  software:  you  can redistribute  it
+and/or modify it  under the terms of the  GNU General Public
+License as published by the Free Software Foundation, either
+version  3 of  the License,  or (at  your option)  any later
+version.
 
-This file is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY;  without even the implied warranty
-of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-the GNU General Public License for more details.
+This  program is  distributed in  the hope  that it  will be
+useful, but  WITHOUT ANY WARRANTY; without  even the implied
+warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+PURPOSE.   See  the  GNU  General Public  License  for  more
+details.
 
 You should  have received a  copy of the GNU  General Public
-License along with this file; see the file COPYING.  If not,
-write to the Free Software Foundation, Inc., 59 Temple Place
-- Suite 330, Boston, MA 02111-1307, USA.
-
-In April, 2005, the licese has changed from LGPL to GPL.
+License   along   with    this   program.    If   not,   see
+<http://www.gnu.org/licenses/>.
 
 
 2. Usage
 --------
 
-The library can be built for both static linking and dynamic
-linking.   There  are   containers  that  depends  on  other
-containers. It is enough to include the main header files.
+Read the documentation in Texinfo format.
+
+  The  library can  be  built for  both  static linking  and
+dynamic linking.  There are containers that depends on other
+containers.  It  is enough to  include the main  header file
+"ucl.h".
 
   All the  function names and  data types are  prefixed with
 "ucl_".
-
-  Warning:  the  code makes  (sometimes  heavy)  use of  the
-"assert()"  macro.   To  reduce  the code  size  exclude  it
-defining the "NDEBUG" symbol; example:
-
-    $ make all CFLAGS="-O2 -DNDEBUG"
-
-  To test the shared, the static and the stub library:
-
-    $ make test
-    $ make test-static
-    $ make test-stub
 
 
 3. Make and install
 -------------------
 
-Read the INSTALL file. The classic:
+Do this:
 
-    $ ./configure
+    $ cd ucl-xxx
+    $ mkdir "=build"
+    $ ../configure [options]
     $ make
     $ make install
+    
+to test the shared, the static and the stub library:
 
-should work. This package  requires the GNU tools: GNU make,
-GNU C Compiler. 
+    $ make test
+    $ make test-static
+    $ make test-stub
+
+  Warning:  the  code makes  (sometimes  heavy)  use of  the
+"assert()" macro; to exclude them use the "--disable-assert"
+option of "configure".
 
 
 A. Credits
@@ -109,9 +109,9 @@ The  stuff was  written  by Marco  Maggi.   If this  package
 exists it's because of the  great GNU software tools that he
 uses all the time.
 
-  The file last portion  of "src/ucl." is a modified version
-of "stdlib/qsort.c"  from the GNU C Library  version 2.4; it
-is Copyright (C) 1991,1992,1996,1997,1999,2004 Free Software
+  The last  portion of "src/ucl.c" is a  modified version of
+"stdlib/qsort.c" from  the GNU C Library version  2.4; it is
+Copyright  (C)  1991,1992,1996,1997,1999,2004 Free  Software
 Foundation, Inc.
 
 

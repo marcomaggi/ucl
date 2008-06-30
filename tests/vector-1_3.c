@@ -10,23 +10,22 @@
    
    Copyright (c) 2004, 2005 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   
 */
 
-/* #define UCL_DEBUGGING */
+#define DEBUGGING		0
 #include "vectortest.h"
 
 void
@@ -55,14 +54,14 @@ test (void)
     {
       ptr = ucl_vector_index_to_new_slot(vector, i);
       ptr = ucl_vector_insert(vector, ptr);
-      ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
+      debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
       assert( ucl_vector_number_of_free_slots(vector) == (size_t)(SIZE-i-1));
     }
 
-  ucl_debug("size %d", ucl_vector_size(vector));
+  debug("size %d", ucl_vector_size(vector));
   assert( ucl_vector_number_of_free_slots(vector) == 0);
   ucl_vector_enlarge(vector);
-  ucl_debug("after enlarging: free slots %d, step up were %d",
+  debug("after enlarging: free slots %d, step up were %d",
 	    ucl_vector_number_of_free_slots(vector),
 	    ucl_vector_number_of_step_up_slots(vector));
   assert( ucl_vector_number_of_free_slots(vector) == \
@@ -72,12 +71,12 @@ test (void)
     {
       ptr = ucl_vector_index_to_new_slot(vector, i);
       ptr = ucl_vector_insert(vector, ptr);
-      ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
+      debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
       assert( ucl_vector_number_of_free_slots(vector) == \
 	      ucl_vector_number_of_step_up_slots(vector) - i - 1);
     }
 
-  ucl_debug("size %d", ucl_vector_size(vector));
+  debug("size %d", ucl_vector_size(vector));
   assert( ucl_vector_number_of_free_slots(vector) == 0);
   ucl_vector_enlarge(vector);
   assert( ucl_vector_number_of_free_slots(vector) == \
@@ -87,27 +86,27 @@ test (void)
     {
       ptr = ucl_vector_index_to_new_slot(vector, i);
       ptr = ucl_vector_insert(vector, ptr);
-      ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
+      debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
       assert( ucl_vector_number_of_free_slots(vector) == \
 	      ucl_vector_number_of_step_up_slots(vector) - i - 1);
     }
 	    
   /* RESTRICTING */
 
-  ucl_debug("beginning to restrict, size %d", ucl_vector_size(vector));
+  debug("beginning to restrict, size %d", ucl_vector_size(vector));
 
   for (i=0; ((size_t)i)<ucl_vector_number_of_step_down_slots(vector); ++i)
     {
       ptr = ucl_vector_index_to_slot(vector, 0);
       ucl_vector_erase(vector, ptr);
-      ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
+      debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
       assert( ucl_vector_number_of_free_slots(vector) == (size_t)(i+1));
     }
 
-  ucl_debug("restriction, size %d", ucl_vector_size(vector));
+  debug("restriction, size %d", ucl_vector_size(vector));
   assert( ucl_vector_number_of_free_slots(vector) == STEP_DOWN);
   ucl_vector_restrict(vector);
-  ucl_debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
+  debug("number of free slots: %d", ucl_vector_number_of_free_slots(vector));
 
   ucl_vector_destructor(vector);
 }

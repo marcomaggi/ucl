@@ -932,14 +932,14 @@ endef
 
 # Synopsis:
 #
-#	$(call ds-replace-dir,<LIST-OF-FILES>)
+#	$(call ds-replace-dir,<NEW_DIR>,<LIST-OF-FILES>)
 #
 # Description:
 # 
 #  Replaces a directory with another in a group of files.
 
 define ds-replace-dir
-$(addprefix $(1)/, $(notdir $(2)))
+$(addprefix $(1)/,$(notdir $(2)))
 endef
 
 ## ------------------------------------------------------------
@@ -1720,22 +1720,17 @@ GDB		= @GDB@
 
 # Notice that '-std=c99' is appended to 'CC' by the Autoconf
 # macro 'AC_PROG_CC_C99'.
-C_DEFAULT	?= -pipe -fPIC
+C_DEFAULT	?= -pipe -fPIC @C_DEFAULT@
 C_WARNINGS	?= -Wall -W -Wextra -pedantic \
 			-Wmissing-prototypes \
 			-Wpointer-arith -Wcast-qual -Wcast-align \
 			-Wwrite-strings -Wnested-externs \
-			-Wstrict-prototypes -Wshadow
-# This gives error when statically linking linking MPFI.
-# -fno-common
+			-Wstrict-prototypes -Wshadow -fno-common
 
 ## ------------------------------------------------------------
 ## Preprocessor stuff.
 
 DEFS		?= @DEFS@
-ifneq ($$(strip $$(ds_config_ENABLE_ASSERTIONS)),yes)
-DEFS		+= -DNDEBUG=1
-endif
 
 INCLUDES	+= @INCLUDES@ -I. -I$$(srcdir)
 ifeq ($$(strip $$(ds_top_srcdir)),$$(strip $$(srcdir)))
@@ -1779,7 +1774,7 @@ endef
 
 # Synopsis:
 #
-#	$(eval $(call ds-cc-compile,<VARNAME>,<OPTIONAL_FLAGS>))
+#	$(eval $(call ds-cc-compile,<VARNAME>,<PRE_OPTIONS>,<PRE_LIBS>,<>))
 #	$(eval $(call ds-cc-build-program,<VARNAME>,<OPTIONAL_FLAGS>))
 #	$(eval $(call ds-cc-build-library,<VARNAME>,<OPTIONAL_FLAGS>))
 #
@@ -1848,7 +1843,7 @@ vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
 $$(eval $$(call ds-cc-compile,$(1)_CC_COMPILE,-I$$($(1)_SRCDIR)))
 
 $(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.c))
-$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$$(OBJEXT))))
+$(1)_TARGETS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.$$(OBJEXT)))
 
 $(1)_CLEANFILES		= $$($(1)_TARGETS)
 $(1)_REALCLEANFILES	= $$($(1)_CLEANFILES)
@@ -2156,7 +2151,8 @@ endef
 
 define ds-c-test-programs
 $(1)_test_programs_ENV		?=
-$(1)_test_programs_CC_BUILD	?= $$(CC_BUILD_PROGRAM)
+$(1)_test_programs_LIBS		?=
+$(1)_test_programs_CC_BUILD	?= $$(CC_COMMAND_LINE) $$(LDFLAGS) $$($(1)_test_programs_LIBS) $$(LIBS) -o
 $(1)_test_programs_BUILDDIR	?= $$(builddir)/tests.d
 
 $$(eval $$(call ds-builddir,$(1)_test_programs,$$($(1)_test_programs_BUILDDIR)))

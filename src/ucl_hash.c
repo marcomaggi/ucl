@@ -1,5 +1,4 @@
-/* ucl_hash.c --
-   
+/*    
    Part of: Useless Containers Library
    Contents: hash table implementation
    Date: Thu Mar  6, 2003
@@ -10,21 +9,19 @@
    
    Copyright (c) 2003, 2004, 2005, 2007 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
-
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   
 */
 
 
@@ -32,8 +29,8 @@
  ** Headers
  ** ----------------------------------------------------------*/
 
-#define UCL_DEBUGGING		0
-#include "ucl_defines.h"
+#define DEBUGGING		0
+#include "internal.h"
 
 /* stub module name hash */
 
@@ -166,7 +163,7 @@ ucl_hash_insert (ucl_hash_t this, ucl_hash_entry_t *entry_p)
   
   bucket_p = compute_bucket_pointer_for_key(this, entry_p->key);
 #if 0
-  ucl_debug("bucket index %d, %p", ucl_vector_slot_to_index(this->buckets, bucket_p), bucket_p);
+  debug("bucket index %d, %p", ucl_vector_slot_to_index(this->buckets, bucket_p), bucket_p);
 #endif
   first_entry_in_list_p = *bucket_p;
   if (first_entry_in_list_p)
@@ -365,7 +362,7 @@ stub(2005-09-23-18-10-51) void
 ucl_hash_enlarge (ucl_hash_t this)
 {
   assert(this);
-  ucl_debug("enter: old size %u", ucl_vector_size(this->buckets));
+  debug("enter: old size %u", ucl_vector_size(this->buckets));
 
   ucl_vector_enlarge_for_slots(this->buckets, ucl_vector_number_of_step_up_slots(this->buckets));
 
@@ -380,7 +377,7 @@ ucl_hash_enlarge (ucl_hash_t this)
   }
       
   rehash(this, ucl_vector_size(this->buckets));
-  ucl_debug("leaving: new size %u\n", ucl_vector_size(this->buckets));
+  debug("leaving: new size %u\n", ucl_vector_size(this->buckets));
 }
 
 /* ------------------------------------------------------------ */
@@ -394,7 +391,7 @@ stub(2007-11-12-18-19-55) void
 ucl_hash_restrict (ucl_hash_t this)
 {
   assert(this);
-  ucl_debug("enter: old size %u", ucl_vector_size(this->buckets));
+  debug("enter: old size %u", ucl_vector_size(this->buckets));
 
   if (ucl_vector_size(this->buckets) > ucl_vector_number_of_step_down_slots(this->buckets))
     {
@@ -409,12 +406,12 @@ ucl_hash_restrict (ucl_hash_t this)
 
 	if (new_number_of_buckets < UCL_HASH_MINIMUM_SIZE)
 	  {
-	    ucl_debug("normalising because new size %u smaller than limit %u",
+	    debug("normalising because new size %u smaller than limit %u",
 		      new_number_of_buckets, UCL_HASH_MINIMUM_SIZE);
 	    new_number_of_buckets = UCL_HASH_MINIMUM_SIZE;
 	  }
       }
-      ucl_debug("selected new size %u", new_number_of_buckets);
+      debug("selected new size %u", new_number_of_buckets);
 
       rehash(this, new_number_of_buckets);
 
@@ -427,7 +424,7 @@ ucl_hash_restrict (ucl_hash_t this)
 	ucl_vector_restrict(this->buckets);
       }
     }
-  ucl_debug("leaving: new size %u\n", ucl_vector_size(this->buckets));
+  debug("leaving: new size %u\n", ucl_vector_size(this->buckets));
 }
 
 /* ------------------------------------------------------------ */
@@ -460,7 +457,7 @@ ucl_hash_iterator (const ucl_hash_t this, ucl_iterator_t iterator)
 	{
 	  bucket_p = ucl_iterator_ptr(vector_iterator);
 #if 0
-	  ucl_debug("bucket index %d",
+	  debug("bucket index %d",
 		    ucl_vector_slot_to_index(this->buckets, bucket_p));
 #endif
 	  if (*bucket_p)
@@ -499,15 +496,15 @@ iterator_next (ucl_iterator_t iterator)
 
       /* advance to the next bucket; if it is not the last examine it */
 #if 0
-      ucl_debug("old bucket index %d",  ucl_vector_slot_to_index(this->buckets, bucket_p));
-      ucl_debug("last bucket index %d", ucl_vector_slot_to_index(this->buckets, ucl_vector_back(this->buckets)));
+      debug("old bucket index %d",  ucl_vector_slot_to_index(this->buckets, bucket_p));
+      debug("last bucket index %d", ucl_vector_slot_to_index(this->buckets, ucl_vector_back(this->buckets)));
 #endif
       for (++bucket_p;
 	   bucket_p <= (entry_t **)ucl_vector_back(this->buckets);
 	   ++bucket_p)
 	{
 #if 0
-	  ucl_debug("bucket index %d %p",
+	  debug("bucket index %d %p",
 		    ucl_vector_slot_to_index(this->buckets, bucket_p), bucket_p);
 #endif
 	  if (*bucket_p)

@@ -24,11 +24,21 @@ C_WARNINGS := $(filter-out -Wcast-qual,$(C_WARNINGS))
 ## Library.
 ## ------------------------------------------------------------
 
-ucl_PREREQUISITES	= ucl_defines.h ucl.h
+ucl_PREREQUISITES	= internal.h debug.h ucl.h
 
 $(eval $(call ds-c-sources,ucl,$(srcdir)/src,*.c))
 $(eval $(call ds-c-shared-library,ucl,$(ucl_LIBRARY_ID),$(ucl_TARGETS)))
 $(eval $(call ds-c-static-library,ucl,$(ucl_LIBRARY_ID),$(ucl_TARGETS)))
+
+.PHONY: install-shared-link
+
+bin-install: install-shared-link
+
+install-shared-link:
+	cd $(DESTDIR)$(libdir) ; \
+	$(SYMLINK) $(ucl_stub_SHARED_LIBRARY_NAME) $(ucl_stub_SHARED_LIBRARY_LINK_NAME); \
+	$(SYMLINK) $(ucl_SHARED_LIBRARY_NAME) $(ucl_SHARED_LIBRARY_LINK_NAME)
+
 
 ## ------------------------------------------------------------
 

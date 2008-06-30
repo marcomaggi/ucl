@@ -9,28 +9,27 @@
    
    Copyright (c) 2007 Marco Maggi
    
-   This is free  software you can redistribute it  and/or modify it under
-   the terms of  the GNU General Public License as  published by the Free
-   Software Foundation; either  version 2, or (at your  option) any later
-   version.
+   This program is free software:  you can redistribute it and/or modify
+   it under the terms of the  GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at
+   your option) any later version.
    
-   This  file is  distributed in  the hope  that it  will be  useful, but
-   WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
-   MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+   This program is  distributed in the hope that it  will be useful, but
+   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
    
-   You  should have received  a copy  of the  GNU General  Public License
-   along with this file; see the file COPYING.  If not, write to the Free
-   Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-   02111-1307, USA.
-*/
+   You should  have received  a copy of  the GNU General  Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   
+
 
 
 /** ------------------------------------------------------------
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#define UCL_DEBUGGING	0
+#define DEBUGGING	0
 #include "vectortest.h"
 
 static void
@@ -42,10 +41,10 @@ callback (ucl_value_t state UCL_UNUSED, ucl_value_t custom)
   *values[0] = 0;
   for (size_t i=1; i<slots->number_of_slots; ++i)
     {
-      ucl_debug("processing slot %u: %d", i, *values[i]);
+      debug("processing slot %u: %d", i, *values[i]);
       *values[0] += *values[i];
     }
-  ucl_debug("result for slot %u: %d", slots->data.unum, *values[0]);
+  debug("result for slot %u: %d", slots->data.unum, *values[0]);
 }
 static void
 initialise (ucl_vector_t vector)
@@ -77,7 +76,7 @@ test (void)
   fill(B, 5, 6);
   fill(C, 5, 11);
 
-  ucl_debug("mapping");
+  debug("mapping");
   ucl_vector_map_multiple(R, cb, A, B, C, NULL);
 
   assert((1+ 6+11) == vector_ref(R, 0));

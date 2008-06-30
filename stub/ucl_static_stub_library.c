@@ -10,7 +10,6 @@
 const ucl_btree_stub_table_t *	ucl_btree_stub_table_p;
 const ucl_base_stub_table_t *	ucl_base_stub_table_p;
 const ucl_circular_stub_table_t *	ucl_circular_stub_table_p;
-const ucl_debug_stub_table_t *	ucl_debug_stub_table_p;
 const ucl_graph_stub_table_t *	ucl_graph_stub_table_p;
 const ucl_hash_stub_table_t *	ucl_hash_stub_table_p;
 const ucl_heap_stub_table_t *	ucl_heap_stub_table_p;
@@ -27,7 +26,6 @@ init_pointers (ucl_stub_table_t *table_p)
   ucl_btree_stub_table_p         = table_p->btree;
   ucl_base_stub_table_p          = table_p->base;
   ucl_circular_stub_table_p      = table_p->circular;
-  ucl_debug_stub_table_p         = table_p->debug;
   ucl_graph_stub_table_p         = table_p->graph;
   ucl_hash_stub_table_p          = table_p->hash;
   ucl_heap_stub_table_p          = table_p->heap;
