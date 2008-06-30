@@ -25,7 +25,7 @@
    
 */
 
-#define DEBUGGING		1
+#define DEBUGGING		0
 #include "vectortest.h"
 
 #define NUMBER_OF_NUMBERS	5
