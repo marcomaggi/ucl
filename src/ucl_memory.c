@@ -8,8 +8,7 @@
 	This  module  declares  the  functions  used  to  handle  memory
 	allocation.
    
-   Copyright (c) 2004, 2005 Marco Maggi
-   
+   Copyright (c) 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -38,7 +37,7 @@
 #include <string.h>
 #include <stdio.h>
 
-/* stub module name memory */
+#define stubmodule		memory
 
 /* ------------------------------------------------------------ */
 

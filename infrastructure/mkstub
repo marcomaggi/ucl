@@ -1,3 +1,37 @@
+#!/bin/bash
+#
+# Part of: Marco's C Library
+# Contents: builds stub tables for C libraries
+# Date: Thu Nov  4, 2004
+# 
+# Abstract
+# 
+# 
+# Copyright (c) 2004, 2005, 2008 Marco Maggi
+# 
+# This  program  is free  software:  you  can redistribute  it
+# and/or modify it  under the terms of the  GNU General Public
+# License as published by the Free Software Foundation, either
+# version  3 of  the License,  or (at  your option)  any later
+# version.
+# 
+# This  program is  distributed in  the hope  that it  will be
+# useful, but  WITHOUT ANY WARRANTY; without  even the implied
+# warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+# PURPOSE.   See  the  GNU  General Public  License  for  more
+# details.
+# 
+# You should  have received a  copy of the GNU  General Public
+# License   along   with    this   program.    If   not,   see
+# <http://www.gnu.org/licenses/>.
+# 
+
+#page
+## ------------------------------------------------------------
+## MBFL library.
+## ------------------------------------------------------------
+
+
 # libmbfl.m4 --
 # 
 # Part of: Marco's BASH Functions Library
@@ -2142,6 +2176,1096 @@ local item=${1:?"missing function name parameter to '${FUNCNAME}'"}
 if test "$(type -t ${item})" = "function"; then ${item}; else return 0; fi
 }
 
+
+### end of file
+# Local Variables:
+# mode: sh
+# End:
+
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## MBFL's related options and variables.
+## ------------------------------------------------------------
+
+script_PROGNAME=mkstub
+script_VERSION=0.2
+script_COPYRIGHT_YEARS='2004, 2005, 2008'
+script_AUTHOR="Marco Maggi"
+script_LICENSE=GPL
+script_USAGE="usage: ${script_PROGNAME} [options] FILE FILE ..."
+script_DESCRIPTION='Builds stub tables for C language libraries.'
+
+# keyword default-value brief-option long-option has-argument description
+
+mbfl_declare_option ACTION_PRINT_MODULE no \
+    '' module noarg "print module names"
+mbfl_declare_option ACTION_PRINT_FUNCTIONS no \
+    '' functions noarg "print function names"
+
+# Generating stub header files.
+mbfl_declare_option ACTION_MAKE_STUB_MODULE_HEADER no \
+    '' make-stub-module-header noarg "make the stub header for a module"
+mbfl_declare_option ACTION_MAKE_STUB_GLOBAL_HEADER no \
+    '' make-stub-global-header noarg "make the stub header for the library"
+
+# Generating stub table files.
+mbfl_declare_option ACTION_MAKE_STUB_MODULE_TABLE no \
+    '' make-stub-module-table noarg "make the stub table for a module"
+mbfl_declare_option ACTION_MAKE_STUB_GLOBAL_TABLE no \
+    '' make-stub-global-table noarg "make the stub table for the library"
+
+# Libraries code
+mbfl_declare_option ACTION_PRINT_STUB_SHARED_LIBRARY yes \
+    '' make-stub-shared-library noarg "print stub shared library code"
+mbfl_declare_option ACTION_PRINT_STUB_STATIC_LIBRARY no \
+    '' make-stub-static-library noarg "print stub static library code"
+
+
+mbfl_declare_option OUTPUT - \
+    o output witharg "select the output file, use '-' for stdout"
+
+mbfl_declare_option LIBRARY "LIB" \
+    '' library witharg "selects the library identifier (prefix for public names)"
+mbfl_declare_option FUNCTION_QUALIFIER "extern" \
+    '' function-qualifier witharg "selects the function qualifier for prototypes"
+mbfl_declare_option HEADER_FILE '' \
+    '' header-file witharg "selects header files to include in stub code"
+mbfl_declare_option SHARED_LIBRARY_NAME '' \
+    '' shared-stub-library-name witharg "selects the name of the shared library"
+
+
+mbfl_declare_program gawk
+mbfl_declare_program sort
+
+mbfl_main_declare_exit_code 2 invalid_input_file
+mbfl_main_declare_exit_code 3 no_data_to_process_in_input_file
+mbfl_main_declare_exit_code 4 no_module_definition_found
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Global variable.
+## ------------------------------------------------------------
+
+# A space separated list of header file names to include in the
+# stub library code.
+HEADER_FILES=
+
+# The output file name.  Use "/dev/stdout" for the stdout channel.
+OUTPUT=
+
+# The C preprocessor symbol used to avoid multiple evaluation of the
+# stub header files.
+STUB_HEADER_GUARD=
+
+# NOTE: all the variables below are exported so that they are
+# available in the 'gawk' subprocessed used by this script.
+
+# The name of the source file being parsed. This script parses
+# a set of source files at each run, the files are selected from
+# the command line ('ARGV' global array); this variable holds the
+# name of the file currently being parsed.
+export FILENAME
+
+# The identifier of the library. A string to be used as prefix
+# to all the function and type names; it is selected from the
+# command line with the '--library' option.
+export LIBRARY
+
+# The identifier of the library in upper case characters.
+export upper_LIBRARY=
+
+# The name of the module being processed. A string used as
+# component for names of functions and struct types. It is selected
+# in the source file with a comment of the form:
+#
+#       /* stub module name MODULE */
+#
+# where 'MODULE' is the module identifier.
+export MODULE
+export upper_MODULE
+
+# The C language functions declaration qualifier.
+export FUNCTION_QUALIFIER=extern
+
+# The name of a preprocessor symbol used to include/exclude the
+# stub declarations in the library header file. The *client*
+# libraries must be compiled with this symbol defined to enable
+# the use of the stub mechanism. When not defined: the header file
+# defines normal function prototypes; when defined: the header
+# file defines the stub table struct types and the preprocessor
+# macros used to invoke the functions through pointers in the
+# stub tables.
+export STUB_ENABLE_DEFINE
+
+# The name of the module stub table struct typedef. This typedef
+# is visible in the library header file.
+export STUB_TABLE_TYPE
+
+# The name of the module stub table struct variable. A variable
+# declared as static in the stub module; it holds pointers to the
+# public functions of a module.
+export STUB_TABLE_NAME
+
+# The name of the pointer to a module stub table. Defined in the
+# stub library: it is used by preprocessor macros to invoke the
+# module functions.
+export STUB_TABLE_POINTER
+
+# The name of the struct typedef for the main stub table. The main
+# stub table holds pointers to the module stub tables.
+export MAIN_STUB_TABLE_TYPE
+
+# The name of the main stub table variable. The main stub table
+# is declared as a static variable in the library module built
+# with the '--stub-table-code' option.
+export MAIN_STUB_TABLE_NAME
+
+# The name of the stub initialisation function. The function is
+# defined in the stub library and linked in client libraries that
+# make use of the stub mechanism. When the client library wants
+# to initialise the stub mechanism it invokes this function.
+export MAIN_STUB_TABLE_INIT_FUNCTION
+export MAIN_STUB_TABLE_FINAL_FUNCTION
+
+# The name of an environment variable that, if set, will cause
+# the static stub library to print debug messages to stderr
+# upon loading shared library.
+export DEBUG_ENVIRONMENT_VARIABLE
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Option update functions.
+## ------------------------------------------------------------
+
+# Invoked  whenever  a  "--header-file"  option is  processed  from  the
+# command line.  Appends the argument to the "HEADER_FILES" variable, so
+# that later an include directive can be added to the output file.
+function script_option_update_header_file () {
+    if test -z "${HEADER_FILES}" ; then
+        HEADER_FILES=${script_option_HEADER_FILE}
+    else
+        HEADER_FILES="${HEADER_FILES} ${script_option_HEADER_FILE}"
+    fi
+}
+
+function script_option_update_function_qualifier () {
+    FUNCTION_QUALIFIER=${script_option_FUNCTION_QUALIFIER}
+}
+function script_option_update_output () {
+    if test '-' = "${script_option_OUTPUT}"; then
+        OUTPUT='/dev/stdout'
+    else
+        OUTPUT=${script_option_OUTPUT}
+    fi
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: basic inspection functions.
+## ------------------------------------------------------------
+
+function script_action_print_module () {
+    fill_main_variables
+    for FILENAME in "${ARGV[@]}" ; do
+        fill_module_variables
+        printf '%s\n' "${MODULE}"
+    done
+}
+function script_action_print_functions () {
+    fill_main_variables
+    for FILENAME in "${ARGV[@]}" ; do
+        fill_module_variables
+        parse_source_file_get_functions <"${FILENAME}"
+    done
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: module stub header generation.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       script_action_make_stub_module_header
+#
+# Generate  a  module's stub  header  for  the  file selected  with  the
+# "ARGV[0]"  variable.  This header  must be  included in  the library's
+# main stub header.
+#
+function script_action_make_stub_module_header () {
+    if ! mbfl_wrong_num_args 1 ${ARGC} ; then
+        exit_because_wrong_num_args
+    fi
+
+    FILENAME=${ARGV[0]}
+    if ! mbfl_file_is_file "${FILENAME}" print_error || ! mbfl_file_is_readable "${FILENAME}" print_error
+    then exit_because_invalid_input_file
+    fi
+
+    fill_main_variables
+    fill_module_variables
+
+    if test -z "${MODULE}" ; then
+        mbfl_message_verbose 'no stub module name comment in input file "%s", skipping' \
+            "${FILENAME}"
+        exit_because_no_data_to_process_in_input_file
+    fi
+
+    {
+        local MODULE_FUNCTIONS_RECORDS=$(parse_source_file_get_functions <"${FILENAME}")
+        local SORTED_MODULE_FUNCTIONS_RECORDS=$(echo "${MODULE_FUNCTIONS_RECORDS}" | program_sort)
+
+        printf '/* Stub header file for the "%s" module.\n   This file must be included in the main stub header. */\n\n#ifndef %s\n\n' \
+            "${MODULE}" "${STUB_HEADER_GUARD}"
+
+        print_comment_section 'Module "%s".' "${MODULE}"
+
+        echo "${MODULE_FUNCTIONS_RECORDS}" | header_section__function_prototypes
+        echo "${MODULE_FUNCTIONS_RECORDS}" | header_section__function_typedefs
+        echo "${SORTED_MODULE_FUNCTIONS_RECORDS}" | header_section__stub_table_typedef
+        echo "${SORTED_MODULE_FUNCTIONS_RECORDS}" | header_section__stub_table_macros
+
+        printf '\n#endif /* defined %s */\n\n/* end of file */\n' \
+            "${STUB_HEADER_GUARD}"
+    } >"${OUTPUT}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: global stub header generation.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       script_action_make_stub_global_header
+#
+# Generate the library stub header: the one that must be included in all
+# the source  files of the library and  the user code that  makes use of
+# the library.
+#
+# Read the command  line arguments from the global  variable "ARGV"; the
+# command line arguments must be the module source files pathnames.
+#
+function script_action_make_stub_global_header () {
+    fill_main_variables
+    {
+        printf '/* Global stub header file for the "%s" library. */\n\n' "${LIBRARY}"
+        printf '#ifndef __%s_STUB_H\n#define __%s_STUB_H\n\n\n' \
+            "${upper_LIBRARY}" "${upper_LIBRARY}"
+
+        print_comment_section 'Load stub header files, one for each module.'
+
+        for FILENAME in "${ARGV[@]}" ; do
+            FILENAME=$(mbfl_file_tail     "${FILENAME}")
+            FILENAME=$(mbfl_file_rootname "${FILENAME}")
+            printf '#include <stub_%s.h>\n' "${FILENAME}"
+        done
+        printf '\n\n'
+
+        print_comment_section 'Stub library loading functions.'
+        header_section__main_stub_library_api
+
+        printf '\n#endif /* defined __%s_STUB_H */\n\n/* end of file */\n' \
+            "${upper_LIBRARY}"
+    } > "${OUTPUT}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: module stub table generation.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       script_action_make_stub_module_table
+#
+# Generate  a  module's  stub  table  for the  file  selected  with  the
+# "ARGV[0]" variable.  This file must  be included in the library's main
+# stub table file to compose the shared stub library.
+#
+function script_action_make_stub_module_table () {
+    if ! mbfl_wrong_num_args 1 ${ARGC} ; then
+        exit_because_wrong_num_args
+    fi
+
+    FILENAME=${ARGV[0]}
+    if ! mbfl_file_is_file "${FILENAME}" print_error || ! mbfl_file_is_readable "${FILENAME}" print_error
+    then exit_because_invalid_input_file
+    fi
+
+    fill_main_variables
+    fill_module_variables
+
+    if test -z "${MODULE}" ; then
+        mbfl_message_verbose 'no stub module name comment in input file "%s", skipping' \
+            "${FILENAME}"
+        exit_because_no_data_to_process_in_input_file
+    fi
+
+    {
+        local MODULE_FUNCTIONS_RECORDS=$(parse_source_file_get_functions <"${FILENAME}")
+        local SORTED_MODULE_FUNCTIONS_RECORDS=$(echo "${MODULE_FUNCTIONS_RECORDS}" | program_sort)
+
+        printf '/* Stub table for the "%s" module.\n   This file must be included in the stub shared library. */\n\n' \
+            "${MODULE}"
+
+        print_comment_section 'Stub table for the "%s" module.' "${MODULE}"
+
+        echo "${SORTED_MODULE_FUNCTIONS_RECORDS}" | \
+            stub_module_section__module_stub_table_decl
+
+        printf '\n/* end of section */\n'
+    } >"${OUTPUT}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: shared library generation.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       script_action_make_stub_shared_library
+#
+# Generate the shared stub library.
+#
+# Read the command  line arguments from the global  variable "ARGV"; the
+# command line arguments must be the module source files pathnames.
+#
+function script_action_print_stub_shared_library () {
+    local item
+
+    fill_main_variables
+    {
+        printf '/* Shared stub library for the "%s" library. */\n\n' "${LIBRARY}"
+
+        for item in ${HEADER_FILES} ; do
+            printf '#include <%s>\n' "${item}"
+        done
+        printf '\n\n'
+
+        print_comment_section 'Include stub table files, one for each module.'
+
+        for FILENAME in "${ARGV[@]}" ; do
+            FILENAME=$(mbfl_file_tail     "${FILENAME}")
+            printf '#include <table_%s>\n' "${FILENAME}"
+        done
+        printf '\n\n'
+
+#         print_comment_section 'Library stub table.'
+#         stub_module_section__main_stub_table_decl "${ARGV[@]}"
+
+        printf '\n/* end of file */\n'
+    } > "${OUTPUT}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Action: static library generation.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       script_action_make_stub_shared_library
+#
+# Generate the shared stub library.
+#
+# Read the command  line arguments from the global  variable "ARGV"; the
+# command line arguments must be the module source files pathnames.
+#
+function script_action_print_stub_static_library () {
+    fill_main_variables
+    {
+        local item=
+
+        printf '/* Static stub library for the "%s" library.\n   This file must be compiled and statically linked with the user code. */\n\n' "${LIBRARY}"
+
+        for item in ${HEADER_FILES} ; do
+            printf '#include "%s"\n' "${item}"
+        done
+        test -n "${HEADER_FILES}" && printf '\n\n'
+
+        print_comment_section 'Pointers to the module stub tables of "%s".' "${LIBRARY}"
+        {
+            for FILENAME in "${ARGV[@]}" ; do
+                fill_module_variables
+                printf 'const %s *%30s;\n' "${STUB_TABLE_TYPE}" "${STUB_TABLE_POINTER}"
+            done
+        }
+        printf '\n\n'
+
+        print_comment_section 'Table of symbols to retrieve from the shared stub library.' "${LIBRARY}"
+
+        printf 'typedef struct symbol_tag_t {
+   const char * name;
+   void **      pointer;
+} symbol_tag_t;
+
+typedef symbol_tag_t *   symbol_t;
+\n\n'
+        printf 'static const symbol_tag_t\tsymbols[] = {\n'
+        for FILENAME in "${ARGV[@]}" ; do
+            fill_module_variables
+            printf '  { "%s",\t\t(void **)&%s },\n' "${STUB_TABLE_NAME}" "${STUB_TABLE_POINTER}"
+        done
+        printf '  { NULL, NULL }\n};\n\n\n'
+
+
+#         printf '\n\nstatic void\ninit_pointers (%s *table_p)\n{\n' "${MAIN_STUB_TABLE_TYPE}"
+
+#         for FILENAME in "${ARGV[@]}" ; do
+#             fill_module_variables
+#             printf '  %-30s = table_p->%s;\n' "${STUB_TABLE_POINTER}" "${MODULE}"
+#         done
+#         printf '\n}\n'
+
+        print_comment_section 'Loading and unloading the shared stub library.'
+
+        cat <<EOF
+#include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+
+static const char *     library_name      = "${script_option_SHARED_LIBRARY_NAME}";
+static void *           library_handle    = NULL;
+static int              debug_notice_flag = 0;
+
+static void
+debug_init (void)
+{
+  const char * string = getenv("${DEBUG_ENVIRONMENT_VARIABLE}");
+
+  if (NULL != string)
+    {
+      debug_notice_flag = (0 == strcmp(string, "notice"));
+    }
+}
+static void
+debug_notice (const char *template, ...)
+{
+  va_list	ap;
+
+  if (debug_notice_flag)
+    {
+      va_start(ap, template);
+      fprintf(stderr, "%s debug: ", "${LIBRARY}");
+      vfprintf(stderr, template, ap);
+      fprintf(stderr, "\\n");
+      va_end(ap);
+    }
+}
+
+const char *
+${MAIN_STUB_TABLE_INIT_FUNCTION} (void)
+{
+  const char *  err;
+
+
+  debug_init();
+  debug_notice("loading stub library \\"%s\\"...", library_name);
+
+  /* this requires glibc 2.2 or later, see dlopen(3) for details */
+  library_handle = dlopen(library_name, RTLD_NOLOAD|RTLD_GLOBAL|RTLD_NOW);
+  if (NULL == library_handle)
+    {
+      err = dlerror();
+      if (err) return err;
+      library_handle = dlopen(library_name, RTLD_GLOBAL|RTLD_NOW);
+      err = dlerror();
+      if (err) return err;
+    }
+  debug_notice("successfully loaded stub library \\"%s\\"", library_name);
+
+  for (size_t i = 0; NULL != symbols[i].pointer; ++i)
+    {
+      *(symbols[i].pointer) = dlsym(library_handle, symbols[i].name);
+      err = dlerror();
+      if (err) { dlclose(library_handle); return err; }
+    }
+  debug_notice("successfully loaded stub tables from \\"%s\\"", library_name);
+
+  return NULL;
+}
+int
+${MAIN_STUB_TABLE_FINAL_FUNCTION} (void)
+{
+  int	errcode;
+
+  if (library_handle)
+    {
+      debug_notice("unloading stub library \\"%s\\"...", library_name);
+
+      errcode = dlclose(library_handle);
+      if (0 == errcode)
+        library_handle = NULL;
+      else
+        return errcode;
+
+      debug_notice("successfully unloaded stub library \\"%s\\"...", library_name);
+    }
+  return 0;
+}
+
+/* end of file */
+EOF
+
+    } > "${OUTPUT}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Global variables initialisation.
+## ------------------------------------------------------------
+
+# Makes use  of the values from command  line options to build  a set of
+# values common to all the stub modules.
+function fill_main_variables () {
+    LIBRARY=${script_option_LIBRARY}
+    upper_LIBRARY=$(mbfl_string_toupper ${LIBRARY})
+
+    STUB_ENABLE_DEFINE=$(printf '%s_ENABLE_STUB' "${upper_LIBRARY}")
+
+    MAIN_STUB_TABLE_TYPE=$(printf '%s_stub_table_t' "${LIBRARY}")
+    MAIN_STUB_TABLE_NAME=$(printf '%s_stub_table' "${LIBRARY}")
+    MAIN_STUB_TABLE_INIT_FUNCTION=$(printf '%s_init_stub_table' "${LIBRARY}")
+    MAIN_STUB_TABLE_FINAL_FUNCTION=$(printf '%s_final_stub_table' "${LIBRARY}")
+
+    DEBUG_ENVIRONMENT_VARIABLE=$(printf '%s_DEBUG' "${upper_LIBRARY}")
+}
+
+# Makes use of values from both  the command line options and the source
+# file to  build a set  of values common  to all the stub  modules.
+#
+# The source file pathname is  taken from the "FILENAME" variable, which
+# must be set in an uplevel scope.
+function fill_module_variables () {
+    {
+        local S=$(printf 'filling variables for "%s"\n' "${FILENAME}")
+        mbfl_message_verbose_end "${S}"
+    }
+
+    if ! MODULE=$(parse_source_file_get_module <"${FILENAME}") ; then
+        mbfl_message_error 'unable to find module definition'
+        exit_because_no_module_definition_found
+    fi
+
+    if test -z "${MODULE}" ; then
+        mbfl_message_error 'null module name'
+        exit_because_no_module_definition_found
+    else
+        upper_MODULE=$(mbfl_string_toupper "${MODULE}")
+        STUB_TABLE_TYPE=$(      printf '%s_%s_stub_table_t'     "${LIBRARY}" "${MODULE}")
+        STUB_TABLE_NAME=$(      printf '%s_%s_stub_table'       "${LIBRARY}" "${MODULE}")
+        STUB_TABLE_POINTER=$(   printf '%s_%s_stub_table_p'     "${LIBRARY}" "${MODULE}")
+        STUB_HEADER_GUARD=$(    printf '__%s_%s_H'              "${upper_LIBRARY}" "${upper_MODULE}")
+    fi
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Source file parsers.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       parse_source_file_get_module < MODULE_PATHNAME
+#
+# Invoked with the purpose of  reading a module identifier from a source
+# file and printing it to stdout.
+#
+#   Spawn a GAWK subprocess that  reads a C language input file, parsing
+# its "#define" directives  looking for a module directive.   It must be
+# like:
+#
+#       #define stubmodule      <NAME>
+#
+# and this function will print <NAME>.
+#
+function parse_source_file_get_module () {
+    program_gawk '
+/define[ \t]+stubmodule/ { \
+  module_name = gensub(/^#define[ \t]+stubmodule[ \t]+([a-z_]+)[ \t]*$/, "\\1", 1, $0)
+  printf "%s\n", module_name;
+  exit
+}'
+}
+
+# Synopsis:
+#
+#       parse_source_file_get_functions < MODULE_PATHNAME
+#
+# Invoked with the purpose of reading the list of exported functions
+# from a source file and printing it to stdout in a special record
+# format.
+#
+# Spawn a GAWK subprocess that reads a C language input file looking for
+# lines starting with "stub"
+function parse_source_file_get_functions () {
+    program_gawk '
+/^stub\([0-9\-]+\) (.+)$/ {
+  decl=$0;
+  attributes="";
+
+  printf "function|";
+
+  # Prints the stub timestamp.
+  printf "%s|", gensub(/^stub\(([0-9\-]+)\)[ \t]*.+$/, "\\1", 1, decl);
+
+  # Get the GCC attributes, if any.
+  if (0 != match(decl, /__attribute__/)) {
+     # Extract the attributes.
+     attributes=gensub(/^.+(__attribute__\([^\)]*\)\)?).+$/, "\\1", 1, decl);
+     # Remove the attributes, so that below it is easier to extract
+     # the return value.
+     decl=gensub(/^(.+)__attribute__\([^\)]*\)\)?[ \t]+(.+)$/,"\\1\\2", 1, decl);
+  }
+
+  # Prints the return value.
+  return_value = gensub(/^stub\([0-9\-]+\)[ \t]+(.+)[ \t]*$/, "\\1", 1, decl);
+  printf "%s|", return_value;
+
+  getline;
+  # Prints the function name.
+  printf "%s|", gensub(/^([^ \t]+)[ \t]*(\(.+\))[ \t]*$/, "\\1", 1, $0);
+  # Prints the arguments list including parenthesis.
+  printf "%s|", gensub(/^([^ \t]+)[ \t]*(\(.+\))[ \t]*$/, "\\2", 1, $0);
+
+  printf "%s\n", attributes;
+}
+'
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Header section: main stub table type definition.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       header_section__main_stub_library_api <PATHNAME> ...
+#
+# Print the prototypes  of functions used to load  and unload the shared
+# stub library  and declares the  library stub table as  global exported
+# variable.
+function header_section__main_stub_library_api () {
+    local TYPE
+
+    printf '#ifndef %s\n\n' ${STUB_ENABLE_DEFINE}
+
+    # Prototype of function used to load the shared stub library.
+    printf '%s const char * %s (void);\n' \
+        "${FUNCTION_QUALIFIER}" "${MAIN_STUB_TABLE_INIT_FUNCTION}"
+
+    # Prototype of function used to UNload the shared stub library.
+    printf '%s int          %s (void);\n' \
+        "${FUNCTION_QUALIFIER}" "${MAIN_STUB_TABLE_FINAL_FUNCTION}"
+
+    printf '\n#endif /* defined %s */\n' ${STUB_ENABLE_DEFINE}
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Header section: a typedef for each function.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       echo <FUNCTIONS_RECORDS> | \
+#               header_section__function_typedefs
+#
+# Environment variables:
+#
+#  MODULE       must be set to the module name.
+#
+# Read  functions records  from stdin  and  print to  stdout a  function
+# typedef for  each function in the  module.  The format  of the records
+# must be the one produced by "parse_source_file_get_functions()".
+#
+#   It  is NOT  mandatory for  the input  records to  be sorted  by stub
+# timestamp;  it is  better to  keep the  original order  so that  it is
+# easier for the human reader to verify the declarations.
+#
+function header_section__function_typedefs () {
+    program_gawk '
+BEGIN {
+  MODULE  = ENVIRON["MODULE"];
+  printf "/* Function type declarations for the \"%s\" module.\n   A typedef for each function in the module. */\n\n", MODULE;
+  FS="|";
+}
+/^function|.+$/ {
+  timestamp = $2;
+  return_value = $3;
+  function_name = $4;
+  arguments = $5;
+  attributes = $6;
+  function_type = sprintf("%s_proto_t", function_name);
+  left = sprintf("typedef %s %s", return_value, function_type);
+  printf("%s %s;\n", left, arguments);
+}
+END { printf "\n"; }
+' || exit $?
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Header section: a prototype for each function.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       echo <FUNCTIONS_RECORDS> | \
+#               header_section__function_prototypes
+#
+# Environment variables:
+#
+#  MODULE              must be set to the module name;
+#  STUB_ENABLE_DEFINE  must be set to the C preprocessor symbol that
+#                      triggers the inclusion of stub declarations;
+#  FUNCTION_QUALIFIER  must be set to the exported functions qualifier.
+#
+# Read  functions records  from stdin  and  print to  stdout a  function
+# prototype for each function in  the module.  The format of the records
+# must be the one produced by "parse_source_file_get_functions()".
+#
+#   The block  of prototypes is  enclosed in a  conditional preprocessor
+# block  that  excludes the  declarations  if the  use  of  the stub  is
+# enabled.
+#
+#   It  is NOT  mandatory for  the input  records to  be sorted  by stub
+# timestamp;  it is  better to  keep the  original order  so that  it is
+# easier for the human reader to verify the declarations.
+#
+function header_section__function_prototypes () {
+    program_gawk '
+BEGIN {
+  DEFINE  = ENVIRON["STUB_ENABLE_DEFINE"];
+  MODULE  = ENVIRON["MODULE"];
+  EXTERN  = ENVIRON["FUNCTION_QUALIFIER"];
+
+  printf "/* Function prototypes for the \"%s\" module.\n   A prototype for each function in the module. */\n\n", MODULE;
+  printf "#ifndef %s\n\n", DEFINE;
+  FS="|";
+}
+/^function|.+$/ {
+  timestamp     = $2;
+  return_value  = $3;
+  function_name = $4;
+  arguments     = $5;
+  attributes    = $6;
+
+  printf("%s %s %s %s", EXTERN, return_value, function_name, arguments);
+  if ("" == attributes)
+    printf(";\n");
+  else
+    printf("\n\t%s;\n", attributes);
+}
+END {
+  printf "\n#endif /* not defined %s */\n\n", DEFINE;
+}
+' || exit $?
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Header section: function stub table typedef.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       echo <SORTED_FUNCTIONS_RECORDS> | \
+#               header_section__stub_table_typedef
+#
+# Environment variables:
+#
+#  MODULE               must be set to the module name;
+#  STUB_TABLE_TYPE      must be set to the name of the structure
+#                       typedef.
+#
+# Read  functions  records from  stdin  and  print  to stdout  the  type
+# definition for the module's stub  table: a data structure with a field
+# for each  function in the module.   The format of the  records must be
+# the one produced by "parse_source_file_get_functions()".
+#
+#   It  is  mandatory  for  the  input  records to  be  sorted  by  stub
+# timestamp, this puts  each function in the same  position of the table
+# no matter the number and name  of the functions.
+#
+function header_section__stub_table_typedef () {
+    program_gawk '
+BEGIN {
+  STUB_TABLE_TYPE = ENVIRON["STUB_TABLE_TYPE"];
+  MODULE          = ENVIRON["MODULE"];
+
+  printf "/* Stub table type declaration for the \"%s\" module.\n   A struct holding a pointer for each function in the module\n   sorted by timestamp. */\n\n", MODULE;
+  printf "typedef struct %s {\n", STUB_TABLE_TYPE;
+  FS="|";
+}
+/^function|.+$/ {
+  timestamp     = $2;
+  return_value  = $3;
+  function_name = $4;
+  arguments     = $5;
+  attributes    = $6;
+  function_type = sprintf("%s_proto_t", function_name);
+  printf("  %-35s * stub_%s;\n", function_type, function_name);
+}
+END {
+  printf "} %s;\n\n", STUB_TABLE_TYPE;
+}
+' || exit $?
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Header section: a preprocessor macro for each function.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       echo <FUNCTIONS_RECORDS> | \
+#               header_section__stub_table_macros
+#
+# Environment variables:
+#
+#  MODULE               must be set to the module name.
+#  STUB_TABLE_TYPE      must be set to the name of the stub table
+#                       structure typedef;
+#  STUB_TABLE_NAME      must be set to the name of the stub table
+#                       structure;
+#  STUB_TABLE_POINTER   must be set to the name of the pointer to the
+#                       stub table structure;
+#  STUB_ENABLE_DEFINE   must be set to the C preprocessor symbol that
+#                       triggers the inclusion of stub declarations;
+#  FUNCTION_QUALIFIER   must be set to the exported functions qualifier.
+#
+# Read functions records from stdin and print to stdout a macro for each
+# function in the module: the macros calls the function through the stub
+# table.   The  format  of the  records  must  be  the one  produced  by
+# "parse_source_file_get_functions()".
+#
+#   Print to stdout the declaration of the pointer used to reference the
+# module's stub table structure.
+#
+#   The block  of definitions is enclosed in  a conditional preprocessor
+# block  that  includes the  declarations  if the  use  of  the stub  is
+# enabled.
+#
+#   It  is NOT  mandatory for  the input  records to  be sorted  by stub
+# timestamp;  it is  better to  keep the  original order  so that  it is
+# easier for the human reader to verify the declarations.
+#
+function header_section__stub_table_macros () {
+    program_gawk '
+BEGIN {
+  MODULE          = ENVIRON["MODULE"];
+  STUB_TABLE_NAME = ENVIRON["STUB_TABLE_NAME"];
+  STUB_TABLE_TYPE = ENVIRON["STUB_TABLE_TYPE"];
+  POINTER         = ENVIRON["STUB_TABLE_POINTER"];
+  DEFINE          = ENVIRON["STUB_ENABLE_DEFINE"];
+  EXTERN          = ENVIRON["FUNCTION_QUALIFIER"];
+
+  printf "/* Stub table macros definition for the \"%s\" module.\n   A preprocessor macro for each function in the module,\n   used to invoke the functions through the stub table. */\n\n", MODULE;
+  printf "#ifdef %s\n\n", DEFINE;
+  printf "%s const %s * %s;\n", EXTERN, STUB_TABLE_TYPE, POINTER;
+  printf "%s const %s   %s;\n\n", EXTERN, STUB_TABLE_TYPE, STUB_TABLE_NAME;
+  FS="|";
+}
+/^function|.+$/ {
+  timestamp = $2;
+  return_value = $3;
+  function_name = $4;
+  arguments = $5;
+  attributes = $6;
+  function_type = sprintf("%s_proto_t", function_name);
+  printf("#define %-25s  ((%s)->stub_%s)\n", function_name, POINTER, function_name);
+}
+END {
+  printf "\n"
+  printf "#endif /* defined %s */\n\n", DEFINE;
+}
+' || exit $?
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Stub module section: module stub table declaration.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       echo <SORTED_FUNCTIONS_RECORDS> | \
+#               header_section__module_stub_table_decl
+#
+# Environment variables:
+#
+#  MODULE               must be set to the module name.
+#  STUB_TABLE_NAME      must be set to the name of the stub table
+#                       structure;
+#  STUB_TABLE_TYPE      must be set to the name of the stub table
+#                       structure typedef.
+#
+# Read functions records  from stdin and print to  stdout the definition
+# of the  stub table structure.  The  format of the records  must be the
+# one produced by "parse_source_file_get_functions()".
+#
+#   It  is  mandatory  for  the  input  records to  be  sorted  by  stub
+# timestamp, this puts  each function in the same  position of the table
+# no matter the number and name  of the functions.
+#
+function stub_module_section__module_stub_table_decl () {
+    program_gawk '
+BEGIN {
+  MODULE          = ENVIRON["MODULE"];
+  STUB_TABLE_NAME = ENVIRON["STUB_TABLE_NAME"];
+  STUB_TABLE_TYPE = ENVIRON["STUB_TABLE_TYPE"];
+
+  printf "/* Functions stub table for the \"%s\" module. */\n\n", MODULE;
+  # The final purpose of the code dealing with this variable is to
+  # output the last function in the stub table struct declaration
+  # with no comma at the end.
+  previous_line = "";
+
+  printf "const %s %s = {\n", STUB_TABLE_TYPE, STUB_TABLE_NAME;
+  FS="|";
+}
+/^function|.+$/ {
+  timestamp = $2;
+  return_value = $3;
+  function_name = $4;
+  arguments = $5;
+  attributes = $6;
+  function_type = sprintf("%s_proto_t", function_name);
+
+  if (length(previous_line) > 0) printf "%s,\n", previous_line;
+  previous_line = sprintf("  %s", function_name);
+}
+END {
+  if (length(previous_line) > 0) printf "%s\n", previous_line;
+
+  printf "};\n\n";
+}
+' || exit $?
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Stub module section: main stub table declaration.
+## ------------------------------------------------------------
+
+# This should output something like:
+#
+#   /* Library stub table.
+#      A pointer for each module's stub table. */
+#
+#   const ucl_stub_table_t ucl_stub_table = {
+#     &ucl_btree_stub_table,
+#     &ucl_base_stub_table,
+#     &ucl_circular_stub_table,
+#     &ucl_debug_stub_table
+#   }
+
+function stub_module_section__main_stub_table_decl () {
+    local last_line
+    fill_main_variables
+
+    printf '/* Library stub table.\n'
+    printf '   A pointer for each module stub table. */\n\n'
+    printf 'const %s %s = {\n' "${MAIN_STUB_TABLE_TYPE}" "${MAIN_STUB_TABLE_NAME}"
+    
+    for FILENAME in "$@" ; do
+        fill_module_variables
+        test -n "${last_line}" && printf '%s,\n' "${last_line}"
+        last_line=$(printf '  &%s' "${STUB_TABLE_NAME}")
+    done
+    test -n "${last_line}" && printf '%s\n' "${last_line}"
+    printf '};\n\n'
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Program intefaces.
+## ------------------------------------------------------------
+
+function program_gawk () {
+    local PROGPATH=$(mbfl_program_found gawk)
+    mbfl_program_exec "${PROGPATH}" "${@}"
+}
+function program_sort () {
+    local PROGPATH=$(mbfl_program_found sort)
+    mbfl_program_exec "${PROGPATH}" "${@}"
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Helper functions.
+## ------------------------------------------------------------
+
+# Synopsis:
+#
+#       print_comment_section <TITLE> ... > <OUTPUT>
+#
+# Print to stdout a C language section-start comment.
+# 
+function print_comment_section () {
+    local TITLE=${1:?"missing comment section title argument to '${FUNCNAME}'"}
+    shift
+    TITLE=$(printf "${TITLE}" "$@")
+
+    printf '/** ------------------------------------------------------------ \n'
+    printf ' ** %s\n' "${TITLE}"
+    printf ' ** --------------------------------------------------------- */\n\n'
+}
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Let's go.
+## ------------------------------------------------------------
+
+mbfl_main
 
 ### end of file
 # Local Variables:

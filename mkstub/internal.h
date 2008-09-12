@@ -1,14 +1,13 @@
 /*
-   Part of: Useless Containers Library
-   Contents: preprocessor symbols
-   Date: Wed Nov  3, 2004
-     
+   Part of: Stub maker
+   Contents: internal header file
+   Date: Sun Aug 31, 2008
+   
    Abstract
-     
-	This header  file must  be included in  all the source  files of
-	UCL.
-
-   Copyright (c) 2004, 2005, 2007, 2008 Marco Maggi
+   
+   
+   
+   Copyright (c) 2008 Marco Maggi <marcomaggi@gna.org>
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -25,6 +24,9 @@
    
 */
 
+#ifndef INTERNAL_H
+#define INTERNAL_H 1
+
 
 /** ------------------------------------------------------------
  ** Headers.
@@ -34,11 +36,22 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>	/* sometimes useful for debugging */
-#include "ucl.h"
-#include "debug.h"
+#include "assert.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "errno.h"
 
 /* ------------------------------------------------------------ */
 
+
+/** ------------------------------------------------------------
+ ** Getopts interface.
+ ** ----------------------------------------------------------*/
+
+
+
+
+#endif /* INTERNAL_H */
 
 /* end of file */

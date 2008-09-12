@@ -1,399 +1,166 @@
+# @configure_input@
+#
 # Part of: DevelStuff
-# Contents: library of functions
+# Contents: library of functions for GNU Make
 # Date: Mon Aug 20, 2007
 # 
 # Abstract
 # 
-#	This is a library of functions for GNU Make. It will not work
-#	with other 'make' programs. See below for documentation about
-#	how to use this file.
+#	This is  a library of functions  for GNU Make. It  will not work
+#	with  other 'make' programs.   Along with  this file  you should
+#	have  received  a documentation  file  in  Texinfo format  named
+#	"infrastructure.texi".
 #
-# Copyright (c) 2007 Marco Maggi
+# Copyright (c) 2007, 2008 Marco Maggi
 # 
-# This is free  software you can redistribute it  and/or modify it under
-# the terms of  the GNU General Public License as  published by the Free
-# Software Foundation; either  version 2, or (at your  option) any later
-# version.
+# This program is  free software: you can redistribute  it and/or modify
+# it under the  terms of the GNU General Public  License as published by
+# the Free Software Foundation, either  version 3 of the License, or (at
+# your option) any later version.
 # 
-# This  file is  distributed in  the hope  that it  will be  useful, but
-# WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
+# This program  is distributed in the  hope that it will  be useful, but
+# WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
 # MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
 # General Public License for more details.
 # 
 # You  should have received  a copy  of the  GNU General  Public License
-# along with this file; see the file COPYING.  If not, write to the Free
-# Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-# 02111-1307, USA.
-
-#page
-## ------------------------------------------------------------
-## Usage.
-## ------------------------------------------------------------
-
-# This file requires to be processed by GNU Autoconf and then to be
-# loaded in your "Makefile". It is mandatory to put this file in
-# the "infrastructure" directory of the top source tree:
-#
-#    $(ds_top_srcdir)/infrastructure/Makefile.library.in
-#
-# so in "configure.ac" (the input file for GNU Autoconf) we can put:
-#
-#    AC_CONFIG_FILES([Makefile.library:infrastructure/Makefile.in])
-#    AC_CONFIG_FILES([Makefile])
-#
-# which will cause "configure" to create a "Makefile.library" file
-# in the build directory. To load the file, place the following in
-# your "Makefile.in":
-#
-#    include Makefile.library
-#
-# if the file does not exist GNU Make will raise an error.
-
-#page
-## ------------------------------------------------------------
-## Conventions.
-## ------------------------------------------------------------
-
-# Function names are lowercase with '-' as word-splitting char, and 'ds' as
-# namespace prefix; example: 'ds-install-files'.
-#
-# Private variable names are mixed case with '_' as word-splitting char, and
-# 'ds' as namespace prefix; example: 'ds_doc_texinfo_BUILDDIR'.
-#
-# User configurable interface variables are mixed case with '_' as
-# word-splitting char; example: 'my_SRCDIR', in which the prefix 'my' is user
-# selected.
-#
-# All the variables in this file that are defined with the '?=' operator are
-# meant to be configurable by the user, either by setting them on the command
-# line of "make" or by declaring them before calling the 'ds-' function.
-#
-# All the variable with prefix 'ds_config_' are meant to be used to configure
-# this library's behaviour.
-#
-
-#page
-## ------------------------------------------------------------
-## Distribution layout.
-## ------------------------------------------------------------
-
-# This library support two distribution types: single and multiple.
-#
-# With single-package distribution:
-#
-# - the distribution installs a single package;
-#
-# - there is only one "infrastructure" directory holding this
-#   file, and it is located in the top source directory;
-#
-# - there is only one "configure.ac" and one "Makefile.in";
-#
-# - the 'ds_top_srcdir' and 'srcdir' variables are set to the
-#   same pathname.
-#
-# With multiple-package distribution:
-#
-# - the distribution installs multiple packages;
-#
-# - the layout of the source tree is:
-#
-#	<top-distribution>/infrastructure
-#	<top-distribution>/<top-package-1>
-#	<top-distribution>/<top-package-2>
-#	<top-distribution>/<top-package-3>
-#	...
-#
-# - there is only one "infrastructure" directory holding this
-#   file, and it is located in the top distribution directory;
-#
-# - there is one "configure.ac" and one "Makefile.in" for each
-#   package;
-#
-# - the 'ds_top_srcdir' variable is set to the root of the
-#   distribution source tree;
-#
-# - the 'srcdir' variable is set to the root of the package
-#   tree.
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Makefile layout.
-## ------------------------------------------------------------
-
-# A "Makefile" that makes use of the library basically looks like this:
-#
-#   include Makefile.library
-#   $(eval $(call ds-begin))
-#   ... project rules ...
-#   $(eval $(call ds-meta-scripts))
-#   $(eval $(call ds-config-inspection-script))
-#   $(eval $(call ds-source-distribution))
-#   $(eval $(call ds-binary-distribution))
-#   $(eval $(call ds-slackware-distribution))
-#   $(eval $(call ds-uninstall-scripts))
-#   $(eval $(call ds-end))
-#
-# or, in extended form, like this:
-#
-#   include Makefile.library
-#   $(eval $(call ds-package-variables))
-#   $(eval $(call ds-common-programs))
-#   $(eval $(call ds-main-rules))
-#   $(eval $(call ds-tests))
-#   $(eval $(call ds-generic-documentation))
-#   ... project rules ...
-#   $(eval $(call ds-meta-scripts))
-#   $(eval $(call ds-config-inspection-script))
-#   $(eval $(call ds-source-distribution))
-#   $(eval $(call ds-binary-distribution))
-#   $(eval $(call ds-slackware-distribution))
-#   $(eval $(call ds-uninstall-scripts))
-#   $(eval $(call ds-end))
-#
-# you have to read this source file to understand what the functions do.
-#
-# WARNING When using 'ds-uninstall-scripts': it must be the last
-# expanded function, only 'ds-end' can come after it.
-#
-# Notice that the variables that define the GNU Autoconf directories are
-# defined in "Makefile.library" outside of functions. So they are already
-# defined when calling 'ds-begin'.
-#
-# We are free to use a different layout and to substitute the library
-# functions with direct "Makefile" declarations or our own function calls.
-
-
-#page
-## ------------------------------------------------------------
-## Modules declaration.
-## ------------------------------------------------------------
-
-# The project rules should be a set of modules like this one:
-#
-#    $(eval $(call ds-srcdir,my,$(srcdir)/src/my))
-#    $(eval $(call ds-builddir,my))
-#
-#    my_SOURCES	= $(call ds-glob,my,*.txt.m4)
-#    my_TARGETS	= $(my_SOURCES:.txt.m4=.txt)
-#    my_INSTLST	= $(my_TARGETS)
-#    my_INSTDIR	= $(pkgdatadir)
-#
-#    my_CLEANFILES	= $(my_TARGETS)
-#    my_REALCLEANFILES	= $(my_CLEANFILES)
-#
-#    $(eval $(call ds-module,my,bin,DATA))
-#
-#    vpath %.m4		$(my_SRCDIR)
-#
-#    my_M4FLAGS	= --prefix-builtins --include=$(my_SRCDIR) --
-#
-#    %.txt : %.txt.m4
-#            $(M4) $(my_M4FLAGS) $(<) >$(@)
-#
-# this chunk of "Makefile" defines a module identified by the string 'my',
-# with the following characteristics:
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
-# - module's purpose is to process a set of files with the GNU m4
-#   preprocessor;
-#
-# - the module is registered under the 'bin' section and its output files
-#   are meant to be installed as data (as opposed to binaries and libraries);
-#
-# - the source files are under "$(srcdir)/src/my" and match the
-#   pattern '*.txt.m4'; this value is stored in the variable 'my_SRCDIR';
-#
-# - the output files will be built under "$(builddir)/my.d" and will
-#   have '.txt' extension; this value is stored in the variable 'my_BUILDDIR';
-#
-# - the variable 'M4' must hold the pathname of the executable program
-#   of GNU m4; the variable is declared by the function 'ds-common-programs'
-#   and something like:
-#
-#      AC_PATH_PROG([M4], [m4], :)
-#      AC_ARG_VAR([M4], [the GNU m4 preprocessor])
-#
-#   must be present in "configure.ac";
-#
-# - the GNU m4 flags to be used are specific for this module and selected
-#   with 'my_M4FLAGS';
-#
-# - the following '.PHONY' rules are available to drive the module:
-#
-#	my-all		builds the module;
-#	my-clean	remove the files listed in 'my_CLEANFILES';
-#	my-realclean	remove the files listed in 'my_REALCLEANFILES';
-#	my-install	installs the files in 'my_INSTLST' under the
-#			directory in 'my_INSTDIR' with data files permissions.
 
 #page
 ## ------------------------------------------------------------
-## Expansion notes.
+## Configuration variables.
 ## ------------------------------------------------------------
 
-# Read the GNU Make documentation to understand the expansion rules for
-# functions. Basically a function is defined with:
-#
-#    define <funcname>
-#    <funcbody>
-#    endef
-#
-# and is invoked with:
-#
-#    $(call <funcname>,arg1,arg2,...)
-#
-# in the body: positional parameters are available as $(1), $(2), $(3), ...
-#
-# A piece of Makefile can be defined by expanding a function with 'eval',
-# example:
-#
-#    $(eval $(call <funcname>,arg1,arg2,...))
-#
-# this evaluates *twice* the body of the function; to prevent the expansion
-# of a function inside the body use '$$', example:
-#
-#    blu = 123
-#		
-#    define spiffy
-#    $(blu)
-#    $$(red)
-#    endef
-#		
-#    $(eval $(call spiffy))
-#		
-# is equivalent to putting in the Makefile:
-#
-#    123
-#    $(red)
-#
-# **** Expansion warning
-#
-# Leading tab chars in the body of functions are not interpreted as valid
-# separators in their 'eval' expansion. This means that to put in a Makefile:
-#
-#    target: prerequisite
-#            command1
-#
-# we have to use:
-#
-#    define doit
-#    target: prerequisite ; command1
-#    endef
-#
-#    $(eval $(call doit))
-#
-# and to put in a Makefile:
-#
-#    target: prerequisite
-#            command1
-#            command2
-#
-# we have to use:
-#
-#    define doit-commands
-#    command1
-#    command2
-#    endef
-#		
-#    target: prerequisite ; $(call doit-commands)
-#		
+ds_config_VERBOSE_MESSAGES	?= yes
+ds_config_DOC_ENABLED		?= yes
+ds_config_DEV_ENABLED		?=
+ds_config_ABI			?= direct
+
+# *FIXME* This  is undocumented because support for  versioned layout is
+# not fully specified: it  is not clear what is good to  always put in a
+# versioned  directory.   The value  of  this  variable influences  some
+# installation directory, but not all of them.
+ds_config_VERSIONED_LAYOUT	?= @ds_config_VERSIONED_LAYOUT@
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
 ## Miscellaneous.
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(call ds-ornull,<ARGUMENT>,<ALTERNATE_ARGUMENT>)
-#
-# Description:
-#
-#   If <ARGUMENT> is not the empty string: the call expands to
-#   <ARGUMENT>; else the call expands to <ALTERNATE_ARGUMENT>.
-
 define ds-ornull
 $(if $(1),$(1),$(2))
 endef
 
-# Synopsis:
-#
-#	$(call ds-verbose,<STUFF_FOR_VERBOSE>,<STUFF_FOR_SILENT>)
-#
-# Description:
-#
-#  If 'ds_config_VERBOSE_MESSAGES' has a non-empty value: expand
-#  <STUFF_FOR_VERBOSE>, else expand <STUFF_FOR_SILENT>.
-
 define ds-verbose
 $(if $(ds_config_VERBOSE_MESSAGES),$(1),$(2))
 endef
-
-# Synopsis:
-#
-#	$(call ds-echo,<MESSAGE>)
-#
-# Description:
-#
-#  Make use of 'ds-verbose' to output a message.
 
 define ds-echo
 @$(call ds-verbose,echo $(1))
 endef
 
 ## ------------------------------------------------------------
+## File system inspection.
+
+define ds-drop-backup-files
+$(filter-out %~,$(1))
+endef
+
+define ds-drop-equal-prefixed-files
+$(foreach f,$(1),$(if $(filter =%,$(notdir $(f))),,$(f)))
+endef
+
+define ds-drop-unwanted-files
+$(call ds-drop-equal-prefixed-files,$(call ds-drop-backup-files,$(1)))
+endef
+
+define ds-files-from-dir
+$(call ds-drop-unwanted-files,$(wildcard $(addprefix $(1)/,$(call ds-ornull,$(2),*))))
+endef
+
+define ds-replace-dir
+$(addprefix $(1)/,$(notdir $(2)))
+endef
+
+define ds-glob
+$(if $($(1)_SRCDIR),\
+	$(call ds-files-from-dir,$($(1)_SRCDIR),$(2)),\
+	$(error null source directory variable "$(1)_SRCDIR"))
+endef
+
+## ------------------------------------------------------------
+## Source directory handling.
+
+define ds-srcdir
+$(1)_SRCDIR	?= $$(call ds-ornull,$(2),$$(srcdir)/$(1))
+$$(call ds-assert-srcdir,$(1))
+endef
+
+define ds-assert-srcdir
+$(if $($(1)_SRCDIR),\
+	$(shell test -d $($(1)_SRCDIR) || \
+		printf "*warning*: missing srcdir '%s'\n" $($(1)_SRCDIR) >&2),\
+	$(error null source directory variable "$(1)_SRCDIR"))
+endef
+
+## ------------------------------------------------------------
+## Build directory handling.
+
+define ds-builddir
+$(1)_BUILDDIR		?= $$(call ds-ornull,$(2),$$(builddir)/$(1).d)
+
+.PHONY: $(1)-make-builddir
+
+$(1)-make-builddir: ; $$(call ds-make-builddir,$(1))
+$(1)-all: $(1)-make-builddir
+endef
+
+define ds-make-builddir
+$(if $($(1)_BUILDDIR),\
+	$(shell test -d $($(1)_BUILDDIR) || $(MKDIR) $($(1)_BUILDDIR)),\
+	$(error null build directory variable "$(1)_BUILDDIR"))
+endef
+
+## ------------------------------------------------------------
+## Clean files
+
+define ds-clean-files
+$(if $($(1)_CLEANFILES),$(RM) $($(1)_CLEANFILES),\
+	$(warning empty clean variable "$(1)_CLEANFILES"))
+endef
+
+define ds-real-clean-files
+$(if $($(1)_REALCLEANFILES),$(RM) $($(1)_REALCLEANFILES),\
+	$(warning empty real clean variable "$(1)_REALCLEANFILES"))
+endef
+
+define ds-default-clean-files-variables
+$(1)_CLEANFILES		+= $$($(1)_TARGETS)
+$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)
+endef
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
-## Package variables.
+## Mandatory modules.
 ## ------------------------------------------------------------
-
-# Set it to empty to 
-ds_config_VERBOSE_MESSAGES	?= 1
-
-# Set it to empty to exclude the 'doc' rules.
-ds_config_DOC_ENABLED		?= 1
-
-# Leave it empty to exclude the 'dev' rules.
-ds_config_DEV_ENABLED		?=
-
-ds_config_VERSIONED_LAYOUT	?= @ds_config_VERSIONED_LAYOUT@
-
-# Select a set of rules to implement 'abi' and 'abu' rules. 'abi' stands
-# for 'all+binary+install', while 'abu' stands for 'all+binary+upgrade'.
-# Supported values are:
-#
-#	slackware	make use of the Slackware Linux packaging rules,
-#			requires '$(eval $(call ds-binary-distribution))'
-#			in the "Makefile";
-#
-#	binary		make use of the bindist rules, requires
-#			'$(eval $(call ds-slackware-distribution))'
-#
-#	direct		make direct use of the 'all' and 'install' rules.
-
-ds_config_ABI	?= slackware
-
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-begin))
-#
 
 define ds-begin
+-include Makefile.variables
+
 $$(eval $$(call ds-package-variables))
 $$(eval $$(call ds-common-programs))
 $$(eval $$(call ds-main-rules))
+$$(eval $$(call ds-examples))
 $$(eval $$(call ds-tests))
 $$(eval $$(call ds-generic-documentation))
 endef
 
-# Synopsis:
-#
-#	$(eval $(call ds-end))
-#
+## ------------------------------------------------------------
 
 define ds-end
 .PHONY: echo-variable echo-list-variable
@@ -404,15 +171,13 @@ echo-variable:
 echo-list-variable:
 	@$$(foreach f,$$($$(VARIABLE)),echo $$(f);)
 
+# This  appears to  be ignored  by GNU  Make 3.81;  at least  it  is not
+# mentioned in the Info documentation.  But it was used in the make file
+# of Tcl and it seems that it does no harm.
 .NOEXPORT:
 endef
 
 ## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-package-variables))
-#
 
 define ds-package-variables
 PACKAGE_NAME		= @PACKAGE_NAME@
@@ -423,6 +188,25 @@ PACKAGE_NAME_LOWERCASE	= @PACKAGE_NAME_LOWERCASE@
 PKG_ID			= $$(PACKAGE_NAME)-$$(PACKAGE_XVERSION)
 endef
 
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## Shortcuts for common module sets.
+## ------------------------------------------------------------
+
+define ds-common-end
+$(eval $(call ds-texinfo-documentation))
+$(eval $(call ds-uninstall-scripts))
+$(eval $(call ds-meta-scripts))
+$(eval $(call ds-pkg-config))
+$(eval $(call ds-autoconf))
+$(eval $(call ds-config-inspection-script))
+$(eval $(call ds-source-distribution))
+$(eval $(call ds-binary-distribution))
+$(eval $(call ds-slackware-distribution))
+$(eval $(call ds-end))
+endef
 
 ## ------------------------------------------------------------
 
@@ -431,61 +215,16 @@ endef
 ## Directories.
 ## ------------------------------------------------------------
 
-# Directories configuration
-# -------------------------
-#
-# The configuration of the directories section is done by defining or
-# undefining the following variables; the value of the variables is
-# unimportant.
-#
-# ds_config_EXCLUDE_AUTOCONF_DIRECTORIES
-#
-#	Exclude the directory variables defined by GNU Autoconf.
-#
-# ds_config_EXCLUDE_DEVELSTUFF_DIRECTORIES
-#
-#	Exclude the directory variables defined by DevelStuff.
-#
-# Note
-# ----
-#
-# Why this is not in a function? The directories defined by GNU
-# Autoconf symbols like '@libdir@' are set by "configure" to values
-# that are themselves dependent upon other variables; example: the
-# expansion of '@libdir@' can be '${prefix}/lib'. The presence of
-# '$' triggers expansion to empty string when a function is invoked
-# with 'eval', and this is not good.
-
-## ------------------------------------------------------------
-
-# Select 'INSTALL_ROOT' from the command line:
-#
-#  make ... INSTALL_ROOT=/tmp/project_1.2.3
-#
-# if 'INSTALL_ROOT' is empty and 'DESTDIR' is defined: use '$(DESTDIR)'.
-
-INSTALL_ROOT	?=
-ifdef DESTDIR
-ifeq ($(INSTALL_ROOT),)
-INSTALL_ROOT	= $(DESTDIR)
-endif
-endif
-
-## ------------------------------------------------------------
-
-# If there is not a value for "TMPDIR" from the environment
-# we select a common default.
+# If there is not a value for 'TMPDIR' from the environment we select a
+# common default.
 ifeq ($(strip $(TMPDIR)),)
 TMPDIR		= /tmp
 endif
 
-## ------------------------------------------------------------
-
-ifndef ds_config_EXCLUDE_AUTOCONF_DIRECTORIES
-
 builddir	= $(if @builddir@,@builddir@,.)
-ds_top_srcdir	= $(if @ds_top_srcdir@,@ds_top_srcdir@,.)
 srcdir		= $(if @srcdir@,@srcdir@,.)
+
+ifneq ($$(strip $$(ds_config_EXCLUDE_AUTOCONF_DIRECTORIES)),)
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -506,7 +245,7 @@ sysconfdir	= @sysconfdir@
 
 endif
 
-ifndef ds_config_EXCLUDE_DEVELSTUFF_DIRECTORIES
+ifneq ($$(strip $$(ds_config_EXCLUDE_DEVELSTUFF_DIRECTORIES)),)
 
 PKG_DIR		= @PKG_DIR@
 pkgdatadir	= @pkgdatadir@
@@ -527,11 +266,6 @@ endif
 ## ------------------------------------------------------------
 ## Programs.
 ## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-common-programs))
-#
 
 define ds-common-programs
 BASH_PROGRAM	= @BASH_PROGRAM@
@@ -558,15 +292,13 @@ SYMLINK		= @SYMLINK@ --symbolic
 TAR		= @TAR@
 SUDO		= @SUDO@
 
-INSTALL			= @INSTALL@
-INSTALL_DIR_MODE	= 0755
-INSTALL_BIN_MODE	= 0555
-INSTALL_DATA_MODE	= 0444
-INSTALL_LIB_MODE	= 0444
-endef
-
-define ds-tcl-programs
 TCLSH		= @TCLSH@
+
+INSTALL			= @INSTALL@
+INSTALL_DIR_MODE	?= 0755
+INSTALL_BIN_MODE	?= 0555
+INSTALL_DATA_MODE	?= 0444
+INSTALL_LIB_MODE	?= 0444
 endef
 
 ## ------------------------------------------------------------
@@ -575,11 +307,6 @@ endef
 ## ------------------------------------------------------------
 ## Main rules.
 ## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-main-rules))
-#
 
 define ds-main-rules
 ds_main_MAIN_RULES	= all clean realclean install
@@ -592,26 +319,50 @@ ifneq ($$(strip $$(ds_config_DEV_ENABLED)),)
 ds_main_GROUP_RULES	+= dev
 endif
 
+## ------------------------------------------------------------
+
 # This is the pathname of the infrastructure directory: a relative
 # pathname with respect to the build directory.
-ds_main_INFRADIR	?= $$(ds_top_srcdir)/infrastructure
+ds_main_INFRADIR	?= $$(srcdir)/infrastructure
 
 # This is the pathname of the configuration directory: a relative
 # pathname with respect to the build directory.
 ds_main_CFGDIR		?= $$(srcdir)/configuration
 
+## ------------------------------------------------------------
+
 .PHONY: $$(ds_main_GROUP_RULES) $$(ds_main_MAIN_RULES)
 .PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(addprefix $$(g)-,$$(ds_main_MAIN_RULES)))
-.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),install-$$(g)-aux)
 
 all:		$$(ds_main_GROUP_RULES)
 clean:		$$(addsuffix -clean,     $$(ds_main_GROUP_RULES))
-realclean:	$$(addsuffix -realclean, $$(ds_main_GROUP_RULES))
+realclean:	$$(addsuffix -realclean, $$(ds_main_GROUP_RULES)) clean
 install:	$$(addsuffix -install,	 $$(ds_main_GROUP_RULES))
+
+## ------------------------------------------------------------
+## Main group rules.
 
 $$(ds_main_GROUP_RULES):
 $$(addsuffix -all, $$(ds_main_GROUP_RULES)): %-all : %
-$$(foreach g,$$(ds_main_GROUP_RULES),install-$$(g)-aux):
+
+## ------------------------------------------------------------
+## Auxiliary installation rules.
+
+.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-install-aux)
+
+install: bin-install-aux
+ifneq ($$(strip $$(ds_config_DOC_ENABLED)),)
+install: doc-install-aux
+endif
+ifneq ($$(strip $$(ds_config_DEV_ENABLED)),)
+install: dev-install-aux
+endif
+
+# These are declared as empty rules, so that "make" does not print a
+# warning 'no rule to make target' message.
+$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-install-aux):
+
+## ------------------------------------------------------------
 
 .PHONY: clean-builddir
 
@@ -620,16 +371,14 @@ clean-builddir:
 
 ## ------------------------------------------------------------
 
-# A fake rule that can be used as second argument for 'ds-module'.
+.PHONY: nop nop-clean nop-realclean
 
-.PHONY: ds-nop
+nop:
 
-ds-nop:
-
-clean:		ds-nop-clean
-realclean:	ds-nop-realclean
-ds-nop-clean:
-ds-nop-realclean:
+clean:		nop-clean
+realclean:	nop-realclean
+nop-clean:
+nop-realclean:
 
 ## ------------------------------------------------------------
 
@@ -653,14 +402,9 @@ endif
 
 .PHONY: abi abu
 
-ifeq ($$(ds_config_ABI),slackware)
-abi: all slackware slackware-install
-abu: all slackware slackware-upgrade
-endif
-
 ifeq ($$(ds_config_ABI),direct)
 abi: all install
-abu: all uninstall upgrade
+abu: all uninstall install
 endif
 
 ifeq ($$(ds_config_ABI),bindist)
@@ -668,18 +412,25 @@ abi: all bindist bindist-install
 abu: all uninstall bindist bindist-install
 endif
 
+ifeq ($$(ds_config_ABI),slackware)
+abi: all slackware slackware-install
+abu: all slackware slackware-upgrade
+endif
+
 ## ------------------------------------------------------------
 
-.PHONY: print-install-layout print-files-layout print-directories-layout
-.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-files-layout)
-.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-directories-layout)
+.PHONY: print-install-layout print-install-files-layout print-install-directories-layout
+.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-layout)
+.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-files-layout)
+.PHONY: $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-directories-layout)
 
-print-layout:			$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-layout)
-print-files-layout:		$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-files-layout)
-print-directories-layout:	$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-directories-layout)
+print-install-layout:			$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-layout)
+print-install-files-layout:		$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-files-layout)
+print-install-directories-layout:	$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-directories-layout)
 
-$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-files-layout):
-$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-directories-layout):
+$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-layout):
+$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-files-layout):
+$$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-install-directories-layout):
 
 ## ------------------------------------------------------------
 
@@ -698,28 +449,16 @@ $$(foreach g,$$(ds_main_GROUP_RULES),$$(g)-print-uninstall-files-script):
 
 ## ------------------------------------------------------------
 
-.PHONY: reconfigure
-
-reconfigure:
-	$$(MAKE) clean
-	$$(MAKE) realclean
-	-cd $$(srcdir) ; test -f config.h.in -a config.h.in -nt configure && autoheaders
-	$$(BASH_PROGRAM) $$(ds_main_INFRADIR)/make-configure-ac.sh "$$(srcdir)"
-	cd $$(srcdir); autoconf
-	@$$(call ds-echo,'*** Now you may run "configure" ***')
-
-## ------------------------------------------------------------
-
-ds_main_CLEANFILES	= config.log config.status config.cache Makefile
+ds_main_CLEANFILES	= config.log config.status config.cache Makefile*
 
 .PHONY: config-clean nothing
 
-# This target is to allow one to update the 'Makefile', if required
+# This  target is to  allow one  to update  the 'Makefile',  if required
 # without doing anything else; if the 'Makefile' does not need updating:
-# nothing happens. This target is required by the 'develstuff.sh'
-# script when querying the 'Makefile' for variable values. If the ':'
-# command is not used, and the target is left with no commands, 'make'
-# will print the message "Nothing to be done for 'nothing'"; we do not
+# nothing  happens.   This target  is  required  by the  'develstuff.sh'
+# script when querying  the 'Makefile' for variable values.   If the ':'
+# command is not  used, and the target is left  with no commands, 'make'
+# will print the  message "Nothing to be done for  'nothing'"; we do not
 # want to fill the user's terminal with this.
 nothing:
 	@:
@@ -732,17 +471,6 @@ config.status: $$(srcdir)/configure
 
 config-clean:
 	-$$(RM) $$(ds_main_CLEANFILES)
-
-## ------------------------------------------------------------
-
-ds_main_INSTALLED_INFRASTRUCTURE = \
-	$$(call ds-files-from-dir,$$(shell develstuff-config --pkgdatadir)/infrastructure)
-
-.PHONY: ds-update-infrastructure
-
-ds-update-infrastructure:
-	$$(CP) $$(ds_main_INSTALLED_INFRASTRUCTURE) $$(ds_main_INFRADIR)
-	bash $$(ds_main_INFRADIR)/make-configure-ac.sh "$$(srcdir)"
 
 endef
 
@@ -771,309 +499,92 @@ endef
 ## Source modules.
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#  $(eval $(call ds-module,<MODULE_NAME>,<MAIN_SECTION>,<INSTALL_MODE>))
-#
-# Description:
-#
-#  Insert the PHONY rules used to drive the rebuilding of a project's module.
-#
-#  <MODULE_NAME> is the module name, which must be unique in the whole Makefile.
-#
-#  <MAIN_SECTION> must be one among: bin, doc, dev, sta; it selects the set of
-#  PHONY rules under which main rule this module is handled.
-#  
-#  <INSTALL_MODE> is the last argument for 'ds-install-module'.
-#  
-# Examples:
-#
-#  If a module is declared with:
-#
-#	$(eval $(call ds-module,my,bin,DATA))
-#
-#  then:
-#
-#	$ make my-all		# rebuilds the module
-#	$ make bin-all		# rebuilds the module
-#
-#	$ make my-clean		# removes the files listed in my_CLEANFILES
-#	$ make bin-clean	# removes the files listed in my_CLEANFILES
-#
-#	$ make my-realclean	# removes the files listed in my_REALCLEANFILES
-#	$ make bin-realclean	# removes the files listed in my_REALCLEANFILES
-#
-#	$ make my-install	# installs the files in my_INSTLST
-#	$ make bin-install	# installs the files in my_INSTLST
-#
-#	$ make my-print-files-layout	# prints installed files layout
-#	$ make bin-print-files-layout	# prints installed files layout
-#
-#	$ make my-print-directories-layout	# prints installed directories layout
-#	$ make bin-print-directories-layout	# prints installed directories layout
-#
-#	$ make my-print-layout		# prints installed files and directories layout
-#	$ make bin-print-layout		# prints installed files and directories layout
-#
-#	$ make my-print-uninstall-files-script	# prints files' uninstall script
-#	$ make bin-print-uninstall-files-script	# prints files' uninstall script
-#
-#	$ make my-print-uninstall-directories-script	# prints directories' uninstall script
-#	$ make bin-print-uninstall-directories-script	# prints directories' uninstall script
-#
-#	$ make my-print-uninstall-script	# prints module's uninstall script
-#	$ make bin-print-uninstall-script	# prints module's uninstall script
-#
-#  the rule 'my-install-aux' is available for custom installation commands.
-
 define ds-module
-.PHONY: $$(addprefix $(1)-, all clean realclean install)
+# $(1) - is the module identifier
+# $(2) - is the main section: bin, dev, doc, nop, test, or whatever
+# $(3) - is the installation mode, second argument to 'ds-install-module'
+
+.PHONY: $$(addprefix $(1)-,	all clean realclean				\
+				install install-aux uninstall uninstall-aux	\
+				\
+				print-install-files-layout			\
+				print-install-directories-layout		\
+				print-install-layout				\
+				\
+				print-install-files-layout-aux			\
+				print-install-directories-layout-aux		\
+				print-install-layout-aux			\
+				\
+				print-uninstall-files-script			\
+				print-uninstall-directories-script		\
+				print-uninstall-script				\
+				\
+				print-uninstall-files-script-aux		\
+				print-uninstall-directories-script-aux		\
+				print-uninstall-script-aux)
+
 $(1)-all: $$($(1)_TARGETS)
-$(1)-clean:	; -@$$(call ds-clean-files,$(1))
-$(1)-realclean:	; -@$$(call ds-real-clean-files,$(1))
-$(1)-install: $(1)-install-aux ; @$$(call ds-install-module,$(1),$(call ds-ornull,$(3),DATA))
+$(1)-clean:				; -@$$(call ds-clean-files,$(1))
+$(1)-realclean:				; -@$$(call ds-real-clean-files,$(1))
+$(1)-install:	$(1)-install-aux	; @$$(call ds-install-module,$(1),$(call ds-ornull,$(3),DATA))
+$(1)-uninstall:	$(1)-uninstall-aux	; @$$(call ds-uninstall-module,$(1))
 $(1)-install-aux:
+$(1)-uninstall-aux:
 
-$(1)-print-files-layout: ; @$$(call ds-module-print-files-layout,$(1))
-$(1)-print-directories-layout: ; @$$(call ds-module-print-directories-layout,$(1))
-$(1)-print-layout: $(1)-print-files-layout $(1)-print-directories-layout
+$(1)-print-install-files-layout:	$(1)-print-install-files-layout-aux
+	@$$(call ds-module-print-files-layout,$(1))
+$(1)-print-install-directories-layout:	$(1)-print-install-directories-layout-aux
+	@$$(call ds-module-print-directories-layout,$(1))
+$(1)-print-install-layout:		$(1)-print-install-layout-aux
+	@$$(call ds-module-print-layout,$(1))
 
-$(1)-print-uninstall-files-script:	 ; @$$(call ds-module-print-uninstall-files-script,$(1))
-$(1)-print-uninstall-directories-script: ; @$$(call ds-module-print-uninstall-directories-script,$(1))
-$(1)-print-uninstall-script:	 $(1)-print-uninstall-files-script $(1)-print-uninstall-directories-script
+$(1)-print-install-files-layout-aux:
+$(1)-print-install-directories-layout-aux:
+$(1)-print-install-layout-aux:		$(1)-print-install-files-layout-aux \
+					$(1)-print-install-directories-layout-aux
+
+$(1)-print-uninstall-files-script:		$(1)-print-uninstall-files-script-aux
+	@$$(call ds-module-print-uninstall-files-script,$(1))
+$(1)-print-uninstall-directories-script:	$(1)-print-uninstall-directories-script-aux
+	@$$(call ds-module-print-uninstall-directories-script,$(1))
+$(1)-print-uninstall-script:			$(1)-print-uninstall-script-aux
+	@$$(call ds-module-print-uninstall-script,$(1))
+
+$(1)-print-uninstall-files-script-aux:
+$(1)-print-uninstall-directories-script-aux:
+$(1)-print-uninstall-script-aux:	$(1)-print-uninstall-files-script-aux \
+					$(1)-print-uninstall-directories-script-aux
+
+# ------------------------------------------------------------
 
 $(2):		$(1)-all
 $(2)-clean:	$(1)-clean
 $(2)-realclean:	$(1)-realclean
 $(2)-install:	$(1)-install
+$(2)-uninstall:	$(1)-uninstall
 
-$(2)-print-files-layout:	$(1)-print-files-layout
-$(2)-print-directories-layout:	$(1)-print-directories-layout
-$(2)-print-layout:		$(1)-print-layout
+$(2)-print-install-files-layout:	$(1)-print-install-files-layout
+$(2)-print-install-directories-layout:	$(1)-print-install-directories-layout
+$(2)-print-install-layout:		$(1)-print-install-layout
 
 $(2)-print-uninstall-files-script:	 $(1)-print-uninstall-files-script
 $(2)-print-uninstall-directories-script: $(1)-print-uninstall-directories-script
-$(2)-print-uninstall-script:	 $(1)-print-uninstall-script
+$(2)-print-uninstall-script:		 $(1)-print-uninstall-script
 
 endef
 
-# Synopsis:
-#
-#	$(eval $(call ds-module-no-install,<MODULE_NAME>,<MAIN_SECTION>))
-#
-# Description:
-#
-#  Like 'ds-module' but with no installation rule.
-
 define ds-module-no-install
-.PHONY: $$(addprefix $(1)-, all clean realclean)
+# $(1) - is the module identifier
+# $(2) - is the main section: bin, dev, doc, nop, test, or whatever
+.PHONY: $$(addprefix $(1)-,all clean realclean)
+
 $(1)-all: $$($(1)_TARGETS)
 $(1)-clean:	; -@$$(call ds-clean-files,$(1))
 $(1)-realclean:	; -@$$(call ds-real-clean-files,$(1))
+
 $(2):		$(1)-all
 $(2)-clean:	$(1)-clean
 $(2)-realclean:	$(1)-realclean
-endef
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## File system inspection.
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(call ds-drop-backup-files,<LIST_OF_FILES>)
-#
-# Description:
-#
-#  Filter out backup files.
-
-define ds-drop-backup-files
-$(filter-out %~,$(1))
-endef
-
-# Synopsis:
-#
-#	$(call ds-drop-equal-prefixed-files,<LIST_OF_FILES>)
-#
-# Description:
-#
-#  Filter out files whose name starts with "=".
-
-define ds-drop-equal-prefixed-files
-$(foreach f,$(1),$(if $(filter =%,$(notdir $(f))),,$(f)))
-endef
-
-# Synopsis:
-#
-#	$(call ds-drop-unwanted-files,<LIST_OF_FILES>)
-#
-# Description:
-#
-#  Filter out backups and files whose name starts with "=".
-
-define ds-drop-unwanted-files
-$(call ds-drop-equal-prefixed-files,$(call ds-drop-backup-files,$(1)))
-endef
-
-# Synopsis:
-#
-#	 $(call ds-files-from-dir,<DIRECTORY>)
-#
-# Description:
-# 
-#  Collects files dropping out backups and files starting with "=".
-
-define ds-files-from-dir
-$(call ds-drop-unwanted-files,$(wildcard $(1)/*))
-endef
-
-# Synopsis:
-#
-#	$(call ds-replace-dir,<NEW_DIR>,<LIST-OF-FILES>)
-#
-# Description:
-# 
-#  Replaces a directory with another in a group of files.
-
-define ds-replace-dir
-$(addprefix $(1)/,$(notdir $(2)))
-endef
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Source directory handling.
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-srcdir,<MODULE_NAME>,[DIRECTORY_PATHNAME]))
-#
-# Description:
-#
-#  Test if the source directory of the module exists in the source tree.
-#
-# Examples:
-#
-#  $(eval $(call ds-srcdir,my,$(srcdir)/src/my))
-#
-#	Select "$(srcdir)/src/my" as location of source files for a
-#	module identified by 'my'.
-#
-#  $(eval $(call ds-srcdir,my))
-#
-#	Select "$(srcdir)/my" as location of source files for a module
-#	identified by 'my'.
-
-define ds-srcdir
-$(1)_SRCDIR	?= $$(call ds-ornull,$(2),$$(srcdir)/$(1))
-$$(call ds-assert-srcdir,$(1))
-endef
-
-# Synopsis:
-#
-#	$(call ds-assert-srcdir,<MODULE_NAME>)
-#
-# Description:
-#
-#  Invoke 'error' if a module's source directory does not exist.
-
-define ds-assert-srcdir
-$(if $($(1)_SRCDIR),\
-	$(shell test -d $($(1)_SRCDIR) || \
-		printf "*warning*: missing srcdir '%s'\n" $($(1)_SRCDIR) >&2),\
-	$(error null source directory variable "$(1)_SRCDIR"))
-endef
-
-# Synopsis:
-#
-#	$(call ds-glob,<MODULE_NAME>,<SOURCE_FILES_PATTERNS>)
-#
-# Description:
-#
-#  Expand the patterns in <SOURCE_FILES_PATTERNS> under the source directory
-#  of a module, filtering out backup files.
-#
-
-define ds-glob
-$(call ds-drop-unwanted-files,$(wildcard $(addprefix $($(1)_SRCDIR)/,$(2))))
-endef
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Build directory handling.
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-builddir,<MODULE_NAME>,[DIRECTORY_PATHNAME]))
-#
-# Description:
-#
-#  Create the build directory for the module.
-#
-# Examples:
-#
-#  $(eval $(call ds-builddir,my,$(builddir)/my-out))
-#
-#	Select "$(builddir)/my-out" as build directory for a module
-#	with identifier 'my'.
-#
-#  $(eval $(call ds-builddir,my))
-#
-#	Select "$(builddir)/my.d" as build directory for a module
-#	with identifier 'my'.
-
-define ds-builddir
-$(1)_BUILDDIR		?= $$(call ds-ornull,$(2),$$(builddir)/$(1).d)
-$(1)-make-builddir: ; $$(call ds-make-builddir,$(1))
-$(1)-all: $(1)-make-builddir
-endef
-
-# Synopsis:
-#
-#	$(call ds-make-builddir,<MODULE_NAME>)
-#
-# Description:
-#
-#  If a module's build directory does not exist: make it.
-
-define ds-make-builddir
-$(if $($(1)_BUILDDIR),\
-	$(shell test -d $($(1)_BUILDDIR) || $(MKDIR) $($(1)_BUILDDIR)),\
-	$(error null build directory variable "$(1)_BUILDDIR"))
-endef
-
-# Synopsis:
-#
-#	 $(call ds-clean-files,<MODULE_NAME>)
-#
-# Description:
-#
-#  Remove all the files listed in '<MODULE_NAME>_CLEANFILES'.
-
-define ds-clean-files
-$(if $($(1)_CLEANFILES),$(RM) $($(1)_CLEANFILES),\
-	$(warning empty clean variable "$(1)_CLEANFILES"))
-endef
-
-# Synopsis:
-#
-#	 $(call ds-real-clean-files,<MODULE_NAME>)
-#
-# Description:
-#
-#  Remove all the files listed in '<MODULE_NAME>_REALCLEANFILES'.
-
-define ds-real-clean-files
-$(if $($(1)_REALCLEANFILES),$(RM) $($(1)_REALCLEANFILES),\
-	$(warning empty real clean variable "$(1)_REALCLEANFILES"))
 endef
 
 ## ------------------------------------------------------------
@@ -1083,14 +594,6 @@ endef
 ## Canned installation commands.
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-permissions,<MODULE_NAME>,<OWNER>,<GROUP>,<FILE_MODE>,<DIR_MODE>))
-#
-# Description:
-#
-#  Configure a module's installation owner and permissions.
-
 define ds-permissions
 $(1)_OWNER	= $(2)
 $(1)_GROUP	= $(3)
@@ -1098,28 +601,17 @@ $(1)_FMODE	= $(4)
 $(1)_DMODE	= $(5)
 endef
 
-# Synopsis:
-#
-#	$(call ds-install-directory,<MODULE_NAME>)
-#
-# Description:
-#
-#  Make a module's installation directory.
+## ------------------------------------------------------------
+## Module's directory and files installation.
 
 define ds-install-directory
 $(if $($(1)_INSTDIR),$(INSTALL) \
 	-m $(call ds-ornull,$($(1)_DMODE),$(INSTALL_DIR_MODE)) \
-	-d $(INSTALL_ROOT)$($(1)_INSTDIR),\
+        $(if $($(1)_OWNER),-o $($(1)_OWNER)) \
+        $(if $($(1)_GROUP),-g $($(1)_GROUP)) \
+	-d $(DESTDIR)$($(1)_INSTDIR),\
 	$(error null install directory variable "$(1)_INSTDIR"))
 endef
-
-# Synopsis:
-#
-#	$(call ds-install-files,<MODULE_NAME>,<INSTALL_MODE>)
-#
-# Description:
-#
-#  Install a module's result files.
 
 define ds-install-files
 $(if $($(1)_INSTLST),\
@@ -1128,19 +620,13 @@ $(if $($(1)_INSTLST),\
 			-m $(call ds-ornull,$($(1)_FMODE),$(INSTALL_$(2)_MODE)) \
 			$(if $($(1)_OWNER),-o $($(1)_OWNER)) \
 			$(if $($(1)_GROUP),-g $($(1)_GROUP)) \
-			$($(1)_INSTLST) $(INSTALL_ROOT)$($(1)_INSTDIR),\
+			$($(1)_INSTLST) $(DESTDIR)$($(1)_INSTDIR),\
 		$(error null install directory variable "$(1)_INSTDIR")),\
 	$(error empty install list variable "$(1)_INSTLST"))
 endef
 
-# Synopsis:
-#
-#	$(call ds-install-module,<MODULE_NAME>,<INSTALL_MODE>)
-#
-# Description:
-#
-#  Install a module: installs both the installation directory and the
-#  result files. <INSTALL_MODE> must be one among: DATA, BIN, LIB.
+## ------------------------------------------------------------
+## Module's installation functions.
 
 define ds-install-module
 $(call ds-echo,'installing $(1) files...')
@@ -1149,91 +635,64 @@ $(call ds-install-files,$(1),$(2))
 $(call ds-echo,'------------------------------------------- completed.')
 endef
 
-# Synopsis:
-#
-#	$(call ds-install-data,<MODULE_NAME>)
-#
-# Description:
-#
-#  Install a module with DATA permissions.
-
 define ds-install-data
 $(call ds-install-module,$(1),DATA)
 endef
 
-# Synopsis:
-#
-#	$(call ds-install-bin,<MODULE_NAME>)
-#
-# Description:
-#
-#  Install a module with DATA permissions.
 define ds-install-bin
 $(call ds-install-module,$(1),BIN)
 endef
-
-# Synopsis: $(call ds-install-lib,<MODULE_NAME>)
-#
-#	$(call ds-install-lib,<MODULE_NAME>)
-#
-# Description:
-#
-#  Install a module with LIB permissions.
 
 define ds-install-lib
 $(call ds-install-module,$(1),LIB)
 endef
 
 ## ------------------------------------------------------------
+## Module's uninstall functions.
 
-# Synopsis: $(call ds-module-print-files-layout,<MODULE_NAME>)
-#
-#	$(call ds-module-print-files-layout,<MODULE_NAME>)
-#
-# Description:
-#
-#  Print to stdout the layout of installed files.
+define ds-uninstall-files
+$(foreach f,$($(1)_INSTLST),$(RM_FILE) $($(1)_INSTDIR)/$(notdir $(f));)
+endef
+
+define ds-uninstall-directories
+$(RMDIR) $($(1)_INSTDIR)
+endef
+
+define ds-uninstall-module
+$(call ds-uninstall-files,$(1))
+$(call ds-uninstall-directories,$(1))
+endef
+
+## ------------------------------------------------------------
+## Module's installation layout inspection.
 
 define ds-module-print-files-layout
 $(foreach f,$($(1)_INSTLST),echo $($(1)_INSTDIR)/$(notdir $(f));)
 endef
 
-# Synopsis: $(call ds-module-print-directories-layout,<MODULE_NAME>)
-#
-#	$(call ds-module-print-directories-layout,<MODULE_NAME>)
-#
-# Description:
-#
-#  Print to stdout the layout of installed directories.
-
 define ds-module-print-directories-layout
 echo $($(1)_INSTDIR)
 endef
 
-## ------------------------------------------------------------
+define ds-module-print-layout
+$(call ds-module-print-files-layout,$(1))
+$(call ds-module-print-directories-layout,$(1))
+endef
 
-# Synopsis: $(call ds-module-print-uninstall-files-script,<MODULE_NAME>)
-#
-#	$(call ds-module-print-uninstall-files-script,<MODULE_NAME>)
-#
-# Description:
-#
-#  Print to stdout a script that uninstalls module's files.
+## ------------------------------------------------------------
+## Module's uninstall scripts.
 
 define ds-module-print-uninstall-files-script
 $(foreach f,$($(1)_INSTLST),echo $(RM_FILE) $($(1)_INSTDIR)/$(notdir $(f));)
 endef
 
-# Synopsis: $(call ds-module-print-uninstall-directories-script,<MODULE_NAME>)
-#
-#	$(call ds-module-print-uninstall-directories-script,<MODULE_NAME>)
-#
-# Description:
-#
-#  Print to stdout a script that uninstalls module's directories.
-
 define ds-module-print-uninstall-directories-script
 echo $(RMDIR) $($(1)_INSTDIR)
+endef
+
+define ds-module-print-uninstall-script
+$(call ds-module-print-uninstall-files-script,$(1))
+$(call ds-module-print-uninstall-directories-script,$(1))
 endef
 
 ## ------------------------------------------------------------
@@ -1479,19 +938,21 @@ endef
 #  'test-realclean'.
 
 define ds-tests
-.PHONY: test tests check  test-clean tests-clean  test-realclean tests-realclean
+.PHONY: test  test-clean  test-realclean
+.PHONY: tests tests-clean tests-realclean
+.PHONY: check
 
 test:
-tests: test
-check: test
+tests:			test
+check:			test
 
 test-clean:
-tests-clean: test-clean
-clean: test-clean
+tests-clean:		test-clean
+clean:			test-clean
 
-test-realclean: test-clean
-tests-realclean: test-realclean
-realclean: test-realclean
+test-realclean:		test-clean
+tests-realclean:	test-realclean
+realclean:		test-realclean
 endef
 
 ## ------------------------------------------------------------
@@ -1526,7 +987,6 @@ ds_tcl_test_REALCLEANFILES	?=
 tcltest tcltests: $$(ds_tcl_test_TARGETS)
 	if test -f $$(ds_tcl_TESTDIR); then		\
 	  export TMPDIR=$$(TMPDIR);			\
-	  export ds_top_srcdir=$$(ds_top_srcdir);		\
 	  export srcdir=$$(srcdir);			\
 	  export builddir=$$(builddir);			\
 	  $$(TCLSH) $$(ds_tcl_TESTDIR) $$(TESTFLAGS);	\
@@ -1541,6 +1001,8 @@ test-clean: tcltest-clean
 test-realclean: tcltest-realclean
 endef
 
+## ------------------------------------------------------------
+
 #page
 ## ------------------------------------------------------------
 ## Predefined modules: examples.
@@ -1552,17 +1014,30 @@ endef
 #
 # Description:
 #
-#  Add rules to drive example building and installation.
+#  Add rules to drive examples building and installation.
 
 define ds-examples
-example_INSTLST		?=
-example_INSTDIR		= $$(pkgexampledir)
+ds_examples_TARGETS	?=
 
-example_CLEANFILES	?=
-example_REALCLEANFILES	?=
+ds_examples_INSTLST	?=
+ds_examples_INSTDIR	= $$(pkgexampledir)
 
-$$(eval $$(call ds-module,example,doc,DATA))
+$$(eval $$(call ds-default-clean-files-variables,ds_examples))
+$$(eval $$(call ds-module,ds_examples,doc,DATA))
+
+.PHONY: example  example-clean  example-realclean
+.PHONY: examples examples-clean examples-realclean
+
+examples:		ds_examples-all
+examples-clean:		ds_examples-clean
+examples-realclean:	ds_examples-realclean
+
+example:		examples
+example-clean:		examples-clean
+example-realclean:	examples-realclean
 endef
+
+## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
@@ -1677,20 +1152,10 @@ endef
 ## Predefined modules: C compiler rules.
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-c-language))
-#
-# optionally:
-#
-#	INCLUDES	= $(srcdir)/...
-#	$(eval $(call ds-c-language))
-#
-# Description:
-#
-#  Add variables used to compile C source files.
-
 define ds-c-language
+
+## ------------------------------------------------------------
+## DevelStuff configuration variables.
 
 # If set to 'yes' static libraries are built.
 ds_config_ENABLE_STATIC		?= @ds_config_ENABLE_STATIC@
@@ -1704,10 +1169,8 @@ ds_config_ENABLE_STUB		?= @ds_config_ENABLE_STUB@
 # Set it to 'yes' to disable 'strip' upon libraries.
 ds_config_ENABLE_STRIP		?= yes
 
-# Set it to 'yes' to enable assertions.
-ds_config_ENABLE_ASSERTIONS	?= @ds_config_ENABLE_ASSERTIONS@
-
 ## ------------------------------------------------------------
+## C language programs programs.
 
 CC		= @CC@
 CPP		= @CPP@
@@ -1717,6 +1180,15 @@ STRIP		= @STRIP@
 GDB		= @GDB@
 
 ## ------------------------------------------------------------
+## Preprocessor options.
+
+# This will be empty if we are using the "config.h" file.
+DEFS		?= @DEFS@
+INCLUDES	+= @INCLUDES@ -I. -I$$(srcdir)
+CPPFLAGS	?= @CPPFLAGS@ $$(DEFS) $$(INCLUDES)
+
+## ------------------------------------------------------------
+## Compiler options.
 
 # Notice that '-std=c99' is appended to 'CC' by the Autoconf
 # macro 'AC_PROG_CC_C99'.
@@ -1726,18 +1198,10 @@ C_WARNINGS	?= -Wall -W -Wextra -pedantic \
 			-Wpointer-arith -Wcast-qual -Wcast-align \
 			-Wwrite-strings -Wnested-externs \
 			-Wstrict-prototypes -Wshadow -fno-common
+CCFLAGS		?= $$(C_DEFAULT) $$(C_WARNINGS)
 
-## ------------------------------------------------------------
-## Preprocessor stuff.
-
-DEFS		?= @DEFS@
-
-INCLUDES	+= @INCLUDES@ -I. -I$$(srcdir)
-ifeq ($$(strip $$(ds_top_srcdir)),$$(strip $$(srcdir)))
-INCLUDES	+= -I$$(ds_top_srcdir)
-endif
-
-CPPFLAGS	?= @CPPFLAGS@ $$(DEFS) $$(INCLUDES)
+# Customisable compiler options.
+CFLAGS		?= @CFLAGS@
 
 ## ------------------------------------------------------------
 ## Linker stuff.
@@ -1748,14 +1212,9 @@ LDFLAGS_RPATH	?= @LDFLAGS_RPATH@
 LDFLAGS_DL	?= @LDFLAGS_DL@
 
 ## ------------------------------------------------------------
+## Other compiler variables.
 
-GNU_C_FLAGS	?= @GNU_C_FLAGS@ $$(C_DEFAULT) $$(C_WARNINGS)
-ALL_CFLAGS	?= $$(GNU_C_FLAGS) $$(CPPFLAGS)
-CFLAGS		?= @CFLAGS@
-OBJEXT		= @OBJEXT@
-
-## ------------------------------------------------------------
-
+OBJEXT			= @OBJEXT@
 NO_MINUS_C_MINUS_O	= @NO_MINUS_C_MINUS_O@
 ifeq ($$(strip $$(NO_MINUS_C_MINUS_O)),)
 CC_COMPILE_OUTPUT	?= -c -o
@@ -1763,255 +1222,565 @@ else
 CC_COMPILE_OUTPUT	?= -o
 endif
 
-CC_COMMAND_LINE		?= $$(CC) $$(ALL_CFLAGS) $$(CFLAGS)
-CC_COMPILE		?= $$(CC_COMMAND_LINE) $$(CC_COMPILE_OUTPUT)
-CC_BUILD_PROGRAM	?= $$(CC_COMMAND_LINE) $$(LDFLAGS) $$(LIBS) -o
-CC_BUILD_LIBRARY	?= $$(CC_COMMAND_LINE) -shared $$(LDFLAGS) $$(LIBS) -o
+CC_BUILD_OUTPUT		?= -o
 
 endef
 
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-cc-compile,<VARNAME>,<PRE_OPTIONS>,<PRE_LIBS>,<>))
-#	$(eval $(call ds-cc-build-program,<VARNAME>,<OPTIONAL_FLAGS>))
-#	$(eval $(call ds-cc-build-library,<VARNAME>,<OPTIONAL_FLAGS>))
-#
-#	$(eval $(call ds-cc-build-program-no-libs,<VARNAME>,<OPTIONAL_FLAGS>))
-#	$(eval $(call ds-cc-build-library-no-libs,<VARNAME>,<OPTIONAL_FLAGS>))
-#
-# Description:
-#
-#  Define a variable to be used as command line for compiling
-#  and linking.
+#page
+## ------------------------------------------------------------
+## C language: generic compiler functions.
+## ------------------------------------------------------------
 
+# $(1) - the identifier of the module
+# $(2) - a list of linker options
 define ds-cc-compile
-$(1)	?= $$(CC) $$(ALL_CFLAGS) $(2) $$(CFLAGS) $(CC_COMPILE_OUTPUT)
+$(1)_CC_COMPILE_ENV		?=
+$(1)_CC_COMPILE_MORE_FLAGS	?=
+$(1)_CC_COMPILE_FLAGS		?= $$(CPPFLAGS) $$(CCFLAGS) $(2) $$(CFLAGS) $$($(1)_CC_COMPILE_MORE_FLAGS)
+$(1)_CC_COMPILE			?= $$($(1)_CC_COMPILE_ENV) $$(CC) $$($(1)_CC_COMPILE_FLAGS) $$(CC_COMPILE_OUTPUT)
 endef
 
+# $(1) - the identifier of the module
+# $(2) - a list of linker options
 define ds-cc-build-program
-$(1)	?= $$(CC) $$(ALL_CFLAGS) $(2) $$(CFLAGS) $$(LDFLAGS) $$(LIBS) -o
+$(1)_CC_BUILD_PROGRAM_ENV	?=
+$(1)_CC_BUILD_PROGRAM_LIBS	?= $$(LDFLAGS) $$(LIBS)
+$(1)_CC_BUILD_PROGRAM_FLAGS	?= $$(C_DEFAULT) $(2) $$(CFLAGS)
+$(1)_CC_BUILD_PROGRAM_PRE	?=
+$(1)_CC_BUILD_PROGRAM_POST	?=
+$(1)_CC_BUILD_PROGRAM		?= $$($(1)_CC_BUILD_PROGRAM_ENV) $$(CC) \
+					$$($(1)_CC_BUILD_PROGRAM_FLAGS) $$($(1)_CC_BUILD_PROGRAM_LIBS) \
+					$$(CC_BUILD_OUTPUT) $$(@) \
+					$$($(1)_CC_BUILD_PROGRAM_PRE) $$(^) $$($(1)_CC_BUILD_PROGRAM_POST)
 endef
 
-define ds-cc-build-library
-$(1)	?= $$(CC) $$(ALL_CFLAGS) -shared $(2) $$(CFLAGS) $$(LDFLAGS) $$(LIBS) -o
-endef
-
-define ds-cc-build-program-no-libs
-$(1)	?= $$(CC) $$(ALL_CFLAGS) $(2) $$(CFLAGS) $$(LDFLAGS) -o
-endef
-
-define ds-cc-build-library-no-libs
-$(1)	?= $$(CC) $$(ALL_CFLAGS) -shared $(2) $$(CFLAGS) $$(LDFLAGS) -o
+# $(1) - the identifier of the module
+# $(2) - a list of linker options
+define ds-cc-build-shared-library
+$(1)_CC_BUILD_SHARED_LIBRARY_ENV	?=
+$(1)_CC_BUILD_SHARED_LIBRARY_LIBS	?= $$(LDFLAGS) $$(LIBS)
+$(1)_CC_BUILD_SHARED_LIBRARY_FLAGS	?= $$(C_DEFAULT) -shared $(2) $$(CFLAGS) 
+$(1)_CC_BUILD_SHARED_LIBRARY_PRE	?=
+$(1)_CC_BUILD_SHARED_LIBRARY_POST	?=
+$(1)_CC_BUILD_SHARED_LIBRARY		?= $$($(1)_CC_BUILD_SHARED_LIBRARY_ENV) $$(CC) \
+					$$($(1)_CC_BUILD_SHARED_LIBRARY_FLAGS) $$($(1)_CC_BUILD_SHARED_LIBRARY_LIBS) \
+					$$(CC_BUILD_OUTPUT) $$(@) \
+					$$($(1)_CC_BUILD_SHARED_LIBRARY_PRE) $$(^) $$($(1)_CC_BUILD_SHARED_LIBRARY_POST)
 endef
 
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-c-sources,<IDENTIFIER>,<SRCDIR>,\
-#		<PATTERNS>,<BUILDDIR>))
-#
-# Description:
-#
-#  Build a set of C language source files.
-#
-#  The optional <PATTERNS> argument allows selection of source
-#  files and defaults to '*.c'.
-#
-#  The optional <BUILDDIR> argument allows selection of build
-#  directory and defaults to '$(builddir)/objects.d'.
-#
-#  The variable '<IDENTIFIER>_PREREQUISITES' can be used to add
-#  prerequisites.
-#
-#  The variable '<IDENTIFIER>_CC_COMPILE' can be used to select
-#  the command line for the C compiler; it defaults to the
-#  expansion of:
-#
-#	$(eval $(call ds-cc-compile,<IDENTIFIER>_CC_COMPILE,-I$(<IDENTIFIER>_SRCDIR)))
+#page
+## ------------------------------------------------------------
+## C language: compiling object files.
+## ------------------------------------------------------------
 
 define ds-c-sources
 
-$$(eval $$(call ds-srcdir,$(1),$(2)))
-$$(eval $$(call ds-builddir,$(1),$$(call ds-ornull,$(4),$$(builddir)/objects.d)))
+# The value $(1) is the identifier of this module.
+$(1)_SRCDIR		?= $$(srcdir)/src
+$(1)_BUILDDIR		?= $$(builddir)/objects.d
+$(1)_PATTERNS		?= *.c
+
+$(1)_PREREQUISITES	?=
+$(1)_MAIN_SECTION	?= bin
+
+$$(eval $$(call ds-srcdir,$(1),$$($(1)_SRCDIR)))
+$$(eval $$(call ds-builddir,$(1),$$($(1)_BUILDDIR)))
 
 vpath	%.h		$$($(1)_SRCDIR)
 vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
 
-$$(eval $$(call ds-cc-compile,$(1)_CC_COMPILE,-I$$($(1)_SRCDIR)))
+$$(eval $$(call ds-cc-compile,$(1),-I$$($(1)_SRCDIR)))
 
-$(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.c))
-$(1)_TARGETS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.$$(OBJEXT)))
+$(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$$($(1)_PATTERNS),*.c))
+$(1)_OBJECTS	= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.$$(OBJEXT)))
 
-$(1)_CLEANFILES		= $$($(1)_TARGETS)
-$(1)_REALCLEANFILES	= $$($(1)_CLEANFILES)
+# This is needed because it is the interface to 'ds-module-no-install'
+$(1)_TARGETS	+= $$($(1)_OBJECTS)
 
-$$(eval $$(call ds-module-no-install,$(1),bin))
+$(1)_CLEANFILES		+= $$($(1)_TARGETS)
+$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)
 
-$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
-	$$($(1)_CC_COMPILE) $$(@) $$(<)
-endef
+$$(eval $$(call ds-module-no-install,$(1),$$($(1)_MAIN_SECTION)))
 
-## ------------------------------------------------------------
-## Like 'ds-c-sources' but does not compile under 'bin'.
-
-define ds-c-sources-nop
-
-$$(eval $$(call ds-srcdir,$(1),$(2)))
-$$(eval $$(call ds-builddir,$(1),$$(call ds-ornull,$(4),$$(builddir)/objects.d)))
-
-vpath	%.h		$$($(1)_SRCDIR)
-vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
-
-$$(eval $$(call ds-cc-compile,$(1)_CC_COMPILE,-I$$($(1)_SRCDIR)))
-
-$(1)_SOURCES	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.c))
-$(1)_TARGETS	= $$(addprefix $$($(1)_BUILDDIR)/,$$(notdir $$($(1)_SOURCES:.c=.$$(OBJEXT))))
-
-$(1)_CLEANFILES		= $$($(1)_TARGETS)
-$(1)_REALCLEANFILES	= $$($(1)_CLEANFILES)
-
-$$(eval $$(call ds-module-no-install,$(1),ds-nop))
-
-$$($(1)_TARGETS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
+$$($(1)_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES)
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-c-shared-library,<IDENTIFIER>,<LIBNAME>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build a shared library from a set of selected objects.
-#  The library file will be "lib<LIBNAME>.so".
-#
-#  The variable '<IDENTIFIER>_shared_library_CC_BUILD' can
-#  be used to select the command line for the C compiler; it
-#  defaults to '$(CC_BUILD_LIBRARY)'.
-#
-#  The variable '<IDENTIFIER>_shared_library_ENV' can be used to
-#  set environment variables to build the library (for example
-#  LD_LIBRARY_PATH).
+#page
+## ------------------------------------------------------------
+## C language: compiling object files with stub sources.
+## ------------------------------------------------------------
+
+define ds-c-sources-with-stub
+
+## ------------------------------------------------------------
+## Common argument variables.
+
+# The value $(1) is the identifier of this module.
+$(1)_SRCDIR		?= $$(srcdir)/src
+$(1)_stubsrc_BUILDDIR	?= $$(srcdir)/stub
+$(1)_BUILDDIR		?= $$(builddir)/objects.d
+$(1)_PATTERNS		?= *.c
+
+$(1)_PREREQUISITES	?= $$(wildcard $$(addprefix $$($(1)_SRCDIR)/,\
+				$$($(1)_stubsrc_HEADER_FILE) internal.h debug.h))
+$(1)_MAIN_SECTION	?= bin
+
+## ------------------------------------------------------------
+## Stub related variables.
+
+$(1)_stubsrc_HEADER_FILE		?= $(1).h
+$(1)_stubsrc_LIBRARY_ID			?= $(1)
+$(1)_stubsrc_STUB_SHARED_LIBRARY_ID	?= $$($(1)_stub_SHARED_LIBRARY_LINK_ID)
+$(1)_stubsrc_EXTERN			?= $$($(1)_stubsrc_LIBRARY_ID)_decl
+
+$(1)_stubsrc_GLOBAL_HEADER_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_stub.h
+$(1)_stubsrc_SHARED_LIB_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_shared_stub_library.c
+$(1)_stubsrc_STATIC_LIB_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_static_stub_library.c
+
+$(1)_stubsrc_GLOBAL_HEADER	= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_GLOBAL_HEADER_NAME)
+$(1)_stubsrc_SHARED_LIB		= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_SHARED_LIB_NAME)
+$(1)_stubsrc_STATIC_LIB		= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_STATIC_LIB_NAME)
+
+## ------------------------------------------------------------
+## Stub related commands.
+
+$(1)_MKSTUB			= $$(ds_main_INFRADIR)/mkstub $$($(1)_stubsrc_FLAGS)
+$(1)_MKSTUB_MODULE_HEADER	= $$($(1)_MKSTUB) --make-stub-module-header
+$(1)_MKSTUB_MODULE_TABLE	= $$($(1)_MKSTUB) --make-stub-module-table
+$(1)_MKSTUB_GLOBAL_HEADER	= $$($(1)_MKSTUB) --make-stub-global-header
+$(1)_MKSTUB_SHARED_LIB		= $$($(1)_MKSTUB) --make-stub-shared-library
+$(1)_MKSTUB_STATIC_LIB		= $$($(1)_MKSTUB) --make-stub-static-library
+
+$(1)_stubsrc_FLAGS	= --header-file=$$($(1)_stubsrc_HEADER_FILE)	\
+			  --library=$$($(1)_stubsrc_LIBRARY_ID)		\
+			  --function-qualifier=$$($(1)_stubsrc_EXTERN)	\
+			  --shared-stub-library-name=$$($(1)_stubsrc_SHARED_LIB)
+
+## ------------------------------------------------------------
+## Rule related variables.
+
+$$(eval $$(call ds-srcdir,$(1),$$($(1)_SRCDIR)))
+$$(eval $$(call ds-builddir,$(1),$$($(1)_BUILDDIR)))
+$$(eval $$(call ds-builddir,$(1)_stubsrc,$$(srcdir)/stub))
+
+vpath	%.h		$$($(1)_SRCDIR)
+vpath	%.h		$$($(1)_stubsrc_BUILDDIR)
+vpath	%.$$(OBJEXT)	$$($(1)_BUILDDIR)
+
+
+$(1)_SOURCES		= $$(call ds-glob,$(1),$$(call ds-ornull,$$($(1)_PATTERNS),*.c))
+$(1)_stubsrc_HEADERS	= $$(addprefix $$($(1)_stubsrc_BUILDDIR)/stub_,$$(notdir $$($(1)_SOURCES:.c=.h)))
+$(1)_stubsrc_TABLES	= $$(addprefix $$($(1)_stubsrc_BUILDDIR)/table_,$$(notdir $$($(1)_SOURCES)))
+$(1)_OBJECTS		= $$(call ds-replace-dir,$$($(1)_BUILDDIR),$$($(1)_SOURCES:.c=.$$(OBJEXT)))
+
+$(1)_stub_shared_library_OBJECTS = $$($(1)_BUILDDIR)/$$($(1)_stubsrc_SHARED_LIB_NAME:.c=.$$(OBJEXT))
+$(1)_stub_static_library_OBJECTS = $$($(1)_BUILDDIR)/$$($(1)_stubsrc_STATIC_LIB_NAME:.c=.$$(OBJEXT))
+$(1)_stubsrc_OBJECTS	= $$($(1)_stub_shared_library_OBJECTS) \
+			  $$($(1)_stub_static_library_OBJECTS)
+
+# This is needed because it is the interface to 'ds-module-no-install'
+$(1)_TARGETS		+= $$($(1)_OBJECTS) $$($(1)_stubsrc_OBJECTS)
+
+$(1)_CLEANFILES		+= $$($(1)_TARGETS)
+$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)						\
+			   $$($(1)_stubsrc_HEADERS) $$($(1)_stubsrc_GLOBAL_HEADER)	\
+			   $$($(1)_stubsrc_TABLES)					\
+			   $$($(1)_stubsrc_SHARED_LIB) $$($(1)_stubsrc_STATIC_LIB)
+
+$$(eval $$(call ds-module-no-install,$(1),$$($(1)_MAIN_SECTION)))
+
+## ------------------------------------------------------------
+## Stub generation rules.
+
+$$($(1)_stubsrc_HEADERS): $$($(1)_stubsrc_BUILDDIR)/stub_%.h : $$($(1)_SRCDIR)/%.c
+	$$($(1)_MKSTUB_MODULE_HEADER) -o$$(@) $$(<)
+
+$$($(1)_stubsrc_GLOBAL_HEADER): $$($(1)_stubsrc_HEADERS)
+	$$($(1)_MKSTUB_GLOBAL_HEADER) -o$$(@) $$($(1)_SOURCES)
+
+$$($(1)_stubsrc_TABLES): $$($(1)_stubsrc_BUILDDIR)/table_%.c : $$($(1)_SRCDIR)/%.c
+	$$($(1)_MKSTUB_MODULE_TABLE) -o$$(@) $$(<)
+
+$$($(1)_stubsrc_SHARED_LIB): $$($(1)_SOURCES)
+	$$($(1)_MKSTUB_SHARED_LIB) -o$$(@) $$($(1)_SOURCES)
+
+$$($(1)_stubsrc_STATIC_LIB): $$($(1)_SOURCES)
+	$$($(1)_MKSTUB_STATIC_LIB) -o$$(@) $$($(1)_SOURCES)
+
+## ------------------------------------------------------------
+## Rules.
+
+$$(eval $$(call ds-cc-compile,$(1),-I$$($(1)_SRCDIR)))
+
+# The -I option allows the compilation  of object files to find the stub
+# headers.  The -D options defines to the empty string the "stub" macros
+# used to  declare the timestamp of  a function; notice  that the double
+# quotes  are mandatory because  the parentheses  are meaningful  to the
+# shell.
+$(1)_CC_COMPILE_FLAGS	+= -I$$($(1)_stubsrc_BUILDDIR) "-Dstub(TIMESTAMP)="
+
+$$($(1)_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES) \
+			$$($(1)_stubsrc_BUILDDIR)/stub_%.h $$($(1)_stubsrc_GLOBAL_HEADER)
+	$$($(1)_CC_COMPILE) $$(@) $$(<)
+
+$$($(1)_stubsrc_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_stubsrc_BUILDDIR)/%.c $$($(1)_PREREQUISITES) \
+			$$($(1)_stubsrc_TABLES) $$($(1)_stubsrc_GLOBAL_HEADER)
+	$$($(1)_CC_COMPILE) $$(@) $$(<)
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: building shared libraries.
+## ------------------------------------------------------------
 
 define ds-c-shared-library
 ifeq ($$(strip $$(ds_config_ENABLE_SHARED)),yes)
 
-$(1)_shared_library_ENV		?=
-$(1)_shared_library_CC_BUILD	?= $$(CC_BUILD_LIBRARY)
-$(1)_shared_library_BUILDDIR	?= $$(builddir)/library.d
-$(1)_shared_library_LIBRARY	= $$($(1)_shared_library_BUILDDIR)/lib$(2).so
+# $(1) - the identifier of the module
+$(1)_shared_library_BUILDDIR		?= $$(builddir)/libraries.d
+$(1)_shared_library_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_shared_library_ID			?= $(1)
+$(1)_shared_library_LINK_ID		?=
+$(1)_shared_library_MAIN_SECTION	?= bin
 
+$(1)_shared_library_NAME	= lib$$($(1)_shared_library_ID).so
+$(1)_shared_library_PATHNAME	= $$($(1)_shared_library_BUILDDIR)/$$($(1)_shared_library_NAME)
+$(1)_shared_library_LINK_NAME	= lib$$($(1)_shared_library_LINK_ID).so
+$(1)_shared_library_LINK_PATHNAME = $$($(1)_shared_library_BUILDDIR)/$$($(1)_shared_library_LINK_NAME)
+
+$$(eval $$(call ds-cc-build-shared-library,$(1)_shared_library))
 $$(eval $$(call ds-builddir,$(1)_shared_library,$$($(1)_shared_library_BUILDDIR)))
 
-$(1)_shared_library_OBJECTS	= $(3)
-$(1)_shared_library_TARGETS	= $$($(1)_shared_library_LIBRARY)
-$(1)_shared_library_INSTLST	= $$($(1)_shared_library_TARGETS)
+$(1)_shared_library_TARGETS	= $$($(1)_shared_library_PATHNAME) $$($(1)_shared_library_LINK_PATHNAME)
+$(1)_shared_library_INSTLST	= $$($(1)_shared_library_PATHNAME)
 $(1)_shared_library_INSTDIR	?= $(libdir)
 
-$(1)_shared_library_CLEANFILES		= $$($(1)_shared_library_TARGETS)
-$(1)_shared_library_REALCLEANFILES	= $$($(1)_shared_library_CLEANFILES)
+$(1)_shared_library_CLEANFILES		+= $$($(1)_shared_library_TARGETS)
+$(1)_shared_library_REALCLEANFILES	+= $$($(1)_shared_library_CLEANFILES)
 
-$(1)-clean:	$(1)_shared_library-clean
-$(1)-realclean:	$(1)_shared_library-realclean
+$$(eval $$(call ds-module,$(1)_shared_library,$$($(1)_shared_library_MAIN_SECTION),LIB))
 
-$$(eval $$(call ds-module,$(1)_shared_library,bin,LIB))
-
-$$($(1)_shared_library_LIBRARY) : $$($(1)_shared_library_OBJECTS)
-	$$($(1)_shared_library_ENV) $$($(1)_shared_library_CC_BUILD) $$(@) $$(^) $4
+$$($(1)_shared_library_PATHNAME) : $$($(1)_shared_library_OBJECTS)
+	$$(call ds-echo,'## ------------------------------------------------------------')
+	$$(call ds-echo,'## Building shared library $$($(1)_shared_library_NAME)')
+	$$($(1)_shared_library_CC_BUILD_SHARED_LIBRARY)
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
 endif
-endif
+ifneq ($$(strip $$($(1)_shared_library_LINK_ID)),)
+	cd $$($(1)_shared_library_BUILDDIR);\
+	test -L $$($(1)_shared_library_LINK_NAME) || \
+	$$(SYMLINK) $$($(1)_shared_library_NAME) $$($(1)_shared_library_LINK_NAME)
+endif # $(1)_shared_library_LINK_ID = ""
+	$$(call ds-echo,'## ------------------------------------------------------------ done.')
+
+## ------------------------------------------------------------
+
+ifneq ($$(strip $$($(1)_shared_library_LINK_ID)),)
+$(1)_shared_library-install-aux:
+	$$(call ds-install-directory,$(1)_shared_library)
+	cd $$(DESTDIR)$$($(1)_shared_library_INSTDIR) ; \
+	$$(SYMLINK) $$($(1)_shared_library_NAME) $$($(1)_shared_library_LINK_NAME)
+
+$(1)_shared_library-uninstall-aux:
+	$$(RM_FILE) $$(DESTDIR)$$(libdir)/$$($(1)_shared_library_LINK_NAME)
+
+$(1)_shared_library-print-install-files-layout-aux:
+	@echo $$($(1)_shared_library_INSTDIR)/$$($(1)_shared_library_LINK_NAME)
+
+$(1)_shared_library-print-uninstall-files-script-aux:
+	@echo $$(RM_FILE) $$($(1)_shared_library_INSTDIR)/$$($(1)_shared_library_LINK_NAME)
+
+endif # $(1)_shared_library_LINK_ID = ""
+endif # ds_config_ENABLE_SHARED = yes
 endef
 
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-c-static-library,<IDENTIFIER>,<LIBNAME>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build a static library from a set of selected objects. The library file
-#  will be "lib<LIBNAME>.a".
+#page
+## ------------------------------------------------------------
+## C language: building static libraries.
+## ------------------------------------------------------------
 
 define ds-c-static-library
 ifeq ($$(strip $$(ds_config_ENABLE_STATIC)),yes)
 
-$(1)_static_library_BUILDDIR	= $$(builddir)/library.d
-$(1)_static_library_LIBRARY	= $$($(1)_static_library_BUILDDIR)/lib$(2).a
+# $(1) - the identifier of the module
+$(1)_static_library_BUILDDIR		?= $$(builddir)/libraries.d
+$(1)_static_library_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_static_library_ID			?= $(1)
+$(1)_static_library_MAIN_SECTION	?= dev
+
+$(1)_static_library_NAME	= lib$$($(1)_static_library_ID).a
+$(1)_static_library_PATHNAME	= $$($(1)_static_library_BUILDDIR)/$$($(1)_static_library_NAME)
 
 $$(eval $$(call ds-builddir,$(1)_static_library,$$($(1)_static_library_BUILDDIR)))
 
-$(1)_static_library_OBJECTS	= $(3)
-$(1)_static_library_TARGETS	= $$($(1)_static_library_LIBRARY)
+$(1)_static_library_TARGETS	= $$($(1)_static_library_PATHNAME)
 $(1)_static_library_INSTLST	= $$($(1)_static_library_TARGETS)
 $(1)_static_library_INSTDIR	?= $(libdir)
 
-$(1)_static_library_CLEANFILES		= $$($(1)_static_library_TARGETS)
-$(1)_static_library_REALCLEANFILES	= $$($(1)_static_library_CLEANFILES)
+$$(eval $$(call ds-default-clean-files-variables,$(1)_static_library))
+$$(eval $$(call ds-module,$(1)_static_library,$$($(1)_static_library_MAIN_SECTION),LIB))
 
-$(1)-clean:	$(1)_static_library-clean
-$(1)-realclean:	$(1)_static_library-realclean
-
-$$(eval $$(call ds-module,$(1)_static_library,dev,LIB))
-
-$$($(1)_static_library_LIBRARY) : $$($(1)_static_library_OBJECTS)
-	$$(AR) $$(@) $$(^) $4
+$$($(1)_static_library_PATHNAME) : $$($(1)_static_library_OBJECTS)
+	$$(call ds-echo,'## ------------------------------------------------------------')
+	$$(call ds-echo,'## Building static library $$($(1)_static_library_NAME)')
+	$$(AR) $$(@) $$(^)
 	-($$(RANLIB) $$(@) || true) >/dev/null 2>&1
+	$$(call ds-echo,'## ------------------------------------------------------------ done.')
 
-endif
+endif # ds_config_ENABLE_STATIC = yes
 endef
 
 ## ------------------------------------------------------------
 
-# Synopsis:
-#
-#	$(eval $(call ds-c-aux-static-library,<IDENTIFIER>,<LIBNAME>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build a static library from a set of selected objects. The library file
-#  will be "lib<LIBNAME>.a".
-#
-#  The difference from 'ds-c-static-library' is that this library is built
-#  when 'ds_config_ENABLE_SHARED' is 'yes'. This function is meant to be
-#  used for static libraries that are auxiliary to shared libraries, like
-#  static stub libraries.
+#page
+## ------------------------------------------------------------
+## C language: library with stub support.
+## ------------------------------------------------------------
 
-define ds-c-aux-static-library
-ifeq ($$(strip $$(ds_config_ENABLE_SHARED)),yes)
+define ds-c-library-with-stub
 
-$(1)_static_library_BUILDDIR	= $$(builddir)/library.d
-$(1)_static_library_LIBRARY	= $$($(1)_static_library_BUILDDIR)/lib$(2).a
+# This links the stub-shared library with the shared library.
+$(1)_stub_shared_library_CC_BUILD_SHARED_LIBRARY_PRE	= \
+	-L$$($(1)_shared_library_BUILDDIR) -l$$($(1)_shared_library_ID)
 
-$$(eval $$(call ds-builddir,$(1)_static_library,$$($(1)_static_library_BUILDDIR)))
+$$(eval $$(call ds-c-sources-with-stub,$(1)))
+$$(eval $$(call ds-c-shared-library,$(1)))
+$$(eval $$(call ds-c-static-library,$(1)))
 
-$(1)_static_library_OBJECTS	= $(3)
-$(1)_static_library_TARGETS	= $$($(1)_static_library_LIBRARY)
-$(1)_static_library_INSTLST	= $$($(1)_static_library_TARGETS)
-$(1)_static_library_INSTDIR	?= $(libdir)
+ifeq ($$(strip $$(ds_config_ENABLE_STUB)),yes)
+$$(eval $$(call ds-c-shared-library,$(1)_stub))
+$$(eval $$(call ds-c-static-library,$(1)_stub))
+endif # ds_config_ENABLE_STUB = yes
 
-$(1)_static_library_CLEANFILES		= $$($(1)_static_library_TARGETS)
-$(1)_static_library_REALCLEANFILES	= $$($(1)_static_library_CLEANFILES)
+# Install the main header file of the library.
+$$(eval $$(call ds-h-files-installer,$(1),$$($(1)_SRCDIR),$$($(1)_stubsrc_HEADER_FILE)))
 
-$(1)-clean:	$(1)_static_library-clean
-$(1)-realclean:	$(1)_static_library-realclean
+# Install the stub header files.
+$$(eval $$(call ds-h-files-installer,$(1)_stubsrc,$$($(1)_stubsrc_BUILDDIR),*.h))
 
-$$(eval $$(call ds-module,$(1)_static_library,dev,LIB))
-
-$$($(1)_static_library_LIBRARY) : $$($(1)_static_library_OBJECTS)
-	$$(AR) $$(@) $$(^) $4
-	-($$(RANLIB) $$(@) || true) >/dev/null 2>&1
-
-endif
 endef
 
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: linking a single program.
+## ------------------------------------------------------------
+
+define ds-c-single-program
+
+# $(1) is the identifier of the module
+$(1)_program_BUILDDIR		?= $$(builddir)/programs.d
+$(1)_program_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_program_PREFIX		?=
+$(1)_program_ENV		?=
+$(1)_program_MAIN_SECTION	?= bin
+
+$(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
+$(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
+
+$$(eval $$(call ds-cc-build-program,$(1)_program))
+$$(eval $$(call ds-builddir,$(1)_program,$$(call ds-ornull,$$($(1)_program_BUILDDIR),$$(builddir)/programs.d)))
+
+$(1)_program_TARGETS	+= $$($(1)_program_PATHNAME)
+$(1)_program_INSTLST	= $$($(1)_program_PATHNAME)
+$(1)_program_INSTDIR	?= $(pkglibexecdir)
+
+$$(eval $$(call ds-default-clean-files-variables,$(1)_program))
+$$(eval $$(call ds-module,$(1)_program,$$($(1)_program_MAIN_SECTION),LIB))
+
+$$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
+	$$($(1)_program_CC_BUILD_PROGRAM)
+ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$(STRIP) $$(@)
+endif
+
+.PHONY: run-$(1)
+
+run-$(1): $(1)_program-all
+	$$($(1)_program_ENV) $$($(1)_program_PATHNAME)
+endef
+
+
+## ------------------------------------------------------------
+
+define ds-c-single-program-no-install
+
+# $(1) is the identifier of the module
+# $(2) is the name of the program
+$(1)_program_BUILDDIR		?= $$(builddir)/programs.d
+$(1)_program_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_program_PREFIX		?=
+$(1)_program_ENV		?=
+$(1)_program_MAIN_SECTION	?= bin
+
+$(1)_program_NAME	= $$($(1)_program_PREFIX)$(2)
+$(1)_program_PATHNAME	= $$($(1)_program_BUILDDIR)/$$($(1)_program_NAME)
+
+$$(eval $$(call ds-builddir,$(1)_program,$$($(1)_program_BUILDDIR)))
+$$(eval $$(call ds-cc-build-program,$(1)_program))
+
+$(1)_program_TARGETS	= $$($(1)_program_PATHNAME)
+
+$$(eval $$(call ds-default-clean-files-variables,$(1)_program))
+$$(eval $$(call ds-module-no-install,$(1)_program,$$($(1)_program_MAIN_SECTION)))
+
+$$($(1)_program_PATHNAME) : $$($(1)_program_OBJECTS)
+	$$($(1)_program_CC_BUILD_PROGRAM)
+ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$(STRIP) $$(@)
+endif
+
+.PHONY: run-$(1)
+
+run-$(1): $(1)_program-all
+	$$($(1)_program_ENV) $$($(1)_program_PATHNAME)
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: linking a set of programs.
+## ------------------------------------------------------------
+
+define ds-c-programs
+
+# $(1) is the identifier of the module
+$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
+$(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_programs_PREFIX		?=
+$(1)_programs_ENV		?=
+$(1)_programs_MAIN_SECTION	?= bin
+
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.$(OBJEXT)=)))
+$(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
+
+$$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
+$$(eval $$(call ds-cc-build-program,$(1)_programs))
+
+$(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
+$(1)_programs_INSTLST	= $$($(1)_programs_PATHNAMES)
+$(1)_programs_INSTDIR	?= $(pkglibexecdir)
+
+$$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
+$$(eval $$(call ds-module,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
+
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : %.$(OBJEXT)
+	$$($(1)_programs_CC_BUILD_PROGRAM)
+ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$(STRIP) $$(@)
+endif
+
+.PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
+
+run-$(1): $$(addprefix run-,$$($(1)_programs_NAMES))
+
+$$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
+	$$($(1)_programs_ENV) $$(<)
+
+endef
+
+## ------------------------------------------------------------
+
+define ds-c-programs-no-install
+
+# $(1) is the identifier of the module
+$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
+$(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_programs_PREFIX		?=
+$(1)_programs_ENV		?=
+$(1)_programs_MAIN_SECTION	?= bin
+
+$(1)_programs_NAMES	= $$(addprefix $$($(1)_programs_PREFIX),$$(notdir $$($(1)_programs_OBJECTS:.$(OBJEXT)=)))
+$(1)_programs_PATHNAMES	= $$(addprefix $$($(1)_programs_BUILDDIR)/,$$($(1)_programs_NAMES))
+
+$$(eval $$(call ds-builddir,$(1)_programs,$$($(1)_programs_BUILDDIR)))
+$$(eval $$(call ds-cc-build-program,$(1)_programs))
+
+$(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
+
+$$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
+$$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
+
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : %.$(OBJEXT)
+	$$($(1)_programs_CC_BUILD_PROGRAM)
+ifeq ($$(ds_config_ENABLE_STRIP),yes)
+	$$(STRIP) $$(@)
+endif
+
+.PHONY: run-$(1) $$(addprefix run-,$$($(1)_programs_NAMES))
+
+run-$(1): $$(addprefix run-,$$($(1)_programs_NAMES))
+
+$$(addprefix run-,$$($(1)_programs_NAMES)): run-% : $$($(1)_programs_BUILDDIR)/%
+	$$($(1)_programs_ENV) $$(<)
+
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: linking example programs.
+## ------------------------------------------------------------
+
+define ds-c-example-programs
+# $(1) is the identifier of the module
+
+$(1)_examples_SRCDIR		?= $$(srcdir)/examples
+$(1)_examples_BUILDDIR		?= $$(builddir)/examples.d
+$(1)_examples_MAIN_SECTION	?= examples
+
+$$(eval $$(call ds-c-sources,$(1)_examples))
+
+$(1)_examples_programs_BUILDDIR		?= $$($(1)_examples_BUILDDIR)
+$(1)_examples_programs_MAIN_SECTION	= examples
+
+$$(eval $$(call ds-c-programs-no-install,$(1)_examples))
+
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: linking test programs.
+## ------------------------------------------------------------
+
+define ds-c-test-programs
+# $(1) is the identifier of the module
+
+$(1)_tests_SRCDIR		?= $$(srcdir)/tests
+$(1)_tests_BUILDDIR		?= $$(builddir)/tests.d
+$(1)_tests_MAIN_SECTION	?= tests
+
+$$(eval $$(call ds-c-sources,$(1)_tests))
+
+$(1)_tests_programs_BUILDDIR		?= $$($(1)_tests_BUILDDIR)
+$(1)_tests_programs_MAIN_SECTION	= tests
+
+$$(eval $$(call ds-c-programs-no-install,$(1)_tests))
+
+endef
+
+## ------------------------------------------------------------
+
+#page
+## ------------------------------------------------------------
+## C language: miscellaneous modules.
 ## ------------------------------------------------------------
 
 # Synopsis:
@@ -2024,152 +1793,18 @@ endef
 
 define ds-h-files-installer
 
-$$(eval $$(call ds-srcdir,$(1),$(2)))
+# $(1) - the identifier of the module
+$(1)_c_headers_SRCDIR		?= $(2)
+$(1)_c_headers_PATTERNS		?= $(3)
+$(1)_c_headers_MAIN_SECTION	?= dev
 
-$(1)_headers_INSTLST	= $$(call ds-glob,$(1),$$(call ds-ornull,$(3),*.h))
-$(1)_headers_INSTDIR	?= $$(pkgincludedir)
+$$(eval $$(call ds-srcdir,$(1),$$($(1)_c_headers_SRCDIR)))
 
-$$(eval $$(call ds-module,$(1)_headers,dev))
+$(1)_c_headers_INSTLST	= $$(call ds-glob,$(1),$$(call ds-ornull,$$($(1)_c_headers_PATTERNS),*.h))
+$(1)_c_headers_INSTDIR	?= $$(pkgincludedir)
 
-endef
+$$(eval $$(call ds-module,$(1)_c_headers,$$($(1)_c_headers_MAIN_SECTION)))
 
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-c-program,<IDENTIFIER>,<PROGNAME>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build an executable program from a set of selected objects.
-#  The program file name is "<PROGNAME>".
-#
-#  The variable '<IDENTIFIER>_program_CC_BUILD' can be used to
-#  select the command line for the C compiler; it defaults to
-#  '$(CC_BUILD_PROGRAM)'.
-#
-#  The variable '<IDENTIFIER>_program_ENV' can be used to set
-#  environment variables to build the program (for example
-#  LD_LIBRARY_PATH).
-
-define ds-c-program
-$(1)_program_ENV		?=
-$(1)_program_CC_BUILD		?= $$(CC_BUILD_PROGRAM)
-$(1)_program_BUILDDIR		?= $$(builddir)/bin.d
-$(1)_program_EXECUTABLE		= $$($(1)_program_BUILDDIR)/$(2)
-
-$$(eval $$(call ds-builddir,$(1)_program,$$($(1)_program_BUILDDIR)))
-
-$(1)_program_OBJECTS		= $(3)
-$(1)_program_TARGETS		= $$($(1)_program_EXECUTABLE)
-$(1)_program_INSTLST		= $$($(1)_program_TARGETS)
-$(1)_program_INSTDIR		?= $(pkglibexecdir)
-
-$(1)_program_CLEANFILES		= $$($(1)_program_TARGETS)
-$(1)_program_REALCLEANFILES	= $$($(1)_program_CLEANFILES)
-
-$$(eval $$(call ds-module,$(1)_program,bin,BIN))
-
-clean:		$(1)_program-clean
-realclean:	$(1)_program-realclean
-
-$$($(1)_program_EXECUTABLE): $$($(1)_program_OBJECTS)
-	$$($(1)_program_ENV) $$($(1)_program_CC_BUILD) $$(@) $$(^) $4
-ifeq ($$(ds_config_ENABLE_STRIP),yes)
-	$$(STRIP) $$(@)
-endif
-endef
-
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-c-program-no-install,<IDENTIFIER>,<PROGNAME>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build an executable program from a set of selected objects. The
-#  program file name is "<PROGNAME>". Does not install the result.
-#
-#  The variable '<IDENTIFIER>_program_CC_BUILD' can be used to
-#  select the command line for the C compiler; it defaults to
-#  '$(CC_BUILD_PROGRAM)'.
-#
-#  The variable '<IDENTIFIER>_program_ENV' can be used to
-#  set environment variables to build the library (for example
-#  LD_LIBRARY_PATH).
-
-define ds-c-program-no-install
-$(1)_program_ENV		?=
-$(1)_program_CC_BUILD		?= $$(CC_BUILD_PROGRAM)
-$(1)_program_BUILDDIR		?= $$(builddir)/bin.d
-$(1)_program_EXECUTABLE		= $$($(1)_program_BUILDDIR)/$(2)
-
-$$(eval $$(call ds-builddir,$(1)_program,$$($(1)_program_BUILDDIR)))
-
-$(1)_program_OBJECTS		= $(3)
-$(1)_program_TARGETS		= $$($(1)_program_EXECUTABLE)
-
-$(1)_program_CLEANFILES		= $$($(1)_program_TARGETS)
-$(1)_program_REALCLEANFILES	= $$($(1)_program_CLEANFILES)
-
-$$(eval $$(call ds-module-no-install,$(1)_program,ds-nop))
-
-clean:		$(1)_program-clean
-realclean:	$(1)_program-realclean
-
-$$($(1)_program_EXECUTABLE): $$($(1)_program_OBJECTS)
-	$$($(1)_program_ENV) $$($(1)_program_CC_BUILD) $$(@) $$(^) $4
-	$$(STRIP) $$(@)
-endef
-
-## ------------------------------------------------------------
-
-# Synopsis:
-#
-#	$(eval $(call ds-c-test-programs,<IDENTIFIER>,<OBJECTS>,<TAIL>))
-#
-# Description:
-#
-#  Build and run a set of C test programs from already compiled
-#  object files.
-#
-#  The variable '<IDENTIFIER>_test_program_CC_BUILD' can be
-#  used to select the command line for the C compiler; it defaults
-#  to '$(CC_BUILD_PROGRAM)'.
-#
-#  The variable '<IDENTIFIER>_test_program_PREREQUISITES' can be
-#  used to select prerequisites for the programs.
-#
-#  The variable '<IDENTIFIER>_test_program_COMMON_OBJECTS' can be
-#  used to select object prerequisites for the programs that are
-#  linked in.
-#
-#  The variable '<IDENTIFIER>_test_programs_ENV' can be used to
-#  set environment variables to build the programs (for example
-#  LD_LIBRARY_PATH).
-
-define ds-c-test-programs
-$(1)_test_programs_ENV		?=
-$(1)_test_programs_LIBS		?=
-$(1)_test_programs_CC_BUILD	?= $$(CC_COMMAND_LINE) $$(LDFLAGS) $$($(1)_test_programs_LIBS) $$(LIBS) -o
-$(1)_test_programs_BUILDDIR	?= $$(builddir)/tests.d
-
-$$(eval $$(call ds-builddir,$(1)_test_programs,$$($(1)_test_programs_BUILDDIR)))
-
-$(1)_test_programs_OBJECTS	= $(2)
-$(1)_test_programs_TARGETS	= $$($(1)_test_programs_OBJECTS:.$$(OBJEXT)=)
-
-$(1)_test_programs_CLEANFILES		= $$($(1)_test_programs_TARGETS)
-$(1)_test_programs_REALCLEANFILES	= $$($(1)_test_programs_CLEANFILES)
-
-$$(eval $$(call ds-module-no-install,$(1)_test_programs,ds-nop))
-
-$$($(1)_test_programs_TARGETS): % : %.$$(OBJEXT)	\
-		$$($(1)_test_programs_COMMON_OBJECTS)	\
-		$$($(1)_test_programs_PREREQUISITES)
-	$$($(1)_test_programs_ENV) $$($(1)_test_programs_CC_BUILD) $$(@) $$(<) \
-		$$($(1)_test_programs_COMMON_OBJECTS) $$($(1)_test_programs_TAIL) $3
 endef
 
 ## ------------------------------------------------------------
@@ -2282,7 +1917,7 @@ dist:
 	$$(RM_SILENT) $$(TMPDIR)/$$(ds_dist_ARCHIVE)
 	$$(MKDIR) $$(ds_dist_TMPDIR)
 	$$(TAR) \
-		--directory=$$(ds_top_srcdir) --create --file=- --dereference	\
+		--directory=$$(srcdir) --create --file=- --dereference		\
 		--exclude=RCS                   --exclude=CVS                   \
 		--exclude=.git			--exclude=.git\*		\
 		--exclude=archives              --exclude=\*.ps			\
@@ -2326,7 +1961,7 @@ define ds-binary-distribution
 ds_bindist_ARCHIVE_BIN	= $$(PACKAGE_NAME)-$$(PACKAGE_XVERSION).tar.gz
 ds_bindist_ARCHIVE_DOC	= $$(PACKAGE_NAME)-doc-$$(PACKAGE_XVERSION).tar.gz
 ds_bindist_ARCHIVE_DEV	= $$(PACKAGE_NAME)-dev-$$(PACKAGE_XVERSION).tar.gz
-ds_bindist_TMPDIR	= $$(TMPDIR)/$$(PACKAGE_NAME)-$$(PACKAGE_VERSION)
+ds_bindist_TMPDIR	= $$(TMPDIR)/$$(PACKAGE_NAME)-$$(PACKAGE_XVERSION)
 ds_bindist_DESTDIR	= $$(builddir)/bindist.d
 
 .PHONY: bindist bindist-bin bindist-doc bindist-dev
@@ -2376,7 +2011,7 @@ endef
 define ds-bindist-make-package
 test -d $(ds_bindist_DESTDIR) || $(MKDIR) $(ds_bindist_DESTDIR)
 $(RM_SILENT) $(ds_bindist_TMPDIR)
-$(MAKE) $(1) INSTALL_ROOT=$(ds_bindist_TMPDIR)
+$(MAKE) $(1) DESTDIR=$(ds_bindist_TMPDIR)
 $(TAR) --directory=$(ds_bindist_TMPDIR) --create --gzip --verbose \
 	--file=$(ds_bindist_DESTDIR)/$(2) .
 $(RM_SILENT) $(ds_bindist_TMPDIR)
@@ -2613,10 +2248,10 @@ ifeq ($$(strip $$(ds_slackware_doinst_$(1)_INSTLST)),)
 ds_slackware_doinst_$(1)-install:
 else
 ds_slackware_doinst_$(1)-install:
-	umask 0; $$(ds_slackware_SUDO) $$(INSTALL) -m 0755 -d $$(INSTALL_ROOT)$$(ds_slackware_doinst_$(1)_INSTDIR)
+	umask 0; $$(ds_slackware_SUDO) $$(INSTALL) -m 0755 -d $$(DESTDIR)$$(ds_slackware_doinst_$(1)_INSTDIR)
 	$$(foreach f,$$(ds_slackware_doinst_$(1)_INSTLST),\
 	umask 0; $$(ds_slackware_SUDO) $$(INSTALL) -m 0644 $$(f) \
-		$$(INSTALL_ROOT)$$(ds_slackware_doinst_$(1)_INSTDIR)/$$(notdir $$(f));)
+		$$(DESTDIR)$$(ds_slackware_doinst_$(1)_INSTDIR)/$$(notdir $$(f));)
 endif
 
 endef

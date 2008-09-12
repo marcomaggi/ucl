@@ -7,7 +7,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005, 2007 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2007, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -32,7 +32,7 @@
 #define DEBUGGING		0
 #include "internal.h"
 
-/* stub module name hash */
+#define stubmodule		hash
 
 /* Values   for    the   "to_be_processed_during_rehashing"   field   of
    "ucl_entry_t". */

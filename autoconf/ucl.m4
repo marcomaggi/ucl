@@ -18,7 +18,7 @@
 #
 #       for interface version "1.0".
 # 
-# Copyright (c) 2007 Marco Maggi
+# Copyright (c) 2007, 2008 Marco Maggi
 # 
 # This  program  is free  software:  you  can redistribute  it
 # and/or modify it  under the terms of the  GNU General Public
@@ -119,6 +119,8 @@ AC_SUBST([UCL_ENABLE_STUB])
 if test "${UCL_ENABLE_STUB}" = 'yes' ; then
     AC_MSG_NOTICE([enabled UCL linking with the stub mechanism])
     AC_DEFINE([UCL_ENABLE_STUB],[1],[enables UCL linking with the stub mechanism])
+else
+    AC_MSG_NOTICE([Disabled UCL linking with the stub mechanism])
 fi
 
 ])

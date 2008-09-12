@@ -4,7 +4,7 @@
 
 	The circular container provides a circular double linked list.
 
-  Copyright (c) 2001, 2002, 2003, 2004, 2005 Marco Maggi
+  Copyright (c) 2001, 2002, 2003, 2004, 2005, 2008 Marco Maggi
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -28,7 +28,7 @@
 
 #include "internal.h"
 
-/* stub module name circular */
+#define stubmodule		circular
 
 /* ------------------------------------------------------------ */
 
@@ -63,10 +63,12 @@ ucl_circular_insert (ucl_circular_t this, ucl_circular_link_t *new)
 
   ++(this->size);
 }
+
+/* ------------------------------------------------------------ */
+
 
-stub(2005-09-23-18-08-40) ucl_circular_link_t *
+stub(2005-09-23-18-08-40) __attribute__((__noinline__)) ucl_circular_link_t *
 ucl_circular_extract (ucl_circular_t this)
-     attribute(__noinline__)
 {
   ucl_circular_link_t *	cur;
 

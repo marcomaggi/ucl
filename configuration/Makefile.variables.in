@@ -1,17 +1,24 @@
 
 
-ucl_LIBRARY_ID                   = @ucl_LIBRARY_ID@
-ucl_INTERFACE_VERSION            = @ucl_INTERFACE_VERSION@
 ucl_INTERFACE_MAJOR_VERSION      = @ucl_INTERFACE_MAJOR_VERSION@
 ucl_INTERFACE_MINOR_VERSION      = @ucl_INTERFACE_MINOR_VERSION@
-ucl_STATIC_LIBRARY_NAME          = @ucl_STATIC_LIBRARY_NAME@
-ucl_SHARED_LIBRARY_NAME          = @ucl_SHARED_LIBRARY_NAME@
-ucl_SHARED_LIBRARY_LINK_NAME     = @ucl_SHARED_LIBRARY_LINK_NAME@
-ucl_SHARED_LIBRARY_LINK_id       = @ucl_SHARED_LIBRARY_LINK_ID@
+ucl_INTERFACE_VERSION            = @ucl_INTERFACE_VERSION@
 
-ucl_stub_SHARED_LIBRARY_ID       = @ucl_stub_SHARED_LIBRARY_ID@
-ucl_stub_SHARED_LIBRARY_NAME     = @ucl_stub_SHARED_LIBRARY_NAME@
-ucl_stub_SHARED_LIBRARY_LINK_NAME= @ucl_stub_SHARED_LIBRARY_LINK_NAME@
-ucl_stub_SHARED_LIBRARY_LINK_ID  = @ucl_stub_SHARED_LIBRARY_LINK_ID@
-ucl_stub_STATIC_LIBRARY_ID       = @ucl_stub_STATIC_LIBRARY_ID@
-ucl_stub_STATIC_LIBRARY_NAME     = @ucl_stub_STATIC_LIBRARY_NAME@
+ucl_LIBRARY_ID                   = @ucl_LIBRARY_ID@
+ucl_LIBRARY_LINK_ID              = @ucl_LIBRARY_LINK_ID@
+
+ucl_static_library_ID            = @ucl_STATIC_LIBRARY_ID@
+ucl_static_library_NAME          = @ucl_STATIC_LIBRARY_NAME@
+
+ucl_shared_library_ID            = @ucl_SHARED_LIBRARY_ID@
+ucl_shared_library_LINK_ID       = @ucl_SHARED_LIBRARY_LINK_ID@
+ucl_shared_library_NAME          = @ucl_SHARED_LIBRARY_NAME@
+ucl_shared_library_LINK_NAME     = @ucl_SHARED_LIBRARY_LINK_NAME@
+
+ucl_stub_shared_library_ID       = @ucl_stub_SHARED_LIBRARY_ID@
+ucl_stub_shared_library_LINK_ID  = @ucl_stub_SHARED_LIBRARY_LINK_ID@
+ucl_stub_shared_library_NAME     = @ucl_stub_SHARED_LIBRARY_NAME@
+ucl_stub_shared_library_LINK_NAME= @ucl_stub_SHARED_LIBRARY_LINK_NAME@
+
+ucl_stub_static_library_ID       = @ucl_stub_STATIC_LIBRARY_ID@
+ucl_stub_static_library_NAME     = @ucl_stub_STATIC_LIBRARY_NAME@

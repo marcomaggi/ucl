@@ -8,23 +8,22 @@
 # 
 # 
 # 
-# Copyright (c) 2003, 2007 Marco Maggi
+# Copyright (c) 2003, 2007, 2008 Marco Maggi
 # 
-# This is free  software you can redistribute it  and/or modify it under
-# the terms of  the GNU General Public License as  published by the Free
-# Software Foundation; either  version 2, or (at your  option) any later
-# version.
 # 
-# This  file is  distributed in  the hope  that it  will be  useful, but
-# WITHOUT   ANY  WARRANTY;  without   even  the   implied  warranty   of
+# This program is  free software: you can redistribute  it and/or modify
+# it under the  terms of the GNU General Public  License as published by
+# the Free Software Foundation, either  version 3 of the License, or (at
+# your option) any later version.
+# 
+# This program  is distributed in the  hope that it will  be useful, but
+# WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
 # MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
 # General Public License for more details.
 # 
 # You  should have received  a copy  of the  GNU General  Public License
-# along with this file; see the file COPYING.  If not, write to the Free
-# Software Foundation,  Inc., 59  Temple Place -  Suite 330,  Boston, MA
-# 02111-1307, USA.
-# 
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 #page
 ## ------------------------------------------------------------
@@ -33,8 +32,9 @@
 
 AC_DEFUN([DS_BEGIN],[
 
+# Notice that this one defines '_GNU_SOURCE' and others.
 AC_USE_SYSTEM_EXTENSIONS
-#AC_DEFINE([_GNU_SOURCE],[1],[GNU libc symbol, see its documentation])
+
 AC_SYS_INTERPRETER
 AC_SYS_LARGEFILE
 AC_SYS_LONG_FILE_NAMES
@@ -301,6 +301,7 @@ AC_HEADER_TIME
 AC_HEADER_DIRENT
 AC_HEADER_STDBOOL
 AC_HEADER_SYS_WAIT
+AC_CHECK_HEADER([setjmp.h])
 AC_CHECK_HEADER([sys/time.h])
 AC_CHECK_HEADER([math.h])
 AC_CHECK_HEADER([complex.h])
@@ -326,7 +327,6 @@ AC_CHECK_FUNCS([memmove memset strerror strchr])
 AC_FUNC_ALLOCA
 
 AC_SUBST([NO_MINUS_C_MINUS_O])
-AC_ARG_VAR([GNU_C_FLAGS],[fixed GNU C compiler flags])
 
 ## ------------------------------------------------------------
 ## Preprocessor stuff.
@@ -356,15 +356,14 @@ AC_SUBST([ds_config_ENABLE_PTHREADS])
 
 AC_MSG_CHECKING([whether we will link with pthreads])
 if test "$ds_config_ENABLE_PTHREADS" = yes ; then
+AC_MSG_RESULT(yes)
 AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([cannot find pthread.h],1)])
 AC_CHECK_LIB([pthread],[pthread_mutex_lock],,[AC_MSG_ERROR([cannot find pthread.h],1)])
 AC_DEFINE([_REENTRANT],[1],[attempt to turn on reentrant functions])
 C_DEFAULT="${C_DEFAULT} -pthread"
-AC_MSG_RESULT(yes)
 else
 AC_MSG_RESULT(no)
 fi
-
 
 ## ------------------------------------------------------------
 
@@ -450,12 +449,21 @@ AC_SUBST([ds_config_ENABLE_STUB])
 #  Variables definitions are put in "Makefile.variables.in".
 
 AC_DEFUN([DS_C_LANGUAGE_LIBRARY],[
-DS_C_LANGUAGE_LIBRARY_STUB(m4_translit($1,-,_),$2,$3,$1)
+DS_C_LANGUAGE_LIBRARY_SUB(m4_translit($1,-,_),$2,$3,$1,m4_translit(m4_translit($1,-,_),[a-z],[A-Z]))
 ])
 
-AC_DEFUN([DS_C_LANGUAGE_LIBRARY_STUB],[
+# Synopsis:
+#
+#   DS_C_LANGUAGE_LIBRARY_STUB(<VARIABLE_PREFIX>,
+#                              <MAJOR_INTERFACE_VERSION>,
+#                              <MINOR_INTERFACE_VERSION>,
+#                              <LIBRARY_PREFIX>,
+#                              <UPPERCASE_VARIABLE_PREFIX>)
+#
+AC_DEFUN([DS_C_LANGUAGE_LIBRARY_SUB],[
 
 AC_SUBST([$1_LIBRARY_ID],[$4$2.$3])
+AC_SUBST([$1_LIBRARY_LINK_ID],[$4$2])
 AC_SUBST([$1_INTERFACE_VERSION],[$2.$3])
 AC_SUBST([$1_INTERFACE_MAJOR_VERSION],[$2])
 AC_SUBST([$1_INTERFACE_MINOR_VERSION],[$3])
@@ -465,53 +473,73 @@ AC_DEFINE([$1_INTERFACE_VERSION],[$2.$3],[library interface version])
 AC_DEFINE([$1_INTERFACE_MAJOR_VERSION],[$2],[library interface major version])
 AC_DEFINE([$1_INTERFACE_MINOR_VERSION],[$3],[library interface minor version])
 
-$1_SHARED_LIBRARY_NAME=lib${$1_LIBRARY_ID}.so
-$1_STATIC_LIBRARY_NAME=lib${$1_LIBRARY_ID}.a
+## ------------------------------------------------------------
 
-$1_SHARED_LIBRARY_LINK_NAME=lib$4$2.so
-$1_SHARED_LIBRARY_LINK_ID=$4$2
+$1_SHARED_LIBRARY_ID=${$1_LIBRARY_ID}
+$1_SHARED_LIBRARY_LINK_ID=${$1_LIBRARY_LINK_ID}
+$1_SHARED_LIBRARY_NAME=lib${$1_SHARED_LIBRARY_ID}.so
+$1_SHARED_LIBRARY_LINK_NAME=lib${$1_SHARED_LIBRARY_LINK_ID}.so
+
+$1_STATIC_LIBRARY_ID=${$1_LIBRARY_ID}
+$1_STATIC_LIBRARY_NAME=lib${$1_STATIC_LIBRARY_ID}.a
 
 $1_stub_SHARED_LIBRARY_ID=$4stub$2.$3
 $1_stub_SHARED_LIBRARY_NAME=lib${$1_stub_SHARED_LIBRARY_ID}.so
-$1_stub_SHARED_LIBRARY_LINK_NAME=lib$4stub$2.so
 $1_stub_SHARED_LIBRARY_LINK_ID=$4stub$2
+$1_stub_SHARED_LIBRARY_LINK_NAME=lib${$1_stub_SHARED_LIBRARY_LINK_ID}.so
+
 $1_stub_STATIC_LIBRARY_ID=$4staticstub$2.$3
 $1_stub_STATIC_LIBRARY_NAME=lib${$1_stub_STATIC_LIBRARY_ID}.a
 
-AC_SUBST([$1_STATIC_LIBRARY_NAME])
+## ------------------------------------------------------------
 
+AC_SUBST([$1_SHARED_LIBRARY_ID])
+AC_SUBST([$1_SHARED_LIBRARY_LINK_ID])
 AC_SUBST([$1_SHARED_LIBRARY_NAME])
 AC_SUBST([$1_SHARED_LIBRARY_LINK_NAME])
-AC_SUBST([$1_SHARED_LIBRARY_LINK_ID])
+
+AC_SUBST([$1_STATIC_LIBRARY_ID])
+AC_SUBST([$1_STATIC_LIBRARY_NAME])
 
 AC_SUBST([$1_stub_SHARED_LIBRARY_ID])
+AC_SUBST([$1_stub_SHARED_LIBRARY_LINK_ID])
 AC_SUBST([$1_stub_SHARED_LIBRARY_NAME])
 AC_SUBST([$1_stub_SHARED_LIBRARY_LINK_NAME])
-AC_SUBST([$1_stub_SHARED_LIBRARY_LINK_ID])
 
 AC_SUBST([$1_stub_STATIC_LIBRARY_ID])
 AC_SUBST([$1_stub_STATIC_LIBRARY_NAME])
+
+## ------------------------------------------------------------
 
 AC_DEFINE_UNQUOTED([$1_stub_SHARED_LIBRARY_NAME],["${$1_stub_SHARED_LIBRARY_NAME}"],[shared library name])
 AC_DEFINE_UNQUOTED([$1_stub_SHARED_LIBRARY_LINK_NAME],["${$1_stub_SHARED_LIBRARY_LINK_NAME}"],\
     [unversioned link to the shared library])
 
+## ------------------------------------------------------------
+
 DS_ADD_VARIABLES([
-$1_LIBRARY_ID                   = @$1_LIBRARY_ID@
-$1_INTERFACE_VERSION            = @$1_INTERFACE_VERSION@
 $1_INTERFACE_MAJOR_VERSION      = @$1_INTERFACE_MAJOR_VERSION@
 $1_INTERFACE_MINOR_VERSION      = @$1_INTERFACE_MINOR_VERSION@
-$1_STATIC_LIBRARY_NAME          = @$1_STATIC_LIBRARY_NAME@
-$1_SHARED_LIBRARY_NAME          = @$1_SHARED_LIBRARY_NAME@
-$1_SHARED_LIBRARY_LINK_NAME     = @$1_SHARED_LIBRARY_LINK_NAME@
-$1_SHARED_LIBRARY_LINK_id       = @$1_SHARED_LIBRARY_LINK_ID@
+$1_INTERFACE_VERSION            = @$1_INTERFACE_VERSION@
 
-$1_stub_SHARED_LIBRARY_ID       = @$1_stub_SHARED_LIBRARY_ID@
-$1_stub_SHARED_LIBRARY_NAME     = @$1_stub_SHARED_LIBRARY_NAME@
-$1_stub_SHARED_LIBRARY_LINK_NAME= @$1_stub_SHARED_LIBRARY_LINK_NAME@
-$1_stub_SHARED_LIBRARY_LINK_ID  = @$1_stub_SHARED_LIBRARY_LINK_ID@
-$1_stub_STATIC_LIBRARY_ID       = @$1_stub_STATIC_LIBRARY_ID@
-$1_stub_STATIC_LIBRARY_NAME     = @$1_stub_STATIC_LIBRARY_NAME@
+$1_LIBRARY_ID                   = @$1_LIBRARY_ID@
+$1_LIBRARY_LINK_ID              = @$1_LIBRARY_LINK_ID@
+
+$1_static_library_ID            = @$1_STATIC_LIBRARY_ID@
+$1_static_library_NAME          = @$1_STATIC_LIBRARY_NAME@
+
+$1_shared_library_ID            = @$1_SHARED_LIBRARY_ID@
+$1_shared_library_LINK_ID       = @$1_SHARED_LIBRARY_LINK_ID@
+$1_shared_library_NAME          = @$1_SHARED_LIBRARY_NAME@
+$1_shared_library_LINK_NAME     = @$1_SHARED_LIBRARY_LINK_NAME@
+
+$1_stub_shared_library_ID       = @$1_stub_SHARED_LIBRARY_ID@
+$1_stub_shared_library_LINK_ID  = @$1_stub_SHARED_LIBRARY_LINK_ID@
+$1_stub_shared_library_NAME     = @$1_stub_SHARED_LIBRARY_NAME@
+$1_stub_shared_library_LINK_NAME= @$1_stub_SHARED_LIBRARY_LINK_NAME@
+
+$1_stub_static_library_ID       = @$1_stub_STATIC_LIBRARY_ID@
+$1_stub_static_library_NAME     = @$1_stub_STATIC_LIBRARY_NAME@
 ])
 
 ])

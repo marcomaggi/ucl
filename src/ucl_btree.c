@@ -19,8 +19,7 @@
                  ----- 
    
    
-   Copyright (c) 2002, 2003, 2004, 2005 Marco Maggi
-   
+   Copyright (c) 2002, 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -44,7 +43,7 @@
 
 #include "internal.h"
 
-/* stub module name btree */
+#define stubmodule		btree
 
 /* ------------------------------------------------------------ */
 

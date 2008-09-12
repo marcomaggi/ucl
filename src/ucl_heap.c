@@ -7,7 +7,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -31,7 +31,7 @@
 
 #include "internal.h"
 
-/* stub module name heap */
+#define stubmodule		heap
 
 typedef ucl_value_t		value_t;
 typedef ucl_valcmp_t		valcmp_t;
@@ -59,6 +59,8 @@ typedef struct Links {
 
 #define SWAP(aptr, bptr)	tmp_p=(aptr);(aptr)=(bptr);(bptr)=tmp_p
 #define LINKS(link)		*((Links *) (link))
+
+/* ------------------------------------------------------------ */
 
 
 

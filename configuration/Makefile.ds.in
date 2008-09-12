@@ -21,247 +21,59 @@ C_WARNINGS := $(filter-out -Wcast-qual,$(C_WARNINGS))
 
 #page
 ## ------------------------------------------------------------
-## Library.
+## Libraries.
 ## ------------------------------------------------------------
 
-ucl_PREREQUISITES	= internal.h debug.h ucl.h
+$(eval $(call ds-c-library-with-stub,ucl))
 
-$(eval $(call ds-c-sources,ucl,$(srcdir)/src,*.c))
-$(eval $(call ds-c-shared-library,ucl,$(ucl_LIBRARY_ID),$(ucl_TARGETS)))
-$(eval $(call ds-c-static-library,ucl,$(ucl_LIBRARY_ID),$(ucl_TARGETS)))
-
-.PHONY: install-shared-link
-
-bin-install: install-shared-link
-
-install-shared-link:
-	cd $(DESTDIR)$(libdir) ; \
-	$(SYMLINK) $(ucl_stub_SHARED_LIBRARY_NAME) $(ucl_stub_SHARED_LIBRARY_LINK_NAME); \
-	$(SYMLINK) $(ucl_SHARED_LIBRARY_NAME) $(ucl_SHARED_LIBRARY_LINK_NAME)
-
-
-## ------------------------------------------------------------
-
-$(eval $(call ds-h-files-installer,ucl,$(srcdir)/src,ucl.h))
-$(eval $(call ds-h-files-installer,ucl_stub,$(srcdir)/stub,ucl_stub.h))
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Stub library: automatically built sources and headers.
-## ------------------------------------------------------------
-
-$(eval $(call ds-srcdir,stublib_sources,$(srcdir)/stub))
-
-MBFL_LIBRARY		= MBFL_LIBRARY=$(srcdir)/scripts/libmbfl.sh
-MAKE_STUB_SCRIPT	= $(srcdir)/scripts/mkstub.sh
-MAKE_STUB		= $(MBFL_LIBRARY) $(BASH_PROGRAM) $(MAKE_STUB_SCRIPT)
-
-MAKE_STUB_FLAGS		= --header-file=ucl.h --library=ucl
-MAKE_STUB_LIBRARY_HEADER= $(MAKE_STUB) --make-stub-header $(MAKE_STUB_FLAGS)
-MAKE_SHARED_STUB_LIBRARY= $(MAKE_STUB) --make-stub-shared-library $(MAKE_STUB_FLAGS)
-MAKE_STATIC_STUB_LIBRARY= $(MAKE_STUB) --make-stub-static-library $(MAKE_STUB_FLAGS) \
-				--shared-library-name=$(ucl_stub_SHARED_LIBRARY_LINK_NAME)
-
-stublib_sources_TARGETS	= $(addprefix $(stublib_sources_SRCDIR)/,\
-				ucl_stub.h ucl_shared_stub_library.c ucl_static_stub_library.c)
-
-stublib_sources_CLEANFILES	= $(stublib_sources_TARGETS)
-stublib_sources_REALCLEANFILES	= $(stublib_sources_CLEANFILES)
-
-$(eval $(call ds-module-no-install,stublib_sources,void))
-
-$(srcdir)/stub/ucl_stub.h : $(ucl_SOURCES)
-	$(MAKE_STUB_LIBRARY_HEADER) $(^) >$(@)
-
-$(srcdir)/stub/ucl_shared_stub_library.c : $(ucl_SOURCES)
-	$(MAKE_SHARED_STUB_LIBRARY) $(^) >$(@)
-
-$(srcdir)/stub/ucl_static_stub_library.c : $(ucl_SOURCES)
-	$(MAKE_STATIC_STUB_LIBRARY) $(^) >$(@)
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Stub library: shared and static.
 ## ------------------------------------------------------------
 
 ifeq ($(strip $(ds_config_ENABLE_STUB)),yes)
-
-# The shared library that's dynamically linked to the base library.
-
-$(eval $(call ds-cc-build-library-no-libs,shared_stublib_shared_library_CC_BUILD,\
-	-L$(builddir)/library.d -l$(ucl_LIBRARY_ID)))
-
-shared_stublib_PREREQUISITES	= $(shared_stublib_SRCDIR)/ucl_stub.h $(ucl_SRCDIR)/ucl.h
-
-$(eval $(call ds-c-sources,shared_stublib,$(srcdir)/stub,ucl_shared_stub_library.c))
-$(eval $(call ds-c-shared-library,shared_stublib,$(ucl_stub_SHARED_LIBRARY_ID),$(shared_stublib_TARGETS)))
-
-ucl_stub_LINK	= $(builddir)/library.d/$(ucl_stub_SHARED_LIBRARY_LINK_NAME)
-
-shared_stublib_shared_library_CLEANFILES += $(ucl_stub_LINK)
-
-shared_stublib_shared_library-all: $(ucl_stub_LINK)
-
-$(ucl_stub_LINK) : $(builddir)/library.d/$(ucl_stub_SHARED_LIBRARY_NAME)
-	$(RM) $(@)
-	cd $(builddir)/library.d ; \
-	$(SYMLINK) $(ucl_stub_SHARED_LIBRARY_NAME) $(ucl_stub_SHARED_LIBRARY_LINK_NAME)
-
-## ------------------------------------------------------------
-
-# The static library that must be statically linked with the
-# application.
-
-static_stublib_PREREQUISITES	= $(static_stublib_SRCDIR)/ucl_stub.h $(ucl_SRCDIR)/ucl.h
-
-$(eval $(call ds-c-sources,static_stublib,$(srcdir)/stub,ucl_static_stub_library.c))
-$(eval $(call ds-c-aux-static-library,static_stublib,$(ucl_stub_STATIC_LIBRARY_ID),$(static_stublib_TARGETS)))
-
-endif
+UCL_LIBS	= -L$(ucl_stub_shared_library_BUILDDIR) -l$(ucl_stub_shared_library_ID)
+else
+UCL_LIBS	= -L$(ucl_shared_library_BUILDDIR) -l$(ucl_shared_library_ID)
+endif # ds_config_ENABLE_STUB = yes
 
 ## ------------------------------------------------------------
 
 #page
 ## ------------------------------------------------------------
-## Tests with shared library.
+## Tests.
 ## ------------------------------------------------------------
 
-define ucl-container-tests-shared
-$$(eval $$(call ds-cc-build-program-no-libs,$(1)_test_programs_CC_BUILD,\
-	-L$$(builddir)/library.d -l$$(ucl_LIBRARY_ID)))
+ucl_shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
+ucl_shared_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_shared_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
+ucl_shared_tests_programs_PREFIX	= shared-
+ucl_shared_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR)
+ucl_shared_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
+	-L$(ucl_shared_library_BUILDDIR) -l$(ucl_shared_library_ID)
 
-$(1)_test_OBJECTS			= $$(filter $$(shared_tests_BUILDDIR)/$(1)-%,$$(shared_tests_TARGETS))
-$(1)_test_programs_BUILDDIR		= $$(shared_tests_BUILDDIR)
-$(1)_test_programs_PREREQUISITES	= $$(shared_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
-					  $$(ucl_shared_library_TARGETS)
-$(1)_test_programs_COMMON_OBJECTS	= $$(shared_tests_common_TARGETS)
-
-$$(eval $$(call ds-c-test-programs,$(1),$$($(1)_test_OBJECTS)))
-
-.PHONY: test-$(1) test-$(1)-clean
-
-test-$(1)-clean: $(1)_test_programs-clean
-
-test-$(1): $(1)_test_programs-all
-	@$$(foreach f,$$($(1)_test_programs_TARGETS),LD_LIBRARY_PATH=$$(builddir)/library.d $$(f);)
-
-test:		test-$(1)
-test-clean:	test-$(1)-clean
-endef
+$(eval $(call ds-c-test-programs,ucl_shared))
 
 ## ------------------------------------------------------------
 
-shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
-shared_tests_common_BUILDDIR	= $(shared_tests_BUILDDIR)
+ucl_stub_tests_BUILDDIR			= $(builddir)/stub-tests.d
+ucl_stub_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_stub_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
+ucl_stub_tests_programs_PREFIX		= stub-
+ucl_stub_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_stub_shared_library_BUILDDIR)
+ucl_stub_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
+	-L$(ucl_stub_static_library_BUILDDIR) -l$(ucl_stub_static_library_ID)
 
-$(eval $(call ds-c-sources-nop,shared_tests,$(srcdir)/tests,*-*_*.c))
-$(eval $(call ds-c-sources-nop,shared_tests_common,$(srcdir)/tests,testmain.c))
-
-$(foreach c,$(CONTAINERS),$(eval $(call ucl-container-tests-shared,$(c))))
-
-test-clean: shared_tests-clean shared_tests_common-clean
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Tests with static library.
-## ------------------------------------------------------------
-
-ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
-
-define ucl-container-tests-static
-$(1)_static_test_OBJECTS		= $$(filter $$(static_tests_BUILDDIR)/$(1)-%,$$(static_tests_TARGETS))
-$(1)_static_test_programs_BUILDDIR	= $$(static_tests_BUILDDIR)
-$(1)_static_test_programs_PREREQUISITES	= $$(static_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
-					  $$(ucl_static_library_TARGETS)
-$(1)_static_test_programs_COMMON_OBJECTS= $$(static_tests_common_TARGETS) \
-		$$(builddir)/library.d/$$(ucl_STATIC_LIBRARY_NAME)
-
-$$(eval $$(call ds-c-test-programs,$(1)_static,$$($(1)_static_test_OBJECTS)))
-
-.PHONY: test-$(1)-static test-$(1)-static-clean
-
-test-$(1)-static: $(1)_static_test_programs-all
-	@$$(foreach f,$$($(1)_static_test_programs_TARGETS),$$(f);)
-
-test-$(1)-static-clean: $(1)_static_test_programs-clean
-
-test-static:	test-$(1)-static
-test-clean:	test-$(1)-static-clean
-endef
+$(eval $(call ds-c-test-programs,ucl_stub))
 
 ## ------------------------------------------------------------
 
-static_tests_BUILDDIR		= $(builddir)/static-tests.d
-static_tests_common_BUILDDIR	= $(static_tests_BUILDDIR)
+ucl_static_tests_BUILDDIR		= $(builddir)/static-tests.d
+ucl_static_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_static_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
+ucl_static_tests_programs_PREFIX	= static-
+ucl_static_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_static_library_BUILDDIR)
+ucl_static_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
+	-L$(ucl_static_library_BUILDDIR) -l$(ucl_static_library_ID)
 
-$(eval $(call ds-c-sources-nop,static_tests,$(srcdir)/tests,*-*_*.c))
-$(eval $(call ds-c-sources-nop,static_tests_common,$(srcdir)/tests,testmain.c))
-
-$(foreach c,$(CONTAINERS),$(eval $(call ucl-container-tests-static,$(c))))
-
-.PHONY: test-static
-
-test-clean: static_tests-clean static_tests_common-clean
-
-endif
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Tests with stub library.
-## ------------------------------------------------------------
-
-ifeq ($(strip $(ds_config_ENABLE_STUB)),yes)
-
-define ucl-container-tests-stub
-$$(eval $$(call ds-cc-build-program-no-libs,$(1)_stub_test_programs_CC_BUILD,\
-	$(LDFLAGS_DL)))
-
-$(1)_stub_test_OBJECTS			= $$(filter $$(stub_tests_BUILDDIR)/$(1)-%,$$(stub_tests_TARGETS))
-$(1)_stub_test_programs_BUILDDIR	= $$(stub_tests_BUILDDIR)
-$(1)_stub_test_programs_PREREQUISITES	= $$(stub_tests_common_TARGETS) $$(ucl_SRCDIR)/ucl.h \
-					  $$(static_stublib_static_library_TARGETS)
-$(1)_stub_test_programs_COMMON_OBJECTS	= $$(stub_tests_common_TARGETS)
-$(1)_stub_test_programs_TAIL		= $$(builddir)/library.d/$$(ucl_stub_STATIC_LIBRARY_NAME)
-
-$$(eval $$(call ds-c-test-programs,$(1)_stub,$$($(1)_stub_test_OBJECTS)))
-
-.PHONY: test-$(1)-stub test-$(1)-stub-clean
-
-test-$(1)-stub: $(1)_stub_test_programs-all
-	@$$(foreach f,$$($(1)_stub_test_programs_TARGETS),LD_LIBRARY_PATH=$$(builddir)/library.d $$(f);)
-
-test-$(1)-stub-clean: $(1)_stub_test_programs-clean
-
-test-stub:	test-$(1)-stub
-test-clean:	test-$(1)-stub-clean
-endef
-
-## ------------------------------------------------------------
-
-stub_tests_BUILDDIR		= $(builddir)/stub-tests.d
-stub_tests_common_BUILDDIR	= $(stub_tests_BUILDDIR)
-
-$(eval $(call ds-cc-compile,stub_tests_CC_COMPILE,-DUCL_ENABLE_STUB=1))
-$(eval $(call ds-cc-compile,stub_tests_common_CC_COMPILE,-DUCL_ENABLE_STUB=1))
-
-$(eval $(call ds-c-sources-nop,stub_tests,$(srcdir)/tests,*-*_*.c))
-$(eval $(call ds-c-sources-nop,stub_tests_common,$(srcdir)/tests,testmain.c))
-
-$(foreach c,$(CONTAINERS),$(eval $(call ucl-container-tests-stub,$(c))))
-
-.PHONY: test-stub
-
-test-clean: stub_tests-clean stub_tests_common-clean
-
-endif
+$(eval $(call ds-c-test-programs,ucl_static))
 
 ## ------------------------------------------------------------
 
@@ -270,20 +82,11 @@ endif
 ## Miscelleous stuff.
 ## ------------------------------------------------------------
 
-$(eval $(call ds-cc-build-program-no-libs,showsize_program_CC_BUILD,\
-	-L$(builddir)/library.d -l$(ucl_LIBRARY_ID)))
+ucl_examples_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_examples_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
+ucl_examples_programs_ENV		= LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR)
 
-showsize_BUILDDIR		= $(builddir)/misc.d
-showsize_program_BUILDDIR	= $(showsize_BUILDDIR)
-showsize_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
-
-$(eval $(call ds-c-sources-nop,showsize,$(srcdir)/tests,showsize.c))
-$(eval $(call ds-c-program-no-install,showsize,showsize,$(showsize_TARGETS)))
-
-.PHONY: showsize
-
-showsize : showsize_program-all
-	@LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR) $(showsize_program_BUILDDIR)/showsize
+$(eval $(call ds-c-example-programs,ucl))
 
 
 ### end of file

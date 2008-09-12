@@ -11,7 +11,7 @@
 	inspired by the book on C++  by Bjarne Stroustrup and by the STL
 	C++ (Standard Template Library).
 
-   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2007 Marco Maggi
+   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2007, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -37,7 +37,7 @@
 #include "internal.h"
 #include <limits.h>
 
-/* stub module name vector */
+#define stubmodule		vector
 
 #define SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH	8
 
