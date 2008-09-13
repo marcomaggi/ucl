@@ -58,7 +58,7 @@ static const symbol_tag_t	symbols[] = {
 #include <string.h>
 #include <stdarg.h>
 
-static const char *     library_name      = "../stub/ucl_shared_stub_library.c";
+static const char *     library_name      = "libuclstub2.so";
 static void *           library_handle    = NULL;
 static int              debug_notice_flag = 0;
 

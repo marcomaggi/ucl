@@ -94,8 +94,8 @@ Do this:
 to test the shared, the static and the stub library:
 
     $ make test
-    $ make test-static
-    $ make test-stub
+    $ make static-tests
+    $ make stub-tests
 
   Warning:  the  code makes  (sometimes  heavy)  use of  the
 "assert()" macro; to exclude them use the "--disable-assert"

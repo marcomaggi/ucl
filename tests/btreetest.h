@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -28,22 +28,28 @@
 #ifndef __BTREETEST_H
 #define __BTREETEST_H 1
 
-#include <stdio.h>
-#include "ucl.h"
+
+/** ------------------------------------------------------------
+ ** Headers.#include <stdio.h>
+ ** ----------------------------------------------------------*/
 
-UCL_BEGIN_C_DECL
+#include "testmain.h"
 
 #define NUMBER	1000
 #define DELTA	234
 
-extern void test (void);
-extern ucl_btree_node_t * alloc_link (void);
-extern void clean_btree	(ucl_btree_node_t *this);
+ucl_btree_node_t * alloc_link (void);
+void clean_btree (ucl_btree_node_t * btree_p UCL_UNUSED);
 
 /* ------------------------------------------------------------ */
 
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
+
 ucl_btree_node_t *
-alloc_link(void)
+alloc_link (void)
 {
   ucl_btree_node_t *	link_p;
 
@@ -57,11 +63,9 @@ alloc_link(void)
 }
 
 void
-clean_btree(ucl_btree_node_t *btree_p UCL_UNUSED)
+clean_btree (ucl_btree_node_t * btree_p UCL_UNUSED)
 {
 }
-
-UCL_END_C_DECL
 
 #endif /* __BTREETEST_H */
 

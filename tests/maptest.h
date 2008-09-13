@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -29,22 +29,27 @@
 #ifndef __MAPTEST_H
 #define __MAPTEST_H 1
 
-#include <stdio.h>
-#include "ucl.h"
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "testmain.h"
 	
 #define NUMBER		50
 #define LITTLENUMBER	10
 
-UCL_BEGIN_C_DECL
-
-extern void test (void);
-extern ucl_map_link_t * alloc_new_link (void);
-extern void clean_map (ucl_map_t map);
-extern void fill_map (ucl_map_t map, int begin, int end);
+void fill_map (ucl_map_t map, int begin, int end);
+void clean_map (ucl_map_t map);
 
 /* ------------------------------------------------------------ */
 
-ucl_map_link_t *
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
+
+static ucl_map_link_t *
 alloc_new_link (void)
 {
   ucl_map_link_t * link_p;
@@ -53,7 +58,6 @@ alloc_new_link (void)
   assert(link_p != NULL);
   return link_p;
 }
-
 void
 fill_map (ucl_map_t map, int begin, int end)
 {
@@ -75,7 +79,6 @@ fill_map (ucl_map_t map, int begin, int end)
       ucl_map_insert(map, link_p);
     }
 }
-
 void
 clean_map (ucl_map_t map)
 {
@@ -95,9 +98,6 @@ clean_map (ucl_map_t map)
   assert(size == 0);
 }
 
-UCL_END_C_DECL
-
 #endif /* __MAPTEST_H */
-
 
 /* end of file */

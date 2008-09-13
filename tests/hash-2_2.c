@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005, 2007 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2007, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -24,6 +24,11 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
+
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
 
 #define DEBUGGING		0
 #include "hashtest.h"

@@ -25,7 +25,7 @@
  ** Stub library loading functions.
  ** --------------------------------------------------------- */
 
-#ifndef UCL_ENABLE_STUB
+#ifdef UCL_ENABLE_STUB
 
 ucl_decl const char * ucl_init_stub_table (void);
 ucl_decl int          ucl_final_stub_table (void);

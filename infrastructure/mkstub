@@ -2876,7 +2876,7 @@ function parse_source_file_get_functions () {
 function header_section__main_stub_library_api () {
     local TYPE
 
-    printf '#ifndef %s\n\n' ${STUB_ENABLE_DEFINE}
+    printf '#ifdef %s\n\n' ${STUB_ENABLE_DEFINE}
 
     # Prototype of function used to load the shared stub library.
     printf '%s const char * %s (void);\n' \

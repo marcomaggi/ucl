@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -29,24 +29,30 @@
 #ifndef __HASHTEST_H
 #define __HASHTEST_H 1
 
-#include <stdio.h>
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "testmain.h"
 #include "ucl.h"
-#include "debug.h"
 	
 #define BUCKETS	100
 #define NUMBER 1000
 #define DELTA	234
 
-UCL_BEGIN_C_DECL
-
-extern void test (void);
-extern ucl_hash_entry_t * alloc_link (void);
-extern size_t hash_num (ucl_value_t data, ucl_value_t val);
+ucl_hash_entry_t * alloc_link (void);
+size_t hash_num (ucl_value_t data UCL_UNUSED, ucl_value_t val);
 
 /* ------------------------------------------------------------ */
 
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
+
 ucl_hash_entry_t *
-alloc_link(void)
+alloc_link (void)
 {
   ucl_hash_entry_t *		ent_p;
 
@@ -59,14 +65,12 @@ alloc_link(void)
     }
   return ent_p;
 }
-
 size_t
-hash_num(ucl_value_t data UCL_UNUSED, ucl_value_t val)
+hash_num (ucl_value_t data UCL_UNUSED, ucl_value_t val)
 {
   return (size_t) val.integer;
 }
 
-UCL_END_C_DECL
 
 #endif /* __HASHTEST_H */
 

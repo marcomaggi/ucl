@@ -7,7 +7,7 @@
    
    
    
-   Copyright (c) 2006 Marco Maggi
+   Copyright (c) 2006, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -24,26 +24,25 @@
    
 */
 
-
 #ifndef GRAPHTEST_H
 #define GRAPHTEST_H 1
 
-#include "ucl.h"
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
 
-UCL_BEGIN_C_DECL
+#include "testmain.h"
 
-extern void test (void);
-void make_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l);
-void destroy_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l);
+static int find_link (ucl_graph_link_t ** l, ucl_graph_link_t * link_p);
+static int find_node (ucl_graph_node_t ** l, ucl_graph_node_t * node_p);
 
-int find_link (ucl_graph_link_t ** l, ucl_graph_link_t * link_p);
-int find_node (ucl_graph_node_t ** l, ucl_graph_node_t * node_p);
-void test_graph_clean_marks (ucl_graph_node_t **n);
+/* ------------------------------------------------------------ */
 
-
+
+/** ------------------------------------------------------------
+ ** Macros.
+ ** ----------------------------------------------------------*/
 
 /*
    1 -> 2 -> 3
@@ -93,15 +92,12 @@ void test_graph_clean_marks (ucl_graph_node_t **n);
 
 /* ------------------------------------------------------------ */
 
-#if 0
-#  define debug(...)	fprintf(stderr,__VA_ARGS__)
-#else
-#  define debug(...)	/* empty */
-#endif
-
 
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
 
-void
+static void
 make_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l)
 {
   ucl_graph_link_t *	link_a;
@@ -408,9 +404,11 @@ make_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l)
   assert(0 == ucl_graph_nodes_are_connected(N7, N5));
 }
 
+/* ------------------------------------------------------------ */
+
 
 
-void
+static void
 destroy_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l)
 {
   ucl_graph_node_t *	next_p;
@@ -450,9 +448,11 @@ destroy_graph_1 (ucl_graph_node_t ** n, ucl_graph_link_t ** l)
     assert(NULL == l[k]);
 }
 
+/* ------------------------------------------------------------ */
+
 
 
-int
+static int
 find_link (ucl_graph_link_t ** l, ucl_graph_link_t * link_p)
 {
   for (size_t i=0; i<12; ++i)
@@ -461,7 +461,7 @@ find_link (ucl_graph_link_t ** l, ucl_graph_link_t * link_p)
     }
   return -1;
 }
-int
+static int
 find_node (ucl_graph_node_t ** l, ucl_graph_node_t * node_p)
 {
   for (size_t i=0; i<9; ++i)
@@ -471,7 +471,7 @@ find_node (ucl_graph_node_t ** l, ucl_graph_node_t * node_p)
   return -1;
 }
 
-void
+static void
 test_graph_clean_marks (ucl_graph_node_t **n)
 {
   ucl_value_t		mark;
@@ -482,7 +482,6 @@ test_graph_clean_marks (ucl_graph_node_t **n)
     ucl_graph_node_set_mark(next_p, mark);
 }
 
-UCL_END_C_DECL
 
 #endif /* GRAPHTEST_H */
 

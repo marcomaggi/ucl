@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -29,21 +29,36 @@
 #ifndef __LISTTEST_H
 #define __LISTTEST_H 1
 
-#include <stdio.h>
-#include "ucl.h"
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "testmain.h"
 	
 #define NUMBER	1000
 #define DELTA	234
 
-UCL_BEGIN_C_DECL
-
-extern void test (void);
-extern void fill (ucl_list_t list, int number, int first);
-extern ucl_list_link_t * alloc_link (void);
-extern void clean_list (ucl_list_t this);
+ucl_list_link_t * alloc_link(void);
+void fill (ucl_list_t list, int number, int first);
+void clean_list(ucl_list_t list);
 
 /* ------------------------------------------------------------ */
 
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
+
+ucl_list_link_t *
+alloc_link(void)
+{
+  ucl_list_link_t *link_p;
+
+  link_p = (ucl_list_link_t *) malloc(sizeof(ucl_list_link_t) + sizeof(int));
+  assert(link_p);
+  return link_p;
+}
 void
 fill (ucl_list_t list, int number, int first)
 {
@@ -59,17 +74,6 @@ fill (ucl_list_t list, int number, int first)
       ucl_list_pushback(list, link_p);
     }
 }
-
-ucl_list_link_t *
-alloc_link(void)
-{
-  ucl_list_link_t *link_p;
-
-  link_p = (ucl_list_link_t *) malloc(sizeof(ucl_list_link_t) + sizeof(int));
-  assert(link_p);
-  return link_p;
-}
-
 void
 clean_list(ucl_list_t list)
 {
@@ -83,8 +87,6 @@ clean_list(ucl_list_t list)
       link_p = ucl_list_front(list);
     }
 }
-
-UCL_END_C_DECL
 
 #endif /* __LISTTEST_H */
 

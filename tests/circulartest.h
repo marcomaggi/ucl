@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -28,19 +28,25 @@
 #ifndef __CIRCULARTEST_H
 #define __CIRCULARTEST_H 1
 
-#include <stdio.h>
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "testmain.h"
 #include "ucl.h"
 #include "debug.h"
 	
 #define NUMBER	20
 
-UCL_BEGIN_C_DECL
-
-extern void test (void);
-extern void fill (ucl_circular_t circ, int number, int first);
-extern void clean_circular (ucl_circular_t this);
+void fill (ucl_circular_t circ_p, int number, int first);
 
 /* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
 
 void
 fill (ucl_circular_t circ_p, int number, int first)
@@ -59,7 +65,7 @@ fill (ucl_circular_t circ_p, int number, int first)
       ucl_circular_insert(circ_p, link_p);
     }
 }
-void
+static void
 clean_circular (ucl_circular_t this)
 {
   ucl_circular_link_t *		link_p;
@@ -72,8 +78,6 @@ clean_circular (ucl_circular_t this)
     }
   assert( ucl_circular_size(this) == 0 );
 }
-
-UCL_END_C_DECL
 
 #endif /* __CIRCULARTEST_H */
 

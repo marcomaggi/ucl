@@ -6,7 +6,7 @@
    Abstract
    
    
-   Copyright (c) 2006 Marco Maggi
+   Copyright (c) 2006, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -132,6 +132,5 @@ do_dfs (ucl_graph_node_t **n)
 
   ucl_graph_finalise_dfs_handle(&handle);
 }
-
 
 /* end of file */

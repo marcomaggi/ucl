@@ -1361,7 +1361,7 @@ $(1)_MKSTUB_STATIC_LIB		= $$($(1)_MKSTUB) --make-stub-static-library
 $(1)_stubsrc_FLAGS	= --header-file=$$($(1)_stubsrc_HEADER_FILE)	\
 			  --library=$$($(1)_stubsrc_LIBRARY_ID)		\
 			  --function-qualifier=$$($(1)_stubsrc_EXTERN)	\
-			  --shared-stub-library-name=$$($(1)_stubsrc_SHARED_LIB)
+			  --shared-stub-library-name=$$($(1)_stub_shared_library_LINK_NAME)
 
 ## ------------------------------------------------------------
 ## Rule related variables.
@@ -1659,6 +1659,7 @@ endef
 define ds-c-programs
 
 # $(1) is the identifier of the module
+$(1)_programs_SRCDIR		?= $$($(1)_BUILDDIR)
 $(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
 $(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
 $(1)_programs_PREFIX		?=
@@ -1678,7 +1679,7 @@ $(1)_programs_INSTDIR	?= $(pkglibexecdir)
 $$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
 $$(eval $$(call ds-module,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
 
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : %.$(OBJEXT)
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.$(OBJEXT)
 	$$($(1)_programs_CC_BUILD_PROGRAM)
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
@@ -1698,8 +1699,9 @@ endef
 define ds-c-programs-no-install
 
 # $(1) is the identifier of the module
-$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
+$(1)_programs_SRCDIR		?= $$($(1)_BUILDDIR)
 $(1)_programs_OBJECTS		?= $$($(1)_OBJECTS)
+$(1)_programs_BUILDDIR		?= $$(builddir)/programs.d
 $(1)_programs_PREFIX		?=
 $(1)_programs_ENV		?=
 $(1)_programs_MAIN_SECTION	?= bin
@@ -1715,7 +1717,7 @@ $(1)_programs_TARGETS	= $$($(1)_programs_PATHNAMES)
 $$(eval $$(call ds-default-clean-files-variables,$(1)_programs))
 $$(eval $$(call ds-module-no-install,$(1)_programs,$$($(1)_programs_MAIN_SECTION)))
 
-$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : %.$(OBJEXT)
+$$($(1)_programs_PATHNAMES) : $$($(1)_programs_BUILDDIR)/$$($(1)_programs_PREFIX)% : $$($(1)_programs_SRCDIR)/%.$(OBJEXT)
 	$$($(1)_programs_CC_BUILD_PROGRAM)
 ifeq ($$(ds_config_ENABLE_STRIP),yes)
 	$$(STRIP) $$(@)
@@ -1765,14 +1767,16 @@ define ds-c-test-programs
 
 $(1)_tests_SRCDIR		?= $$(srcdir)/tests
 $(1)_tests_BUILDDIR		?= $$(builddir)/tests.d
-$(1)_tests_MAIN_SECTION	?= tests
+$(1)_tests_MAIN_SECTION		?= test
 
 $$(eval $$(call ds-c-sources,$(1)_tests))
 
 $(1)_tests_programs_BUILDDIR		?= $$($(1)_tests_BUILDDIR)
-$(1)_tests_programs_MAIN_SECTION	= tests
+$(1)_tests_programs_MAIN_SECTION	?= test
 
 $$(eval $$(call ds-c-programs-no-install,$(1)_tests))
+
+$$($(1)_tests_programs_MAIN_SECTION): run-$(1)_tests
 
 endef
 

@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -26,7 +26,6 @@
 */
 
 #include "maptest.h"
-
 
 void
 test (void)
@@ -48,7 +47,7 @@ test (void)
   */
 
 
-#include "numbers1.c"
+#include "numbers1.h"
 
   ucl_map_constructor(map, 0, compar);
   

@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -29,25 +29,33 @@
 #ifndef __TREETEST_H
 #define __TREETEST_H 1
 
-#include <stdio.h>
-#include "ucl.h"
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
+#include "testmain.h"
 	
 #define NUMBER	1000
 #define DELTA	234
 
-UCL_BEGIN_C_DECL
-
-extern void test (void);
-extern ucl_tree_node_t * alloc_link (void);
-extern void fill_tree (ucl_tree_node_t **n);
-extern void clean_tree (ucl_tree_node_t **n);
-extern int find_node (ucl_tree_node_t **n, ucl_tree_node_t *node);
-extern void assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
-				  ucl_tree_node_t *son, ucl_tree_node_t *nxt,
-				  ucl_tree_node_t *fst, ucl_tree_node_t *lst);
-        
+/* The following helper  functions are not used by all  the tests, so we
+   do  not declare  them "static"  to avoid  the annoying  warning about
+   "defined but not used" function. */
+ucl_tree_node_t * alloc_link(void);
+int find_node(ucl_tree_node_t **n, ucl_tree_node_t *node);
+void assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
+		  ucl_tree_node_t *son, ucl_tree_node_t *nxt,
+		  ucl_tree_node_t *fst, ucl_tree_node_t *lst);
+void fill_tree(ucl_tree_node_t **n);
+void clean_tree(ucl_tree_node_t **n);
 
 /* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Helper functions.
+ ** ----------------------------------------------------------*/
 
 ucl_tree_node_t *
 alloc_link(void)
@@ -61,7 +69,6 @@ alloc_link(void)
   }
   return linkPtr;
 }
-
 int
 find_node(ucl_tree_node_t **n, ucl_tree_node_t *node)
 {
@@ -76,7 +83,6 @@ find_node(ucl_tree_node_t **n, ucl_tree_node_t *node)
     }
   return -1;
 }
-
 void
 assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
 	     ucl_tree_node_t *son, ucl_tree_node_t *nxt,
@@ -89,7 +95,6 @@ assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
   assert(ucl_tree_get_first(nod) == fst);
   assert(ucl_tree_get_last(nod) == lst);
 }
-
 void
 fill_tree(ucl_tree_node_t **n)
 {
@@ -174,7 +179,6 @@ fill_tree(ucl_tree_node_t **n)
   ucl_tree_set_bro(n[27], n[28]);
   ucl_tree_set_son(n[28], n[29]);
 }
-
 void
 clean_tree(ucl_tree_node_t **n)
 {
@@ -184,8 +188,6 @@ clean_tree(ucl_tree_node_t **n)
     free(n[i]);
   }
 }
-
-UCL_END_C_DECL
 
 #endif /* __TREETEST_H */
 

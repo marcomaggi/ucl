@@ -28,52 +28,66 @@ $(eval $(call ds-c-library-with-stub,ucl))
 
 ## ------------------------------------------------------------
 
-ifeq ($(strip $(ds_config_ENABLE_STUB)),yes)
-UCL_LIBS	= -L$(ucl_stub_shared_library_BUILDDIR) -l$(ucl_stub_shared_library_ID)
-else
-UCL_LIBS	= -L$(ucl_shared_library_BUILDDIR) -l$(ucl_shared_library_ID)
-endif # ds_config_ENABLE_STUB = yes
-
-## ------------------------------------------------------------
-
 #page
 ## ------------------------------------------------------------
 ## Tests.
 ## ------------------------------------------------------------
 
+ifeq ($(strip $(ds_config_ENABLE_SHARED)),yes)
+
+ucl_shared_tests_MAIN_SECTION		= shared-tests
+ucl_shared_tests_programs_MAIN_SECTION	= shared-tests
+
 ucl_shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
-ucl_shared_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_shared_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h $(srcdir)/tests/testmain.h
 ucl_shared_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
 ucl_shared_tests_programs_PREFIX	= shared-
 ucl_shared_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR)
-ucl_shared_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
+ucl_shared_tests_programs_CC_BUILD_PROGRAM_PRE = \
 	-L$(ucl_shared_library_BUILDDIR) -l$(ucl_shared_library_ID)
 
 $(eval $(call ds-c-test-programs,ucl_shared))
 
+test:		shared-tests
+test-clean:	shared-tests-clean
+test-realclean:	shared-tests-realclean
+
+endif # ds_config_ENABLE_SHARED = yes
+
 ## ------------------------------------------------------------
 
+ifeq ($(strip $(ds_config_ENABLE_STUB)),yes)
+
+ucl_stub_tests_MAIN_SECTION		= stub-tests
+ucl_stub_tests_programs_MAIN_SECTION	= stub-tests
+
 ucl_stub_tests_BUILDDIR			= $(builddir)/stub-tests.d
-ucl_stub_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
-ucl_stub_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
+ucl_stub_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h $(srcdir)/tests/testmain.h
+ucl_stub_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR) -DUCL_ENABLE_STUB=1
 ucl_stub_tests_programs_PREFIX		= stub-
 ucl_stub_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_stub_shared_library_BUILDDIR)
-ucl_stub_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
-	-L$(ucl_stub_static_library_BUILDDIR) -l$(ucl_stub_static_library_ID)
+ucl_stub_tests_programs_CC_BUILD_PROGRAM_POST = $(ucl_stub_static_library_PATHNAME) $(LDFLAGS_DL)
 
 $(eval $(call ds-c-test-programs,ucl_stub))
 
+endif # ds_config_ENABLE_STUB = yes
+
 ## ------------------------------------------------------------
 
+ifeq ($(strip $(ds_config_ENABLE_STATIC)),yes)
+
+ucl_static_tests_MAIN_SECTION		= static-tests
+ucl_static_tests_programs_MAIN_SECTION	= static-tests
+
 ucl_static_tests_BUILDDIR		= $(builddir)/static-tests.d
-ucl_static_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h
+ucl_static_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h $(srcdir)/tests/testmain.h
 ucl_static_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
 ucl_static_tests_programs_PREFIX	= static-
-ucl_static_tests_programs_ENV		= LD_LIBRARY_PATH=$(ucl_static_library_BUILDDIR)
-ucl_static_tests_programs_CC_BUILD_PROGRAM_PRE = $(UCL_UCL_LIBS) \
-	-L$(ucl_static_library_BUILDDIR) -l$(ucl_static_library_ID)
+ucl_static_tests_programs_CC_BUILD_PROGRAM_POST = $(ucl_static_library_PATHNAME)
 
 $(eval $(call ds-c-test-programs,ucl_static))
+
+endif # ds_config_ENABLE_STATIC = yes
 
 ## ------------------------------------------------------------
 
