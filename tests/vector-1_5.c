@@ -8,7 +8,7 @@
    
 	Block swallowing.
    
-   Copyright (c) 2006 Marco Maggi
+   Copyright (c) 2006, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -45,7 +45,7 @@ test (void)
 
   ucl_vector_initialise(vector, sizeof(unsigned));
 
-  ucl_block_alloc(allocator, block, sizeof(unsigned)*NUMBER);
+  block = ucl_block_alloc(allocator, sizeof(unsigned)*NUMBER);
   p = (unsigned *)block.ptr;
   for (i=0; i<NUMBER; ++i)
     p[i] = i;

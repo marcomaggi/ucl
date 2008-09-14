@@ -8,7 +8,7 @@
 	This file must be included in every module that makes use of the
 	UCL containers.
 
-   Copyright (c)  2001-2007  Marco Maggi
+   Copyright (c)  2001-2007, 2008  Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -38,6 +38,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 /* ------------------------------------------------------------ */
 
@@ -143,32 +144,6 @@ typedef struct ucl_array_of_pointers_t {
 
 
 /** ------------------------------------------------------------
- ** Base functions.
- ** ----------------------------------------------------------*/
-
-#ifndef UCL_ENABLE_STUB
-
-ucl_decl const char * ucl_version      (void);
-ucl_decl const char * ucl_major_version (void);
-ucl_decl const char * ucl_minor_version (void);
-ucl_decl const char * ucl_patch_version (void);
-ucl_decl ucl_valcmp_fun_t	ucl_intcmp;
-ucl_decl ucl_valcmp_fun_t	ucl_uintcmp;
-ucl_decl ucl_valcmp_fun_t	ucl_strcmp;
-ucl_decl ucl_valcmp_fun_t	ucl_ptrintcmp;
-ucl_decl ucl_hashfun_t		ucl_hash_string;
-ucl_decl unsigned   ucl_interface_major_version (void);
-ucl_decl unsigned   ucl_interface_minor_version (void);
-
-ucl_decl void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_valcmp_t cmp);
-
-#endif
-
-/* ------------------------------------------------------------ */
-
-
-
-/** ------------------------------------------------------------
  ** Memory allocation.
  ** ----------------------------------------------------------*/
 
@@ -178,12 +153,6 @@ typedef struct ucl_memory_allocator_t {
   void *			data;
   ucl_memory_alloc_fun_t *	alloc;
 } ucl_memory_allocator_t;
-
-#ifndef UCL_ENABLE_STUB
-
-ucl_decl ucl_memory_alloc_fun_t ucl_memory_alloc;
-
-#endif
 
 /* ------------------------------------------------------------ */
 
@@ -288,20 +257,18 @@ typedef struct ucl_byte_pointer_range_t {
  ** Struct macros.
  ** ----------------------------------------------------------*/
 
-static inline void
-ucl_p_struct_clean (void * buffer_p, size_t len)
-{
-  memset(buffer_p, '\0', len);
-}
-#define ucl_struct_clean(B,TYPE_T)	ucl_p_struct_clean((B),sizeof(TYPE_T))
+#define ucl_struct_clean(B,TYPE_T)	memset((B),'\0',sizeof(TYPE_T))
 #define ucl_struct_reset(B,TYPE_T)	ucl_struct_clean((B),(TYPE_T))
 
-static inline void
+static __inline__ void
 ucl_p_struct_alloc (ucl_memory_allocator_t * allocator, void ** buffer_pp, size_t len)
 {
-  allocator->alloc(allocator->data, buffer_pp, len);
+  void *	p = NULL;
+
+  allocator->alloc(allocator->data, &p, len);
+  *buffer_pp = p;
 }
-#define ucl_struct_alloc(A,B,TYPE_T)	ucl_p_struct_alloc((A),&(B),sizeof(TYPE_T))
+#define ucl_struct_alloc(ALLOCATOR,P,TYPE_T)	ucl_p_struct_alloc(ALLOCATOR,&(P),sizeof(TYPE_T))
 
 /* ------------------------------------------------------------ */
 
@@ -312,27 +279,62 @@ ucl_p_struct_alloc (ucl_memory_allocator_t * allocator, void ** buffer_pp, size_
 
 typedef struct ucl_block_struct_t {
   size_t	len;
-  ucl_byte_t *	ptr;
+  uint8_t *	ptr;
 } ucl_block_t;
 
-typedef struct ucl_const_block_struct_t {
-  size_t		len;
-  const ucl_byte_t *	ptr;
-} ucl_const_block_t;
-
 #define UCL_BLOCK_NULL_VALUE	{ 0, NULL }
+#define UCL_BLOCK_EMPTY		UCL_BLOCK_NULL_VALUE
+#define UCL_EMPTY_BLOCK		UCL_BLOCK_NULL_VALUE
 
 /* ------------------------------------------------------------ */
 
-#define ucl_block_set(BLOCK, PTR, LEN)	((BLOCK).ptr = (ucl_byte_t *)(PTR), (BLOCK).len = LEN)
-#define ucl_block_reset(BLOCK)		ucl_block_set((BLOCK),NULL,0)
+static __inline__ void
+ucl_block_set (ucl_block_t * block, void * p, size_t len)
+{
+  block->ptr = p;
+  block->len = len;
+}
+static __inline__ void
+ucl_block_reset (ucl_block_t * block)
+{
+  block->ptr = NULL;
+  block->len = 0;
+}
+static __inline__ int
+ucl_block_is_null (ucl_block_t block)
+{
+  return (NULL == block.ptr);
+}
+static __inline__ void
+ucl_block_clean_memory (ucl_block_t block)
+{
+  memset(block.ptr, '\0', block.len);
+}
 
-#define ucl_block_alloc(ALLOCATOR, BLOCK, DIM)	\
-	((ALLOCATOR).alloc((ALLOCATOR).data, &((BLOCK).ptr), (DIM)), \
-	 (BLOCK).len = (DIM))
+/* ------------------------------------------------------------ */
 
-#define ucl_block_is_null(BLOCK)	(! (BLOCK).ptr)
-#define ucl_block_clean_memory(BLOCK)	memset((BLOCK).ptr, '\0', (BLOCK).len)
+static __inline__ ucl_block_t
+ucl_block_alloc (ucl_memory_allocator_t allocator, size_t dim)
+{
+  ucl_block_t	block = UCL_EMPTY_BLOCK;
+
+  allocator.alloc(allocator.data, &(block.ptr), dim);
+  block.len = dim;
+  return block;
+}
+static __inline__ ucl_block_t
+ucl_block_realloc (ucl_memory_allocator_t allocator, ucl_block_t block, size_t new_dim)
+{
+  allocator.alloc(allocator.data, &(block.ptr), new_dim);
+  block.len = new_dim;
+  return block;
+}
+static __inline__ void
+ucl_block_free (ucl_memory_allocator_t allocator, ucl_block_t block)
+{
+  if (block.ptr)
+    allocator.alloc(allocator.data, &(block.ptr), 0);
+}
 
 /* ------------------------------------------------------------ */
 
@@ -346,46 +348,96 @@ typedef struct ucl_ascii_struct_t {
   char *	ptr;
 } ucl_ascii_t;
 
-typedef struct ucl_const_ascii_struct_t {
-  size_t	len;
-  const char *	ptr;
-} ucl_const_ascii_t;
-
 typedef struct ucl_ascii_list_struct_t {
   size_t	len;
   char **	ptr;
 } ucl_ascii_list_t;
 
 #define UCL_ASCII_NULL_VALUE	{ 0, NULL }
+#define UCL_ASCII_EMPTY		UCL_ASCII_NULL_VALUE
+#define UCL_EMPTY_ASCII		UCL_ASCII_NULL_VALUE
 
 /* ------------------------------------------------------------ */
 
-#define ucl_ascii_alloc(ALLOCATOR, ASCII, DIM)				\
-	(((ASCII).ptr = NULL),						\
-	 (ALLOCATOR).alloc((ALLOCATOR).data, &((ASCII).ptr), (DIM)+1),	\
-	 ((ASCII).len = (DIM)),						\
-	 ((ASCII).ptr[(DIM)]='\0'))
+static __inline__ void
+ucl_ascii_set (ucl_ascii_t * ascii, void * ptr, size_t len)
+{
+  ascii->ptr = ptr;
+  ascii->len = len;
+}
+static __inline__ void
+ucl_ascii_reset (ucl_ascii_t * ascii)
+{
+  ascii->ptr = NULL;
+  ascii->len = 0;
+}
+static __inline__ ucl_ascii_t
+ucl_ascii_const (const char * string)
+{
+  ucl_ascii_t	ascii;
 
-#define ucl_ascii_set(ASCII, PTR, LEN)	((ASCII).ptr = (PTR), (ASCII).len = LEN)
-#define ucl_ascii_reset(ASCII)		((ASCII).ptr = NULL, (ASCII).len = 0)
-#define ucl_ascii_const(ASCII, STRING)				\
-	ucl_ascii_set((ASCII), (char *)(STRING), strlen(STRING))
+  ascii.ptr = (void *)string;
+  ascii.len = strlen(string);
+  return ascii;
+}
+static __inline__ int
+ucl_ascii_is_null (ucl_ascii_t ascii)
+{
+  return (NULL == ascii.ptr);
+}
+static __inline__ void
+ucl_ascii_clean_memory (ucl_ascii_t ascii)
+{
+  memset(ascii.ptr,'\0',ascii.len);
+}
+static __inline__ ucl_ascii_t
+ucl_ascii_from_block (ucl_block_t block)
+{
+  ucl_ascii_t	ascii;
 
-#define ucl_ascii_is_null(ASCII)	(! (ASCII).ptr)
-#define ucl_ascii_clean_memory(ASCII)	memset((ASCII).ptr, '\0', (ASCII).len)
+  ascii.len = block.len - 1;
+  ascii.ptr = (void *)block.ptr;
+  ascii.ptr[block.len] = '\0';
+  return ascii;
+}
+static __inline__ ucl_block_t
+ucl_block_from_ascii (ucl_ascii_t ascii)
+{
+  ucl_block_t	block;
 
-
-#define mcl_block_from_ascii(BLOCK,ASCII)			\
-		((BLOCK).len=((ASCII).len+1),			\
-                 (BLOCK).ptr=(ucl_byte_t *)((ASCII).ptr))
-
-#define ucl_ascii_from_block(ASCII,BLOCK)			\
-		((ASCII).len=((BLOCK).len-1),			\
-		 (ASCII).ptr=(char *)((BLOCK).ptr),		\
-                 (ASCII).ptr[(BLOCK).len]='\0')
+  block.len = 1 + ascii.len;
+  block.ptr = (void *)ascii.ptr;
+  return block;
+}
 
 /* ------------------------------------------------------------ */
 
+static __inline__ ucl_ascii_t
+ucl_ascii_alloc (ucl_memory_allocator_t allocator, size_t dim)
+{
+  ucl_ascii_t	ascii = UCL_ASCII_NULL_VALUE;
+
+  allocator.alloc(allocator.data, &(ascii.ptr), 1+dim);
+  ascii.len = dim;
+  ascii.ptr[dim]='\0';
+  return ascii;
+}
+static __inline__ ucl_ascii_t
+ucl_ascii_realloc (ucl_memory_allocator_t allocator, ucl_ascii_t ascii, size_t new_dim)
+{
+  allocator.alloc(allocator.data, &(ascii.ptr), 1+new_dim);
+  ascii.len = new_dim;
+  ascii.ptr[new_dim]='\0';
+  return ascii;
+}
+static __inline__ void
+ucl_ascii_free (ucl_memory_allocator_t allocator, ucl_ascii_t ascii)
+{
+  if (ascii.ptr)
+    allocator.alloc(allocator.data, &(ascii.ptr), 0);
+}
+
+/* ------------------------------------------------------------ */
 
 /** ------------------------------------------------------------
  ** Callback.

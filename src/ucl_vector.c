@@ -1578,7 +1578,7 @@ ucl_vector_append_range (ucl_vector_t target, const ucl_vector_t source, ucl_ran
   assert(ucl_vector_slot_dimension(target) == ucl_vector_slot_dimension(source));
   assert(ucl_vector_range_is_valid(source, range));
 
-  ucl_block_set(block,
+  ucl_block_set(&block,
 		ucl_vector_index_to_slot(source, ucl_range_min(range)),
 		(ucl_range_size(range) * ucl_vector_slot_dimension(source)));
 

@@ -4,37 +4,68 @@
 @settitle Useless Containers Library
 @c %**end of header
 
-@include version.texiinc
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+@c page
+@c ------------------------------------------------------------
+@c Macros.
 @c ------------------------------------------------------------
 
-@macro author{}
-Marco Maggi
+@include version.texiinc
+
+@macro gnu{}
+@acronym{GNU}
 @end macro
 
-@macro copyrightyears{}
-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+@macro gpl{}
+@acronym{GPL}
+@end macro
+
+@macro fdl{}
+@acronym{FDL}
 @end macro
 
 @macro ucl{}
 @acronym{UCL}
 @end macro
 
-@macro gnu{}
-@acronym{GNU}
-@end macro
-
 @macro tcl{}
 @acronym{TCL}
 @end macro
 
-@macro pkgconfig{}
-@command{pkg-config}
+@macro dfs{}
+@acronym{DFS}
 @end macro
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
+@c Miscellaneous acronyms
+
+@macro ascii{}
+@acronym{ASCII}
+@end macro
+
+@macro api{}
+@acronym{API}
+@end macro
+
+@c Remember that @url is already used by Texinfo.
+@macro urla{}
+@acronym{URL}
+@end macro
+
+@macro http{}
+@acronym{HTTP}
+@end macro
+
+@macro ftp{}
+@acronym{FTP}
+@end macro
+
+@macro smtp{}
+@acronym{SMTP}
+@end macro
+
+@c ------------------------------------------------------------
+@c C language macros.
 
 @macro function{NAME}
 @code{\NAME\()}
@@ -44,33 +75,92 @@ Marco Maggi
 @code{NULL}
 @end macro
 
-@macro dfs{}
-@acronym{DFS}
+@c ------------------------------------------------------------
+@c Other programming language macros
+
+@macro module{NAME}
+@code{\NAME\}
 @end macro
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
-@c ---------------------------------------------------------
-@titlepage
-@title Useless Containers Library
-@subtitle Version @version{}
-@author @author{}
-@page
-@vskip 0pt plus 1filll
+@c page
+@c ------------------------------------------------------------
+@c Values.
+@c ------------------------------------------------------------
 
-@noindent
-Copyright @copyright{}  @copyrightyears{}  @author{}.
+@set TITLE                      Useless Containers Library
 
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.2 or
-any later version published by the Free Software Foundation; with no
-Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
-copy of the license is included in the section entitled ``GNU Free
-Documentation License''.
-@end titlepage
+@c To be used as @value{PACKAGE} whenever we need to include the full
+@c name of this package.
+@set PACKAGE                    @ucl{}
 
+@c To be used as @value{PACKAGE} whenever we need to include the
+@c nickname of the project: the name that is used to compose the
+@c distribution tarball or the web address.
+@set PACKAGE_NICKNAME           ucl
+
+@c To be used as @value{AUTHOR} whenever we need to include the list of
+@c authors of this document.
+@set AUTHOR                     Marco Maggi
+
+@c To be used as @value{AUTHOR_EMAIL} whenever we need to include the
+@c email of the *single* author of this document.
+@set AUTHOR_EMAIL               @email{marcomaggi@@gna.org}
+
+@c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
+@c list of copyright years.
+@set COPYRIGHT_YEARS            2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 
 @c ------------------------------------------------------------
+
+@c page
+@c ------------------------------------------------------------
+@c Copyright notice.
+@c ------------------------------------------------------------
+
+@copying
+@noindent
+This document describes version @version{} of @value{PACKAGE}, a set of
+containers that can hold the basic set of C language types and untyped
+pointers.
+
+The package is distributed under the terms of the @gnu{} General Public
+License (@gpl{}) and can be downloaded from:
+
+@center @url{http://gna.org/projects/@value{PACKAGE_NICKNAME}}
+
+@noindent
+Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the @gnu{} Free Documentation License, Version 1.2 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front--Cover Texts, and no Back--Cover Texts.  A
+copy of the license is included in the section entitled ``@gnu{} Free
+Documentation License''.
+@end quotation
+@end copying
+
+@c ------------------------------------------------------------
+
+@c page
+@c ------------------------------------------------------------
+@c Headers.
+@c ------------------------------------------------------------
+
+@titlepage
+@title @value{TITLE}
+@subtitle Revision @version{}
+@author @value{AUTHOR} @value{AUTHOR_EMAIL}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c ------------------------------------------------------------
+
 @ifnottex
 @dircategory Development
 @direntry
@@ -78,25 +168,22 @@ Documentation License''.
 @end direntry
 @end ifnottex
 
+@c ------------------------------------------------------------
 
-@c ---------------------------------------------------------------------
+@ignore
+@syncodeindex tp cp
+@syncodeindex vr cp
+@syncodeindex fn cp
+@end ignore
+
+@c ------------------------------------------------------------
+
+@c page
+@ifnottex
 @node Top
-@top Useless Containers Library
+@top @value{TITLE}
 
-
-@noindent
-The Useless Containers Library (@acronym{UCL}) provides a set of
-containers that can hold the basic set of C language types and untyped
-pointers.  This document describes to version @version{}.
-
-This software is Copyright @copyright{} @copyrightyears{} @author{}.
-The @ucl{} is licensed under the terms of the GNU General Public
-License.  See the node ``Package License'' for details.
-
-This manual is Copyright @copyright{} @copyrightyears{} @author{}.  This
-manual is licensed under the terms of the @acronym{GNU} Free
-Documentation License.  See the node ``Documentation License'' for
-further details.
+@insertcopying
 
 @menu
 * overview::                    Overview of the library.
@@ -278,9 +365,11 @@ High level functions
 @end detailmenu
 @end menu
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@end ifnottex
 
-@c ---------------------------------------------------------------------
+@c ------------------------------------------------------------
+
+@c page
 @node overview
 @chapter Overview of the library
 
@@ -311,8 +400,12 @@ link.
 We give to the container the responsibility to hold a reference to a
 structure and we will come back later to take it out.
 
-All the function and data type names are prefixed with @code{ucl_};
-there are no global variables.
+All the function and data type names are prefixed with @code{ucl_}.
+There is no error reporting system: it is our responsibility to validate
+function's arguments using the appropriate functions.  With the single
+exception of the vector module: @ucl{} does no memory allocation.
+
+@ref{stub} for details about how to use the stub mechanism.
 
 The library is developed and tested under the Linux+@gnu{} system and
 officially it supports only the @gnu{} infrastructure: requires the
@@ -320,264 +413,22 @@ officially it supports only the @gnu{} infrastructure: requires the
 (@code{-std=c99 -pedantic} switches).
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
+
+@set using_package_name         @value{PACKAGE}
+@set using_package              @value{PACKAGE_NICKNAME}
+@set using_PACKAGE              UCL
+@set using_config_script        @value{PACKAGE_NICKNAME}-config
+@set using_xversion             1.0a1
+@set using_version              1.0.0
+@set using_iface_version        1.2
+@set using_autoconf_macro       USELESS_CONTAINERS_LIBRARY
+
+@include overview-using.texiinc
 
 @c ------------------------------------------------------------
-@node overview using
-@section Using the library
 
-
-@noindent
-@ref{stub mechanism} the recommended way to use the library is to link
-it using the stub mechanism.  @ref{library version} to understand
-version numbers.
-
-In the following we assume that the library is installed under the
-@file{/usr/local} hierarchy.
-
-A shell script is installed on the system to provide informations about
-version numbers and installation directories; it should be
-@file{/usr/local/bin/ucl-config}.  Run @command{ucl-config} without
-arguments for the usage screen.  An example of output for the important
-options is:
-
-@example
-$ ucl-config --package-xversion
-0.8a3
-
-$ ucl-config --package-version
-0.8.0
-
-$ ucl-config --library-interface-version
-2.0
-
-$ ucl-config --pkgincludedir
-/usr/local/include/ucl/0.8a3
-
-$ ucl-config --libdir
-/usr/local/lib
-
-$ ucl-config --library-id
-ucl2.0
-
-$ ucl-config --stub-static-library-id
-uclstaticstub2.0
-@end example
-
-There is a single header file that must be included in C sources:
-@file{ucl.h}; in our source code we can put:
-
-@example
-#include <ucl.h>
-@end example
-
-@noindent
-and use the output of @code{ucl-config --pkgincludedir} as argument to
-the @code{-I} option of the C preprocessor.
-
-The libraries are installed under the directory obtained by running
-@code{ucl-config --libdir}; we can use its output as argument of the
-@code{-L} option to the linker.
-
-If we want to link with the shared or static library we take the output
-of @code{ucl-config --library-id} and use it as value for the @code{-l}
-option to the linker.
-
-If we want to use the stub mechanism we have to link with the static
-stub library; we take the output of @code{ucl-config
---stub-static-library-id} and use it as value for the @code{-l} option
-to the linker.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-@c ------------------------------------------------------------
-@node overview autoconf
-@section Using @gnu{} Autoconf to load @ucl{}
-
-
-@noindent
-If you use @gnu{} Autoconf to configure your application you can embed
-in your distribution the file @file{ucl.m4}, installed under
-@file{$prefix/share/aclocal}, and load it in your @file{configure.ac} by
-putting:
-
-@example
-m4_include(ucl.m4)
-@end example
-
-@noindent
-in @file{aclocal.m4}.  This macro file defines a function that can be
-invoked with:
-
-@example
-USELESS_CONTAINERS_LIBRARY(2,0)
-@end example
-
-@noindent
-it  finds  and invokes  @command{ucl-config}  to acquire  installation
-directories and  library names.  The  macro accepts two  arguments: the
-major and minor interface version numbers that are needed; both of the
-arguments are optional, but it is recommended to specify them.
-
-@code{USELESS_CONTAINERS_LIBRARY} defines the following symbols:
-
-@table @code
-@item @@UCL_INCLUDEDIR@@
-the directory under which header files are installed, example:
-@file{/usr/local/include/ucl/0.8a3};
-
-@item @@UCL_LIBDIR@@
-the directory under which shared and static libraries are installed,
-example: @file{/usr/local/lib};
-
-@item @@UCL_CPPFLAGS@@
-the preprocessor option @option{-I} with the value of
-@code{@@UCL_INCLUDEDIR@@} appended, example:
-@code{-I/usr/local/include/ucl/0.8a3}; this value should be appended to
-the value of the @var{CPPFLAGS} variable in your @file{Makefile};
-
-@item @@UCL_LDFLAGS@@
-the linker option @option{-L} with the value of @code{@@UCL_LIBDIR@@}
-appended, example: @file{-L/usr/local/lib}; this value should be
-appended to the value of the @code{LDFLAGS} variable in your
-@file{Makefile};
-
-@item @@UCL_LIBRARY_ID@@
-the identifier of the shared or static library, example: @code{ucl2.0};
-
-@item @@UCL_LIBS@@
-the linker option @option{-l} with the value of
-@code{@@UCL_LIBRARY_ID@@} appended, example: @code{-lucl2.0}; this value
-must be appended to the command line of the linking command for
-libraries and programs that directly use the @ucl{}; for example: it
-could be appended to the value of the @code{LIBS} variable in your
-@file{Makefile};
-
-@item @@UCL_STUB_STATIC_LIBRARY_ID@@
-the identifier of the static stub library, example:
-@code{uclstaticstub2.0};
-
-@item @@UCL_STUB_LIBS@@
-the linker option @option{-l} with the value of
-@code{@@UCL_STUB_STATIC_LIBRARY_ID@@} appended, example:
-@code{-luclstaticstub2.0}; this value must be appended to the command
-line of the linking command for libraries and programs that use the
-@ucl{} through the stub mechanism; for example: it could be appended to
-the value of the @code{LIBS} variable in your @file{Makefile}.
-@end table
-
-You have to choose: you link directly @strong{or} you link with the stub
-mechanism; that is: you use @code{@@UCL_LIBS@@} @strong{or} you use
-@code{@@UCL_STUB_LIBS@@}.
-
-
-If you use @code{USELESS_CONTAINERS_LIBRARY} in your @file{configure.ac}
-and everything works well, you should see something like this in the
-output of @command{configure}:
-
-@example
-checking for ucl-config... /usr/local/bin/ucl-config
-configure: UCL include directory /usr/local/include/ucl/0.9a34
-configure: UCL library directory /usr/local/lib
-configure: UCL library identifier ucl2.0
-configure: UCL stub static library identifier uclstaticstub2.0
-checking ucl.h usability... yes
-checking ucl.h presence... yes
-checking for ucl.h... yes
-checking for ucl_version in -lucl2.0... yes
-checking for ucl_init_stub_table in -luclstaticstub2.0... yes
-@end example
-
-Notice that the static stub library requires the @function{dlopen}
-function and its friends; so to use the stub mechanism you have to link
-with the @code{dl} library.  The linking test for
-@code{-luclstaticstub2.0} makes explicit use of the @code{-ldl} option
-to the linker as fifth argument to @code{AC_CHECK_LIB}.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-@c ------------------------------------------------------------
-@node overview pkgconfig
-@section Using pkgconfig to load @ucl{}
-
-
-@noindent
-@pkgconfig{} is a program (a compiled executable) that inspects a
-database of package meta informations and prints to its standard output
-channel informations about installed packages and libraries.  The @ucl{}
-installs a meta data file for use with @pkgconfig{}, it should be:
-
-@example
-$@{libdir@}/pkgconfig/ucl.pc
-@end example
-
-For the full list of available informations look in the file itself, and
-remember that the value of all the variables set in the meta file can be
-printed with:
-
-@example
-$ pkg-config ucl --variable=<VARNAME>
-@end example
-
-@noindent
-an example of output for the important variables is:
-
-@example
-$ pkg-config ucl --variable=PACKAGE_XVERSION
-0.8a3
-
-$ pkg-config ucl --variable=PACKAGE_VERSION
-0.8.0
-
-$ pkg-config ucl --variable=library_interface_version
-2.0
-
-$ pkg-config ucl --variable=pkgincludedir
-/usr/local/include/ucl/0.8a3
-
-$ pkg-config ucl --variable=libdir
-/usr/local/lib
-
-$ pkg-config ucl --variable=library_id
-ucl2.0
-
-$ pkg-config ucl --variable=stub_static_library_id
-uclstaticstub2.0
-@end example
-
-Since the suggested method to link with the @ucl{} is the stub
-mechanism, the @option{--libs} option outputs something like:
-
-@example
-$ pkg-config ucl --libs
--L/usr/local/lib -ldl -luclstaticstub2.0
-@end example
-
-@noindent
-while the list of preprocessor options is:
-
-@example
-$ pkg-config ucl --cflags
--DUCL_ENABLE_STUB=1 -I/usr/local/include/ucl/0.8a3
-@end example
-
-Notice that:
-
-@example
-$ pkg-config ucl --modversion
-2.0
-@end example
-
-@noindent
-because what matters is the version of the library interface, not the
-package distribution version.
-
-
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-@c ------------------------------------------------------------
+@c page
 @node overview error
 @section Error handling
 
@@ -594,9 +445,9 @@ For example: if a vector index is out of range, we have to make sure not
 to hand it to an insertion/extraction method; we have to test it first
 and make use of it only if the test result is good.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node overview size
 @section Structures size
 
@@ -649,9 +500,9 @@ ucl_graph_node_t        28
 ucl_graph_link_t        28
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node overview const
 @section Constification
 
@@ -711,9 +562,9 @@ the_function (const data_type_t * p)
 It is not beautiful.  But the ugliness is only in the @ucl{} code, the
 user does not see it.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node memory
 @chapter Memory allocation
 
@@ -721,18 +572,18 @@ user does not see it.
 @noindent
 The @ucl{} tries to avoid as much as possible the responsibility to
 allocate and free memory.  Dynamic structures based on trees or linked
-lists don't call any memory allocation function: the responsibility to
+lists do not call any memory allocation function: the responsibility to
 allocate @ucl{} data structures is delegated to the user's code.
 
 This makes the library a little more complex to use, but it also makes
-the library code simpler by reducing the error cases that have to be
-dealt with.  Also, the user's code can implement a custom allocator and
-feed memory blocks to the @ucl{} functions.  This may come in handy
-because the @ucl{} makes use of a lot of little data structures.
+library's code simpler by reducing the error cases that have to be dealt
+with.  Also, user's code can implement a custom allocator and feed
+memory blocks to the @ucl{} functions.  This may come in handy because
+the @ucl{} makes use of a lot of little data structures.
 
-The library makes use of a default allocator that reverts to the
-standard @function{malloc}, @function{realloc} and @function{free}
-functions.
+When needed: the library makes use of a default allocator that reverts
+to the standard @function{malloc}, @function{realloc} and
+@function{free} functions.
 
 @menu
 * memory typedefs::             Allocator data types.
@@ -742,8 +593,9 @@ functions.
 * memory macros::               Miscellaneous macros.
 @end menu
 
-
 @c ------------------------------------------------------------
+
+@c page
 @node memory typedefs
 @section Data types
 
@@ -840,6 +692,8 @@ allocator.alloc(allocator.data, &p, 0);
 
 
 @c ------------------------------------------------------------
+
+@c page
 @node memory functions
 @section Public interface
 
@@ -884,12 +738,15 @@ ucl_memory_alloc (void * dummy, void * q, size_t dim)
 
 
 @c ------------------------------------------------------------
+
+@c page
 @node memory blocks
 @section Memory blocks
 
 
 @noindent
-This module offers a set of preprocessor macros to handle memory blocks.
+This module offers a set of functions to handle memory blocks.  All the
+functions are declared as @code{__inline__}.
 
 
 @deftp {Struct Typedef} ucl_block_t
@@ -897,57 +754,69 @@ The type of memory block.  Fields description follows.
 
 @table @code
 @item size_t len
-The number of bytes in the block.
+The number of bytes in the block; can be zero.
 
-@item ucl_byte_t * ptr
-Pointer to the memory block.
+@item uint8_t * ptr
+Pointer to the memory block or @null{}.
 @end table
 @end deftp
 
 
-@deftp {Struct Typedef} ucl_const_block_t
-The type of memory block.  Fields description follows.
+@defmac UCL_BLOCK_NULL_VALUE
+@defmacx UCL_BLOCK_EMPTY
+@defmacx UCL_EMPTY_BLOCK
+Define the nil values to initialise a block.  To be used like this:
 
-@table @code
-@item size_t len
-The number of bytes in the block.
-
-@item const ucl_byte_t * ptr
-Pointer to the memory block.
-@end table
-@end deftp
+@example
+ucl_block_t     B = UCL_BLOCK_NULL_VALUE;
+@end example
+@end defmac
 
 
-@defmac ucl_block_set (ucl_block_t @var{block}, ucl_byte_t * @var{ptr}, size_t @var{len})
+@deftypefun void ucl_block_set (ucl_block_t * @var{block}, void * @var{ptr}, size_t @var{len})
 Set the fields of the block structure.
-@end defmac
+@end deftypefun
 
-@defmac ucl_block_reset (ucl_block_t @var{block})
+
+@deftypefun void ucl_block_reset (ucl_block_t * @var{block})
 Reset to zero all the fields of the block.
-@end defmac
+@end deftypefun
 
-@defmac ucl_block_alloc (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block}, size_t @var{dim})
-Allocate a memory block using the @var{allocator} and store pointer and
-size in the block structure.
-@end defmac
 
-@defmac ucl_block_is_null (ucl_block_t @var{block})
-Return true if the structure is referencing a memory block.
-@end defmac
+@deftypefun int ucl_block_is_null (ucl_block_t @var{block})
+Return true if the @code{ptr} field of @var{block} is @null{}.
+@end deftypefun
 
-@defmac ucl_block_clean_memory (ucl_block_t @var{block})
+
+@deftypefun void ucl_block_clean_memory (ucl_block_t @var{block})
 Reset to zero all the bytes in the memory block.
-@end defmac
+@end deftypefun
+
+
+@deftypefun ucl_block_t ucl_block_alloc (ucl_memory_allocator_t @var{allocator}, size_t @var{dim})
+@deftypefunx ucl_block_t ucl_block_realloc (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block}, size_t @var{new_dim})
+Allocate or reallocate a memory block using the @var{allocator} and
+return the resulting block.
+@end deftypefun
+
+
+@deftypefun void ucl_block_free (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block})
+If the @code{ptr} field of @var{block} is not @null{}: free the
+referenced memory block using @var{allocator}.
+@end deftypefun
 
 
 @c ------------------------------------------------------------
+
+@c page
 @node memory ascii
 @section Handling ASCII strings
 
 
 @noindent
-This module offers a set of preprocessor macros to handle
-@acronym{ASCII} coded, null terminated strings.
+This module offers a set of functions to handle @ascii{} coded, zero
+terminated strings.  All the functions are declared as
+@code{__inline__}.
 
 
 @deftp {Struct Typedef} ucl_ascii_t
@@ -955,25 +824,12 @@ The type of string.  Fields description follows.
 
 @table @code
 @item size_t len
-The number of characters in the block.  This does not include the
-terminating null character.
+The number of characters in the block; can be zero; it does @strong{not}
+include the terminating null character.
 
 @item char * ptr
-Pointer to the memory block.
-@end table
-@end deftp
-
-
-@deftp {Struct Typedef} ucl_const_ascii_t
-The type of string.  Fields description follows.
-
-@table @code
-@item size_t len
-The number of characters in the block.  This does not include the
-terminating null character.
-
-@item const char * ptr
-Pointer to the memory block.
+Pointer to the memory block or @null{}; the last @code{char} must be
+zero.
 @end table
 @end deftp
 
@@ -990,55 +846,70 @@ the array of pointers.
 @end deftp
 
 
-In the macros @var{ascii} is the name of the structure itself,
-@strong{not} the name of a pointer to the structure.
+@defmac UCL_ASCII_NULL_VALUE
+@defmacx UCL_ASCII_EMPTY
+@defmacx UCL_EMPTY_ASCII
+Define the nil values to initialise a ascii.  To be used like this:
+
+@example
+ucl_ascii_t     B = UCL_ASCII_NULL_VALUE;
+@end example
+@end defmac
 
 
-@defmac ucl_ascii_set (@var{ascii}, @var{ptr}, @var{len})
+
+@deftypefun void ucl_ascii_set (ucl_ascii_t * @var{ascii}, void * @var{ptr}, size_t @var{len})
 Initialise the fields of a structure.
-@end defmac
+@end deftypefun
 
 
-@defmac ucl_ascii_reset (@var{ascii})
+@deftypefun void ucl_ascii_reset (ucl_ascii_t * @var{ascii})
 Reset to zero the fields.
-@end defmac
+@end deftypefun
 
 
-@defmac ucl_ascii_const (@var{ascii}, @var{string})
-Initialise the structure with a statically allocted @var{string}.
-@end defmac
-
-@defmac ucl_ascii_alloc (ucl_memory_allocator_t @var{allocator}, ucl_ascii_t @var{block}, size_t @var{dim})
-Allocate a memory block using the @var{allocator} and stores pointer
-and size in the block structure.
-
-@var{dim} is the number of characters that can be stored in the buffer,
-with the exclusion of the terminating null one.  The size of the
-allocated block is @code{@var{dim}+1}.
-
-The @code{len} field of @var{block} is set to @var{dim}.
-@end defmac
+@deftypefun ucl_ascii_t ucl_ascii_const (const char * @var{string})
+Build and return a structure initialised with @var{string}.  The length
+is determined with the standard @function{strlen} function.
+@end deftypefun
 
 
-@defmac ucl_ascii_is_null (@var{ascii})
+@deftypefun int ucl_ascii_is_null (ucl_ascii_t @var{ascii})
 Return true if the pointer field is set to @null{}.
-@end defmac
+@end deftypefun
 
-@defmac ucl_ascii_clean_memory (@var{ascii})
+
+@deftypefun void ucl_ascii_clean_memory (ucl_ascii_t @var{ascii})
 Reset the block of memory to zero bytes.
-@end defmac
+@end deftypefun
 
 
-@defmac mcl_block_from_ascii (@var{block}, @var{ascii})
-Copy the fields from a @code{ucl_ascii_t} to a @code{ucl_block_t}.
-@end defmac
+@deftypefun ucl_block_t ucl_block_from_ascii (ucl_ascii_t @var{ascii})
+Return a block initialised with the fields of an @ascii{} block.
+@end deftypefun
 
-@defmac mcl_ascii_from_block (@var{ascii}, @var{block})
-Copy the fields from a @code{ucl_block_t} to a @code{ucl_ascii_t}.
-@end defmac
+@deftypefun ucl_ascii_t ucl_ascii_from_block (ucl_block_t @var{block})
+Return an @ascii{} block initialised with the fields of a block.
+@end deftypefun
+
+
+@deftypefun ucl_ascii_t ucl_ascii_alloc (ucl_memory_allocator_t @var{allocator}, size_t @var{dim})
+@deftypefunx ucl_ascii_t ucl_ascii_realloc (ucl_memory_allocator_t @var{allocator}, ucl_ascii_t @var{ascii}, size_t @var{new_dim})
+Allocate or reallocate an @ascii{} block using @var{allocator};
+@var{dim} and @var{new_dim} are the number of characters to be stored in
+the block, with the @strong{exclusion} of the terminating zero.
+@end deftypefun
+
+
+@deftypefun void ucl_ascii_free (ucl_memory_allocator_t @var{allocator}, ucl_ascii_t @var{ascii})
+If the @code{ptr} field of @var{ascii} is not @null{}: free the
+referenced memory block using @var{allocator}.
+@end deftypefun
 
 
 @c ------------------------------------------------------------
+
+@c page
 @node memory macros
 @section Miscellaneous macros
 
@@ -1048,19 +919,14 @@ Copy the fields from a @code{ucl_block_t} to a @code{ucl_ascii_t}.
 
 @defmac ucl_struct_clean (@var{struct_p}, @var{type})
 @defmacx ucl_struct_reset (@var{struct_p}, @var{type})
-Resets to zero, using @function{memset}, the structure of @var{type}
+Reset to zero, using @function{memset}, the structure of @var{type}
 pointed to by @var{struct_p}.
 @end defmac
 
 
-@defmac ucl_struct_alloc (@var{struct_p}, @var{type})
-Allocates, using @function{ucl_memory_alloc}, and resets, using
-@function{ucl_struct_clean}, a struct of @var{type} and save the pointer
-info @var{struct_p}.
-@end defmac
-
-
-Examples:
+@defmac ucl_struct_alloc (ucl_memory_allocator_t @var{allocator}, void * @var{p}, @var{type})
+Allocate a new structure of @var{type} using @var{alloctor} and store a
+pointer to it in @var{p}.  Example:
 
 @example
 typedef struct a_t @{
@@ -1069,11 +935,13 @@ typedef struct a_t @{
 
 a_t * p;
 
-ucl_struct_alloc(p, a_t);
+ucl_struct_alloc(allocator, p, a_t);
 @end example
+@end defmac
 
+@c ------------------------------------------------------------
 
-@c ---------------------------------------------------------------------
+@c page
 @node typedefs
 @chapter Data types you have to know
 
@@ -1091,9 +959,9 @@ sections dedicated to containers.  Here common data types are described.
 @end menu
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node typedefs value
 @section Collected values and others
 
@@ -1301,9 +1169,9 @@ allocator.alloc(allocator.data, &preallocated_links,
 
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node typedefs ranges
 @section Range selectors
 
@@ -1316,7 +1184,7 @@ allocator.alloc(allocator.data, &preallocated_links,
 @end menu
 
 
-@c ------------------------------------------------------------
+@c page
 @node typedefs ranges macros
 @subsection Macros to handle ranges
 
@@ -1377,7 +1245,7 @@ Return true if the ranges are equal.
 @end defmac
 
 
-@c ------------------------------------------------------------
+@c page
 @node typedefs ranges types
 @subsection Type of ranges
 
@@ -1405,7 +1273,7 @@ Ranges of values.
 @end deftp
 
 
-@c ------------------------------------------------------------
+@c page
 @node typedefs compar
 @section Comparison functions
 
@@ -1461,9 +1329,9 @@ An alias for @code{ucl_valcmp_t}.
 @end deftypefn
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node typedefs hash
 @section Hash functions
 
@@ -1496,9 +1364,9 @@ See the hash table description for more details (@ref{hash} the hash
 table container).
 @end deftypefn
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node typedefs callback
 @section Callback functions
 
@@ -1615,9 +1483,9 @@ ucl_callback_invoke(cb, data);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
-@c ---------------------------------------------------------------------
+@c page
 @node containers
 @chapter The data structures
 
@@ -1635,7 +1503,7 @@ ucl_callback_invoke(cb, data);
 @end menu
 
 
-@c ------------------------------------------------------------
+@c page
 @node btree
 @section The binary tree container
 
@@ -1687,7 +1555,7 @@ are provided: to append nodes to other nodes; to extract nodes from the
 tree; to traverse the hierarchy and to find particularly interesting
 nodes.
 
-@c ------------------------------------------------------------
+@c page
 @node btree creation
 @subsection Building btrees hierarchies
 
@@ -1785,9 +1653,9 @@ ucl_btree_getbro(c) == NULL
 (ucl_btree_getson(d) == NULL) && (ucl_btree_getbro(d) == NULL)
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree inspection
 @subsection Accessing nodes
 
@@ -1809,9 +1677,9 @@ Return a pointer to the son of @var{self} or @null{} if the node has no
 son.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree removing
 @subsection Removing elements from a btree
 
@@ -1838,9 +1706,9 @@ ucl_btree_setbro(a, NULL);
 ucl_btree_setdad(b, NULL);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree find
 @subsection Finding special nodes
 
@@ -1913,9 +1781,9 @@ Return a pointer to the deepest son in the @var{self} sub--hierarchy,
 or @var{self} itself if it has no son.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree iteration
 @subsection Iterations in a btree hierarchy
 
@@ -1928,7 +1796,7 @@ or @var{self} itself if it has no son.
 @end menu
 
 
-@c ------------------------------------------------------------
+@c page
 @node btree inorder iteration
 @subsubsection Inorder iteration
 
@@ -2106,9 +1974,9 @@ while (cur != end)
 nodes in a subtree; this code should work even if: @code{root == cur ==
 end}.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree preorder iteration
 @subsubsection Preorder iteration
 
@@ -2181,9 +2049,9 @@ while (cur != end);
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree postorder iteration
 @subsubsection Postorder iteration
 
@@ -2258,9 +2126,9 @@ while (cur != end);
 @noindent
 @code{cur} can't be null in the loop.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node btree level iteration
 @subsubsection Level order iteration
 
@@ -2302,9 +2170,9 @@ while (cur != NULL);
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular
 @section The circular list
 
@@ -2347,9 +2215,9 @@ The handling of list links is derived from the handling of elements in
 the @acronym{TCL} (Tool Command Language) hash table by John Ousterhout
 and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular creation
 @subsection Creating and destroying circulars
 
@@ -2405,9 +2273,9 @@ while (ucl_circular_size(circ))
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular adding
 @subsection Adding elements to a circular
 
@@ -2437,9 +2305,9 @@ ucl_circular_setval(link_p, val);
 ucl_circular_insert(circ, link_p);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular removing
 @subsection Removing elements from a circular
 
@@ -2471,7 +2339,7 @@ if (NULL != link_p)
 @end example
 
 
-@c ------------------------------------------------------------
+@c page
 @node circular moving
 @subsection Moving the cursor
 
@@ -2489,9 +2357,9 @@ current position, @var{times} is the backward offset.  If the container
 is empty or the offset is zero nothing happens.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular search
 @subsection Searching elements
 
@@ -2507,9 +2375,9 @@ equal to @var{val}; return a pointer to the link, or @null{} if the
 value was not found.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular ops
 @subsection Various operations on a circular
 
@@ -2535,9 +2403,9 @@ Return a the data value in the link.
 Store a value in a link.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node circular data
 @subsection Another usage for links
 
@@ -2563,9 +2431,9 @@ val.ptr = &(((my_link_t *)link_p)->bigdata);
 ucl_circular_setval(link_p, val);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph
 @section The graph structure
 
@@ -2601,9 +2469,9 @@ The type of the link structure.  It should be treated as opaque even if
 it is not.
 @end deftp
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph implementation
 @subsection How it's done
 
@@ -2668,9 +2536,9 @@ node, one of incoming links of the destination node.
     ------------------          -----------------
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph insert
 @subsection Inserting links and nodes
 
@@ -2717,9 +2585,9 @@ Return true if there is a link between @var{src} and @var{dst}, no
 matter what is the direction.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph extract
 @subsection Extracting links and nodes
 
@@ -2748,7 +2616,7 @@ allocator.alloc(allocator.data, &link_p, 0);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Erasing a node with loops
 
@@ -2790,7 +2658,7 @@ allocator.alloc(allocator.data, &node_p, 0);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Erasing a node with loop macros
 
@@ -2837,7 +2705,7 @@ allocator.alloc(allocator.data, &node_p, 0);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Erasing a node with a link destructor
 
@@ -2895,7 +2763,7 @@ link_destructor (void * p)
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Erasing a node by collecting links
 
@@ -2941,9 +2809,9 @@ value = ucl_graph_node_get_value(node_p)
 allocator.alloc(allocator.data, &node_p, 0);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph merge
 @subsection Merging links
 
@@ -3038,7 +2906,7 @@ free_memory_of(in);
 @end example
 
 
-@c ------------------------------------------------------------
+@c page
 @node graph node list
 @subsection Chaining nodes
 
@@ -3214,9 +3082,9 @@ UCL_GRAPH_NODE_LIST_DELETE_LOOP(first_p, current_p, tmp_p)
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph value
 @subsection Accessing values
 
@@ -3238,9 +3106,9 @@ Return the current value in the structure.
 Set/get the mark value, a field of @code{ucl_value_t} type.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph link iter
 @subsection Link iterators
 
@@ -3324,9 +3192,9 @@ Return a pointer to the next link in the chain.  The return value is
 @null{} if @var{link} is the last link.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph ops
 @subsection Various operations on a graph
 
@@ -3336,9 +3204,9 @@ Return a pointer to the next link in the chain.  The return value is
 Return the number of incoming or outgoing links.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node graph dfs
 @subsection Depth first search
 
@@ -3365,7 +3233,7 @@ with outgoing links only: the @dfs{} does not touch all the nodes.
 the links; one that does not.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection @dfs{} example
 
@@ -3428,7 +3296,7 @@ the values of counter when entering a node and leaving a node, we can
 infer properties of the graph.
 @end enumerate
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 
 @subsubsection Programming interface
@@ -3521,9 +3389,9 @@ ucl_graph_initialise_dfs_handle(&search_handle);
 ucl_graph_finalise_dfs_handle(&search_handle);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash
 @section The hash table structure
 
@@ -3569,9 +3437,9 @@ hash structure in the @tcl{} (Tool Command Language) source code, by
 John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 @tcl{}).  However, no code comes from @tcl{}.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash implementation
 @subsection How it's done
 
@@ -3607,7 +3475,7 @@ the slots are marked as used, even when the bucket is set to
 we never reallocate the vector all the memory is used to hold buckets.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Elements insertion and removal
 
@@ -3654,7 +3522,7 @@ If the keys are such that the hash function distributes entries
 uniformly over all the buckets, the time spent to find an entry is (more
 or less) constant.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Resizing
 
@@ -3684,9 +3552,9 @@ Enlarging and restricting changes the number of buckets, so it requires
 a rehashing of all the entries in the table: this is expensive.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash creation
 @subsection Creating and destroying hash tables
 
@@ -3798,9 +3666,9 @@ ucl_hash_destructor(table);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash adding
 @subsection Adding elements to a hash table
 
@@ -3838,9 +3706,9 @@ if (NULL == entry_p)
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash removing
 @subsection Removing elements from a hash table
 
@@ -3880,9 +3748,9 @@ if (NULL != entry_p)
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash ops
 @subsection Various operations on a hash table
 
@@ -3955,9 +3823,9 @@ overwritten.
 Return the value stored in an entry structure.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash resizing
 @subsection Resizing a hash table
 
@@ -3983,9 +3851,9 @@ If an error occurs reallocating the vector: the table is not corrupted.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash iterator
 @subsection Visiting elements in the table
 
@@ -4018,9 +3886,9 @@ for (ucl_hash_iterator(hash, iterator);
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node hash functions
 @subsection Provided hash function
 
@@ -4034,9 +3902,9 @@ The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 (@ref{references}).
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node heap
 @section The heap structure
 
@@ -4076,9 +3944,9 @@ A one--element array of @code{ucl_heap_struct_t}.
 The type of heap nodes.
 @end deftp
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node heap creation
 @subsection Creating and destroying heap
 
@@ -4113,9 +3981,9 @@ while (ucl_heap_size(heap))
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node heap adding
 @subsection Adding elements to a heap
 
@@ -4141,9 +4009,9 @@ ucl_heap_setval(node_p, value);
 ucl_heap_insert(heap, node_p);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node heap removing
 @subsection Removing elements from a heap
 
@@ -4169,9 +4037,9 @@ value  = ucl_heap_getval(node_p);
 allocator.alloc(allocator.data, &node_p, 0);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node heap ops
 @subsection Various operations on a heap
 
@@ -4198,9 +4066,9 @@ Merge two heaps: nodes from @var{other} are extracted and inserted into
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node list
 @section The linked list structure
 
@@ -4237,7 +4105,7 @@ the @acronym{TCL} (Tool Command  Language) hash table by John Ousterhout
 and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
 
 
-@c ------------------------------------------------------------
+@c page
 @node list creation
 @subsection Creating and destroying lists
 
@@ -4283,9 +4151,9 @@ while (NULL != link_p)
 @noindent
 popping elements from the front or from the back makes no difference.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node list adding
 @subsection Adding elements to a list
 
@@ -4347,9 +4215,9 @@ Insert a link at the end of the list.  This function can be used to
 insert an element in an empty list.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node list removing
 @subsection Removing elements from a list
 
@@ -4389,9 +4257,9 @@ Remove an element at the end of the list.  This is a wrapper for
 @function{ucl_list_extract}.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node list ops
 @subsection Various operations on a list
 
@@ -4441,9 +4309,9 @@ Return a pointer to the previous link of @var{link_p} or @null{} if
 @var{link_p} is the first in the chain.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node list iteration
 @subsection Iteration over a list
 
@@ -4482,9 +4350,9 @@ for (link_p = ucl_list_back(list); link_p; link_p = ucl_list_prev(link_p))
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map
 @section The map structure
 
@@ -4531,7 +4399,7 @@ The handling of nodes is influenced by the handling of elements in the
 others (@url{http://www.tcl.tk/} for more about @acronym{TCL}).
 
 
-@c ------------------------------------------------------------
+@c page
 @node map intro
 @subsection Introduction to operations and implementation
 
@@ -4566,9 +4434,9 @@ multiple values to be associated to the same key, and the one that
 doesn't.  We call the first a @dfn{multimap} and the second a @dfn{simple
 map}.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map creation
 @subsection Creating and destroying maps
 
@@ -4606,9 +4474,9 @@ from the map.   If the elements are not extracted before this function is
 invoked, at least memory leakage will happen.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map adding/removing
 @subsection Adding and removing elements to a map
 
@@ -4689,9 +4557,9 @@ if (NULL != link)
   @}
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map accessors
 @subsection Accessing values and keys
 
@@ -4715,9 +4583,9 @@ Return the key in a map link.
 Return the value in a map link. 
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map ops
 @subsection Various operations on a map
 
@@ -4785,9 +4653,9 @@ are greater than the selected one.
 Return the number of elements in the map.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node map iterators
 @subsection Iteration over a map
 
@@ -4819,9 +4687,9 @@ Initialise an iteration over the elements with the selected key,
 starting with the last element.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node set iterators
 @subsection Composing map iterators
 
@@ -4901,7 +4769,7 @@ Subtraction: 0 1 2 3
 @end example
 
 
-@c ------------------------------------------------------------
+@c page
 @node tree
 @section The tree structure
 
@@ -4951,7 +4819,7 @@ The type of the tree nodes.
 @end deftp
 
 
-@c ------------------------------------------------------------
+@c page
 @node tree implementation
 @subsection How it's done
 
@@ -4998,7 +4866,7 @@ A and B are brothers, and children of the same parent node.
 @end table
 
 
-@c ------------------------------------------------------------
+@c page
 @node tree creation
 @subsection Creating tree nodes
 
@@ -5015,9 +4883,9 @@ members of the structure referenced by @var{nod_p}.  This is recommended
 before inserting a node into a tree.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node tree testing
 @subsection Testing relationships between nodes
 
@@ -5057,9 +4925,9 @@ Return true if the node referenced by @var{self} has a son, otherwise
 return false.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node tree relatives
 @subsection Accessing or setting the relatives of a node
 
@@ -5101,9 +4969,9 @@ referenced by @var{self}; it can be a pointer to @var{self} itself, if
 @var{self} is the last.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node tree adding
 @subsection Adding elements to a tree
 
@@ -5265,9 +5133,9 @@ ucl_tree_insert_next( 2, A )
 the @code{D}, @code{B} and @code{C} nodes are detached and will be lost
 if we don't keep a reference to them.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node tree removing
 @subsection Removing elements from a tree
 
@@ -5368,9 +5236,9 @@ are reset to @null{}.
 @end example
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node tree iterators
 @subsection Traversing a tree
 
@@ -5395,7 +5263,7 @@ Initialises a post--order iteration.
 @end deftypefun
 
 
-@c ------------------------------------------------------------
+@c page
 @node vector
 @section The vector structure
 
@@ -5468,9 +5336,9 @@ ucl_vector_array_t    array = @{
 @end example
 @end deftp
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector implementation
 @subsection How it's done
 
@@ -5703,9 +5571,9 @@ The padding area, whose starting size can be configured, has the purpose
 of allowing fast insertion of elements at the beginning, with no
 reallocation of the memory block.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector fields
 @subsection Fields and configuration for vectors
 
@@ -5785,7 +5653,7 @@ The declaration allows overriding, for example:
 #endif
 @end example
 
-@c ------------------------------------------------------------
+@c page
 @node vector creation
 @subsection Creating and destroying vectors
 
@@ -5979,9 +5847,9 @@ ucl_vector_swallow_block(vector, block);
 Register the function+context used to compare elements.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector indexes
 @subsection Converting indexes to pointers
 
@@ -6212,9 +6080,9 @@ Return the range of slots referenced by a block.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector adding
 @subsection Adding elements to a vector
 
@@ -6297,9 +6165,9 @@ ptr   = ucl_vector_insert_sort(vector, &data);
 @end example
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector removing
 @subsection Removing elements from a vector
 
@@ -6349,9 +6217,9 @@ ucl_vector_erase(V, ptr);
 ucl_vector_restrict(V);
 @end example
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector ops
 @subsection Various operations on a vector
 
@@ -6453,9 +6321,9 @@ vector, so it is slow.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector find
 @subsection Finding elements
 
@@ -6488,9 +6356,9 @@ sorted.  If there are few elements in the vector: a linear search is
 performed, else a binary search is used.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector iteration
 @subsection Iteration over a vector
 
@@ -6557,9 +6425,9 @@ selected by @var{range}.  @var{range} must be a valid range for
 @var{self}, we can test this with @function{ucl_vector_range_is_valid}.
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector memory
 @subsection Allocating and freeing memory
 
@@ -6664,7 +6532,7 @@ By default the @ucl{} allocator is used (@ref{memory functions}), but it
 is possible to register a vector--specific allocator.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Enlarging
 
@@ -6713,7 +6581,7 @@ limits, across the current upper index limit.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+@c ------------------------------------------------------------
 
 @subsubsection Restricting
 
@@ -6767,9 +6635,9 @@ It is safe to call this function only between a call to
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector as pqueue
 @subsection Using a vector as a priority queue
 
@@ -6802,9 +6670,9 @@ Then @function{ucl_vector_front} or @function{ucl_vector_back} can be
 used to extract the element with lesser or greater key.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high
 @subsection High level functions
 
@@ -6824,9 +6692,9 @@ some of them invoke the enlarge/restrict memory functions.
 * vector high apply::           Applying functions.
 @end menu
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high stack
 @subsubsection Stack and queue
 
@@ -6860,9 +6728,9 @@ Notice that the ``top'' operations of the stack and queue are already
 implemented by @function{ucl_vector_front} and
 @function{ucl_vector_back}.
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high append
 @subsubsection Appending data to a vector
 
@@ -6922,9 +6790,9 @@ array rather than from application parameters.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high insert
 @subsubsection Inserting into a vector
 
@@ -6965,9 +6833,9 @@ dimension of @var{target}.  @var{offset} must be a valid value for
 
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high erase
 @subsubsection Removing from a vector
 
@@ -6978,9 +6846,9 @@ Erase all the elements in the selected range.
 @strong{This function invokes @function{ucl_vector_restrict}.}
 @end deftypefun
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high access
 @subsubsection Setters and getters
 
@@ -7018,9 +6886,9 @@ enough slots in @var{target} to fill the block.  The length of
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high compare
 @subsubsection Comparing vectors
 
@@ -7066,9 +6934,9 @@ are equal.
 @end deftypefun
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node vector high apply
 @subsubsection Applying functions
 
@@ -7350,9 +7218,9 @@ array rather than a list of arguments.
 
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node iterators
 @chapter Container iteration
 
@@ -7418,7 +7286,7 @@ for (ucl_map_iterator_inorder(this, iterator);
 @end example
 
 
-@c ------------------------------------------------------------
+@c page
 @node generic
 @chapter Generic functions
 
@@ -7508,9 +7376,9 @@ version 2.4, modified to use @var{compar}.
 
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 @node stub
 @chapter The stubs mechanism
 
@@ -7599,12 +7467,12 @@ gcc ourcode.o -lucl1.0
 @end enumerate
 
 
-@c ------------------------------------------------------------
+@c page
 
 @include libversion.texiinc
 @include stubmechanism.texiinc
 
-@c ---------------------------------------------------------------------
+@c page
 @node references
 @appendix Bibliography and references
 
@@ -7617,14 +7485,14 @@ dati in C}.  McGraw--Hill, 1993.
 Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 
 
-@c ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 @c ------------------------------------------------------------
+
+@c page
 
 @include gpl.texiinc
 @include fdl.texiinc
 
-@c ---------------------------------------------------------------------
+@c page
 @node concept index
 @appendix An entry for each concept
 @printindex cp
