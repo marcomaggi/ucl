@@ -156,7 +156,7 @@ static void	reallocate_block	(ucl_vector_t this, size_t new_size_in_bytes);
 static inline void move_used_bytes_at_beginning		(ucl_vector_t this);
 static inline void move_used_bytes_at_end		(ucl_vector_t this);
 static inline void move_used_bytes_at_byte_pointer	(ucl_vector_t this,
-							 ucl_byte_t *p);
+							 uint8_t *p);
 static inline void move_used_bytes_at_index_offset	(ucl_vector_t this,
 							 ucl_vector_index_t offset);
 
@@ -175,12 +175,12 @@ static void iterator_range_next	(ucl_iterator_t iterator, ucl_bool_t forward);
 
 
 /* Helper functions for "ucl_vector_insert()". */
-static ucl_byte_t *	\
+static uint8_t *	\
    insert_slot_moving_data_toward_the_beginning	(ucl_vector_t this,
-						 ucl_byte_t * pointer_to_slot_p);
-static ucl_byte_t *	\
+						 uint8_t * pointer_to_slot_p);
+static uint8_t *	\
    insert_slot_moving_data_toward_the_end	(ucl_vector_t this,
-						 ucl_byte_t * pointer_to_slot_p);
+						 uint8_t * pointer_to_slot_p);
 /* Helper functions for "ucl_vector_erase()". */
 static inline void \
 erase_range_moving_tail_data_toward_the_beginning (ucl_vector_t this,
@@ -288,7 +288,7 @@ ucl_vector_initialise_step_down (ucl_vector_t self, size_t step_down)
 stub(2006-03-02-22-48-28) void
 ucl_vector_initialise_buffer (ucl_vector_t self)
 {
-  ucl_vector_initialise(self, sizeof(ucl_byte_t));
+  ucl_vector_initialise(self, sizeof(uint8_t));
   ucl_vector_initialise_size(self, UCL_VECTOR_BUFFER_PAGE_SIZE);
   ucl_vector_initialise_pad(self, 0);
   ucl_vector_initialise_step_up(self,   UCL_VECTOR_BUFFER_PAGE_SIZE);
@@ -434,11 +434,11 @@ ucl_vector_mark_allocated_range_as_used (ucl_vector_t self, ucl_range_t range)
 
   potential_first_used_slot = self->first_allocated_slot + ucl_range_min(range) * self->slot_dimension;
   potential_last_used_slot  = self->first_allocated_slot + ucl_range_max(range) * self->slot_dimension;
-  assert((ucl_byte_t *)potential_first_used_slot <= (ucl_byte_t *)potential_last_used_slot);
-  assert((ucl_byte_t *)potential_first_used_slot >= (ucl_byte_t *)self->first_allocated_slot);
-  assert((ucl_byte_t *)potential_first_used_slot <= (ucl_byte_t *)self->last_allocated_slot);
-  assert((ucl_byte_t *)potential_last_used_slot  >= (ucl_byte_t *)self->first_allocated_slot);
-  assert((ucl_byte_t *)potential_last_used_slot  <= (ucl_byte_t *)self->last_allocated_slot);
+  assert((uint8_t *)potential_first_used_slot <= (uint8_t *)potential_last_used_slot);
+  assert((uint8_t *)potential_first_used_slot >= (uint8_t *)self->first_allocated_slot);
+  assert((uint8_t *)potential_first_used_slot <= (uint8_t *)self->last_allocated_slot);
+  assert((uint8_t *)potential_last_used_slot  >= (uint8_t *)self->first_allocated_slot);
+  assert((uint8_t *)potential_last_used_slot  <= (uint8_t *)self->last_allocated_slot);
   self->first_used_slot = potential_first_used_slot;
   self->last_used_slot  = potential_last_used_slot;
 }
@@ -479,8 +479,8 @@ pointer_to_slot_or_null (self, idx, slot_dimension_or_zero)
      ucl_vector_index_t idx;
      size_t		slot_dimension_or_zero;
 {
-  ucl_byte_t *	pointer_to_slot_p;
-  ucl_byte_t *	max_allowed_value_p;
+  uint8_t *	pointer_to_slot_p;
+  uint8_t *	max_allowed_value_p;
 
 
   ASSERT_INVARIANTS(self);
@@ -498,7 +498,7 @@ ucl_vector_last_index (const ucl_vector_t self)
 stub(2005-09-23-18-16-49) ucl_vector_index_t
 ucl_vector_slot_to_index (const ucl_vector_t self, const void *_pointer_to_slot_p)
 {
-  const ucl_byte_t * pointer_to_slot_p = _pointer_to_slot_p;
+  const uint8_t * pointer_to_slot_p = _pointer_to_slot_p;
   return (pointer_to_slot_p - self->first_used_slot)/self->slot_dimension;
 }
 
@@ -507,7 +507,7 @@ ucl_vector_slot_to_index (const ucl_vector_t self, const void *_pointer_to_slot_
 stub(2005-09-23-18-16-51) ucl_bool_t
 ucl_vector_pointer_is_valid_slot (const ucl_vector_t self, const void *_pointer_to_slot_p)
 {
-  const ucl_byte_t *	pointer_to_slot_p = _pointer_to_slot_p;
+  const uint8_t *	pointer_to_slot_p = _pointer_to_slot_p;
 
   return ((pointer_to_slot_p >= self->first_used_slot) &&
 	  (pointer_to_slot_p <= self->last_used_slot)  &&
@@ -584,7 +584,7 @@ stub(2005-09-23-18-17-01) void *
 ucl_vector_insert (ucl_vector_t self, void *_pointer_to_slot_p)
 {
   ucl_bool_t	room_at_the_end, room_at_the_beginning;
-   ucl_byte_t *	pointer_to_slot_p = _pointer_to_slot_p;
+   uint8_t *	pointer_to_slot_p = _pointer_to_slot_p;
 
 
   debug("making room at pointer %p, first %p, index %d",
@@ -662,10 +662,10 @@ ucl_vector_insert (ucl_vector_t self, void *_pointer_to_slot_p)
   ASSERT_INVARIANTS(self);
   return pointer_to_slot_p;
 }
-static ucl_byte_t *
+static uint8_t *
 insert_slot_moving_data_toward_the_beginning (self, pointer_to_slot_p)
      ucl_vector_t	self;
-     ucl_byte_t *	pointer_to_slot_p;
+     uint8_t *	pointer_to_slot_p;
 {
   assert(there_is_room_at_the_beginning(self));
   debug("here %p", pointer_to_slot_p);
@@ -679,10 +679,10 @@ insert_slot_moving_data_toward_the_beginning (self, pointer_to_slot_p)
   debug("there %p", pointer_to_slot_p);
   return pointer_to_slot_p;
 }
-static ucl_byte_t *
+static uint8_t *
 insert_slot_moving_data_toward_the_end (self, pointer_to_slot_p)
      ucl_vector_t	self;
-     ucl_byte_t *	pointer_to_slot_p;
+     uint8_t *	pointer_to_slot_p;
 {
   assert(there_is_room_at_the_end(self));
   if (pointer_to_slot_p != self->last_used_slot)
@@ -714,7 +714,7 @@ insert_slot_moving_data_toward_the_end (self, pointer_to_slot_p)
 stub(2005-09-23-18-17-07) void *
 ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
 {
-  ucl_byte_t *		p = NULL;
+  uint8_t *		p = NULL;
   ucl_vector_index_t	size;
 
 
@@ -727,7 +727,7 @@ ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
     }
   else if (size <= SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH)
     {
-      ucl_valcmp_t	compar = self->compar;
+      ucl_comparison_t	compar = self->compar;
       ucl_value_t	a, b;
 
 
@@ -750,7 +750,7 @@ ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
       size_t		i, lower_index_limit, upper_index_limit;
       size_t		current_index, new_current_index;
       int		match;
-      ucl_valcmp_t	compar = self->compar;
+      ucl_comparison_t	compar = self->compar;
       ucl_value_t	a, b;
 
 
@@ -812,7 +812,7 @@ stub(2005-09-23-18-17-11) void
 ucl_vector_erase (ucl_vector_t self, void *_pointer_to_slot_p)
 {
   ucl_bool_t			room_at_the_end, room_at_the_beginning;
-  ucl_byte_t *			pointer_to_slot_p = _pointer_to_slot_p;
+  uint8_t *			pointer_to_slot_p = _pointer_to_slot_p;
   ucl_byte_pointer_range_t	range;
 
 
@@ -873,7 +873,7 @@ erase_range_moving_head_data_toward_the_end (self, range)
      ucl_vector_t		self;
      ucl_byte_pointer_range_t	range;
 {
-  ucl_byte_t *	new_first;
+  uint8_t *	new_first;
 
   debug("move head data toward the end");
   new_first = self->first_used_slot + (range.max - range.min + self->slot_dimension);
@@ -897,7 +897,7 @@ ucl_vector_size (const ucl_vector_t self)
   return compute_used_slots(self);
 }
 stub(2005-09-23-18-17-22) void
-ucl_vector_set_compar (ucl_vector_t self, ucl_valcmp_t compar)
+ucl_vector_set_compar (ucl_vector_t self, ucl_comparison_t compar)
 {
   self->compar = compar;
 }
@@ -979,7 +979,7 @@ stub(2006-10-06-11-47-11) ucl_bool_t
 ucl_vector_sorted (ucl_vector_t self)
 {
   size_t	size = ucl_vector_size(self);
-  ucl_valcmp_t	compar = self->compar;
+  ucl_comparison_t	compar = self->compar;
   ucl_value_t	a, b;
 
   for (size_t i=1; i<size; ++i)
@@ -1059,7 +1059,7 @@ static void
 iterator_next (ucl_iterator_t iterator, ucl_bool_t forward)
 {
   const ucl_vector_struct_t *	self = iterator->container;
-  ucl_byte_t *			current_p = iterator->iterator;
+  uint8_t *			current_p = iterator->iterator;
 
   ASSERT_INVARIANTS(self);
   if (forward)
@@ -1126,8 +1126,8 @@ static void
 iterator_range_next (ucl_iterator_t iterator, ucl_bool_t forward)
 {
   const ucl_vector_struct_t *	self = iterator->container;
-  ucl_byte_t *			current_p = iterator->iterator;
-  ucl_byte_t *			last_p = iterator->ptr1;
+  uint8_t *			current_p = iterator->iterator;
+  uint8_t *			last_p = iterator->ptr1;
 
   ASSERT_INVARIANTS(self);
   if (forward)
@@ -1344,13 +1344,13 @@ allocate_block (ucl_vector_t self, size_t number_of_slots)
   assert(p);
   self->first_allocated_slot	= p;
   self->last_allocated_slot	=
-    ((ucl_byte_t *)p) + number_of_bytes - self->slot_dimension;
+    ((uint8_t *)p) + number_of_bytes - self->slot_dimension;
 }
 static void
 reallocate_block (ucl_vector_t self, size_t new_number_of_allocated_bytes)
 {
   size_t	offset_of_first_used_slot, offset_of_last_used_slot;
-  ucl_byte_t *	p;
+  uint8_t *	p;
   
 
   assert(0 == (new_number_of_allocated_bytes % self->slot_dimension));
@@ -1379,14 +1379,14 @@ reallocate_block (ucl_vector_t self, size_t new_number_of_allocated_bytes)
 stub(2005-09-23-18-17-56) void *
 ucl_vector_find (const ucl_vector_t self, const void * data_p)
 {
-  ucl_byte_t *	p;
+  uint8_t *	p;
 
 
   ASSERT_INVARIANTS(self); ASSERT_COMPAR_FUNCTION_IS_SET(self); assert(data_p);
 
   if (ucl_vector_size(self))
     {
-      ucl_valcmp_t	compar = self->compar;
+      ucl_comparison_t	compar = self->compar;
       ucl_value_t	a, b;
 
       for (p = self->first_used_slot; p <= self->last_used_slot;
@@ -1417,9 +1417,9 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
 {
   size_t	size, i, lower_index_limit, upper_index_limit;
   size_t	current_index, new_current_index;
-  ucl_byte_t *	p;
+  uint8_t *	p;
   int		match;
-  ucl_valcmp_t	compar = self->compar;
+  ucl_comparison_t	compar = self->compar;
   ucl_value_t	a, b;
 
 
@@ -1526,7 +1526,7 @@ ucl_vector_append_block (ucl_vector_t self, const ucl_block_t block)
 
   if (block.len > 0)
     {
-      ucl_byte_t *	first_new_slot;
+      uint8_t *	first_new_slot;
       size_t	number_of_new_slots = block.len / self->slot_dimension;
 
       debug("enlarging for %d new slots", number_of_new_slots);
@@ -1628,7 +1628,7 @@ ucl_vector_append_more_from_array (ucl_vector_t target, const ucl_vector_array_t
 stub(2007-10-26-17-40-01) void
 ucl_vector_insert_block	(ucl_vector_t target, ucl_vector_index_t offset, const ucl_block_t block)
 {
-  ucl_byte_t *	insertion_slot;
+  uint8_t *	insertion_slot;
   size_t	bytes_at_beginning	= compute_bytes_at_beginning(target);
   size_t	bytes_at_end		= compute_bytes_at_end(target);
 
@@ -1639,7 +1639,7 @@ ucl_vector_insert_block	(ucl_vector_t target, ucl_vector_index_t offset, const u
 
   if (block.len <= bytes_at_beginning)
     {
-      ucl_byte_t *	p = target->first_used_slot - block.len;
+      uint8_t *	p = target->first_used_slot - block.len;
       size_t		size_of_block_to_move = insertion_slot - target->first_used_slot;
 
       memmove(p, target->first_used_slot, size_of_block_to_move);
@@ -1648,7 +1648,7 @@ ucl_vector_insert_block	(ucl_vector_t target, ucl_vector_index_t offset, const u
     }
   else if (block.len <= bytes_at_end)
     {
-      ucl_byte_t *	p = insertion_slot + block.len;
+      uint8_t *	p = insertion_slot + block.len;
       size_t		size_of_block_to_move = target->last_used_slot + target->slot_dimension - insertion_slot;
 
       memmove(p, insertion_slot, size_of_block_to_move);
@@ -1822,10 +1822,10 @@ ucl_vector_get_block (ucl_block_t target, ucl_vector_index_t position, ucl_vecto
 stub(2005-09-23-18-18-19) int
 ucl_vector_compare_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb)
 {
-  ucl_byte_t *		pa;
-  ucl_byte_t *		pb;
+  uint8_t *		pa;
+  uint8_t *		pb;
   ucl_vector_index_t	i;
-  ucl_valcmp_t		compar;
+  ucl_comparison_t	compar;
   ucl_value_t		va, vb;
   int			result=0;
   
@@ -1884,7 +1884,7 @@ ucl_vector_for_each (ucl_callback_t callback, const ucl_vector_t self)
   for (ucl_vector_iterator_forward(self, I); ucl_iterator_more(I); ucl_iterator_next(I))
     {
       slot.ptr = ucl_iterator_ptr(I);;
-      ucl_callback_invoke(callback, slot);
+      ucl_callback_apply(callback, slot);
     }
 }
 stub(2007-10-24-13-26-16) void
@@ -1902,7 +1902,7 @@ ucl_vector_for_each_in_range (ucl_callback_t callback, ucl_range_t range, const 
        ++i, slot = ucl_vector_increment_slot(self, slot))
     {
       data.ptr = slot;
-      ucl_callback_invoke(callback, data);
+      ucl_callback_apply(callback, data);
     }
 }
 
@@ -1938,7 +1938,7 @@ ucl_vector_for_each_multiple_from_array (ucl_callback_t callback, const ucl_vect
       for (i=0; i<slots_array.number_of_slots; ++i)
 	slots[i] = ucl_iterator_ptr(iterators[i]);
 
-      ucl_callback_invoke(callback, data);
+      ucl_callback_apply(callback, data);
 
       for (i=0; i<vectors->number_of_vectors; ++i)
 	ucl_iterator_next(iterators[i]);
@@ -2013,7 +2013,7 @@ ucl_vector_map (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t
     {
       slots[0] = ucl_vector_push_back(result);
       slots[1] = ucl_iterator_ptr(I);
-      ucl_callback_invoke(callback, data);
+      ucl_callback_apply(callback, data);
     }
 }
 stub(2007-10-24-13-26-25) void
@@ -2036,7 +2036,7 @@ ucl_vector_map_range (ucl_vector_t result, ucl_callback_t callback, ucl_range_t 
     {
       slots[0] = ucl_vector_push_back(result);
       slots[1] = ucl_iterator_ptr(I);
-      ucl_callback_invoke(callback, data);
+      ucl_callback_apply(callback, data);
     }
 }
 
@@ -2074,7 +2074,7 @@ ucl_vector_map_multiple_from_array (ucl_vector_t result, ucl_callback_t callback
       for (i=0; i<vectors->number_of_vectors; ++i)
 	slots[1+i] = ucl_iterator_ptr(iterators[i]);
 
-      ucl_callback_invoke(callback, data);
+      ucl_callback_apply(callback, data);
 
       for (i=0; i<vectors->number_of_vectors; ++i)
 	ucl_iterator_next(iterators[i]);
@@ -2134,7 +2134,7 @@ ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, const ucl
 static inline void
 set_pointers_for_empty_vector	(ucl_vector_t self)
 {
-  ucl_byte_t *	potential_first_used_slot;
+  uint8_t *	potential_first_used_slot;
 
   /* do not assert emptyness here,  because this function may be used to
      force the emptyness state */
@@ -2253,7 +2253,7 @@ move_used_bytes_at_pad_area_beginning (ucl_vector_t self)
     }
   else
     {
-      ucl_byte_t *	p;
+      uint8_t *	p;
       size_t		number_of_free_bytes = compute_free_bytes(self);
 
 
@@ -2317,7 +2317,7 @@ move_used_bytes_leave_requested_at_end (ucl_vector_t self, size_t bytes_requeste
 	    }
 	  else
 	    {
-	      ucl_byte_t *	p;
+	      uint8_t *	p;
 	      size_t		slots_requested_at_end = \
 		bytes_requested_at_end / self->slot_dimension;
 
@@ -2349,18 +2349,18 @@ move_used_bytes_at_beginning (ucl_vector_t self)
 static inline void
 move_used_bytes_at_end (ucl_vector_t self)
 {
-  ucl_byte_t *	p = self->last_allocated_slot -
+  uint8_t *	p = self->last_allocated_slot -
     compute_used_bytes(self) - self->slot_dimension;
   move_used_bytes_at_byte_pointer(self, p);
 }
 static inline void
 move_used_bytes_at_index_offset (ucl_vector_t self, ucl_vector_index_t offset)
 {
-  ucl_byte_t *	p = ucl_vector_index_to_slot(self, offset);
+  uint8_t *	p = ucl_vector_index_to_slot(self, offset);
   move_used_bytes_at_byte_pointer(self, p);
 }
 static inline void
-move_used_bytes_at_byte_pointer (ucl_vector_t self, ucl_byte_t *p)
+move_used_bytes_at_byte_pointer (ucl_vector_t self, uint8_t *p)
 {
   if (p != self->first_used_slot)
     {

@@ -8,7 +8,7 @@
    
 	Comparation.
    
-   Copyright (c) 2005 Marco Maggi
+   Copyright (c) 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -33,7 +33,7 @@ test (void)
 {
   ucl_vector_t	a, b;
   ucl_range_t	range_a, range_b;
-  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
 
 
   /* equal */

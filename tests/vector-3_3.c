@@ -1,5 +1,4 @@
-/* vector-3_3.c --
-   
+/*   
    Part of: Useless Containers Library
    Contents: test for vector
    Date: Wed Dec 10, 2003
@@ -8,7 +7,7 @@
    
 	Insert sort
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -37,7 +36,7 @@ test (void)
   int			i, j, k, l;
   int *			ptr;
   ucl_vector_t		vector;
-  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_ptrintcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL}, ucl_ptrintcmp };
 
 
   ucl_vector_initialise(vector, sizeof(int));

@@ -1,13 +1,13 @@
 /*
    Part of: Useless Containers Library
-   Contents: tests for vector
-   Date: Wed Oct 24, 2007
+   Contents: callback handling functions
+   Date: Mon Sep 15, 2008
    
    Abstract
    
    
    
-   Copyright (c) 2007, 2008 Marco Maggi
+   Copyright (c) 2008 Marco Maggi <marcomaggi@gna.org>
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -30,40 +30,35 @@
  ** ----------------------------------------------------------*/
 
 #define DEBUGGING		0
-#include "vectortest.h"
+#include "internal.h"
 
-static void
-callback (ucl_value_t state, va_list ap)
+#define stubmodule		callback
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Functions.
+ ** ----------------------------------------------------------*/
+
+stub(2008-09-15-13-34-00) void
+ucl_callback_apply (ucl_callback_t callback, ...)
 {
-  ucl_value_t	custom = va_arg(ap,ucl_value_t);
-  int *		accumulator_p	= state.ptr;
-  int *		slot		= custom.ptr;
+  if (ucl_callback_is_present(callback))
+    {
+      va_list	ap;
 
-  *accumulator_p += *slot;
+      va_start(ap,callback);
+      callback.func(callback.data, ap);
+      va_end(ap);
+    }
 }
-
-void
-test (void)
+stub(2008-09-15-13-43-41) void
+ucl_callback_eval_thunk (ucl_callback_t callback)
 {
-  ucl_vector_t		vector;
-  int			accumulator = 0;
-  ucl_callback_t	cb = {
-    .func = callback,
-    .data = { .ptr = &accumulator }
-  };
-
-
-  ucl_vector_initialise(vector, sizeof(int));
-  ucl_vector_constructor(vector);
-
-  fill(vector, 5, 1);
-  
-  ucl_vector_for_each(cb, vector);
-  assert((1+2+3+4+5) == accumulator);
-
-  ucl_vector_destructor(vector);
+  if (ucl_callback_is_present(callback))
+    callback.func(callback.data,NULL);
 }
-
 
 
 /* end of file */

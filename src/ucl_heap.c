@@ -34,7 +34,6 @@
 #define stubmodule		heap
 
 typedef ucl_value_t		value_t;
-typedef ucl_valcmp_t		valcmp_t;
 typedef ucl_heap_t		heap_t;
 typedef ucl_heap_node_t		node_t;
 
@@ -65,11 +64,11 @@ typedef struct Links {
 
 
 stub(2005-09-23-18-11-02) void
-ucl_heap_constructor (ucl_heap_t this, ucl_valcmp_t compar)
+ucl_heap_constructor (ucl_heap_t this, ucl_comparison_t compar)
 {
   assert(this);
   ucl_struct_clean(this, ucl_heap_struct_t);
-  this->valcmp	= compar;
+  this->compar	= compar;
 }
 
 
@@ -81,7 +80,6 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
   node_t *	dad_p;
   node_t *	tmp_p;
   value_t	a, b;
-  valcmp_t	compar;
   int		first;
 
 
@@ -96,7 +94,6 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
 
 
   next_p	= this->next_p;
-  compar	= this->valcmp;
 
   son(node_p) = bro(node_p) = NULL;
   if (this->state)
@@ -113,7 +110,7 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
   b = ucl_heap_getval(node_p);
   first = 2;
 
-  while (compar.func(compar.data, a, b) > 0)
+  while (this->compar.func(this->compar.data, a, b) > 0)
     {
       switch (first)
 	{
@@ -236,7 +233,6 @@ ucl_heap_extract (ucl_heap_t this)
   node_t *	dad_p;
   value_t	a, b;
   int		first, v, fromleft=-1;
-  valcmp_t	compar;
   Links		links, links1;
 
 
@@ -256,7 +252,6 @@ ucl_heap_extract (ucl_heap_t this)
 
   tmp_p	= NULL;
 
-  compar	= this->valcmp;
   link_p	= this->root_p;
   first		= 1;
 
@@ -274,7 +269,7 @@ ucl_heap_extract (ucl_heap_t this)
 	{
 	  a = ucl_heap_getval(links.son_p);
 	  b = ucl_heap_getval(links.bro_p);
-	  v = (compar.func(compar.data, a, b) <= 0)? 1 : 0;
+	  v = (this->compar.func(this->compar.data, a, b) <= 0)? 1 : 0;
 	}
       else if ((!links.son_p) && (!links.bro_p))
 	{

@@ -10,6 +10,7 @@
 
 const ucl_btree_stub_table_t *        ucl_btree_stub_table_p;
 const ucl_base_stub_table_t *         ucl_base_stub_table_p;
+const ucl_callback_stub_table_t *     ucl_callback_stub_table_p;
 const ucl_circular_stub_table_t *     ucl_circular_stub_table_p;
 const ucl_graph_stub_table_t *        ucl_graph_stub_table_p;
 const ucl_hash_stub_table_t *         ucl_hash_stub_table_p;
@@ -36,6 +37,7 @@ typedef symbol_tag_t *   symbol_t;
 static const symbol_tag_t	symbols[] = {
   { "ucl_btree_stub_table",		(void **)&ucl_btree_stub_table_p },
   { "ucl_base_stub_table",		(void **)&ucl_base_stub_table_p },
+  { "ucl_callback_stub_table",		(void **)&ucl_callback_stub_table_p },
   { "ucl_circular_stub_table",		(void **)&ucl_circular_stub_table_p },
   { "ucl_graph_stub_table",		(void **)&ucl_graph_stub_table_p },
   { "ucl_hash_stub_table",		(void **)&ucl_hash_stub_table_p },

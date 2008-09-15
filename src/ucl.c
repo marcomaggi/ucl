@@ -223,7 +223,7 @@ typedef struct
       stack size is needed (actually O(1) in this case)!  */
 
 stub(2007-09-14-20-54-48) void
-ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_valcmp_t cmp)
+ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp)
 {
   register char *	base_ptr = (char *) pbase;
   const size_t		max_thresh = MAX_THRESH * size;

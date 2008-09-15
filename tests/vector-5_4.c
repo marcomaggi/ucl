@@ -8,7 +8,7 @@
    
 	Binary search.
    
-   Copyright (c) 2005 Marco Maggi
+   Copyright (c) 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -34,7 +34,7 @@ test (void)
   int		i, j;
   int *		ptr;
   ucl_vector_t	vector;
-  ucl_valcmp_t	compar = { { .ptr = NULL }, ucl_ptrintcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL }, ucl_ptrintcmp };
 
 
   ucl_vector_initialise(vector, sizeof(int));

@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2006 Marco Maggi
+   Copyright (c) 2006, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -49,7 +49,7 @@ test (void)
   assert( ucl_vector_number_of_step_down_slots(vector) == UCL_VECTOR_BUFFER_PAGE_SIZE+1);
   assert( ucl_vector_number_of_padding_slots(vector) == 0);
   
-  assert( ucl_vector_slot_dimension(vector) == sizeof(ucl_byte_t) );
+  assert( ucl_vector_slot_dimension(vector) == sizeof(uint8_t) );
 
   fill(vector, NUMBER, 0);
   assert(ucl_vector_size(vector) == NUMBER);

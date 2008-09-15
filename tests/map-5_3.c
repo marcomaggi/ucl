@@ -1,5 +1,4 @@
-/* map-5_3.c --
-   
+/*   
    Part of: Useless Container Library
    Contents: test for the Map container
    Date: Sat Feb  8, 2003
@@ -8,7 +7,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -36,7 +35,7 @@ test (void)
   ucl_value_t		key, val;
   int			i;
   ucl_iterator_t	iterator;
-  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL}, ucl_intcmp };
 
 
   ucl_map_constructor(map, 0, compar);

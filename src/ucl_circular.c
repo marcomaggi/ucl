@@ -128,7 +128,7 @@ stub(2005-09-23-18-08-50) ucl_circular_link_t *
 ucl_circular_find (ucl_circular_t this, ucl_value_t val)
 {
   ucl_circular_link_t *	cur_p;
-  ucl_valcmp_t		compar;
+  ucl_comparison_t	compar;
 
 
   assert(this);

@@ -7,7 +7,7 @@
    
    
    
-   Copyright (c) 2007 Marco Maggi
+   Copyright (c) 2007, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -33,8 +33,9 @@
 #include "vectortest.h"
 
 static void
-callback (ucl_value_t state UCL_UNUSED, ucl_value_t custom)
+callback (ucl_value_t state UCL_UNUSED, va_list ap)
 {
+  ucl_value_t custom = va_arg(ap,ucl_value_t);
   ucl_array_of_pointers_t * slots   = custom.ptr;
   int *                     result  = slots->slots[0];
   int *                     operand = slots->slots[1];

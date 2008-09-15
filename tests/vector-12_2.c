@@ -33,10 +33,11 @@
 #include "vectortest.h"
 
 static void
-callback (ucl_value_t state, ucl_value_t custom)
+callback (ucl_value_t state, va_list ap)
 {
-  int *	accumulator_p	= state.ptr;
-  int *	slot		= custom.ptr;
+  ucl_value_t	custom = va_arg(ap,ucl_value_t);
+  int *		accumulator_p	= state.ptr;
+  int *		slot		= custom.ptr;
 
   *accumulator_p += *slot;
 }

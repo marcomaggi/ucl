@@ -34,7 +34,7 @@ test (void)
   int			i;
   ucl_circular_link_t *	link_p;
   ucl_value_t 		val;
-  ucl_valcmp_t		compar = { { .ptr = NULL }, ucl_intcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL }, ucl_intcmp };
 
 
   ucl_circular_constructor(circ);

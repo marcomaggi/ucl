@@ -8,7 +8,7 @@
    
 	Erase range.
    
-   Copyright (c) 2005 Marco Maggi
+   Copyright (c) 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -79,7 +79,7 @@ void
 dump_vector (ucl_vector_t self, const char *title UCL_UNUSED)
 {
   int		i;
-  ucl_byte_t *	p;
+  uint8_t *	p;
 
   debug(title);
   for (i=0; (size_t)i<ucl_vector_size(self); ++i)

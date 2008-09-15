@@ -23,7 +23,7 @@ ucl_decl int ucl_uintcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, cons
 ucl_decl int ucl_strcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
 ucl_decl int ucl_ptrintcmp (ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
 ucl_decl size_t ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val);
-ucl_decl void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_valcmp_t cmp);
+ucl_decl void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp);
 
 #endif /* not defined UCL_ENABLE_STUB */
 
@@ -41,7 +41,7 @@ typedef int ucl_uintcmp_proto_t (ucl_value_t data UCL_UNUSED, const ucl_value_t 
 typedef int ucl_strcmp_proto_t (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b);
 typedef int ucl_ptrintcmp_proto_t (ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
 typedef size_t ucl_hash_string_proto_t (ucl_value_t data UCL_UNUSED, const ucl_value_t val);
-typedef void ucl_quicksort_proto_t (void *const pbase, size_t total_elems, size_t size, ucl_valcmp_t cmp);
+typedef void ucl_quicksort_proto_t (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp);
 
 /* Stub table type declaration for the "base" module.
    A struct holding a pointer for each function in the module

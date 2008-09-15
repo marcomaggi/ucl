@@ -8,7 +8,7 @@
    
 	Index related functions
    
-   Copyright (c) 2005 Marco Maggi
+   Copyright (c) 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -64,7 +64,7 @@ test (void)
 static void
 test_index (ucl_vector_t vector, ucl_vector_index_t _index)
 {
-  ucl_byte_t *		p;
+  uint8_t *		p;
   ucl_vector_index_t	i;
 
   p = ucl_vector_index_to_slot(vector, _index);

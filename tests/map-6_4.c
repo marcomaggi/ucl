@@ -1,5 +1,4 @@
-/* map-6_4.c --
-   
+/*   
    Part of: Useless Container Library
    Contents: test for the Map container
    Date: Sat Mar  1, 2003
@@ -8,7 +7,7 @@
    
 	Tests for the subtraction iterator.
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -37,7 +36,7 @@ test (void)
   int			size;
   ucl_map_link_t *	link_p;
   ucl_value_t		key, val; 
-  ucl_valcmp_t		compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL}, ucl_intcmp };
 
 
   ucl_map_constructor(map1, 0, compar);

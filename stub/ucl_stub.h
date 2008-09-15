@@ -10,6 +10,7 @@
 
 #include <stub_ucl_btree.h>
 #include <stub_ucl.h>
+#include <stub_ucl_callback.h>
 #include <stub_ucl_circular.h>
 #include <stub_ucl_graph.h>
 #include <stub_ucl_hash.h>

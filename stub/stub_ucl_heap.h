@@ -12,7 +12,7 @@
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_heap_constructor (ucl_heap_t this, ucl_valcmp_t compar);
+ucl_decl void ucl_heap_constructor (ucl_heap_t this, ucl_comparison_t compar);
 ucl_decl void ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p);
 ucl_decl ucl_heap_node_t * ucl_heap_extract (ucl_heap_t this);
 ucl_decl void ucl_heap_merge (ucl_heap_t this, ucl_heap_t other);
@@ -22,7 +22,7 @@ ucl_decl void ucl_heap_merge (ucl_heap_t this, ucl_heap_t other);
 /* Function type declarations for the "heap" module.
    A typedef for each function in the module. */
 
-typedef void ucl_heap_constructor_proto_t (ucl_heap_t this, ucl_valcmp_t compar);
+typedef void ucl_heap_constructor_proto_t (ucl_heap_t this, ucl_comparison_t compar);
 typedef void ucl_heap_insert_proto_t (ucl_heap_t this, ucl_heap_node_t *node_p);
 typedef ucl_heap_node_t * ucl_heap_extract_proto_t (ucl_heap_t this);
 typedef void ucl_heap_merge_proto_t (ucl_heap_t this, ucl_heap_t other);

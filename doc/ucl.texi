@@ -783,7 +783,7 @@ Reset to zero all the fields of the block.
 @end deftypefun
 
 
-@deftypefun int ucl_block_is_null (ucl_block_t @var{block})
+@deftypefun bool ucl_block_is_null (ucl_block_t @var{block})
 Return true if the @code{ptr} field of @var{block} is @null{}.
 @end deftypefun
 
@@ -874,7 +874,7 @@ is determined with the standard @function{strlen} function.
 @end deftypefun
 
 
-@deftypefun int ucl_ascii_is_null (ucl_ascii_t @var{ascii})
+@deftypefun bool ucl_ascii_is_null (ucl_ascii_t @var{ascii})
 Return true if the pointer field is set to @null{}.
 @end deftypefun
 
@@ -976,33 +976,26 @@ The data type of objects that can be stored in the containers.  It's a
 @item int integer
 @item void * ptr
 @item char * str
-@item ucl_byte_t * bytes
+@item uint8_t * bytes
 @end table
 @end deftp
 
 
-@deftp {Alias Typedef} ucl_byte_t
-Alias for @code{unsigned char}.
-@end deftp
-
-
 @deftp {Alias Typedef} ucl_bool_t
-Alias for @code{unsigned short int}.
+Alias for @code{_Bool}, which is defined by the C99 standard.  The
+standard defines also the @code{true} and @code{false} values (in the
+@file{stdbool.h} header).
 @end deftp
 
 
 @deftp {Alias Typedef} ucl_index_t
-Alias for @code{size_t}.
+@deftpx {Alias Typedef} ucl_vector_index_t
+Alias for @code{size_t}.  @code{ucl_vector_index_t} is deprecated.
 @end deftp
 
 
 @deftp {Alias Typedef} ucl_data_t
 Alias for @code{void *}.
-@end deftp
-
-
-@deftp {Alias Typedef} ucl_cstr_t
-Alias for @code{const char *}.
 @end deftp
 
 
@@ -1164,7 +1157,6 @@ allocator.alloc(allocator.data, &preallocated_links,
       link_p = link_p->next_p;
     @}
 @}
-
 @end example
 
 
@@ -1183,6 +1175,8 @@ allocator.alloc(allocator.data, &preallocated_links,
 * typedefs ranges types::       Type of ranges.
 @end menu
 
+
+@c ------------------------------------------------------------
 
 @c page
 @node typedefs ranges macros
@@ -1245,6 +1239,8 @@ Return true if the ranges are equal.
 @end defmac
 
 
+@c ------------------------------------------------------------
+
 @c page
 @node typedefs ranges types
 @subsection Type of ranges
@@ -1273,60 +1269,51 @@ Ranges of values.
 @end deftp
 
 
+@c ------------------------------------------------------------
+
 @c page
 @node typedefs compar
 @section Comparison functions
 
 
-@deftp {Struct Typedef} ucl_valcmp_t
+@deftp {Struct Typedef} ucl_comparison_t
 Structure holding a policy for values comparison.  Fields:
 
 @table @code
 @item ucl_value_t data
-pointer to a context to be handed as first argument to the function;
+context to be used as first argument to the function;
 
-@item ucl_valcmp_fun_t * func
+@item ucl_comparison_fun_t * func
 pointer to the function that compares two values of type
 @code{ucl_value_t}.
 @end table
 @end deftp
 
 
-@deftypefn {Function Typedef} int ucl_valcmp_fun_t (ucl_value_t @var{data}, ucl_value_t @var{a}, ucl_value_t @var{b})
-The type of functions used to compare values of type
-@code{ucl_value_t}.  Functions of this type are used by the associative
-containers.
+@deftypefn {Function Typedef} int ucl_comparison_fun_t (ucl_value_t @var{data}, ucl_value_t @var{a}, ucl_value_t @var{b})
+The type of functions used to compare values.  Functions of this type
+are used by the associative containers.
 
 The behaviour of the function must be the one of the standard function
 @function{strcmp}: return @code{-1} if @code{a<b}, return @code{0} if
 @code{a==b}, return @code{1} if @code{a>b}.
 
-The function has the responsibility to provide the comparison policy:
-whether to use the @code{num} or @code{ptr} union members and when a
-value is greater than the other.  Needless to say, the function has to
-know which one is the data type of values referenced/stored in the
-@code{ucl_value_t} unions.
-
-@var{data} is a pointer to a context that can be used to compare
-values.  Its meaning is defined by the function.
+The function has the responsibility to provide the comparison policy: to
+select a field in the @code{ucl_value_t} unions and establish when a
+value is formally greater than the other.
 @end deftypefn
 
 
 Example:
 
 @example
-ucl_valcmp_fun_t        intcmp;
-ucl_valcmp_t            compar = @{ NULL, intcmp @};
+ucl_comparison_fun_t    intcmp;
+ucl_comparison_t        compar = @{ NULL, intcmp @};
 ucl_value_t             a, b;
 int                     result;
 
 result = compar.func(compar.data, a, v);
 @end example
-
-
-@deftypefn {Function Typedef} int ucl_keycmp_t (ucl_value_t @var{a}, ucl_value_t @var{b})
-An alias for @code{ucl_valcmp_t}.
-@end deftypefn
 
 
 @c ------------------------------------------------------------
@@ -1336,32 +1323,22 @@ An alias for @code{ucl_valcmp_t}.
 @section Hash functions
 
 
-@deftp {Struct Typedef} ucl_hashcmp_t
-Structure holding the hash function; notice that @code{hashcmp} stands
-for ``hash computation'', not ``hash comparison''.  Fields:
+@deftp {Struct Typedef} ucl_hash_t
+Structure holding the hash function and its context.  Fields:
 
 @table @code
 @item ucl_value_t data
-pointer to a context to be handed as first argument to the function;
+a context to be used as first argument to the function;
 
-@item ucl_hashfun_t * func
+@item ucl_hash_fun_t * func
 pointer to the function that computes the hash value.
 @end table
 @end deftp
 
 
-@deftypefn {Function Typedef} size_t ucl_hashfun_t (ucl_value_t @var{data}, ucl_value_t @var{key})
-Type of hash functions used by the hash table.  The @var{data} argument
-is a custom value that can be selected for each container, the @var{key}
-value is the key used to store a value.
-
-The return value must be an unsigned integer representing the
-``position'' of the key in a vector, the hash container code will take
-care of mapping the @code{size_t} value to an index in the vector of
-buckets.
-
-See the hash table description for more details (@ref{hash} the hash
-table container).
+@deftypefn {Function Typedef} ucl_index_t ucl_hash_fun_t (ucl_value_t @var{data}, ucl_value_t @var{key})
+Type of hash functions used by the hash table.  The return value must be
+the ``position'' of the key in a vector.  @ref{hash} for details.
 @end deftypefn
 
 @c ------------------------------------------------------------
@@ -1372,38 +1349,41 @@ table container).
 
 
 @deftp {Struct Typedef} ucl_callback_t
-Holds a function pointer and a state value.  Public fields:
+Holds a function pointer and a context value.  Public fields:
 
 @table @code
 @item ucl_callback_fun_t * func
 pointer to the callback function;
 @item ucl_value_t data
-the state value.
+the context value.
 @end table
 @end deftp
 
 
-@deftypefun void ucl_callback_fun_t (ucl_value_t @var{callback_data}, ucl_value_t @var{custom_data})
-Callback function type definition.  @var{callback_data} is the value
-stored in the callback structure, representing the callback
-state.  @var{custom_data} is an invocation specific value.
+@deftypefn {Function Prototype} void ucl_callback_fun_t (ucl_value_t @var{context}, va_list @var{ap})
+Callback function.  @var{context} is the value stored in the callback
+structure, representing the callback state.  @var{ap} is the list of
+arguments: it is responsibility of the function to know how to interpret
+them.
+@end deftypefn
+
+
+@defmac ucl_callback_is_present (ucl_callback_t @var{cb})
+Evaluate to true if the @code{func} field of @var{cb} is not @null{}.
+@end defmac
+
+
+@deftypefun void ucl_callback_apply (ucl_callback_t @var{cb}, ...)
+If @function{ucl_callback_is_present} applied to @var{cb} evaluates to
+true: invoke the callback function using the callback context as first
+argument and a @code{va_list} as second argument; the @code{va_list}
+will hold references to the arguments to this function.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_callback_is_present (ucl_callback_t @var{cb})
-Return true if the @code{func} field of @var{cb} is not @null{}.
-@end deftypefun
-
-
-@deftypefun void ucl_callback_invoke (ucl_callback_t @var{cb}, ucl_value_t @var{data})
-If @function{ucl_callback_is_present} evaluates to true: invoke the
-function using @var{data} as invocation value; else do nothing.
-@end deftypefun
-
-
-@deftypefun ucl_callback_invoke_alone (ucl_callback_t @var{cb})
-Like @function{ucl_callback_invoke} but uses as invocation value a
-@code{ucl_value_t} value with the @code{ptr} field set to @null{}.
+@deftypefun ucl_callback_eval_thunk (ucl_callback_t @var{cb})
+Like @function{ucl_callback_invoke} but the @code{va_list} argument is
+replaced by @null{}.
 @end deftypefun
 
 
@@ -1432,56 +1412,15 @@ ucl_callback_t cb = UCL_CALLBACK_NULL_VALUE;
 
 
 @noindent
-To invoke a callback we could do:
+To invoke a callback we can do:
 
 @example
-ucl_callback_t  cb   = ...;
-ucl_value_t     data = @{ .num = 123 @};
+ucl_callback_t  cb = ...;
+int             a  = 123;
+int             b  = 456;
 
-cb.func(cb.data, data);
+ucl_callback_apply(cb, a, b);
 @end example
-
-@noindent
-but it is better to use @function{ucl_callback_invoke}:
-
-@example
-ucl_callback_t  cb   = ...;
-ucl_value_t     data = @{ .num = 123 @};
-
-ucl_callback_invoke(cb, data);
-@end example
-
-
-@subsection Example: callbacks with return value
-
-
-@noindent
-To make the callback return a value is annoying, but that is the way it
-is for a @code{double} return value:
-
-@example
-typedef struct environment_t @{
-  double        operand_1;
-  double        operand_2;
-  double        result;
-@} environment_t;
-
-void
-callback_function (ucl_value_t state, ucl_value_t custom)
-@{
-  environment_t *  envi = custom.ptr;
-
-  envi->result = something(state.num, envi->operand_1, envi->operand_2);
-@}
-
-
-ucl_callback_t  cb   = @{ ... @};
-environment_t   envi = @{ .operand_1 = 1.2, .operand_2 = 3.4 @};
-ucl_value_t     data = @{ .ptr = &envi @};
-
-ucl_callback_invoke(cb, data);
-@end example
-
 
 @c ------------------------------------------------------------
 
@@ -1502,6 +1441,8 @@ ucl_callback_invoke(cb, data);
 * vector::                      The vector structure.
 @end menu
 
+
+@c ------------------------------------------------------------
 
 @c page
 @node btree
@@ -2364,7 +2305,7 @@ is empty or the offset is zero nothing happens.
 @subsection Searching elements
 
 
-@deftypefun void ucl_circular_set_compar (ucl_circular_t @var{this}, ucl_valcmp_t @var{compar})
+@deftypefun void ucl_circular_set_compar (ucl_circular_t @var{this}, ucl_comparison_t @var{compar})
 Register the function to be used to compare elements.
 @end deftypefun
 
@@ -3566,11 +3507,11 @@ default values, for a table using strings as keys goes like this:
 
 @example
 ucl_hash_t      table;
-ucl_valcmp_t    key_comparison_function = @{
+ucl_comparison_t    key_comparison_function = @{
   .data = @{ .ptr = NULL @},
   .func = ucl_strcmp
 @};
-ucl_valcmp_t    key_hash_function       = @{
+ucl_comparison_t    key_hash_function       = @{
   .data = @{ .ptr = NULL @},
   .func = ucl_hash_string
 @};
@@ -3585,11 +3526,11 @@ of buckets:
 
 @example
 ucl_hash_t      table;
-ucl_valcmp_t    key_comparison_function = @{
+ucl_comparison_t    key_comparison_function = @{
   .data = @{ .ptr = NULL @},
   .func = ucl_strcmp
 @};
-ucl_valcmp_t    key_hash_function       = @{
+ucl_comparison_t    key_hash_function       = @{
   .data = @{ .ptr = NULL @},
   .func = ucl_hash_string
 @};
@@ -3605,7 +3546,7 @@ the custimisations must go between @function{ucl_hash_initialise} and
 @function{ucl_hash_constructor}.
 
 
-@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_valcmp_t @var{keycmp}, ucl_hashcmp_t @var{hash})
+@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_comparison_t @var{keycmp}, ucl_hashcmp_t @var{hash})
 Initialise the hash table referenced by @var{self}.  The @ucl{} vector
 of buckets is initialised to use the default @ucl{} memory allocator and
 with the following preprocessor symbols:
@@ -3783,7 +3724,7 @@ Return the number of used buckets.
 @end deftypefun
 
 
-@deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_t @var{this}, ucl_vector_index_t @var{position})
+@deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_t @var{this}, ucl_index_t @var{position})
 Return the number of entries in the chain refereces by bucket at
 @var{position}.  @var{position} must be a valid bucket index: a
 non--negative integer in the range @code{[0,
@@ -3952,7 +3893,7 @@ The type of heap nodes.
 
 
 
-@deftypefun void ucl_heap_constructor (ucl_heap_t @var{self}, ucl_valcmp_t @var{valcmp})
+@deftypefun void ucl_heap_constructor (ucl_heap_t @var{self}, ucl_comparison_t @var{valcmp})
 Initialise the heap structure to represent an empty heap.  @var{self} is
 a pointer to an already allocated heap structure, @var{valcmp} is the
 function+context used to compare values.
@@ -4451,7 +4392,7 @@ pointer to the already allocated map structure;
 @item unsigned int @var{flags}
 map behaviour flags;
 
-@item ucl_valcmp_t @var{keycmp}
+@item ucl_comparison_t @var{keycmp}
 function+context used to compare keys.
 @end table
 
@@ -5308,10 +5249,6 @@ code.
 A one--element array of @code{ucl_vector_struct_t}.
 @end deftp
 
-@deftp {Typedef} ucl_vector_index_t
-An alias to @code{size_t}, used to represent indexes into the vector.
-@end deftp
-
 @deftp {Struct Typedef} ucl_vector_array_t
 Holds an array of vectors.  Public slots:
 
@@ -5612,7 +5549,7 @@ the size, in bytes, of the elements that the vector will hold, this
 should be the result of the @code{sizeof()} operator applied to the data
 type;
 
-@item ucl_valcmp_t compar
+@item ucl_comparison_t compar
 function+context used to compare elements; this function is used only by
 the sort operations, so this field can be left blank if no sort
 operations are required.
@@ -5843,7 +5780,7 @@ ucl_vector_swallow_block(vector, block);
 @end deftypefun
 
 
-@deftypefun void ucl_vector_set_compar (ucl_vector_t @var{self}, ucl_valcmp_t @var{compar})
+@deftypefun void ucl_vector_set_compar (ucl_vector_t @var{self}, ucl_comparison_t @var{compar})
 Register the function+context used to compare elements.
 @end deftypefun
 
@@ -5857,7 +5794,7 @@ Register the function+context used to compare elements.
 @subsubsection Index to pointer conversion
 
 
-@deftypefun {void *} ucl_vector_index_to_slot (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+@deftypefun {void *} ucl_vector_index_to_slot (const ucl_vector_t @var{self}, ucl_index_t @var{index})
 Convert @var{index} into the corresponding pointer to a slot in the
 vector.
 
@@ -5889,7 +5826,7 @@ else
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{self}, ucl_index_t @var{index})
 Convert @var{index} into the corresponding pointer to a slot in the
 vector.
 
@@ -5945,12 +5882,12 @@ to the last element in the array.
 @subsubsection Pointer to index conversion
 
 
-@deftypefun ucl_vector_index_t ucl_vector_last_index (const ucl_vector_t @var{self})
+@deftypefun ucl_index_t ucl_vector_last_index (const ucl_vector_t @var{self})
 Return the index of the last element.
 @end deftypefun
 
 
-@deftypefun ucl_vector_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
+@deftypefun ucl_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
 Return the index corresponding to a pointer to slot.  It is the inverse
 of @function{ucl_vector_index_to_slot}.
 @end deftypefun
@@ -5964,12 +5901,12 @@ Return true if the pointer is a valid slot pointer, else return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+@deftypefun ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t @var{self}, ucl_index_t @var{index})
 Return true if @var{index} is a valid index for the vector.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t @var{self}, ucl_vector_index_t @var{index})
+@deftypefun ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t @var{self}, ucl_index_t @var{index})
 Return true if @var{index} is a valid index for a new slot of the
 vector.
 @end deftypefun
@@ -5989,7 +5926,7 @@ Return the inclusive range of indexes representing the whole vector.
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
+@deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{self}, ucl_index_t @var{position})
 Return the inclusive range of indexes from @var{position} to the end of
 the vector.  @var{position} must be a valid index for @var{self}.
 @end deftypefun
@@ -6005,7 +5942,7 @@ ucl_range_set_min_max(range, 0, position);
 @end example
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{self}, ucl_vector_index_t @var{position})
+@deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{self}, ucl_index_t @var{position})
 Return the inclusive range of indexes from the end of the vector to
 @var{position}.  @var{position} must be greater or equal to the size of
 @var{self}.
@@ -6131,10 +6068,10 @@ is: enlarge the vector, acquire the pointer, make a free slot, copy the
 value.  Example of insertion:
 
 @example
-ucl_vector_t            vector;
-ucl_vector_index_t      index;
-data_type_t             data;
-data_type_t *           ptr;
+ucl_vector_t     vector;
+ucl_index_t      index;
+data_type_t      data;
+data_type_t *    ptr;
 
 ...
 
@@ -6150,10 +6087,10 @@ ptr   = ucl_vector_insert(vector, ptr);
 example of insert sort operation:
 
 @example
-ucl_vector_t            vector;
-ucl_vector_index_t      index;
-data_type_t             data;
-data_type_t *           ptr;
+ucl_vector_t     vector;
+ucl_index_t      index;
+data_type_t      data;
+data_type_t *    ptr;
 
 ...
 
@@ -6187,9 +6124,9 @@ reallocation of the array to free some unused memory with a call to
 Example of data erasure:
 
 @example
-ucl_vector_t            V;
-ucl_vector_index_t      index;
-data_type_t *           ptr;
+ucl_vector_t     V;
+ucl_index_t      index;
+data_type_t *    ptr;
 
 ...
 
@@ -6203,10 +6140,10 @@ ucl_vector_restrict(V);
 example of data extraction:
 
 @example
-ucl_vector_t            V;
-ucl_vector_index_t      index;
-data_type_t *           ptr;
-data_type_t             data;
+ucl_vector_t     V;
+ucl_index_t      index;
+data_type_t *    ptr;
+data_type_t      data;
 
 ...
 
@@ -6659,7 +6596,7 @@ typedef struct pair_t @{
 @end example
 
 @noindent
-and a @code{ucl_keycmp_t} function+context to compare keys.
+and a @code{ucl_comparison_t} function+context to compare keys.
 
 If any time a @code{pair_t} must be inserted in the vector we use the
 @function{ucl_vector_insert_sort} function to determine the insertion
@@ -6797,7 +6734,7 @@ array rather than from application parameters.
 @subsubsection Inserting into a vector
 
 
-@deftypefun void ucl_vector_insert_vector (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, ucl_vector_t @var{source})
+@deftypefun void ucl_vector_insert_vector (ucl_vector_t @var{target}, ucl_index_t @var{offset}, ucl_vector_t @var{source})
 Insert all the elements of @var{source} into @var{target} at
 @var{offset}.
 
@@ -6808,7 +6745,7 @@ Insert all the elements of @var{source} into @var{target} at
 @end deftypefun
 
 
-@deftypefun void ucl_vector_insert_block (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, const ucl_block_t @var{block})
+@deftypefun void ucl_vector_insert_block (ucl_vector_t @var{target}, ucl_index_t @var{offset}, const ucl_block_t @var{block})
 Insert the data referenced by @var{block} into @var{target} at
 @var{offset}.
 
@@ -6820,7 +6757,7 @@ dimension of @var{target}.  @var{offset} must be a valid value for
 @end deftypefun
 
 
-@deftypefun void ucl_vector_insert_range (ucl_vector_t @var{target}, ucl_vector_index_t @var{offset}, const ucl_vector_t @var{source}, ucl_range_t @var{range});
+@deftypefun void ucl_vector_insert_range (ucl_vector_t @var{target}, ucl_index_t @var{offset}, const ucl_vector_t @var{source}, ucl_range_t @var{range});
 Insert the data referenced by the inclusive @var{range} of indexes from
 @var{source} into @var{target} at @var{offset}.
 
@@ -6853,7 +6790,7 @@ Erase all the elements in the selected range.
 @subsubsection Setters and getters
 
 
-@deftypefun void ucl_vector_copy_range (ucl_vector_t @var{target}, ucl_vector_index_t @var{position}, ucl_vector_t @var{source}, ucl_range_t @var{source_range})
+@deftypefun void ucl_vector_copy_range (ucl_vector_t @var{target}, ucl_index_t @var{position}, ucl_vector_t @var{source}, ucl_range_t @var{source_range})
 Copy slots referenced by @var{source_range} in @var{source} to
 @var{position} in @var{target}.  Data into @var{target} is overwritten.
 
@@ -6864,7 +6801,7 @@ slots after @var{position} in @var{target} to hold the whole range from
 @end deftypefun
 
 
-@deftypefun void ucl_vector_set_block (ucl_vector_t @var{target}, ucl_vector_index_t @var{position}, ucl_block_t @var{source})
+@deftypefun void ucl_vector_set_block (ucl_vector_t @var{target}, ucl_index_t @var{position}, ucl_block_t @var{source})
 Copy data from @var{source} into @var{target} at @var{position},
 overwriting data.
 
@@ -6875,7 +6812,7 @@ must exist after it to accept the whol @var{source} block.  The length of
 @end deftypefun
 
 
-@deftypefun void ucl_vector_get_block (ucl_block_t @var{target}, ucl_vector_index_t @var{position}, ucl_vector_t @var{source})
+@deftypefun void ucl_vector_get_block (ucl_block_t @var{target}, ucl_index_t @var{position}, ucl_vector_t @var{source})
 Copy data from @var{source} at @var{position} into @var{target},
 overwriting data.
 
@@ -7365,7 +7302,7 @@ type @code{int}: compare the two referenced numbers by invoking
 @subsection Sorting
 
 
-@deftypefun void ucl_quicksort (void * @var{array}, size_t @var{count}, size_t @var{size}, ucl_valcmp_t @var{compar})
+@deftypefun void ucl_quicksort (void * @var{array}, size_t @var{count}, size_t @var{size}, ucl_comparison_t @var{compar})
 Like the standard @function{qsort}, but makes use of the comparison
 function and context in @var{compar}.   @var{array} is an array of
 @var{count} elements of size @var{size}.

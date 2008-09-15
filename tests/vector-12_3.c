@@ -33,8 +33,9 @@
 #include "vectortest.h"
 
 static void
-callback (ucl_value_t state, ucl_value_t custom)
+callback (ucl_value_t state, va_list ap)
 {
+  ucl_value_t			custom  = va_arg(ap,ucl_value_t);
   int *				sums	= state.ptr;
   ucl_array_of_pointers_t *	slots	= custom.ptr;
   int **			values	= (int **)slots->slots;

@@ -66,7 +66,6 @@ typedef ucl_btree_node_t	node_t;
 typedef ucl_iterator_t		iterator_t;
 typedef ucl_iterator_struct_t	iterator_struct_t;
 typedef ucl_value_t		value_t;
-typedef ucl_valcmp_t		keycmp_t;
 
 /* Static function prototypes. */
 
@@ -104,7 +103,7 @@ static void	subtraction_iterator_next (iterator_t iterator);
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-11-41) void
-ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_keycmp_t keycmp)
+ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp)
 {
   assert(this); assert(keycmp.func);
 
@@ -129,11 +128,11 @@ ucl_map_destructor (ucl_map_t this)
 stub(2005-09-23-18-11-44) void
 ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 {
+  ucl_comparison_t	keycmp;
   int		v, root_flag;
   link_t *	tmp_p;
   link_t *	cur_p;
   value_t	key;
-  keycmp_t	keycmp;
 
   /*
     A flag  used in the loop below,  when stepping up in  the tree doing
@@ -960,10 +959,10 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 stub(2005-09-23-18-12-55) ucl_map_link_t *
 ucl_map_find (const ucl_map_t this, const ucl_value_t key)
 {
-  int		v;
-  link_t *	cur_p;
-  link_t *	last_p;
-  keycmp_t	keycmp;
+  ucl_comparison_t	keycmp;
+  int			v;
+  link_t *		cur_p;
+  link_t *		last_p;
 
 
   cur_p = this->root;
@@ -1057,28 +1056,22 @@ ucl_map_prev (ucl_map_link_t *link_p)
 stub(2005-09-23-18-13-48) ucl_map_link_t *
 ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
 {
-  int		v;
-  link_t *	cur_p;
-  link_t *	last_p;
-  keycmp_t	keycmp;
+  int			v;
+  link_t *		cur_p;
+  link_t *		last_p;
+  ucl_comparison_t	keycmp;
 
 
   assert(this != 0);
 
-  /*
-    Handle the case of empty map.
-  */
-
+  /* Handle the case of empty map. */
   cur_p = this->root;
   if (cur_p == NULL)
     {
       return cur_p;
     }
 
-  /*
-    Dive in the tree to find the key.
-  */
-
+  /* Dive in the tree to find the key. */
   keycmp = this->keycmp;
 
   while (cur_p != NULL)
@@ -1148,10 +1141,10 @@ ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
 stub(2005-09-23-18-13-51) ucl_map_link_t *
 ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
 {
-  int		v;
-  link_t *	cur_p;
-  link_t *	last_p;
-  keycmp_t	keycmp;
+  int			v;
+  link_t *		cur_p;
+  link_t *		last_p;
+  ucl_comparison_t	keycmp;
 
   assert(this != 0);
 
@@ -1238,9 +1231,9 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
 stub(2005-09-23-18-13-55) size_t
 ucl_map_count (const ucl_map_t this, const ucl_value_t key)
 {
-  size_t	count;
-  link_t *	link_p;
-  keycmp_t	keycmp;
+  size_t		count;
+  link_t *		link_p;
+  ucl_comparison_t	keycmp;
 
 
   assert(this != 0);
@@ -1466,7 +1459,7 @@ map_upperbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);  
   if (link_p != NULL)
     {
-      ucl_valcmp_t	keycmp = this->keycmp;
+      ucl_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1493,7 +1486,7 @@ map_lowerbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder((node_t *) link_p);  
   if (link_p != NULL)
     {
-      ucl_keycmp_t	keycmp = this->keycmp;
+      ucl_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1557,11 +1550,11 @@ union_find_next (iter1, iter2, iterator)
      iterator_t 	iter2;
      iterator_t 	iterator;
 {
-  value_t	key1, key2;
-  link_t *	node1;
-  link_t *	node2;
-  keycmp_t	compar;
-  int		v;
+  value_t		key1, key2;
+  link_t *		node1;
+  link_t *		node2;
+  ucl_comparison_t	compar;
+  int			v;
 
 
   if (ucl_iterator_more(iter1) && ucl_iterator_more(iter2))
@@ -1643,11 +1636,11 @@ intersection_find_common (iter1, iter2, iterator)
      iterator_t 	iter2;
      iterator_t 	iterator;
 {
-  value_t	key1, key2;
-  link_t *	node1;
-  link_t *	node2;
-  ucl_valcmp_t	compar;
-  int		v;
+  value_t		key1, key2;
+  link_t *		node1;
+  link_t *		node2;
+  ucl_comparison_t	compar;
+  int			v;
 
 
   compar = ((const map_struct_t *) (iter1->container))->keycmp;
@@ -1706,10 +1699,10 @@ complintersect_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  keycmp_t	compar;
-  value_t	key1, key2;
-  link_t *	node1;
-  link_t *	node2;
+  ucl_comparison_t	compar;
+  value_t		key1, key2;
+  link_t *		node1;
+  link_t *		node2;
   int		v;
 
 
@@ -1853,11 +1846,11 @@ subtraction_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  keycmp_t	compar;
-  value_t	key1, key2;
-  link_t *	node1;
-  link_t *	node2;
-  int		v;
+  ucl_comparison_t	compar;
+  value_t		key1, key2;
+  link_t *		node1;
+  link_t *		node2;
+  int			v;
 
 
   /*

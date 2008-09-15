@@ -32,7 +32,7 @@ test (void)
 {
   ucl_map_t	map;
   int		size;
-  ucl_valcmp_t	compar = { { .ptr = NULL}, ucl_intcmp };
+  ucl_comparison_t	compar = { { .ptr = NULL}, ucl_intcmp };
 
   /*
     int			i, j;

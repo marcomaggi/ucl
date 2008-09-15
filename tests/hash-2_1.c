@@ -30,15 +30,15 @@
 void
 test (void)
 {
-  ucl_hash_t 		hash;
+  ucl_hash_table_tag_t 	hash[1];
   ucl_hash_entry_t *	entPtr;
   ucl_value_t		val, key, val1, key1;
   unsigned		i;
-  ucl_hashcmp_t		key_hash_function = {
+  ucl_hash_t		key_hash_function = {
     .data = { .ptr = NULL},
     .func = hash_num
   };
-  ucl_valcmp_t		key_comparison_function = {
+  ucl_comparison_t		key_comparison_function = {
     .data = { .ptr = NULL},
     .func = ucl_intcmp
   };

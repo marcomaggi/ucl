@@ -306,6 +306,7 @@ AC_CHECK_HEADER([sys/time.h])
 AC_CHECK_HEADER([math.h])
 AC_CHECK_HEADER([complex.h])
 AC_CHECK_HEADER([stdint.h])
+AC_CHECK_HEADER([stdbool.h])
 AC_CHECK_HEADER([limits.h])
 AC_CHECK_HEADER([unistd.h])
 AC_CHECK_HEADER([dlfcn.h])
@@ -323,7 +324,6 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memmove memset strerror strchr])
-
 AC_FUNC_ALLOCA
 
 AC_SUBST([NO_MINUS_C_MINUS_O])

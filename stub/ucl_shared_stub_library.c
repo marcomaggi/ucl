@@ -9,6 +9,7 @@
 
 #include <table_ucl_btree.c>
 #include <table_ucl.c>
+#include <table_ucl_callback.c>
 #include <table_ucl_circular.c>
 #include <table_ucl_graph.c>
 #include <table_ucl_hash.c>

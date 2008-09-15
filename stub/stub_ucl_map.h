@@ -12,7 +12,7 @@
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_keycmp_t keycmp);
+ucl_decl void ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp);
 ucl_decl void ucl_map_destructor (ucl_map_t this);
 ucl_decl void ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p);
 ucl_decl ucl_map_link_t * ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p);
@@ -41,7 +41,7 @@ ucl_decl void ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t
 /* Function type declarations for the "map" module.
    A typedef for each function in the module. */
 
-typedef void ucl_map_constructor_proto_t (ucl_map_t this, unsigned int flags, ucl_keycmp_t keycmp);
+typedef void ucl_map_constructor_proto_t (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp);
 typedef void ucl_map_destructor_proto_t (ucl_map_t this);
 typedef void ucl_map_insert_proto_t (ucl_map_t this, ucl_map_link_t *link_p);
 typedef ucl_map_link_t * ucl_map_remove_proto_t (ucl_map_t this, ucl_map_link_t *cur_p);

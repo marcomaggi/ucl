@@ -48,7 +48,7 @@
  ** ----------------------------------------------------------*/
 
 static void
-insert_elements_in_range (ucl_hash_t table, int begin, int end)
+insert_elements_in_range (ucl_hash_table_t table, int begin, int end)
 {
   ucl_hash_entry_t *	entry_p;
   ucl_value_t		key, val;
@@ -67,7 +67,7 @@ insert_elements_in_range (ucl_hash_t table, int begin, int end)
     }
 }
 static void
-extract_elements_in_range (ucl_hash_t table, int begin, int end)
+extract_elements_in_range (ucl_hash_table_t table, int begin, int end)
 {
   ucl_hash_entry_t *	entry_p;
   ucl_value_t		key;
@@ -91,7 +91,7 @@ extract_elements_in_range (ucl_hash_t table, int begin, int end)
  ** ----------------------------------------------------------*/
 
 static void
-find_elements (ucl_hash_t table, int upper_limit)
+find_elements (ucl_hash_table_t table, int upper_limit)
 {
   ucl_hash_entry_t *	entry_p;
   ucl_value_t		key, val;
@@ -124,14 +124,14 @@ find_elements (ucl_hash_t table, int upper_limit)
 void
 test (void)
 {
-  ucl_hash_t 		table;
+  ucl_hash_table_tag_t 	table[1];
   ucl_hash_entry_t *	entry_p;
   int			j, beg, end;
-  ucl_hashcmp_t		key_hash_function = {
+  ucl_hash_t		key_hash_function = {
     .data = { .ptr = NULL},
     .func = hash_num
   };
-  ucl_valcmp_t		key_comparison_function = {
+  ucl_comparison_t		key_comparison_function = {
     .data = { .ptr = NULL},
     .func = ucl_intcmp
   };
