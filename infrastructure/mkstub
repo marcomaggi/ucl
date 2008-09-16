@@ -2316,15 +2316,6 @@ export STUB_TABLE_NAME
 # module functions.
 export STUB_TABLE_POINTER
 
-# The name of the struct typedef for the main stub table. The main
-# stub table holds pointers to the module stub tables.
-export MAIN_STUB_TABLE_TYPE
-
-# The name of the main stub table variable. The main stub table
-# is declared as a static variable in the library module built
-# with the '--stub-table-code' option.
-export MAIN_STUB_TABLE_NAME
-
 # The name of the stub initialisation function. The function is
 # defined in the stub library and linked in client libraries that
 # make use of the stub mechanism. When the client library wants
@@ -2569,9 +2560,6 @@ function script_action_print_stub_shared_library () {
         done
         printf '\n\n'
 
-#         print_comment_section 'Library stub table.'
-#         stub_module_section__main_stub_table_decl "${ARGV[@]}"
-
         printf '\n/* end of file */\n'
     } > "${OUTPUT}"
 }
@@ -2628,15 +2616,6 @@ typedef symbol_tag_t *   symbol_t;
             printf '  { "%s",\t\t(void **)&%s },\n' "${STUB_TABLE_NAME}" "${STUB_TABLE_POINTER}"
         done
         printf '  { NULL, NULL }\n};\n\n\n'
-
-
-#         printf '\n\nstatic void\ninit_pointers (%s *table_p)\n{\n' "${MAIN_STUB_TABLE_TYPE}"
-
-#         for FILENAME in "${ARGV[@]}" ; do
-#             fill_module_variables
-#             printf '  %-30s = table_p->%s;\n' "${STUB_TABLE_POINTER}" "${MODULE}"
-#         done
-#         printf '\n}\n'
 
         print_comment_section 'Loading and unloading the shared stub library.'
 
@@ -2747,8 +2726,6 @@ function fill_main_variables () {
 
     STUB_ENABLE_DEFINE=$(printf '%s_ENABLE_STUB' "${upper_LIBRARY}")
 
-    MAIN_STUB_TABLE_TYPE=$(printf '%s_stub_table_t' "${LIBRARY}")
-    MAIN_STUB_TABLE_NAME=$(printf '%s_stub_table' "${LIBRARY}")
     MAIN_STUB_TABLE_INIT_FUNCTION=$(printf '%s_init_stub_table' "${LIBRARY}")
     MAIN_STUB_TABLE_FINAL_FUNCTION=$(printf '%s_final_stub_table' "${LIBRARY}")
 
@@ -3181,42 +3158,6 @@ END {
   printf "};\n\n";
 }
 ' || exit $?
-}
-
-## ------------------------------------------------------------
-
-#page
-## ------------------------------------------------------------
-## Stub module section: main stub table declaration.
-## ------------------------------------------------------------
-
-# This should output something like:
-#
-#   /* Library stub table.
-#      A pointer for each module's stub table. */
-#
-#   const ucl_stub_table_t ucl_stub_table = {
-#     &ucl_btree_stub_table,
-#     &ucl_base_stub_table,
-#     &ucl_circular_stub_table,
-#     &ucl_debug_stub_table
-#   }
-
-function stub_module_section__main_stub_table_decl () {
-    local last_line
-    fill_main_variables
-
-    printf '/* Library stub table.\n'
-    printf '   A pointer for each module stub table. */\n\n'
-    printf 'const %s %s = {\n' "${MAIN_STUB_TABLE_TYPE}" "${MAIN_STUB_TABLE_NAME}"
-    
-    for FILENAME in "$@" ; do
-        fill_module_variables
-        test -n "${last_line}" && printf '%s,\n' "${last_line}"
-        last_line=$(printf '  &%s' "${STUB_TABLE_NAME}")
-    done
-    test -n "${last_line}" && printf '%s\n' "${last_line}"
-    printf '};\n\n'
 }
 
 ## ------------------------------------------------------------

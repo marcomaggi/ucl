@@ -1340,13 +1340,13 @@ $(1)_stubsrc_LIBRARY_ID			?= $(1)
 $(1)_stubsrc_STUB_SHARED_LIBRARY_ID	?= $$($(1)_stub_SHARED_LIBRARY_LINK_ID)
 $(1)_stubsrc_EXTERN			?= $$($(1)_stubsrc_LIBRARY_ID)_decl
 
-$(1)_stubsrc_GLOBAL_HEADER_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_stub.h
-$(1)_stubsrc_SHARED_LIB_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_shared_stub_library.c
-$(1)_stubsrc_STATIC_LIB_NAME	?= $$($(1)_stubsrc_LIBRARY_ID)_static_stub_library.c
+$(1)_stubsrc_GLOBAL_HEADER_NAME		?= $$($(1)_stubsrc_LIBRARY_ID)_stub.h
+$(1)_stubsrc_SHARED_LIB_NAME		?= $$($(1)_stubsrc_LIBRARY_ID)_shared_stub_library.c
+$(1)_stubsrc_STATIC_LIB_NAME		?= $$($(1)_stubsrc_LIBRARY_ID)_static_stub_library.c
 
-$(1)_stubsrc_GLOBAL_HEADER	= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_GLOBAL_HEADER_NAME)
-$(1)_stubsrc_SHARED_LIB		= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_SHARED_LIB_NAME)
-$(1)_stubsrc_STATIC_LIB		= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_STATIC_LIB_NAME)
+$(1)_stubsrc_GLOBAL_HEADER_PATHNAME	= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_GLOBAL_HEADER_NAME)
+$(1)_stubsrc_SHARED_LIB_PATHNAME	= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_SHARED_LIB_NAME)
+$(1)_stubsrc_STATIC_LIB_PATHNAME	= $$($(1)_stubsrc_BUILDDIR)/$$($(1)_stubsrc_STATIC_LIB_NAME)
 
 ## ------------------------------------------------------------
 ## Stub related commands.
@@ -1386,13 +1386,14 @@ $(1)_stubsrc_OBJECTS	= $$($(1)_stub_shared_library_OBJECTS) \
 			  $$($(1)_stub_static_library_OBJECTS)
 
 # This is needed because it is the interface to 'ds-module-no-install'
-$(1)_TARGETS		+= $$($(1)_OBJECTS) $$($(1)_stubsrc_OBJECTS)
+$(1)_TARGETS		+= $$($(1)_stubsrc_GLOBAL_HEADER_PATHNAME) \
+			   $$($(1)_OBJECTS) $$($(1)_stubsrc_OBJECTS)
 
 $(1)_CLEANFILES		+= $$($(1)_TARGETS)
-$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)						\
-			   $$($(1)_stubsrc_HEADERS) $$($(1)_stubsrc_GLOBAL_HEADER)	\
-			   $$($(1)_stubsrc_TABLES)					\
-			   $$($(1)_stubsrc_SHARED_LIB) $$($(1)_stubsrc_STATIC_LIB)
+$(1)_REALCLEANFILES	+= $$($(1)_CLEANFILES)						      \
+			   $$($(1)_stubsrc_HEADERS) $$($(1)_stubsrc_GLOBAL_HEADER_PATHNAME)   \
+			   $$($(1)_stubsrc_TABLES)					      \
+			   $$($(1)_stubsrc_SHARED_LIB_PATHNAME) $$($(1)_stubsrc_STATIC_LIB_PATHNAME)
 
 $$(eval $$(call ds-module-no-install,$(1),$$($(1)_MAIN_SECTION)))
 
@@ -1402,16 +1403,16 @@ $$(eval $$(call ds-module-no-install,$(1),$$($(1)_MAIN_SECTION)))
 $$($(1)_stubsrc_HEADERS): $$($(1)_stubsrc_BUILDDIR)/stub_%.h : $$($(1)_SRCDIR)/%.c
 	$$($(1)_MKSTUB_MODULE_HEADER) -o$$(@) $$(<)
 
-$$($(1)_stubsrc_GLOBAL_HEADER): $$($(1)_stubsrc_HEADERS)
+$$($(1)_stubsrc_GLOBAL_HEADER_PATHNAME): $$($(1)_stubsrc_HEADERS)
 	$$($(1)_MKSTUB_GLOBAL_HEADER) -o$$(@) $$($(1)_SOURCES)
 
 $$($(1)_stubsrc_TABLES): $$($(1)_stubsrc_BUILDDIR)/table_%.c : $$($(1)_SRCDIR)/%.c
 	$$($(1)_MKSTUB_MODULE_TABLE) -o$$(@) $$(<)
 
-$$($(1)_stubsrc_SHARED_LIB): $$($(1)_SOURCES)
+$$($(1)_stubsrc_SHARED_LIB_PATHNAME): $$($(1)_SOURCES)
 	$$($(1)_MKSTUB_SHARED_LIB) -o$$(@) $$($(1)_SOURCES)
 
-$$($(1)_stubsrc_STATIC_LIB): $$($(1)_SOURCES)
+$$($(1)_stubsrc_STATIC_LIB_PATHNAME): $$($(1)_SOURCES)
 	$$($(1)_MKSTUB_STATIC_LIB) -o$$(@) $$($(1)_SOURCES)
 
 ## ------------------------------------------------------------
@@ -1420,18 +1421,25 @@ $$($(1)_stubsrc_STATIC_LIB): $$($(1)_SOURCES)
 $$(eval $$(call ds-cc-compile,$(1),-I$$($(1)_SRCDIR)))
 
 # The -I option allows the compilation  of object files to find the stub
-# headers.  The -D options defines to the empty string the "stub" macros
+# headers.  The -D option defines  to the empty string the "stub" macros
 # used to  declare the timestamp of  a function; notice  that the double
 # quotes  are mandatory because  the parentheses  are meaningful  to the
 # shell.
 $(1)_CC_COMPILE_FLAGS	+= -I$$($(1)_stubsrc_BUILDDIR) "-Dstub(TIMESTAMP)="
 
 $$($(1)_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_SRCDIR)/%.c $$($(1)_PREREQUISITES) \
-			$$($(1)_stubsrc_BUILDDIR)/stub_%.h $$($(1)_stubsrc_GLOBAL_HEADER)
+			$$($(1)_stubsrc_BUILDDIR)/stub_%.h
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 
-$$($(1)_stubsrc_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : $$($(1)_stubsrc_BUILDDIR)/%.c $$($(1)_PREREQUISITES) \
-			$$($(1)_stubsrc_TABLES) $$($(1)_stubsrc_GLOBAL_HEADER)
+# The  static stub  librariy  object  must be  compiled  with the  stubs
+# enabled,  so that  the  compiler will  see  the stub-related  function
+# prototypes.
+$$($(1)_stub_static_library_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : \
+   $$($(1)_stubsrc_BUILDDIR)/%.c $$($(1)_PREREQUISITES) $$($(1)_stubsrc_TABLES)
+	$$($(1)_CC_COMPILE) $$(@) $$(<) -D$$($(1)_UPPERCASE_LIBRARY_PREFIX)_ENABLE_STUB=1
+
+$$($(1)_stub_shared_library_OBJECTS) : $$($(1)_BUILDDIR)/%.$$(OBJEXT) : \
+   $$($(1)_stubsrc_BUILDDIR)/%.c $$($(1)_PREREQUISITES) $$($(1)_stubsrc_TABLES)
 	$$($(1)_CC_COMPILE) $$(@) $$(<)
 endef
 

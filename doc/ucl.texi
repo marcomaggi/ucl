@@ -1368,9 +1368,9 @@ them.
 @end deftypefn
 
 
-@defmac ucl_callback_is_present (ucl_callback_t @var{cb})
-Evaluate to true if the @code{func} field of @var{cb} is not @null{}.
-@end defmac
+@deftypefn {Inline Function} ucl_bool_t ucl_callback_is_present (ucl_callback_t @var{cb})
+Return true if the @code{func} field of @var{cb} is not @null{}.
+@end deftypefn
 
 
 @deftypefun void ucl_callback_apply (ucl_callback_t @var{cb}, ...)
@@ -1453,6 +1453,7 @@ ucl_callback_apply(cb, a, b);
 @cindex BTree container
 
 @menu
+* btree examples::              Usage examples.
 * btree creation::              Building btree hierarchies.
 * btree inspection::            Accessing nodes.
 * btree removing::              Removing elements from a btree.
@@ -1461,23 +1462,24 @@ ucl_callback_apply(cb, a, b);
 @end menu
 
 @noindent
-The @ucl{} btree container provides an implementation of a binary tree.
+The btree container provides an implementation of binary tree.
 
 
-@deftp {Struct Typedef} ucl_btree_node_t
-The data type of the nodes.  Nodes must be allocated and freed by the
-user's code.
+@deftp {Struct Typedef} ucl_btree_node_tag_t
+@deftpx {Pointer Typedef} ucl_btree_node_t
+The data type of the node structure and of the pointer to the node
+structure.  Nodes must be allocated and freed by the user's code.
 @end deftp
 
 The btree container is built as a chain of structures; each link has a
 brother, a son and a parent:
 
 @example
-                 -----    bro     -----
+                 -----   bro_p    -----
                 | no1 |--------->| no2 |
                  ----- <--------- -----
-                 |  ^     dad
-             son |  | dad
+                 |  ^    dad_p
+           son_p |  | dad_p
                  v  |
                  ----- 
                 | no3 |
@@ -1487,88 +1489,83 @@ brother, a son and a parent:
 @noindent
 each node data structure is just a collection of pointers used to keep
 trace of the tree hierarchy.  There's no data field: to use a tree to
-store data we have to include the btree node structure in another
+store data we have to embed the btree node structure in another
 structure; that's what the @ucl{} map container does.
 
-Each of the three pointers in the structure can be @null{}: that
-means that the node has no parent, brother or son.  Functions and macros
-are provided: to append nodes to other nodes; to extract nodes from the
+Each of the three pointers in the structure can be @null{}, which means
+that the node has no parent, brother or son.  Functions and macros are
+provided: to append nodes to other nodes; to extract nodes from the
 tree; to traverse the hierarchy and to find particularly interesting
 nodes.
 
+@c ------------------------------------------------------------
+
 @c page
-@node btree creation
-@subsection Building btrees hierarchies
+@node btree examples
+@subsection Usage examples
 
 
-@deftypefun void ucl_btree_constructor (ucl_btree_node_t * @var{self}, const ucl_btree_node_t * @var{dad})
-Initialise an already allocated btree structure referenced by
-@var{self}.  @var{dad} is a pointer to the parent node of @var{self}, or
-@null{} if @var{self} has no parent node.   We can use this function to
-initialise a new node and append it to an existing btree in a single
-step.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_destructor (ucl_btree_node_t * @var{self})
-Reset all the node fields to @null{}.  It's a wrapper for
-@function{ucl_struct_clean}.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_setdad (ucl_btree_node_t * @var{self}, const ucl_btree_node_t * @var{dad})
-Select a new parent node for @var{self}.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_setbro (ucl_btree_node_t * @var{self}, const ucl_btree_node_t * @var{bro})
-Select a new brother node for @var{self}.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_setson (ucl_btree_node_t * @var{self}, const ucl_btree_node_t * @var{son})
-Select a new child node for @var{self}.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_dadson (ucl_btree_node_t * @var{dad}, ucl_btree_node_t * @var{son})
-Link @var{dad} and @var{son} to be the parent and the son respectively.
-@end deftypefun
-
-
-@deftypefun void ucl_btree_dadbro (ucl_btree_node_t * @var{dad}, ucl_btree_node_t * @var{bro})
-Link @var{dad} and @var{bro} to be the parent and the bro respectively.
-@end deftypefun
-
-
-Example of btree creation: we want @code{a} to be the root node;
-@code{b} to be the son of @code{a}; @code{c} to be the brother of
-@code{a}; @code{d} to be the son of @code{c}.
+@noindent
+Let's say that we want to organise a set of characters in a binary tree;
+we define the tree node type and allocation functions of the node like
+these:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_btree_node_t        *a, *b, *c, *d;
+typedef struct node_tag_t @{
+  ucl_btree_node_t      node;
+  char                  c;
+@} node_tag_t;
 
-a = b = c = d = NULL;
-allocator.alloc(allocator.data, &a, sizeof(ucl_btree_node_t));
-allocator.alloc(allocator.data, &b, sizeof(ucl_btree_node_t));
-allocator.alloc(allocator.data, &c, sizeof(ucl_btree_node_t));
-allocator.alloc(allocator.data, &d, sizeof(ucl_btree_node_t));
+typedef node_tag_t *    node_t;
 
-ucl_btree_constructor(a, NULL);
+ucl_memory_allocator_t  allocator = @{
+  .data  = NULL,
+  .alloc = ucl_memory_alloc
+@};
 
-ucl_btree_constructor(b, a);
-ucl_btree_setson(a, b);
+node_t
+node_make (char c)
+@{
+  node_t        p = NULL;
 
-ucl_btree_constructor(c, a);
-ucl_btree_setbro(a, c);
-
-ucl_btree_constructor(d, c);
-ucl_btree_setson(c, d);
+  allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
+  p->c = c;
+  return p;
+@}
+void
+node_final (node_t p)
+@{
+  allocator.alloc(allocator.data, &p, 0);
+@}
+__inline__ void
+node_clean (node_t p)
+@{
+  ucl_struct_clean(p, node_tag_t);
+@}
 @end example
 
 @noindent
-now the hierarchy is:
+and we remember that the built in @ucl{} allocation function,
+@function{ucl_memory_alloc}, sets to zero all the bytes of newly
+allocated blocks.
+
+We define the getter/setter functions in ``generic'' form, like these:
+
+@example
+__inline__ void
+node_set (node_t p, void * data)
+@{
+  p->c = *((char *)data);
+@}
+__inline__ char *
+node_get (node_t p)
+@{
+  return &(p->c);
+@}
+@end example
+
+
+Now if we want the following hierarchy:
 
 @example
        ---  bro  ---
@@ -1582,17 +1579,98 @@ now the hierarchy is:
 @end example
 
 @noindent
+we do it like this, taking advantage of the fact that the btree
+functions accept @code{void *} values as arguments:
+
+@example
+node_t  a, b, c, d;
+
+a = node_make('a');
+b = node_make('b');
+c = node_make('c');
+d = node_make('d');
+
+ucl_btree_dadson(a, b);
+ucl_btree_dadbro(a, c);
+ucl_btree_dadson(c, d);
+@end example
+
+@noindent
 the following expressions are true:
 
 @example
-(a == ucl_btree_getdad(b)) && (b == ucl_btree_getson(a))
-(a == ucl_btree_getdad(c)) && (c == ucl_btree_getbro(a))
-(c == ucl_btree_getdad(d)) && (d == ucl_btree_getson(c))
-ucl_btree_getdad(a) == NULL
-ucl_btree_getbro(c) == NULL
-(ucl_btree_getson(b) == NULL) && (ucl_btree_getbro(b) == NULL)
-(ucl_btree_getson(d) == NULL) && (ucl_btree_getbro(d) == NULL)
+NULL == ucl_btree_getdad(a)
+a    == ucl_btree_getdad(b)
+a    == ucl_btree_getdad(c)
+c    == ucl_btree_getdad(d)
+
+c    == ucl_btree_getbro(a)
+NULL == ucl_btree_getbro(b)
+NULL == ucl_btree_getbro(c)
+NULL == ucl_btree_getbro(d)
+
+b    == ucl_btree_getson(a)
+NULL == ucl_btree_getson(b)
+d    == ucl_btree_getson(c)
+NULL == ucl_btree_getson(d)
 @end example
+
+@c ------------------------------------------------------------
+
+@c page
+@node btree creation
+@subsection Building btrees hierarchies
+
+
+@noindent
+The correct way of building btrees is to allocate node structures with a
+function that cleans them up, like @function{calloc}, then use the
+following functions to initialise the fields.  If a structure must be
+recycled, we must reset its fields to zero first.
+
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast @code{ucl_btree_node_t}.
+
+
+@subsubsection Single link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_setdad (void * @var{self}, void * @var{dad})
+Select a new parent node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_setbro (void * @var{self}, void * @var{bro})
+Select a new brother node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_setson (void * @var{self}, void * @var{son})
+Select a new child node for @var{self}.
+@end deftypefn
+
+
+@subsubsection Double link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_dadson (void * @var{dad}, void * @var{son})
+Link @var{dad} and @var{son} to be the parent and the son respectively.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_dadbro (void * @var{dad}, void * @var{bro})
+Link @var{dad} and @var{bro} to be the parent and the bro respectively.
+@end deftypefn
+
+
+@subsubsection Triple link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_dadsonbro (void * @var{dad}, void * @var{son}, void * @var{bro})
+Link @var{dad}, @var{son} and @var{bro} to be the parent, the son and
+the bro respectively.
+@end deftypefn
+
 
 @c ------------------------------------------------------------
 
@@ -1601,22 +1679,37 @@ ucl_btree_getbro(c) == NULL
 @subsection Accessing nodes
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_getdad (const ucl_btree_node_t * @var{self})
+@noindent
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_getdad (void * @var{self})
 Return a pointer to the parent of @var{self} or @null{} if the node
 has no parent.
-@end deftypefun
+@end deftypefn
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_getbro (const ucl_btree_node_t * @var{self})
+@deftypefn {Inline Function} {void *} ucl_btree_getbro (void * @var{self})
 Return a pointer to the brother of @var{self} or @null{} if the node has
 no brother.
-@end deftypefun
+@end deftypefn
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_getson (const ucl_btree_node_t * @var{self})
+@deftypefn {Inline Function} {void *} ucl_btree_getson (void * @var{self})
 Return a pointer to the son of @var{self} or @null{} if the node has no
 son.
-@end deftypefun
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_data (void * @var{self})
+Assuming that the first field of the memory block referenced by
+@var{self} is a structure of type @code{ucl_btree_node_tag_t}, return a
+pointer to the first byte after that structure.  The returned pointer
+should reference the first byte of the data area of the tree node.
+@end deftypefn
+
 
 @c ------------------------------------------------------------
 
@@ -1626,19 +1719,16 @@ son.
 
 
 @noindent
-It's a matter of setting pointers to @null{}.  Care must be taken not
-to loose reference to subtrees.
+It's a matter of setting pointers to @null{}.  Care must be taken not to
+loose references to subtrees.  We can use the
+@function{ucl_btree_setdad}, @function{ucl_btree_setbro} and
+@function{ucl_btree_setson} functions.
 
-We just use the @function{ucl_btree_setdad}, @function{ucl_btree_setbro}
-and @function{ucl_btree_setson} macros.
-
-
-Example: detach a subtree; the brother of the node @code{a} is detached
-and made an independent tree:
+Example of detaching a subtree; the brother of the node @code{a} is
+detached and made an independent tree:
 
 @example
-ucl_btree_node_t *   a;
-ucl_btree_node_t *   b;
+ucl_btree_node_t  a, b;
 
 a = ...;
 b = ucl_btree_getbro(a);
@@ -1647,6 +1737,30 @@ ucl_btree_setbro(a, NULL);
 ucl_btree_setdad(b, NULL);
 @end example
 
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_son (void * @var{self})
+Detach the son of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_bro (void * @var{self})
+Detach the bro of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_dad (void * @var{self})
+Detach the dad of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
 @c ------------------------------------------------------------
 
 @c page
@@ -1654,7 +1768,13 @@ ucl_btree_setdad(b, NULL);
 @subsection Finding special nodes
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_find_leftmost (const ucl_btree_node_t * @var{self})
+@noindent
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
+
+
+@deftypefun {void *} ucl_btree_find_leftmost (void * @var{self})
 Find the leftmost node in the subtree of the supplied node.  To do this,
 we traverse the tree choosing always the son of the current node.
 
@@ -1677,7 +1797,7 @@ or to @var{self} itself if it has no son.
 @end deftypefun
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_find_rightmost (const ucl_btree_node_t * @var{self})
+@deftypefun {void *} ucl_btree_find_rightmost (void * @var{self})
 Find the rightmost node in the subtree of the supplied node.  To do this,
 we traverse the tree choosing always the brother of the current node.
 
@@ -1700,7 +1820,7 @@ or to @var{self} itself if it has no brother.
 @end deftypefun
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_find_deepest_son (const ucl_btree_node_t * @var{self})
+@deftypefun {void *} ucl_btree_find_deepest_son (void * @var{self})
 Find the deepest leftmost son in a subtree.  This is different from
 @function{ucl_btree_find_leftmost}.
 
@@ -1737,6 +1857,8 @@ or @var{self} itself if it has no son.
 @end menu
 
 
+@c ------------------------------------------------------------
+
 @c page
 @node btree inorder iteration
 @subsubsection Inorder iteration
@@ -1759,38 +1881,43 @@ rightmost to the leftmost.  Example: given the tree:
 the inorder iteration is: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12; the
 backward inorder iteration is: 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0.
 
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_step_inorder (const ucl_btree_node_t * @var{self})
+@deftypefun {void *} ucl_btree_step_inorder (void * @var{self})
 Advance a forward inorder iteration.  Given a node in a btree, this
 function performs a single step.  Return a pointer to the next node in
 the iteration, or @null{} if the iteration is over.
 @end deftypefun
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_step_inorder_backward (const ucl_btree_node_t * @var{self})
+@deftypefun {void *} ucl_btree_step_inorder_backward (void * @var{self})
 Advance a backward inorder iteration.  Given a node in a btree, this
 function performs a single step.  Return a pointer to the next node in
 the iteration, or @null{} if the iteration is over.
 @end deftypefun
 
 
-@subsubsection  Examples of forward iteration
+@c ------------------------------------------------------------
+
+@c page
+@subsubsection Examples of forward iteration
+
 
 @noindent
-To perform a complete forward inorder iteration, we have to start from the
-leftmost node (@code{0} in the picture), already visited, and begin from
-there.  Example:
+To perform a complete forward inorder iteration, we have to start from
+the leftmost node (@code{0} in the picture above), already visited, and
+begin from there.  Example:
 
 @example
-ucl_btree_node_t *        cur;
+ucl_btree_node_t   cur = get_the_top_node();
 
-cur     = select_a_btree(...);
-cur     = ucl_btree_find_leftmost(cur);
-
-while (cur);
+for (cur = ucl_btree_find_leftmost(cur);
+     cur;
+     cur = ucl_btree_step_inorder(cur));
   @{
-    makes_use_of_node(cur);
-    cur = ucl_btree_step_inorder(cur);
+    do_something_with(cur);
   @}
 @end example
 
@@ -1802,66 +1929,69 @@ Example of subtree restriction: does an inorder iteration from the top
 of a subtree to the rightmost node in the subtree:
 
 @example
-ucl_btree_node_t *        cur, end;
+ucl_btree_node_t        cur, end;
 
-cur     = select_a_node(...);
-end     = ucl_btree_find_rightmost(cur);
-cur     = ucl_btree_find_leftmost(cur);
-makes_use_of_node(cur);
+cur = get_a_node(...);
+end = ucl_btree_find_rightmost(cur);
 
-while (cur != end)
+for (cur = ucl_btree_find_leftmost(cur);
+     cur != end;
+     cur = ucl_btree_step_inorder(cur))
   @{
-    cur = ucl_btree_step_inorder(cur);
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
 @end example
 
 @noindent
-@code{cur} can't be @null{} because @code{end} is in the subtree of
-the top node; this code should work even if: @code{cur == end}.
+@code{cur} can't be @null{} because @code{end} is in the subtree of the
+top node; this code will work even when @code{cur == end} at the
+beginning.
 
 Example of range restriction: does an iteration starting from a node
 (not the leftmost) to the rightmost one:
 
 @example
-ucl_btree_node_t *	root, cur, end;
+ucl_btree_node_t        root, cur, end;
 
-root	= select_a_node(...);
-cur	= select_first(root, ...);
+root	= get_a_node();
 end	= ucl_btree_find_rightmost(root);
 
-makes_use_of_node(cur);
-
-while (cur != end)
+for (cur = select_first(root, ...);
+     cur != end;
+     cur = ucl_btree_step_inorder(cur))
   @{
-    cur = ucl_btree_step_inorder(cur);
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
 @end example
 
 @noindent
-@code{cur} can't be @null{} since we selected the first and last
-nodes in a subtree; this code should work even if: @code{root == cur ==
-end}.
+@code{cur} can't be @null{} because we selected the first and last nodes
+in a subtree; this code will work even when @code{root == cur == end} at
+the beginning.
 
 
-@subsubsection  Examples of backward iteration
+@c ------------------------------------------------------------
+
+@c page
+@subsubsection Examples of backward iteration
+
 
 @noindent
 To perform a complete backward iteration, we have to start from the
-rightmost node (@code{12} in the picture), already visited, and begin
-from there.  Example:
+rightmost node (@code{12} in the picture above), already visited, and
+begin from there.  Example:
 
 @example
-ucl_btree_node_t *        cur;
+ucl_btree_node_t   cur = get_the_top_node();
 
-cur     = select_a_btree(...);
-cur     = ucl_btree_find_rightmost(cur);
-
-while (cur);
+for (cur = ucl_btree_find_rightmost(cur);
+     cur;
+     cur = ucl_btree_step_inorder_backward(cur))
   @{
-    makes_use_of_node(cur);
-    cur = ucl_btree_step_inorder_backward(cur);
+    do_something_with(cur);
   @}
 @end example
 
@@ -1873,47 +2003,50 @@ Example of subtree restriction: does an iteration from the rightmost to
 the leftmost nodes in a subtree:
 
 @example
-ucl_btree_node_t *        cur, end;
+ucl_btree_node_t        cur, end;
 
-cur     = select_a_node(...);
-end     = ucl_btree_find_leftmost(cur);
-cur     = ucl_btree_find_rightmost(cur);
+cur = get_a_node(...);
+end = ucl_btree_find_leftmost(cur);
 
-makes_use_of_node(cur);
-
-while (cur != end)
+for (cur = ucl_btree_find_rightmost(cur);
+     cur != end;
+     cur = ucl_btree_step_inorder_backward(cur))
   @{
-    cur = ucl_btree_step_inorder_backward(cur);
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
 @end example
 
 @noindent
-@code{cur} can't be @null{} because @code{end} is in the subtree of
-the top node; this code should work even if: @code{cur == end}.
+@code{cur} can't be @null{} because @code{end} is in the subtree of the
+top node; this code will work even when @code{cur == end} at the
+beginning.
 
 Example of range restriction:
 
 @example
-ucl_btree_node_t *        root, cur, end;
+ucl_btree_node_t        root, cur, end;
 
-root    = select_a_node(...);
-cur     = select_first(root, ...);
-end     = ucl_btree_find_leftmost(root);
+root	= get_a_node();
+end	= ucl_btree_find_leftmost(root);
 
-makes_use_of_node(cur);
-
-while (cur != end)
+for (cur = select_first(root, ...);
+     cur != end;
+     cur = ucl_btree_step_inorder_backward(cur))
   @{
-    cur = ucl_btree_step_inorder_backward(cur);
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
 @end example
 
 @noindent
-@code{cur} can't be @null{} since we selected the first and last
-nodes in a subtree; this code should work even if: @code{root == cur ==
-end}.
+@code{cur} can't be @null{} since we selected the first and last nodes
+in a subtree; this code will work even when @code{root == cur == end} a
+the beginning.
 
 @c ------------------------------------------------------------
 
@@ -1939,7 +2072,7 @@ the order is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8, 12, 11.  It's a worm that
 always ``turns right''.
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_step_preorder (const ucl_btree_node_t *@var{self})
+@deftypefun {void *} ucl_btree_step_preorder (void * @var{self})
 Advance a preorder iteration.  Given a node in a btree this function
 performs a single step.  Return a pointer to the next node in the
 preorder iteration, or @null{} if the iteration is over.
@@ -1951,14 +2084,13 @@ the tree (@code{5} in the example), already visited, and begin from
 there.  Example:
 
 @example
-ucl_btree_node_t *    cur;
+ucl_btree_node_t        cur;
 
-cur = select_a_btree(...);
-
-while (cur);
+for (cur = select_the_top_node();
+     cur;
+     cur = ucl_btree_step_pre(cur))
   @{
     makes_use_of_node(cur);
-    cur = ucl_btree_step_pre(cur);
   @}
 @end example
 

@@ -452,7 +452,11 @@ typedef struct ucl_callback_t {
 
 /* ------------------------------------------------------------ */
 
-#define ucl_callback_is_present(CALLBACK)	(NULL != (CALLBACK).func)
+static __inline__ __attribute__((__pure__)) ucl_bool_t
+ucl_callback_is_present (ucl_callback_t callback)
+{
+  return (NULL != callback.func);
+}
 
 /* ------------------------------------------------------------ */
 
@@ -542,14 +546,135 @@ ucl_iterator_ptr (ucl_iterator_t iterator_p)
  ** Binary tree type definitions.
  ** ----------------------------------------------------------*/
 
-typedef struct ucl_btree_node_t {
-  struct ucl_btree_node_t *	dad_p;
-  struct ucl_btree_node_t *	bro_p;
-  struct ucl_btree_node_t *	son_p;
-} ucl_btree_node_t;
+typedef struct ucl_btree_node_tag_t {
+  struct ucl_btree_node_tag_t *	dad_p;
+  struct ucl_btree_node_tag_t *	bro_p;
+  struct ucl_btree_node_tag_t *	son_p;
+} ucl_btree_node_tag_t;
+
+typedef ucl_btree_node_tag_t *	ucl_btree_node_t;
 
 /* ------------------------------------------------------------ */
-/* Circular list type definitions. */
+
+#if (defined __GNUC__)
+#  if !(defined ucl_btree_decl)
+#    define ucl_btree_decl		\
+  __attribute__((__always_inline__,__pure__,__nonnull__))
+#    define ucl_btree_decl_null		\
+  __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+#  else
+#    define ucl_btree_decl		/* empty */
+#    define ucl_btree_decl		/* empty */
+#  endif /* not defined ucl_btree_decl */
+#endif /* defined __GNUC__ */
+
+/* ------------------------------------------------------------ */
+/* setters */
+
+static __inline__ ucl_btree_decl_null void
+ucl_btree_setbro (void * self, void * bro_p)
+{
+  ((ucl_btree_node_t)self)->bro_p = bro_p;
+}
+static __inline__ ucl_btree_decl_null void
+ucl_btree_setson (void * self, void * son_p)
+{
+  ((ucl_btree_node_t)self)->son_p = son_p;
+}
+static __inline__ ucl_btree_decl_null void
+ucl_btree_setdad (void * self, void * dad_p)
+{
+  ((ucl_btree_node_t)self)->dad_p = dad_p;
+}
+static __inline__ ucl_btree_decl void
+ucl_btree_dadbro (void * dad, void * bro)
+{
+  ucl_btree_setdad(bro, dad);
+  ucl_btree_setbro(dad, bro);
+}
+static __inline__ ucl_btree_decl void
+ucl_btree_dadson (void * dad, void * son)
+{
+  ucl_btree_setdad(son, dad);
+  ucl_btree_setson(dad, son);
+}
+static __inline__ ucl_btree_decl void
+ucl_btree_dadsonbro (void * dad, void * son, void * bro)
+{
+  ucl_btree_setdad(son, dad);
+  ucl_btree_setdad(bro, dad);
+  ucl_btree_setson(dad, son);
+  ucl_btree_setbro(dad, bro);
+}
+
+/* ------------------------------------------------------------ */
+/* getters */
+
+static __inline__ ucl_btree_decl void *
+ucl_btree_getbro (void * self)
+{
+  return ((ucl_btree_node_t)self)->bro_p;
+}
+static __inline__ ucl_btree_decl void *
+ucl_btree_getson (void * self)
+{
+  return ((ucl_btree_node_t)self)->son_p;
+}
+static __inline__ ucl_btree_decl void *
+ucl_btree_getdad (void * self)
+{
+  return ((ucl_btree_node_t)self)->dad_p;
+}
+static __inline__ ucl_btree_decl void *
+ucl_btree_data (void * self)
+{
+  typedef struct {
+    ucl_btree_node_t	dad_p;
+    ucl_btree_node_t	bro_p;
+    ucl_btree_node_t	son_p;
+    uint8_t		data[];
+  } ucl_btree_embedded_node_tag_t;
+
+  return ((ucl_btree_embedded_node_tag_t *)self)->data;
+}
+
+/* ------------------------------------------------------------ */
+/* detaching */
+
+static __inline__ ucl_btree_decl void *
+ucl_btree_detach_son (void * self)
+{
+  ucl_btree_node_t	son_p = ucl_btree_getson(self);
+
+  ucl_btree_setson(self, NULL);
+  ucl_btree_setdad(son_p, NULL);
+  return son_p;
+}
+static __inline__ ucl_btree_decl void *
+ucl_btree_detach_bro (void * self)
+{
+  ucl_btree_node_t	bro_p = ucl_btree_getbro(self);
+
+  ucl_btree_setbro(self, NULL);
+  ucl_btree_setdad(bro_p, NULL);
+  return bro_p;
+}
+static __inline__ ucl_btree_decl void *
+ucl_btree_detach_dad (void * self)
+{
+  ucl_btree_node_t	dad_p = ucl_btree_getdad(self);
+
+  ucl_btree_setdad(self, NULL);
+  ucl_btree_setdad(dad_p, NULL);
+  return dad_p;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Circular list type definitions.
+ ** ----------------------------------------------------------*/
 
 typedef struct ucl_circular_link_t {
   struct ucl_circular_link_t *	next;
@@ -746,10 +871,10 @@ ucl_list_setval (ucl_list_link_t * link_p, ucl_value_t newval)
  ** ----------------------------------------------------------*/
 
 typedef struct ucl_map_link_t {
-  ucl_btree_node_t 	node;
-  char			avl_status;
-  ucl_value_t		key;
-  ucl_value_t		val;
+  ucl_btree_node_tag_t	node;
+  char		avl_status;
+  ucl_value_t	key;
+  ucl_value_t	val;
 } ucl_map_link_t;
 
 typedef struct ucl_map_struct_t {
@@ -1152,7 +1277,6 @@ typedef struct ucl_graph_dfs_item_t {
 #define ucl_graph_dfs_items(SEARCH_HANDLE_P)	(&((SEARCH_HANDLE_P)->visited_nodes[0]))
 
 /* ------------------------------------------------------------ */
-
 
 
 /** ------------------------------------------------------------

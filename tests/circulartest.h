@@ -40,6 +40,7 @@
 #define NUMBER	20
 
 void fill (ucl_circular_t circ_p, int number, int first);
+void clean_circular (ucl_circular_t this);
 
 /* ------------------------------------------------------------ */
 
@@ -65,7 +66,7 @@ fill (ucl_circular_t circ_p, int number, int first)
       ucl_circular_insert(circ_p, link_p);
     }
 }
-static void
+void
 clean_circular (ucl_circular_t this)
 {
   ucl_circular_link_t *		link_p;

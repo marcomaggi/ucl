@@ -14,7 +14,8 @@
 
 ucl_decl void ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp);
 ucl_decl void ucl_map_destructor (ucl_map_t this);
-ucl_decl void ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p);
+ucl_decl void ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
+	__attribute__((__nonnull__,__pure__));
 ucl_decl ucl_map_link_t * ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p);
 ucl_decl ucl_map_link_t * ucl_map_find (const ucl_map_t this, const ucl_value_t key);
 ucl_decl ucl_map_link_t * ucl_map_first (const ucl_map_t this);

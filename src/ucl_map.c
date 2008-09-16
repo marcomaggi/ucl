@@ -62,7 +62,7 @@
 typedef ucl_map_t		map_t;
 typedef ucl_map_struct_t	map_struct_t;
 typedef ucl_map_link_t		link_t;
-typedef ucl_btree_node_t	node_t;
+typedef ucl_btree_node_tag_t	node_t;
 typedef ucl_iterator_t		iterator_t;
 typedef ucl_iterator_struct_t	iterator_struct_t;
 typedef ucl_value_t		value_t;
@@ -125,7 +125,7 @@ ucl_map_destructor (ucl_map_t this)
  ** Insertion.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-11-44) void
+stub(2005-09-23-18-11-44) __attribute__((__nonnull__,__pure__)) void
 ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 {
   ucl_comparison_t	keycmp;
