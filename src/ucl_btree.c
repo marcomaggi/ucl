@@ -41,6 +41,7 @@
  ** Header files.
  ** ----------------------------------------------------------*/
 
+#define DEBUGGING		0
 #include "internal.h"
 
 #define stubmodule		btree
@@ -55,12 +56,9 @@
 stub(2005-09-23-18-09-13) __attribute__((__nonnull__,__pure__)) void *
 ucl_btree_find_leftmost (void * _node_p)
 {
-  ucl_btree_node_t	node_p = _node_p;
+  ucl_btree_node_t node_p = _node_p;
 
-  while (node_p->son_p)
-    {
-      node_p = node_p->son_p;
-    }
+  for (; node_p->son_p; node_p = node_p->son_p) ;
   return node_p;
 }
 stub(2005-09-23-19-07-07) __attribute__((__nonnull__,__pure__)) void *
@@ -93,12 +91,31 @@ ucl_btree_find_deepest_son (void * _node_p)
   while (node_p->son_p || node_p->bro_p);
   return node_p;
 }
+stub(2008-09-16-15-13-57) __attribute__((__nonnull__,__pure__)) void *
+ucl_btree_find_deepest_bro (void * _node_p)
+{
+  ucl_btree_node_t	node_p = _node_p;
+
+  do
+    {
+      while (node_p->bro_p)
+	{
+	  node_p = node_p->bro_p;
+	}
+      if (node_p->son_p)
+	{
+	  node_p = node_p->son_p;
+	}
+    }
+  while (node_p->bro_p || node_p->son_p);
+  return node_p;
+}
 
 /* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
- ** Inorder forward iteration step.
+ ** Inorder FORward iteration step.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-15) __attribute__((__nonnull__,__pure__)) void *
@@ -143,7 +160,7 @@ ucl_btree_step_inorder (void * _cur_p)
 
 
 /** ------------------------------------------------------------
- ** Inorder backward iteration step.
+ ** Inorder BACKward iteration step.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-19) __attribute__((__nonnull__,__pure__)) void *
@@ -188,7 +205,7 @@ ucl_btree_step_inorder_backward (void * _cur_p)
 
 
 /** ------------------------------------------------------------
- ** Preorder forward iteration step.
+ ** Preorder FORward iteration step.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-23) __attribute__((__nonnull__,__pure__)) void *
@@ -239,7 +256,58 @@ ucl_btree_step_preorder (void * _cur_p)
 
 
 /** ------------------------------------------------------------
- ** Postorder forward iteration step.
+ ** Preorder BACKward iteration step.
+ ** ----------------------------------------------------------*/
+
+stub(2008-09-16-15-34-28) __attribute__((__nonnull__,__pure__)) void *
+ucl_btree_step_preorder_backward (void * _cur_p)
+{
+  ucl_btree_node_t	cur_p = _cur_p;
+  ucl_btree_node_t	dad_p;
+
+
+  /* Visit the bro, if any. If no bro: visit the sonther, if any. */
+  if (cur_p->bro_p)
+    {
+      return cur_p->bro_p;
+    }
+  else if (cur_p->son_p)
+    {
+      return cur_p->son_p;
+    }
+  /* No  bro and no  sonther so  step up  to the  father: if  there's no
+     father, ends the  iteration; if coming from the  father's bro visit
+     the father's sonther,  if any; if coming from  the father's sonther
+     step up and loop.
+  */
+  else
+    {
+      for (;;)
+	{
+	  dad_p = cur_p->dad_p;
+
+	  if (! dad_p)
+	    {
+	      break;
+	    }
+	  else if ((dad_p->bro_p == cur_p) && (dad_p->son_p))
+	    {
+	      return dad_p->son_p;
+	    }
+	  else
+	    {
+	      cur_p = dad_p;
+	    }
+	}
+    }
+  return dad_p;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Postorder FORward iteration step.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-27) __attribute__((__nonnull__,__pure__)) void *
@@ -268,7 +336,36 @@ ucl_btree_step_postorder (void * _cur_p)
 
 
 /** ------------------------------------------------------------
- ** Levelorder forward iteration step.
+ ** Postorder BACKward iteration step.
+ ** ----------------------------------------------------------*/
+
+stub(2008-09-16-15-35-06) __attribute__((__nonnull__,__pure__)) void *
+ucl_btree_step_postorder_backward (void * _cur_p)
+{
+  ucl_btree_node_t	cur_p = _cur_p;
+  ucl_btree_node_t	dad_p;
+
+
+  dad_p = cur_p->dad_p;
+  if (! dad_p)
+    {
+      return dad_p;
+    }
+  else if ((dad_p->son_p) && (dad_p->son_p != cur_p))
+    {
+      return ucl_btree_find_deepest_bro(dad_p->son_p);
+    }
+  else
+    {
+      return dad_p;
+    }
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Levelorder FORward iteration step.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-30) __attribute__((__nonnull__,__pure__)) void *
@@ -352,6 +449,103 @@ ucl_btree_step_levelorder (void * _cur_p)
 		  return cur_p;
 		}
 	      if ((cur_p == org_p) && (!cur_p->son_p) && (!cur_p->bro_p))
+		{
+		  return NULL;
+		}
+	    }
+	}
+    }
+  return cur_p;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Levelorder BACKward iteration step.
+ ** ----------------------------------------------------------*/
+
+stub(2008-09-16-15-36-20) __attribute__((__nonnull__,__pure__)) void *
+ucl_btree_step_levelorder_backward (void * _cur_p)
+{
+  ucl_btree_node_t	cur_p = _cur_p;
+  ucl_btree_node_t	org_p;
+  ucl_btree_node_t	last_p;
+  int i=0;
+
+
+  if ((! cur_p->dad_p) && (! cur_p->bro_p) && (! cur_p->son_p))
+    {
+      return NULL;
+    }
+
+  org_p = cur_p;
+
+  for (;;)
+    {
+      if (cur_p->dad_p)
+	{
+	  last_p = cur_p;
+	  cur_p = cur_p->dad_p;
+	  ++i;
+	  if (cur_p->son_p && cur_p->son_p != last_p)
+	    {
+	      last_p = cur_p;
+	      cur_p = cur_p->son_p;
+	      --i;
+	      if (i == 0)
+		{
+		  return cur_p;
+		}
+	      if (cur_p == org_p && !cur_p->bro_p && !cur_p->son_p)
+		{
+		  return NULL;
+		}
+	      while (cur_p->bro_p || cur_p->son_p)
+		{
+		  if (cur_p->bro_p)
+		    {
+		      last_p = cur_p;
+		      cur_p = cur_p->bro_p;
+		    }
+		  else if (cur_p->son_p)
+		    {
+		      last_p = cur_p;
+		      cur_p = cur_p->son_p;
+		    }
+		  --i;
+		  if (i == 0)
+		    {
+		      return cur_p;
+		    }
+		  if (cur_p == org_p && !cur_p->bro_p && !cur_p->son_p)
+		    {
+		      return NULL;
+		    }
+		}
+	    }
+	}
+      else
+	{
+	  ++i;
+	  while (cur_p->bro_p || cur_p->son_p)
+	    {
+	      if (cur_p->bro_p)
+		{
+		  last_p = cur_p;
+		  cur_p = cur_p->bro_p;
+		}
+	      else if (cur_p->son_p)
+		{
+		  last_p = cur_p;
+		  cur_p = cur_p->son_p;
+		}
+	      --i;
+	      if (i == 0)
+		{
+		  return cur_p;
+		}
+	      if ((cur_p == org_p) && (!cur_p->bro_p) && (!cur_p->son_p))
 		{
 		  return NULL;
 		}

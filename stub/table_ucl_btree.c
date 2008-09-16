@@ -15,7 +15,11 @@ const ucl_btree_stub_table_t ucl_btree_stub_table = {
   ucl_btree_step_postorder,
   ucl_btree_step_levelorder,
   ucl_btree_find_rightmost,
-  ucl_btree_find_deepest_son
+  ucl_btree_find_deepest_son,
+  ucl_btree_find_deepest_bro,
+  ucl_btree_step_preorder_backward,
+  ucl_btree_step_postorder_backward,
+  ucl_btree_step_levelorder_backward
 };
 
 

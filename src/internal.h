@@ -40,5 +40,6 @@
 
 /* ------------------------------------------------------------ */
 
+extern ucl_callback_apply_fun_t * ucl_callback_application_function;
 
 /* end of file */

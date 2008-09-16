@@ -6,7 +6,8 @@
    
    Abstract
    
-   
+	Test  the  hierarchy  builder  functions and  the  generic  data
+	accessor function.
    
    Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
@@ -25,18 +26,60 @@
    
 */
 
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
+
 #include "btreetest.h"
+
+typedef struct node_tag_t {
+  ucl_btree_node_tag_t	node;
+  char			c;
+} node_tag_t;
+typedef node_tag_t *	node_t;
+
+ucl_memory_allocator_t	allocator = {
+  .data = NULL, .alloc = ucl_memory_alloc
+};
+
+static node_t
+node_make (char c)
+{
+  node_t        p = NULL;
+
+  allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
+  p->c = c;
+  return p;
+}
+static void
+node_final (node_t p)
+{
+  allocator.alloc(allocator.data, &p, 0);
+}
+static __inline__ void
+node_clean (node_t p)
+{
+  ucl_struct_clean(p, node_tag_t);
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Test.
+ ** ----------------------------------------------------------*/
 
 void
 test (void)
 {
-  ucl_btree_node_t	*a, *b, *c, *d;
+  node_t	a, b, c, d;
 
 
-  a = (ucl_btree_node_t *) malloc(sizeof(ucl_btree_node_t));
-  b = (ucl_btree_node_t *) malloc(sizeof(ucl_btree_node_t));
-  c = (ucl_btree_node_t *) malloc(sizeof(ucl_btree_node_t));
-  d = (ucl_btree_node_t *) malloc(sizeof(ucl_btree_node_t));
+  a = node_make('a');
+  b = node_make('b');
+  c = node_make('c');
+  d = node_make('d');
 
 
   /*
@@ -53,18 +96,9 @@ test (void)
   */
 
 
-  ucl_btree_constructor(a, NULL);
-
-  ucl_btree_constructor(b, a);
-  ucl_btree_setson(a, b);
-
-  ucl_btree_constructor(c, a);
-  ucl_btree_setbro(a, c);
-  
-  ucl_btree_constructor(d, c);
-  ucl_btree_setson(c, d);
-
-  /* test all the pointers */
+  ucl_btree_dadson(a, b);
+  ucl_btree_dadbro(a, c);
+  ucl_btree_dadson(c, d);
 
   assert((a == ucl_btree_getdad(b)) && (b == ucl_btree_getson(a)));
   assert((a == ucl_btree_getdad(c)) && (c == ucl_btree_getbro(a)));
@@ -74,10 +108,15 @@ test (void)
   assert((ucl_btree_getson(b) == NULL) && (ucl_btree_getbro(b) == NULL));
   assert((ucl_btree_getson(d) == NULL) && (ucl_btree_getbro(d) == NULL));
   
-  free(a);
-  free(b);
-  free(c);
-  free(d);
+  assert('a' == *((char *)ucl_btree_data(a)));
+  assert('b' == *((char *)ucl_btree_data(b)));
+  assert('c' == *((char *)ucl_btree_data(c)));
+  assert('d' == *((char *)ucl_btree_data(d)));
+
+  node_final(a);
+  node_final(b);
+  node_final(c);
+  node_final(d);
 }
 
 /* end of file */

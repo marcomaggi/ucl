@@ -450,6 +450,8 @@ typedef struct ucl_callback_t {
 
 #define UCL_CALLBACK_NULL_VALUE		{ .func = NULL, .data = { .ptr = 0 } }
 
+typedef void ucl_callback_apply_fun_t (ucl_callback_t callback, ...);
+
 /* ------------------------------------------------------------ */
 
 static __inline__ __attribute__((__pure__)) ucl_bool_t
@@ -559,9 +561,11 @@ typedef ucl_btree_node_tag_t *	ucl_btree_node_t;
 #if (defined __GNUC__)
 #  if !(defined ucl_btree_decl)
 #    define ucl_btree_decl		\
-  __attribute__((__always_inline__,__pure__,__nonnull__))
+  __attribute__((__always_inline__,__nonnull__))
 #    define ucl_btree_decl_null		\
-  __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+  __attribute__((__always_inline__,__nonnull__(1)))
+#    define ucl_btree_decl_pure		\
+  __attribute__((__always_inline__,__pure__,__nonnull__))
 #  else
 #    define ucl_btree_decl		/* empty */
 #    define ucl_btree_decl		/* empty */
@@ -587,45 +591,45 @@ ucl_btree_setdad (void * self, void * dad_p)
   ((ucl_btree_node_t)self)->dad_p = dad_p;
 }
 static __inline__ ucl_btree_decl void
-ucl_btree_dadbro (void * dad, void * bro)
+ucl_btree_dadbro (void * dad_p, void * bro_p)
 {
-  ucl_btree_setdad(bro, dad);
-  ucl_btree_setbro(dad, bro);
+  ucl_btree_setdad(bro_p, dad_p);
+  ucl_btree_setbro(dad_p, bro_p);
 }
 static __inline__ ucl_btree_decl void
-ucl_btree_dadson (void * dad, void * son)
+ucl_btree_dadson (void * dad_p, void * son_p)
 {
-  ucl_btree_setdad(son, dad);
-  ucl_btree_setson(dad, son);
+  ucl_btree_setdad(son_p, dad_p);
+  ucl_btree_setson(dad_p, son_p);
 }
 static __inline__ ucl_btree_decl void
-ucl_btree_dadsonbro (void * dad, void * son, void * bro)
+ucl_btree_dadsonbro (void * dad_p, void * son_p, void * bro_p)
 {
-  ucl_btree_setdad(son, dad);
-  ucl_btree_setdad(bro, dad);
-  ucl_btree_setson(dad, son);
-  ucl_btree_setbro(dad, bro);
+  ucl_btree_setdad(son_p, dad_p);
+  ucl_btree_setdad(bro_p, dad_p);
+  ucl_btree_setson(dad_p, son_p);
+  ucl_btree_setbro(dad_p, bro_p);
 }
 
 /* ------------------------------------------------------------ */
 /* getters */
 
-static __inline__ ucl_btree_decl void *
+static __inline__ ucl_btree_decl_pure void *
 ucl_btree_getbro (void * self)
 {
   return ((ucl_btree_node_t)self)->bro_p;
 }
-static __inline__ ucl_btree_decl void *
+static __inline__ ucl_btree_decl_pure void *
 ucl_btree_getson (void * self)
 {
   return ((ucl_btree_node_t)self)->son_p;
 }
-static __inline__ ucl_btree_decl void *
+static __inline__ ucl_btree_decl_pure void *
 ucl_btree_getdad (void * self)
 {
   return ((ucl_btree_node_t)self)->dad_p;
 }
-static __inline__ ucl_btree_decl void *
+static __inline__ ucl_btree_decl_pure void *
 ucl_btree_data (void * self)
 {
   typedef struct {

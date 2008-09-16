@@ -1387,6 +1387,36 @@ replaced by @null{}.
 @end deftypefun
 
 
+@c ------------------------------------------------------------
+
+@subsection Custom callback application
+
+
+@noindent
+The @ucl{} does not support any error reporting mechanism; this means
+that @function{ucl_callback_apply} does not expect the callback to fail.
+To avoid problems all the @ucl{} modules that need to apply a callback
+to arguments, do so by invoking a customisable function and are written
+in such a way that if the callback raises an exception nothing bad
+happens.  The following @api{} handles this.
+
+
+@deftypefn {Function Prototype} void ucl_callback_apply_fun_t (ucl_callback_t @var{callback}, ...)
+The prototype of functions that apply a callback to a list of arguments.
+@function{ucl_callback_apply} has this prototype.
+@end deftypefn
+
+
+@deftypefun void ucl_callback_set_application_function (ucl_callback_apply_fun_t * @var{f})
+Register in @ucl{} a new function for the application of callbacks to
+arguments; it will be used by all the @ucl{} functions that invoke a
+callback.  The default application function is
+@function{ucl_callback_apply}.
+@end deftypefun
+
+
+@c ------------------------------------------------------------
+
 @subsection Example: callback initialisation
 
 
@@ -1512,7 +1542,7 @@ these:
 
 @example
 typedef struct node_tag_t @{
-  ucl_btree_node_t      node;
+  ucl_btree_node_tag_t  node;
   char                  c;
 @} node_tag_t;
 
@@ -1838,8 +1868,31 @@ Example:
 starting from @code{5} the selected node is @code{2}, starting from
 @code{10} the selected node is @code{6}.
 
-Return a pointer to the deepest son in the @var{self} sub--hierarchy,
-or @var{self} itself if it has no son.
+Return a pointer to the deepest son in the @var{self} sub--hierarchy, or
+@var{self} itself if it has no son.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_find_deepest_bro (void * @var{self})
+Find the deepest rightmost bro in a subtree.  This is different from
+@function{ucl_btree_find_rightmost}.
+
+Example:
+
+@example   
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+starting from @code{5} the selected node is @code{11}, starting from
+@code{1} the selected node is @code{4}.
+
+Return a pointer to the deepest bro in the @var{self} sub--hierarchy, or
+@var{self} itself if it has no son.
 @end deftypefun
 
 @c ------------------------------------------------------------
@@ -1892,6 +1945,7 @@ function performs a single step.  Return a pointer to the next node in
 the iteration, or @null{} if the iteration is over.
 @end deftypefun
 
+
 @deftypefun {void *} ucl_btree_step_inorder_backward (void * @var{self})
 Advance a backward inorder iteration.  Given a node in a btree, this
 function performs a single step.  Return a pointer to the next node in
@@ -1901,7 +1955,6 @@ the iteration, or @null{} if the iteration is over.
 
 @c ------------------------------------------------------------
 
-@c page
 @subsubsection Examples of forward iteration
 
 
@@ -1975,7 +2028,6 @@ the beginning.
 
 @c ------------------------------------------------------------
 
-@c page
 @subsubsection Examples of backward iteration
 
 
@@ -2068,8 +2120,13 @@ brother.  Example:
 @end example
 
 @noindent  
-the order is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8, 12, 11.  It's a worm that
-always ``turns right''.
+the order of the forward iteration is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8,
+12, 11.  It's a worm that always ``turns right''.  The order of the
+backward iteration is: 5, 10, 12, 11, 7, 9, 8, 6, 1, 3, 4, 2, 0.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
 
 
 @deftypefun {void *} ucl_btree_step_preorder (void * @var{self})
@@ -2079,9 +2136,22 @@ preorder iteration, or @null{} if the iteration is over.
 @end deftypefun
 
 
+@deftypefun {void *} ucl_btree_step_preorder_backward (void * @var{self})
+Advance a backward preorder iteration.  Given a node in a btree this
+function performs a single step.  Return a pointer to the next node in
+the preorder iteration, or @null{} if the iteration is over.
+@end deftypefun
+
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
 To perform a complete iteration, we have to start from the top node of
-the tree (@code{5} in the example), already visited, and begin from
-there.  Example:
+the tree (@code{5} in the picture above), already visited, and begin
+from there.  Example:
 
 @example
 ucl_btree_node_t        cur;
@@ -2090,35 +2160,34 @@ for (cur = select_the_top_node();
      cur;
      cur = ucl_btree_step_pre(cur))
   @{
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
 @end example
 
 @noindent
-this works because the top node of a btree has a @null{} value in
-the parent pointer field.
+this works because the top node of a btree has a @null{} value in the
+dad pointer field.
 
 To restrict the iteration to a subtree of a tree: we cannot loop until
 the function returns @null{}, because the top node of a subtree has a
-non--@null{} value in the parent pointer field.  With reference to the
-tree in the figure: we select the top node (number 10) and we visit it;
-then we step to the next (number 7) and visit it; then we enter the loop
+non--@null{} value in the dad pointer field.  With reference to the
+picture above: we select the top node (number 10) and we visit it; then
+we step to the next (number 7) and visit it; then we enter the loop
 until the iterator reaches the top node (number 10 again).
 
 Example:
 
 @example
-ucl_btree_node_t *        cur, end;
+ucl_btree_node_t        cur, end;
 
-end = cur = select_a_node(...);
+end = cur = get_a_node();
 
-makes_use_of_node(cur);
-cur = ucl_btree_step_preorder(cur);
-
-while (cur != end);
+do_something_with(cur);
+for (cur = ucl_btree_step_preorder(cur);
+     cur != end;
+     cur = ucl_btree_step_preorder(cur))
   @{
-    makes_use_of_node(cur);
-    cur = ucl_btree_step_preorder(cur);
+    do_something_with(cur);
   @}
 @end example
 
@@ -2142,28 +2211,44 @@ node.  Example:
 @end example  
 
 @noindent
-the order is: 2, 4, 3, 1, 6, 8, 9, 7, 11, 12, 10, 5.
+the order of the forward iteration is: 2, 4, 3, 1, 6, 8, 9, 7, 11, 12,
+10, 5.  The order of the backward iteration is: 11, 12, 8, 9, 6, 7, 10,
+4, 2, 3, 1, 5.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_step_postorder (const ucl_btree_node_t *@var{self})
-Advance a postorder iteration.  Return a pointer to the next node in the
-postorder iteration, or @null{} if the iteration is over.
+@deftypefun {void *} ucl_btree_step_postorder (void * @var{self})
+Advance a forward postorder iteration.  Return a pointer to the next
+node in the iteration, or @null{} if the iteration is over.
 @end deftypefun
 
 
+@deftypefun {void *} ucl_btree_step_postorder_backward (void * @var{self})
+Advance a backward postorder iteration.  Return a pointer to the next
+node in the iteration, or @null{} if the iteration is over.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
 To perform a complete iteration, we have to select the deepest leftmost
 son in the tree (@code{2} in the example) and begin from there.  Example:
 
 @example
-ucl_btree_node_t *        cur;
+ucl_btree_node_t        cur;
 
-cur     = select_a_node(...);
-cur     = ucl_btree_find_deepest_son(cur);
-
-while (cur != NULL);
+cur = get_a_node();
+for (cur = ucl_btree_find_deepest_son(cur);
+     cur != NULL;
+     cur = ucl_btree_step_postorder(cur));
   @{
-    makes_use_of_node(cur);
-    cur = ucl_btree_step_postorder(cur);
+    do_something_with(cur);
   @}
 @end example
 
@@ -2173,27 +2258,26 @@ the iterator reaches the top node.  Example:
 To restrict the iteration to a subtree of a tree: we cannot loop until
 the function returns @null{}, because the top node of a subtree has a
 non--@null{} value in the parent pointer field.  With reference to the
-tree in the figure: we select the top node (number 10); then we moev to
-the deepest son (number ) and we visit it; then we step to the next
-(number 7) and visit it; then we enter the loop until the iterator
-reaches the top node (number 10 again).
+tree in the picture above: we select the top node (number 10); then we
+move to the deepest son (number 6) and we visit it; then we enter the
+loop until the iterator reaches the top node (number 10 again).
 
 Example:
 
 @example
-ucl_btree_node_t *        cur, end;
+ucl_btree_node_t        cur, end;
 
-cur = end = select_a_node(...);
-cur = ucl_btree_find_deepest_son(cur);
+cur = end = get_a_node();
 
-makes_use_of_node(cur);
-cur = ucl_btree_step_postorder(cur);
-
-while (cur != end);
+for (cur = ucl_btree_find_deepest_son(cur);
+     cur != end;
+     cur = ucl_btree_step_postorder(cur));
   @{
-    cur = ucl_btree_step_postorder(cur);
-    makes_use_of_node(cur);
+    do_something_with(cur);
   @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
 @end example
 
 @noindent
@@ -2213,33 +2297,70 @@ Level order iteration: visit the tree level by level.  Example:
       5-------10----12
       |        |     |
       1--3--4  7--9 11
-      |  |     |  |
-      0  2     6  8
+         |     |  |
+         2     6  8
 @end example
 
 @noindent
-the order is: 5, 1, 10, 0, 3, 7, 12, 2, 4, 6, 9, 11, 8.  We need a moving
-cursor that always ``turns right'' keeping the count of the level.
+the order of the forward iteration is: 5, 1, 10, 3, 7, 12, 2, 4, 6, 9,
+11, 8.  To do it we need a moving cursor that always ``turns right''
+keeping the count of the level.  The order of the backward iteration is:
+5, 10, 1, 12, 7, 3, 11, 9, 6, 4, 2, 8.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
 
 
-@deftypefun {ucl_btree_node_t *} ucl_btree_step_levelorder (const ucl_btree_node_t *@var{self})
-Advance a level--order iteration.  Return a pointer to the next node in
-the levelorder iteration, or @null{} if the iteration is over.
+@deftypefun {void *} ucl_btree_step_levelorder (void * @var{self})
+Advance forward a level--order iteration.  Return a pointer to the next
+node in the levelorder iteration, or @null{} if the iteration is over.
 @end deftypefun
 
 
-To perform a complete iteration, we just call this function until it
+@deftypefun {void *} ucl_btree_step_levelorder_backward (void * @var{self})
+Advance backward a level--order iteration.  Return a pointer to the next
+node in the levelorder iteration, or @null{} if the iteration is over.
+@end deftypefun
+
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
+To perform a complete iteration, we just call the function until it
 returns @null{}.  Example:
 
 @example
-ucl_btree_node_t *        cur;
+ucl_btree_node_t cur;
 
-cur     = select_a_btree(...);
-
-while (cur != NULL);
+for (cur = get_the_top_node();
+     cur != NULL;
+     cur = ucl_btree_step_levelorder(cur));
   @{
-    makes_use_of_node(cur);
-    cur = ucl_btree_step_levelorder(cur);
+    do_something_with(cur);
+  @}
+@end example
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of backward iteration
+
+
+@noindent
+To perform a complete iteration, we just call the function until it
+returns @null{}.  Example:
+
+@example
+ucl_btree_node_t cur;
+
+for (cur = get_the_top_node();
+     cur != NULL;
+     cur = ucl_btree_step_levelorder_backward(cur));
+  @{
+    do_something_with(cur);
   @}
 @end example
 

@@ -9,7 +9,8 @@
 
 const ucl_callback_stub_table_t ucl_callback_stub_table = {
   ucl_callback_apply,
-  ucl_callback_eval_thunk
+  ucl_callback_eval_thunk,
+  ucl_callback_set_application_function
 };
 
 

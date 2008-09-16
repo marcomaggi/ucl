@@ -6,7 +6,7 @@
    
    Abstract
    
-   
+	Test the finder functions.
    
    Copyright (c) 2003, 2005, 2008 Marco Maggi
    
@@ -25,20 +25,61 @@
    
 */
 
+
+/** ------------------------------------------------------------
+ ** Headers.
+ ** ----------------------------------------------------------*/
 
+#define DEBUGGING		0
 #include "btreetest.h"
 
+typedef struct node_tag_t {
+  ucl_btree_node_tag_t	node;
+  char			c;
+} node_tag_t;
+typedef node_tag_t *	node_t;
+
+ucl_memory_allocator_t	allocator = {
+  .data = NULL, .alloc = ucl_memory_alloc
+};
+
+static node_t
+node_make (char c)
+{
+  node_t        p = NULL;
+
+  allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
+  p->c = c;
+  return p;
+}
+static void
+node_final (node_t p)
+{
+  allocator.alloc(allocator.data, &p, 0);
+}
+static __inline__ void
+node_clean (node_t p)
+{
+  ucl_struct_clean(p, node_tag_t);
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Test function.
+ ** ----------------------------------------------------------*/
 
 void
 test (void)
 {
-  int			i;
-  ucl_btree_node_t *	n[13];
+  int		i;
+  node_t	n[13];
 
 
   for (i=0; i<13; ++i)
     {
-      n[i] = malloc(sizeof(ucl_btree_node_t));
+      n[i] = node_make((char)(64+i));
     }
 
   /*
@@ -51,28 +92,29 @@ test (void)
 		   2     6  8
   */
 
-  ucl_btree_constructor(n[5], NULL);
-  ucl_btree_constructor(n[1], NULL);  ucl_btree_dadson(n[5],  n[1]);
-  ucl_btree_constructor(n[3], NULL);  ucl_btree_dadbro(n[1],  n[3]);
-  ucl_btree_constructor(n[2], NULL);  ucl_btree_dadson(n[3],  n[2]);
-  ucl_btree_constructor(n[4], NULL);  ucl_btree_dadbro(n[3],  n[4]);
-  ucl_btree_constructor(n[10], NULL); ucl_btree_dadbro(n[5],  n[10]);
-  ucl_btree_constructor(n[7], NULL);  ucl_btree_dadson(n[10], n[7]);
-  ucl_btree_constructor(n[6], NULL);  ucl_btree_dadson(n[7],  n[6]);
-  ucl_btree_constructor(n[9], NULL);  ucl_btree_dadbro(n[7],  n[9]);
-  ucl_btree_constructor(n[8], NULL);  ucl_btree_dadson(n[9],  n[8]);
-  ucl_btree_constructor(n[12], NULL); ucl_btree_dadbro(n[10], n[12]);
-  ucl_btree_constructor(n[11], NULL); ucl_btree_dadson(n[12], n[11]);
+  ucl_btree_dadson(n[5],  n[1]);
+  ucl_btree_dadbro(n[1],  n[3]);
+  ucl_btree_dadson(n[3],  n[2]);
+  ucl_btree_dadbro(n[3],  n[4]);
+  ucl_btree_dadbro(n[5],  n[10]);
+  ucl_btree_dadson(n[10], n[7]);
+  ucl_btree_dadson(n[7],  n[6]);
+  ucl_btree_dadbro(n[7],  n[9]);
+  ucl_btree_dadson(n[9],  n[8]);
+  ucl_btree_dadbro(n[10], n[12]);
+  ucl_btree_dadson(n[12], n[11]);
   
-  /*
-    printf("\n");
-    for (i=0; i<13; ++i)
+#ifdef DEBUGGING
+  for (i=1; i<12; ++i)
     {
-    printf("node %2d: %p,\tbro: %p,\tson: %p,\tdad: %p\n",
-    i, n[i], n[i]->broPtr, n[i]->sonPtr, n[i]->dadPtr);
+      debug("node %d: %p, dad=%p, son=%p, bro=%p, c=%c", i, n[i],
+	    ucl_btree_getdad(n[i]),
+	    ucl_btree_getson(n[i]),
+	    ucl_btree_getbro(n[i]),
+	    *((char *)ucl_btree_data(n[i])));
     }
-  */
-  /* tests */
+
+#endif
 
   /*
 		5-------10----12
@@ -81,6 +123,9 @@ test (void)
 		   |     |  |
 		   2     6  8
   */
+
+  debug("got %p, expected %p", ucl_btree_find_leftmost(n[5]), n[1]);
+  debug("got %p, expected %p", ucl_btree_find_rightmost(n[5]), n[12]);
 
   assert( ucl_btree_find_leftmost(n[5]) == n[1] );
   assert( ucl_btree_find_leftmost(n[1]) == n[1] );
@@ -122,13 +167,34 @@ test (void)
   assert( ucl_btree_find_deepest_son(n[3]) == n[2] );
   assert( ucl_btree_find_deepest_son(n[2]) == n[2] );
   assert( ucl_btree_find_deepest_son(n[4]) == n[4] );
-  assert( ucl_btree_find_deepest_son(n[10]) == n[6] );
+  assert( ucl_btree_find_deepest_son(n[10])== n[6] );
   assert( ucl_btree_find_deepest_son(n[7]) == n[6] );
-  assert( ucl_btree_find_deepest_son(n[12]) == n[11] );
+  assert( ucl_btree_find_deepest_son(n[12])== n[11]);
+
+  /*
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+
+  assert( ucl_btree_find_deepest_bro(n[5]) == n[11]);
+  assert( ucl_btree_find_deepest_bro(n[1]) == n[4] );
+  assert( ucl_btree_find_deepest_bro(n[3]) == n[4] );
+  assert( ucl_btree_find_deepest_bro(n[2]) == n[2] );
+  assert( ucl_btree_find_deepest_bro(n[4]) == n[4] );
+  assert( ucl_btree_find_deepest_bro(n[10])== n[11]);
+  assert( ucl_btree_find_deepest_bro(n[12])== n[11]);
+  assert( ucl_btree_find_deepest_bro(n[7]) == n[8] );
+  assert( ucl_btree_find_deepest_bro(n[9]) == n[8] );
+  assert( ucl_btree_find_deepest_bro(n[6]) == n[6]);
+  assert( ucl_btree_find_deepest_bro(n[8]) == n[8]);
+  assert( ucl_btree_find_deepest_bro(n[11])== n[11]);
 
   for (i=0; i<12; ++i)
     {
-      free(n[i]);
+      node_final(n[i]);
     }
 }
 

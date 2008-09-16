@@ -1884,7 +1884,7 @@ ucl_vector_for_each (ucl_callback_t callback, const ucl_vector_t self)
   for (ucl_vector_iterator_forward(self, I); ucl_iterator_more(I); ucl_iterator_next(I))
     {
       slot.ptr = ucl_iterator_ptr(I);;
-      ucl_callback_apply(callback, slot);
+      ucl_callback_application_function(callback, slot);
     }
 }
 stub(2007-10-24-13-26-16) void
@@ -1902,7 +1902,7 @@ ucl_vector_for_each_in_range (ucl_callback_t callback, ucl_range_t range, const 
        ++i, slot = ucl_vector_increment_slot(self, slot))
     {
       data.ptr = slot;
-      ucl_callback_apply(callback, data);
+      ucl_callback_application_function(callback, data);
     }
 }
 

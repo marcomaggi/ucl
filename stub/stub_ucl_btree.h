@@ -18,15 +18,23 @@ ucl_decl void * ucl_btree_find_rightmost (void * _node_p)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_find_deepest_son (void * _node_p)
 	__attribute__((__nonnull__,__pure__));
+ucl_decl void * ucl_btree_find_deepest_bro (void * _node_p)
+	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_inorder (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_inorder_backward (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_preorder (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
+ucl_decl void * ucl_btree_step_preorder_backward (void * _cur_p)
+	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_postorder (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
+ucl_decl void * ucl_btree_step_postorder_backward (void * _cur_p)
+	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_levelorder (void * _cur_p)
+	__attribute__((__nonnull__,__pure__));
+ucl_decl void * ucl_btree_step_levelorder_backward (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
 
 #endif /* not defined UCL_ENABLE_STUB */
@@ -37,11 +45,15 @@ ucl_decl void * ucl_btree_step_levelorder (void * _cur_p)
 typedef void * ucl_btree_find_leftmost_proto_t (void * _node_p);
 typedef void * ucl_btree_find_rightmost_proto_t (void * _node_p);
 typedef void * ucl_btree_find_deepest_son_proto_t (void * _node_p);
+typedef void * ucl_btree_find_deepest_bro_proto_t (void * _node_p);
 typedef void * ucl_btree_step_inorder_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_inorder_backward_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_preorder_proto_t (void * _cur_p);
+typedef void * ucl_btree_step_preorder_backward_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_postorder_proto_t (void * _cur_p);
+typedef void * ucl_btree_step_postorder_backward_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_levelorder_proto_t (void * _cur_p);
+typedef void * ucl_btree_step_levelorder_backward_proto_t (void * _cur_p);
 
 /* Stub table type declaration for the "btree" module.
    A struct holding a pointer for each function in the module
@@ -56,6 +68,10 @@ typedef struct ucl_btree_stub_table_t {
   ucl_btree_step_levelorder_proto_t   * stub_ucl_btree_step_levelorder;
   ucl_btree_find_rightmost_proto_t    * stub_ucl_btree_find_rightmost;
   ucl_btree_find_deepest_son_proto_t  * stub_ucl_btree_find_deepest_son;
+  ucl_btree_find_deepest_bro_proto_t  * stub_ucl_btree_find_deepest_bro;
+  ucl_btree_step_preorder_backward_proto_t * stub_ucl_btree_step_preorder_backward;
+  ucl_btree_step_postorder_backward_proto_t * stub_ucl_btree_step_postorder_backward;
+  ucl_btree_step_levelorder_backward_proto_t * stub_ucl_btree_step_levelorder_backward;
 } ucl_btree_stub_table_t;
 
 /* Stub table macros definition for the "btree" module.
@@ -75,6 +91,10 @@ ucl_decl const ucl_btree_stub_table_t   ucl_btree_stub_table;
 #define ucl_btree_step_levelorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_levelorder)
 #define ucl_btree_find_rightmost   ((ucl_btree_stub_table_p)->stub_ucl_btree_find_rightmost)
 #define ucl_btree_find_deepest_son  ((ucl_btree_stub_table_p)->stub_ucl_btree_find_deepest_son)
+#define ucl_btree_find_deepest_bro  ((ucl_btree_stub_table_p)->stub_ucl_btree_find_deepest_bro)
+#define ucl_btree_step_preorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_preorder_backward)
+#define ucl_btree_step_postorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_postorder_backward)
+#define ucl_btree_step_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_levelorder_backward)
 
 #endif /* defined UCL_ENABLE_STUB */
 
