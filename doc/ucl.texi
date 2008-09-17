@@ -1265,6 +1265,7 @@ selecting the indexes.  The fields are of type @code{size_t}.
 @deftpx {Struct Typedef} ucl_float_range_t
 @deftpx {Struct Typedef} ucl_double_range_t
 @deftpx {Struct Typedef} ucl_byte_pointer_range_t
+@deftpx {Struct Typedef} ucl_pointer_range_t
 Ranges of values.
 @end deftp
 
@@ -1461,13 +1462,13 @@ ucl_callback_apply(cb, a, b);
 
 @menu
 * btree::                       The binary tree structure.
+* tree::                        The tree structure.
 * circular::                    The circular list structure.
 * graph::                       The graph structure.
 * hash::                        The hash table structure.
 * heap::                        The heap structure.
 * list::                        The linked list structure.
 * map::                         The map structure.
-* tree::                        The tree structure.
 * vector::                      The vector structure.
 @end menu
 
@@ -1487,7 +1488,8 @@ ucl_callback_apply(cb, a, b);
 * btree creation::              Building btree hierarchies.
 * btree inspection::            Accessing nodes.
 * btree removing::              Removing elements from a btree.
-* btree find::                  Finding special nodes.
+* btree find::                  Finding values.
+* btree visitors::              Finding special nodes in the hierarchy.
 * btree iteration::             Iterations in a btree hierarchy.
 @end menu
 
@@ -1498,7 +1500,9 @@ The btree container provides an implementation of binary tree.
 @deftp {Struct Typedef} ucl_btree_node_tag_t
 @deftpx {Pointer Typedef} ucl_btree_node_t
 The data type of the node structure and of the pointer to the node
-structure.  Nodes must be allocated and freed by the user's code.
+structure; nodes must be allocated and freed by the user's code.  The
+structure holds 3 pointers of type @code{ucl_btre_node_t}: @code{dad_p},
+@code{son_p}, @code{bro_p}.
 @end deftp
 
 The btree container is built as a chain of structures; each link has a
@@ -1795,7 +1799,30 @@ hold references to each other no more.
 
 @c page
 @node btree find
-@subsection Finding special nodes
+@subsection Finding values
+
+
+@noindent
+The purpose of a binary tree is to organise values in a hierarchy; the
+functions described in this section can be used to find values.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_btree_node_t}.
+
+
+@deftypefun {void *} ucl_btree_find_value (void * @var{root}, ucl_comparison_t @var{compar})
+Interpret @var{root} as a pointer to the root node of a btree (whose dad
+is @null{}) and find
+@end deftypefun
+
+
+
+@c ------------------------------------------------------------
+
+@c page
+@node btree visitors
+@subsection Finding special nodes in the hierarchy
 
 
 @noindent
@@ -1926,30 +1953,60 @@ rightmost to the leftmost.  Example: given the tree:
       5-------10----12
       |        |     |
       1--3--4  7--9 11
-      |  |     |  |
-      0  2     6  8
+         |     |  |
+         2     6  8
 @end example
 
 @noindent
-the inorder iteration is: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12; the
-backward inorder iteration is: 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0.
+the inorder iteration is:
+
+@example
+forward:   1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12
+backward: 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1
+@end example
 
 All the following functions accept @code{void *} values as arguments and
 return @code{void *} values; internally these pointers are cast to
 @code{ucl_btree_node_t}.
 
 
-@deftypefun {void *} ucl_btree_step_inorder (void * @var{self})
-Advance a forward inorder iteration.  Given a node in a btree, this
-function performs a single step.  Return a pointer to the next node in
-the iteration, or @null{} if the iteration is over.
+@deftypefn {Inline Function} {void *} ucl_btree_first_inorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_inorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of an
+inorder iteration.  For the forward iteration: it is the leftmost node;
+for the backward iteration: it is the rightmost node.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_inorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_inorder_backward (void * @var{current})
+Advance an inorder iteration.  Given a pointer to a node in a tree:
+perform a single step and return a pointer to the next node, or @null{}
+if the iteration is over.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_step_inorder_backward (void * @var{self})
-Advance a backward inorder iteration.  Given a node in a btree, this
-function performs a single step.  Return a pointer to the next node in
-the iteration, or @null{} if the iteration is over.
+@deftypefun void ucl_btree_iterator_inorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_inorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_inorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_inorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_inorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
 @end deftypefun
 
 
@@ -2115,31 +2172,64 @@ brother.  Example:
       5-------10----12
       |        |     |
       1--3--4  7--9 11
-      |  |     |  |
-      0  2     6  8
+         |     |  |
+         2     6  8
 @end example
 
 @noindent  
-the order of the forward iteration is: 5, 1, 0, 3, 2, 4, 10, 7, 6, 9, 8,
-12, 11.  It's a worm that always ``turns right''.  The order of the
-backward iteration is: 5, 10, 12, 11, 7, 9, 8, 6, 1, 3, 4, 2, 0.
+the preorder iteration is:
+
+@example
+forward:    5,  1,  3,  2,  4, 10,  7,  6,  9,  8, 12, 11
+backward:   5, 10, 12, 11,  7,  9,  8,  6,  1,  3,  4,  2
+@end example
+
+@noindent
+the forward iteration is a ``worm that always turns right'', while the
+backward iteration is a ``worm that always turns left''.
 
 All the following functions accept @code{void *} values as arguments and
 return @code{void *} values; internally these pointers are cast to
 @code{ucl_btree_node_t}.
 
 
-@deftypefun {void *} ucl_btree_step_preorder (void * @var{self})
-Advance a preorder iteration.  Given a node in a btree this function
-performs a single step.  Return a pointer to the next node in the
-preorder iteration, or @null{} if the iteration is over.
+@deftypefn {Inline Function} {void *} ucl_btree_first_preorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_preorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+preorder iteration.  For both the forward and backward iterations: it is
+the root node itself.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_preorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_preorder_backward (void * @var{current})
+Advance a preorder iteration.  Given a node in a btree: perform a single
+step and return a pointer to the next node, or @null{} if the iteration
+is over.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_step_preorder_backward (void * @var{self})
-Advance a backward preorder iteration.  Given a node in a btree this
-function performs a single step.  Return a pointer to the next node in
-the preorder iteration, or @null{} if the iteration is over.
+@deftypefun void ucl_btree_iterator_preorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_preorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_preorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_preorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_preorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
 @end deftypefun
 
 
@@ -2211,25 +2301,59 @@ node.  Example:
 @end example  
 
 @noindent
-the order of the forward iteration is: 2, 4, 3, 1, 6, 8, 9, 7, 11, 12,
-10, 5.  The order of the backward iteration is: 11, 12, 8, 9, 6, 7, 10,
-4, 2, 3, 1, 5.
+the postorder iteration is:
+
+@example
+forward:    2,  4,  3,  1,  6,  8,  9,  7, 11, 12, 10,  5
+backward:  11, 12,  8,  9,  6,  7, 10,  4,  2,  3,  1,  5
+@end example
 
 All the following functions accept @code{void *} values as arguments and
 return @code{void *} values; internally these pointers are cast to
 @code{ucl_btree_node_t}.
 
 
-@deftypefun {void *} ucl_btree_step_postorder (void * @var{self})
-Advance a forward postorder iteration.  Return a pointer to the next
-node in the iteration, or @null{} if the iteration is over.
+@deftypefn {Inline Function} {void *} ucl_btree_first_postorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_postorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+postorder iteration.  For the forward iteration: it is the deepest son
+found by @function{ucl_btree_find_deepest_son}; for the backward
+iteration: it is the deepest bro found by
+@function{ucl_btree_find_deepest_bro}.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_postorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_postorder_backward (void * @var{current})
+Advance a forward postorder iteration.  Given a node in a btree: perform
+a single step and return a pointer to the next node, or @null{} if the
+iteration is over.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_step_postorder_backward (void * @var{self})
-Advance a backward postorder iteration.  Return a pointer to the next
-node in the iteration, or @null{} if the iteration is over.
+@deftypefun void ucl_btree_iterator_postorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_postorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
 @end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_postorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_postorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_postorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+
 
 @c ------------------------------------------------------------
 
@@ -2312,17 +2436,46 @@ return @code{void *} values; internally these pointers are cast to
 @code{ucl_btree_node_t}.
 
 
+@deftypefn {Inline Function} {void *} ucl_btree_first_levelorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_levelorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+levelorder iteration.  For both the forward and backward iterations: it
+is the root node itself.
+@end deftypefn
+
+
 @deftypefun {void *} ucl_btree_step_levelorder (void * @var{self})
-Advance forward a level--order iteration.  Return a pointer to the next
-node in the levelorder iteration, or @null{} if the iteration is over.
+@deftypefunx {void *} ucl_btree_step_levelorder_backward (void * @var{self})
+Advance a levelorder iteration.  Given a node in the three: perform a
+single step and return a pointer to the next node, or @null{} if the
+iteration is over.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_step_levelorder_backward (void * @var{self})
-Advance backward a level--order iteration.  Return a pointer to the next
-node in the levelorder iteration, or @null{} if the iteration is over.
+@deftypefun void ucl_btree_iterator_levelorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_levelorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
 @end deftypefun
 
+
+@ignore
+@deftypefun void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_levelorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_levelorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+@end ignore
 
 @c ------------------------------------------------------------
 
@@ -2365,6 +2518,471 @@ for (cur = get_the_top_node();
 @end example
 
 @c ------------------------------------------------------------
+
+@c page
+@node tree
+@section The tree structure
+
+
+@menu
+* tree implementation::         How it's done.
+* tree creation::               Creating tree nodes.
+* tree testing::                Testing relationships between nodes.
+* tree relatives::              Accessing or setting the relatives of
+                                a node.
+* tree adding::                 Adding elements to a tree.
+* tree removing::               Removing elements from a tree.
+* tree iterators::              Traversing a tree.
+@end menu
+
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree implementation
+@subsection How it's done
+
+
+@noindent
+The implementation is a binary tree in which the nodes are of type
+@code{ucl_btree_node_t}; the son of the node A is the first child of the
+node A, the brother of the child is the second son of the node A, and so
+on.
+
+@example
+   -----
+  | dad |
+   -----
+    ^ |son
+dad | v
+   -----  bro   -----  bro   -----  bro   -----  bro
+  | 1st |----->| 2nd |----->| 3rd |----->| 4th |----->NULL
+   -----        -----        -----        -----
+    |            |
+    v son        v son
+   -----        -----
+  | nep |      |     |
+   -----        -----
+@end example
+
+Pointers condition meaning:
+
+@table @code
+@item node.bro_p == NULL
+the node has no brothers, so it's the last brother between the children
+of its father;
+
+@item node.son_p == NULL
+the node has no children;
+
+@item node.dad_p == NULL
+the node is the root node of a tree;
+
+@item A.dad_p == B && B.son_p == A
+A is the first between the children of node B;
+
+@item A.dad_p == B && B.bro_p == A 
+A and B are brothers, and children of the same parent node.
+@end table
+
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree creation
+@subsection Creating tree nodes
+
+
+@noindent
+The tree node structures must be allocated by the user's code, none of
+the @acronym{UCL} tree methods will invoke memory allocation/release
+functions.
+
+
+@deftypefun void ucl_tree_constructor (ucl_tree_node_t * @var{nod_p})
+A wrapper for @function{ucl_struct_clean}.  Initialise to zero all the
+members of the structure referenced by @var{nod_p}.  This is recommended
+before inserting a node into a tree.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree testing
+@subsection Testing relationships between nodes
+
+
+@deftypefun ucl_bool_t ucl_tree_is_dad (const ucl_tree_node_t * @var{dad_p}, const ucl_tree_node_t * @var{cld_p})
+Return true if the node referenced by @var{dad_p} is the father of the
+node referenced by @var{cld_p}, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_is_bro (const ucl_tree_node_t * @var{nod_p}, const ucl_tree_node_t * @var{bro_p})
+Return true if the node referenced by @var{nod_p} is a brother of the
+node referenced by @var{bro_p}, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_dad (const ucl_tree_node_t * @var{self})
+Return true if the node referenced by @var{self} has a parent,
+otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_prev (const ucl_tree_node_t * @var{self})
+Return true if the node referenced by @var{self} has a brother to the
+left, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_next (const ucl_tree_node_t * @var{self})
+Return true if the node referenced by @var{self} has a brother to the
+right, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_son (const ucl_tree_node_t * @var{self})
+Return true if the node referenced by @var{self} has a son, otherwise
+return false.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree relatives
+@subsection Accessing or setting the relatives of a node
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_dad (const ucl_tree_node_t * @var{self})
+Return a pointer to the father of the node referenced by @var{self}; if
+the node has no parent: return @null{}.
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_prev (const ucl_tree_node_t * @var{self})
+Return a pointer to the left brother of the node referenced by
+@var{self}; if the node has no left brother: return @null{}.
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_next (const ucl_tree_node_t * @var{self})
+Return a pointer to the right brother of the node referenced by
+@var{self}; if the node has no right brother: return @null{}.
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_son (const ucl_tree_node_t * @var{self})
+Return a pointer to the son of the node referenced by @var{self}; if the
+node has no child: return @null{}.
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_first (const ucl_tree_node_t * @var{self})
+Return a pointer to the first between the brothers of the node
+referenced by @var{self}; it can be a pointer to @var{self} itself, if
+@var{self} is the first.
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_get_last (const ucl_tree_node_t * @var{self})
+Return a pointer to the last between the brothers of the node
+referenced by @var{self}; it can be a pointer to @var{self} itself, if
+@var{self} is the last.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree adding
+@subsection Adding elements to a tree
+
+
+@noindent
+The @code{ucl_tree_set_*()} functions are used to append a new subtree
+to a tree.
+
+
+@deftypefun void ucl_tree_set_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
+Link together the nodes referenced by @var{nod_p} and @var{son_p} so
+that one is the son of the other.  The old reference to the son of
+@var{nod_p} is lost; the old reference to the dad of @var{son_p} is
+lost.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_set_bro (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
+Link together the nodes referenced by @var{nod_p} and @var{bro_p} so
+that one is the brother of the other.  The node referenced by @var{bro_p}
+becomes the right brother of the node referenced by @var{nod_p}.  The old
+references to the brothers of the two nodes are lost.
+@end deftypefun
+
+
+The following functions are used to insert subtrees in a tree.  None of
+the nodes in the target tree are detached.  The links in the new subtrees
+that are not interested by the relations in these functions, are left
+untouched.
+
+
+@deftypefun void ucl_tree_insert_dad (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{dad_p})
+Inserts a new dad for a node.  The dad node becomes the father of the
+node and the first son of the old dad (if any).
+
+@example	
+ ---       ---
+| A |     | A |
+ ---       ---
+  |         |
+ ---       ---
+|nod| ->  |dad|
+ ---       ---
+            |
+           ---
+          |nod|
+           ---
+@end example
+@end deftypefun
+
+
+Example of dad insertion:
+
+@example
+ucl_tree_insert_dad( 1, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   A--C
+|  |            |         |
+5  6            B         1--2--3--4
+                          |  |
+                          5  6
+@end example
+
+@noindent
+the @code{D} and @code{B} nodes are detached and will be lost if we
+don't keep a reference to them.
+
+
+@deftypefun void ucl_tree_insert_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
+Insert a new child for a node.  The node referenced by @var{son_p}
+becomes the last between the children of the node referenced by
+@var{nod_p}.
+
+@example
+ ---         ---
+|nod|       |nod|
+ ---         ---
+  |     ->    |
+ ---         ---     ---
+| A |       | A |-->|son|
+ ---         ---     ---
+@end example
+@end deftypefun
+
+
+Example of son insertion:
+
+@example
+ucl_tree_insert_son( 0, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--2--3--4--A--C
+|  |            |         |  |        |
+5  6            B         5  6        B
+@end example
+
+@noindent
+the node @code{D} is detached and will be lost if we don't keep a
+reference to it.
+
+
+@deftypefun void ucl_tree_insert_prev (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
+Insert a new brother for a node.  The node referenced by @var{bro_p}
+becomes the left brother of the node referenced by @var{nod_p}.
+
+@example
+ ---    ---          ---    ---    ---
+| A |--|nod|   ->   | A |--|bro|--|nod|
+ ---    ---          ---    ---    ---
+@end example
+@end deftypefun
+
+
+Example of prev node insertion:
+
+@example
+ucl_tree_insert_prev( 2, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--A--2--3--4
+|  |            |         |  |  |
+5  6            B         5  B  6
+@end example
+
+@noindent
+the @code{D} and @code{C} nodes are detached and will be lost if we
+don't keep a reference to them.
+
+
+@deftypefun void ucl_tree_insert_next (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
+Insert a new brother for a node.  The node referenced by @var{bro_p}
+becomes the right brother of the node referenced by @var{nod_p}.
+
+@example
+ ---    ---          ---    ---    ---
+|nod|--| A |   ->   |nod|--|bro|--| A |
+ ---    ---          ---    ---    ---
+@end example
+@end deftypefun
+
+
+Example of next brother insertion:
+
+@example
+ucl_tree_insert_next( 2, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--2--A--3--4
+|  |            |         |  |
+5  6            B         5  6
+@end example
+
+@noindent
+the @code{D}, @code{B} and @code{C} nodes are detached and will be lost
+if we don't keep a reference to them.
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree removing
+@subsection Removing elements from a tree
+
+
+@noindent
+These functions will extract a node from a tree, returning a pointer to
+the extracted node.
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_extract_dad (ucl_tree_node_t * @var{nod_p})
+Extract the dad of the node referenced by @var{nod_p} from the tree.
+The referenced node and all its brothers are inserted in place of the
+extracted dad.
+
+Returns a pointer to the extracted node, or @null{} if the selected node
+has nod dad.  All the pointers in the extracted node structure are reset
+to @null{}.
+
+@example
+ ---    ---    ---       ---    ---    ---    ---
+| A |--|dad|--| B |     | A |--|nod|--| C |--| B |
+ ---    ---    ---       ---    ---    ---    ---
+         |          ->
+        ---    ---              ---
+       |nod|--| C |            |dad|
+        ---    ---              ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_extract_son (ucl_tree_node_t * @var{nod_p})
+Extract the son of the node referenced by @var{nod_p} from the tree.
+The son of the selected node is extracted from the hierarchy.  All of its
+children become children of the selected node.
+
+Return a pointer to the extracted node or @null{} if the selected node
+has no son.  All the pointers in the extracted node structure are reset
+to @null{}.
+
+@example
+ ---               ---
+|nod|             |nod|
+ ---               ---
+  |                 |
+ ---    ---        ---    ---    ---
+|son|--| C |  ->  | A |--| B |--| C |
+ ---    ---        ---    ---    ---
+  |
+ ---    ---            ---
+| A |--| B |          |son|
+ ---    ---            ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_extract_prev (ucl_tree_node_t * @var{nod_p})
+Extract the left brother of the node referenced by @var{nod_p}.  The
+left brother of the selected node is extracted from the hierarchy.  Its
+children become left brothers of the selected node.
+
+Return a pointer to the extracted node, or @null{} if the selected node
+has no left brother.   All the pointers in the extracted node structure
+are reset to @null{}.
+
+@example
+ ---               ---
+| A |             | A |
+ ---               ---
+  |                 |
+ ---    ---        ---    ---
+|prv|--|nod|  ->  | B |--|nod|
+ ---    ---        ---    ---
+  |
+ ---                   ---
+| B |                 |prv|
+ ---                   ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_tree_node_t *} ucl_tree_extract_next (ucl_tree_node_t * @var{nod_p})
+Extract the right brother of the node referenced by @var{nod_p}.   The
+right brother of the selected node is extracted from the hierarchy.  Its
+children become right brothers of the selected node.
+
+Return a pointer to the extracted node, or @null{} if the selected node
+has no right brother.   All the pointers in the extracted node structure
+are reset to @null{}.
+
+@example
+ ---    ---    ---       ---    ---    ---
+|nod|--|nxt|--| A |     |nod|--| B |--| A |
+ ---    ---    ---       ---    ---    ---
+         |           ->
+        ---                 ---
+       | B |               |nxt|
+        ---                 ---
+@end example
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@c page
+@node tree iterators
+@subsection Traversing a tree
+
+
+@noindent
+For the tree iterators, the return value of @function{ucl_iterator_ptr}
+is a pointer to the current node.
+
+
+@deftypefun void ucl_tree_iterator_inorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
+Initialises an in--order iteration.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_iterator_preorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
+Initialises a pre--order iteration.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_iterator_postorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
+Initialises a post--order iteration.
+@end deftypefun
 
 @c page
 @node circular
@@ -4962,500 +5580,7 @@ Complementary intersection: 0 1 2 3 7 8 9
 Subtraction: 0 1 2 3
 @end example
 
-
-@c page
-@node tree
-@section The tree structure
-
-
-@menu
-* tree implementation::         How it's done.
-* tree creation::               Creating tree nodes.
-* tree testing::                Testing relationships between nodes.
-* tree relatives::              Accessing or setting the relatives of
-                                a node.
-* tree adding::                 Adding elements to a tree.
-* tree removing::               Removing elements from a tree.
-* tree iterators::              Traversing a tree.
-@end menu
-
-
-@noindent
-The tree container is basically different from the others in the @ucl{}.
-There is no ``base struct'', like @code{ucl_list_t} and
-@code{ucl_map_t}, that holds fundamental data and that can be used to
-``keep a grab'' on the structure itself.
-
-Instead, the tree is just a collection of nodes linked together, and we
-control the struct keeping a pointer to one of the nodes.   Which one
-doesn't matter.  Nothing prevents us from storing somewhere a pointer to
-the ``root node'', but this is not required.
-
-At any time we must take care of holding a pointer to at least one tree
-node; if we loose it, we will not be able to free the struct.  Keeping
-two or more references to nodes is possible but dangerous: if we delete
-a subtree we may end up with a pointer to a memory block already freed.
-
-The referenced node is called ``current''.  To handle the tree we use a
-``walking'' pattern.  We can add/remove nodes relative to the ``current'' and
-move step by step from the ``current'' to adjacent nodes.
-
-Care must be taken to distinguish between the node's classification from
-the ``logic'' point of view and the ``implementation'' point of view.  A
-tree is implemented with a binary tree.  Here we talk about the logic
-point of view; so: the ``dad'' of a node is the uplevel node in the
-hierarchy, the ``brother'' of a node is in the same level of the
-``current'' node.
-
-
-@deftp {Struct Typedef} ucl_tree_node_t
-The type of the tree nodes.
-@end deftp
-
-
-@c page
-@node tree implementation
-@subsection How it's done
-
-
-@noindent
-The implementation is a binary tree in which: the son of the node A is
-the first child of the node A, the brother of the child is the second
-son of the node A, and so on.
-
-@example
-   -----
-  | dad |
-   -----
-    ^ |son
-dad | v
-   -----  bro   -----  bro   -----  bro   -----  bro
-  | 1st |----->| 2nd |----->| 3rd |----->| 4th |----->NULL
-   -----        -----        -----        -----
-    |            |
-    v son        v son
-   -----        -----
-  | nep |      |     |
-   -----        -----
-@end example
-
-Pointers condition meaning:
-
-@table @code
-@item node.bro_p == NULL
-the node has no brothers, so it's the last brother between the children
-of its father;
-
-@item node.son_p == NULL
-the node has no children;
-
-@item node.dad_p == NULL
-the node is the root node of a tree;
-
-@item A.dad_p == B && B.son_p == A
-A is the first between the children of node B;
-
-@item A.dad_p == B && B.bro_p == A 
-A and B are brothers, and children of the same parent node.
-@end table
-
-
-@c page
-@node tree creation
-@subsection Creating tree nodes
-
-
-@noindent
-The tree node structures must be allocated by the user's code, none of
-the @acronym{UCL} tree methods will invoke memory allocation/release
-functions.
-
-
-@deftypefun void ucl_tree_constructor (ucl_tree_node_t * @var{nod_p})
-A wrapper for @function{ucl_struct_clean}.  Initialise to zero all the
-members of the structure referenced by @var{nod_p}.  This is recommended
-before inserting a node into a tree.
-@end deftypefun
-
 @c ------------------------------------------------------------
-
-@c page
-@node tree testing
-@subsection Testing relationships between nodes
-
-
-@deftypefun ucl_bool_t ucl_tree_is_dad (const ucl_tree_node_t * @var{dad_p}, const ucl_tree_node_t * @var{cld_p})
-Return true if the node referenced by @var{dad_p} is the father of the
-node referenced by @var{cld_p}, otherwise return false.
-@end deftypefun
-
-
-@deftypefun ucl_bool_t ucl_tree_is_bro (const ucl_tree_node_t * @var{nod_p}, const ucl_tree_node_t * @var{bro_p})
-Return true if the node referenced by @var{nod_p} is a brother of the
-node referenced by @var{bro_p}, otherwise return false.
-@end deftypefun
-
-
-@deftypefun ucl_bool_t ucl_tree_has_dad (const ucl_tree_node_t * @var{self})
-Return true if the node referenced by @var{self} has a parent,
-otherwise return false.
-@end deftypefun
-
-
-@deftypefun ucl_bool_t ucl_tree_has_prev (const ucl_tree_node_t * @var{self})
-Return true if the node referenced by @var{self} has a brother to the
-left, otherwise return false.
-@end deftypefun
-
-
-@deftypefun ucl_bool_t ucl_tree_has_next (const ucl_tree_node_t * @var{self})
-Return true if the node referenced by @var{self} has a brother to the
-right, otherwise return false.
-@end deftypefun
-
-
-@deftypefun ucl_bool_t ucl_tree_has_son (const ucl_tree_node_t * @var{self})
-Return true if the node referenced by @var{self} has a son, otherwise
-return false.
-@end deftypefun
-
-@c ------------------------------------------------------------
-
-@c page
-@node tree relatives
-@subsection Accessing or setting the relatives of a node
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_dad (const ucl_tree_node_t * @var{self})
-Return a pointer to the father of the node referenced by @var{self}; if
-the node has no parent: return @null{}.
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_prev (const ucl_tree_node_t * @var{self})
-Return a pointer to the left brother of the node referenced by
-@var{self}; if the node has no left brother: return @null{}.
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_next (const ucl_tree_node_t * @var{self})
-Return a pointer to the right brother of the node referenced by
-@var{self}; if the node has no right brother: return @null{}.
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_son (const ucl_tree_node_t * @var{self})
-Return a pointer to the son of the node referenced by @var{self}; if the
-node has no child: return @null{}.
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_first (const ucl_tree_node_t * @var{self})
-Return a pointer to the first between the brothers of the node
-referenced by @var{self}; it can be a pointer to @var{self} itself, if
-@var{self} is the first.
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_get_last (const ucl_tree_node_t * @var{self})
-Return a pointer to the last between the brothers of the node
-referenced by @var{self}; it can be a pointer to @var{self} itself, if
-@var{self} is the last.
-@end deftypefun
-
-@c ------------------------------------------------------------
-
-@c page
-@node tree adding
-@subsection Adding elements to a tree
-
-
-@noindent
-The @code{ucl_tree_set_*()} functions are used to append a new subtree
-to a tree.
-
-
-@deftypefun void ucl_tree_set_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
-Link together the nodes referenced by @var{nod_p} and @var{son_p} so
-that one is the son of the other.  The old reference to the son of
-@var{nod_p} is lost; the old reference to the dad of @var{son_p} is
-lost.
-@end deftypefun
-
-
-@deftypefun void ucl_tree_set_bro (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
-Link together the nodes referenced by @var{nod_p} and @var{bro_p} so
-that one is the brother of the other.  The node referenced by @var{bro_p}
-becomes the right brother of the node referenced by @var{nod_p}.  The old
-references to the brothers of the two nodes are lost.
-@end deftypefun
-
-
-The following functions are used to insert subtrees in a tree.  None of
-the nodes in the target tree are detached.  The links in the new subtrees
-that are not interested by the relations in these functions, are left
-untouched.
-
-
-@deftypefun void ucl_tree_insert_dad (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{dad_p})
-Inserts a new dad for a node.  The dad node becomes the father of the
-node and the first son of the old dad (if any).
-
-@example	
- ---       ---
-| A |     | A |
- ---       ---
-  |         |
- ---       ---
-|nod| ->  |dad|
- ---       ---
-            |
-           ---
-          |nod|
-           ---
-@end example
-@end deftypefun
-
-
-Example of dad insertion:
-
-@example
-ucl_tree_insert_dad( 1, A )
-
-0               D         0
-|               |         |
-1--2--3--4  +   A--C  =   A--C
-|  |            |         |
-5  6            B         1--2--3--4
-                          |  |
-                          5  6
-@end example
-
-@noindent
-the @code{D} and @code{B} nodes are detached and will be lost if we
-don't keep a reference to them.
-
-
-@deftypefun void ucl_tree_insert_son (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{son_p})
-Insert a new child for a node.  The node referenced by @var{son_p}
-becomes the last between the children of the node referenced by
-@var{nod_p}.
-
-@example
- ---         ---
-|nod|       |nod|
- ---         ---
-  |     ->    |
- ---         ---     ---
-| A |       | A |-->|son|
- ---         ---     ---
-@end example
-@end deftypefun
-
-
-Example of son insertion:
-
-@example
-ucl_tree_insert_son( 0, A )
-
-0               D         0
-|               |         |
-1--2--3--4  +   A--C  =   1--2--3--4--A--C
-|  |            |         |  |        |
-5  6            B         5  6        B
-@end example
-
-@noindent
-the node @code{D} is detached and will be lost if we don't keep a
-reference to it.
-
-
-@deftypefun void ucl_tree_insert_prev (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
-Insert a new brother for a node.  The node referenced by @var{bro_p}
-becomes the left brother of the node referenced by @var{nod_p}.
-
-@example
- ---    ---          ---    ---    ---
-| A |--|nod|   ->   | A |--|bro|--|nod|
- ---    ---          ---    ---    ---
-@end example
-@end deftypefun
-
-
-Example of prev node insertion:
-
-@example
-ucl_tree_insert_prev( 2, A )
-
-0               D         0
-|               |         |
-1--2--3--4  +   A--C  =   1--A--2--3--4
-|  |            |         |  |  |
-5  6            B         5  B  6
-@end example
-
-@noindent
-the @code{D} and @code{C} nodes are detached and will be lost if we
-don't keep a reference to them.
-
-
-@deftypefun void ucl_tree_insert_next (ucl_tree_node_t * @var{nod_p}, ucl_tree_node_t * @var{bro_p})
-Insert a new brother for a node.  The node referenced by @var{bro_p}
-becomes the right brother of the node referenced by @var{nod_p}.
-
-@example
- ---    ---          ---    ---    ---
-|nod|--| A |   ->   |nod|--|bro|--| A |
- ---    ---          ---    ---    ---
-@end example
-@end deftypefun
-
-
-Example of next brother insertion:
-
-@example
-ucl_tree_insert_next( 2, A )
-
-0               D         0
-|               |         |
-1--2--3--4  +   A--C  =   1--2--A--3--4
-|  |            |         |  |
-5  6            B         5  6
-@end example
-
-@noindent
-the @code{D}, @code{B} and @code{C} nodes are detached and will be lost
-if we don't keep a reference to them.
-
-@c ------------------------------------------------------------
-
-@c page
-@node tree removing
-@subsection Removing elements from a tree
-
-
-@noindent
-These functions will extract a node from a tree, returning a pointer to
-the extracted node.
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_extract_dad (ucl_tree_node_t * @var{nod_p})
-Extract the dad of the node referenced by @var{nod_p} from the tree.
-The referenced node and all its brothers are inserted in place of the
-extracted dad.
-
-Returns a pointer to the extracted node, or @null{} if the selected node
-has nod dad.  All the pointers in the extracted node structure are reset
-to @null{}.
-
-@example
- ---    ---    ---       ---    ---    ---    ---
-| A |--|dad|--| B |     | A |--|nod|--| C |--| B |
- ---    ---    ---       ---    ---    ---    ---
-         |          ->
-        ---    ---              ---
-       |nod|--| C |            |dad|
-        ---    ---              ---
-@end example
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_extract_son (ucl_tree_node_t * @var{nod_p})
-Extract the son of the node referenced by @var{nod_p} from the tree.
-The son of the selected node is extracted from the hierarchy.  All of its
-children become children of the selected node.
-
-Return a pointer to the extracted node or @null{} if the selected node
-has no son.  All the pointers in the extracted node structure are reset
-to @null{}.
-
-@example
- ---               ---
-|nod|             |nod|
- ---               ---
-  |                 |
- ---    ---        ---    ---    ---
-|son|--| C |  ->  | A |--| B |--| C |
- ---    ---        ---    ---    ---
-  |
- ---    ---            ---
-| A |--| B |          |son|
- ---    ---            ---
-@end example
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_extract_prev (ucl_tree_node_t * @var{nod_p})
-Extract the left brother of the node referenced by @var{nod_p}.  The
-left brother of the selected node is extracted from the hierarchy.  Its
-children become left brothers of the selected node.
-
-Return a pointer to the extracted node, or @null{} if the selected node
-has no left brother.   All the pointers in the extracted node structure
-are reset to @null{}.
-
-@example
- ---               ---
-| A |             | A |
- ---               ---
-  |                 |
- ---    ---        ---    ---
-|prv|--|nod|  ->  | B |--|nod|
- ---    ---        ---    ---
-  |
- ---                   ---
-| B |                 |prv|
- ---                   ---
-@end example
-@end deftypefun
-
-
-@deftypefun {ucl_tree_node_t *} ucl_tree_extract_next (ucl_tree_node_t * @var{nod_p})
-Extract the right brother of the node referenced by @var{nod_p}.   The
-right brother of the selected node is extracted from the hierarchy.  Its
-children become right brothers of the selected node.
-
-Return a pointer to the extracted node, or @null{} if the selected node
-has no right brother.   All the pointers in the extracted node structure
-are reset to @null{}.
-
-@example
- ---    ---    ---       ---    ---    ---
-|nod|--|nxt|--| A |     |nod|--| B |--| A |
- ---    ---    ---       ---    ---    ---
-         |           ->
-        ---                 ---
-       | B |               |nxt|
-        ---                 ---
-@end example
-@end deftypefun
-
-@c ------------------------------------------------------------
-
-@c page
-@node tree iterators
-@subsection Traversing a tree
-
-
-@noindent
-For the tree iterators, the return value of @function{ucl_iterator_ptr}
-is a pointer to the current node.
-
-
-@deftypefun void ucl_tree_iterator_inorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
-Initialises an in--order iteration.
-@end deftypefun
-
-
-@deftypefun void ucl_tree_iterator_preorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
-Initialises a pre--order iteration.
-@end deftypefun
-
-
-@deftypefun void ucl_tree_iterator_postorder (ucl_tree_node_t *@var{nod_p}, ucl_iterator_t @var{iter})
-Initialises a post--order iteration.
-@end deftypefun
-
 
 @c page
 @node vector
@@ -7421,19 +7546,10 @@ explicitly, but the functions used to do the actual iterations and to
 access the objects are accessed through a set of macros.
 
 
-@section Type definitions
-
-
-@deftp {Struct Typedef} ucl_iterator_struct_t
+@deftp {Struct Typedef} ucl_iterator_tag_t
+@deftpx {One--Element Array Typedef} ucl_iterator_t
 Base structure for all the iterators.
 @end deftp
-
-@deftp {One--Element Array Typedef} ucl_iterator_t
-Array of one @code{ucl_iterator_struct_t}.
-@end deftp
-
-
-@section Functions
 
 
 @deftypefun ucl_bool_t ucl_iterator_more (ucl_iterator_t @var{iterator})
@@ -7475,6 +7591,8 @@ for (ucl_map_iterator_inorder(this, iterator);
   @}
 @end example
 
+
+@c ------------------------------------------------------------
 
 @c page
 @node generic

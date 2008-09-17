@@ -1098,7 +1098,7 @@ ucl_vector_iterator_range_forward (const ucl_vector_t self, ucl_range_t range, u
   iterator->container	= self;
   iterator->iterator	= (ucl_vector_size(self) && ucl_range_size(range))?
     ucl_vector_index_to_slot(self, ucl_range_min(range)) : NULL;
-  iterator->ptr1	= ucl_vector_index_to_slot(self, ucl_range_max(range));
+  iterator->internal1.pointer	= ucl_vector_index_to_slot(self, ucl_range_max(range));
   iterator->next	= iterator_range_forward_next;
 }
 stub(2007-10-25-07-29-52) void
@@ -1109,7 +1109,7 @@ ucl_vector_iterator_range_backward (const ucl_vector_t self, ucl_range_t range, 
   iterator->container	= self;
   iterator->iterator	= (ucl_vector_size(self) && ucl_range_size(range))?
     ucl_vector_index_to_slot(self, ucl_range_max(range)) : NULL;
-  iterator->ptr1	= ucl_vector_index_to_slot(self, ucl_range_min(range));
+  iterator->internal1.pointer	= ucl_vector_index_to_slot(self, ucl_range_min(range));
   iterator->next	= iterator_range_backward_next;
 }
 static void
@@ -1127,7 +1127,7 @@ iterator_range_next (ucl_iterator_t iterator, ucl_bool_t forward)
 {
   const ucl_vector_struct_t *	self = iterator->container;
   uint8_t *			current_p = iterator->iterator;
-  uint8_t *			last_p = iterator->ptr1;
+  uint8_t *			last_p = iterator->internal1.pointer;
 
   ASSERT_INVARIANTS(self);
   if (forward)

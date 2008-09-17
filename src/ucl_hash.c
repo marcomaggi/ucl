@@ -459,7 +459,7 @@ ucl_hash_iterator (const ucl_hash_table_t this, ucl_iterator_t iterator)
 	  if (*bucket_p)
 	    {
 	      iterator->iterator = *bucket_p;
-	      iterator->ptr1     = bucket_p;
+	      iterator->internal1.pointer = bucket_p;
 	      return;
 	    }
 	}
@@ -487,7 +487,7 @@ iterator_next (ucl_iterator_t iterator)
     }
   else
     {
-      bucket_p = iterator->ptr1;
+      bucket_p = iterator->internal1.pointer;
       this     = (const ucl_hash_table_tag_t *) iterator->container;
 
       /* advance to the next bucket; if it is not the last examine it */
@@ -506,7 +506,7 @@ iterator_next (ucl_iterator_t iterator)
 	  if (*bucket_p)
 	    {
 	      iterator->iterator = *bucket_p;
-	      iterator->ptr1     = bucket_p;
+	      iterator->internal1.pointer = bucket_p;
 	      return;
 	    }
 	}

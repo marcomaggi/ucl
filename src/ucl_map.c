@@ -64,7 +64,7 @@ typedef ucl_map_struct_t	map_struct_t;
 typedef ucl_map_link_t		link_t;
 typedef ucl_btree_node_tag_t	node_t;
 typedef ucl_iterator_t		iterator_t;
-typedef ucl_iterator_struct_t	iterator_struct_t;
+typedef ucl_iterator_tag_t	iterator_struct_t;
 typedef ucl_value_t		value_t;
 
 /* Static function prototypes. */
@@ -1512,8 +1512,8 @@ ucl_map_iterator_union (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator
 
   if (ucl_iterator_more(iter1) || ucl_iterator_more(iter2))
     {
-      iterator->ptr1	= iter1;
-      iterator->ptr2	= iter2;
+      iterator->internal1.pointer	= iter1;
+      iterator->internal2.pointer	= iter2;
       iterator->next	= union_iterator_next;
 
       union_find_next(iter1, iter2, iterator);
@@ -1530,8 +1530,8 @@ union_iterator_next (iterator_t iterator)
   iterator_struct_t *	iter2;
 
 
-  iter1 = iterator->ptr1;
-  iter2 = iterator->ptr2;
+  iter1 = iterator->internal1.pointer;
+  iter2 = iterator->internal2.pointer;
 
   if (iterator->container == iter1)
     {
@@ -1605,8 +1605,8 @@ ucl_map_iterator_intersection (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_i
 
   if (ucl_iterator_more(iter1) && ucl_iterator_more(iter2))
     {
-      iterator->ptr1	 = iter1;
-      iterator->ptr2	 = iter2;
+      iterator->internal1.pointer	 = iter1;
+      iterator->internal2.pointer	 = iter2;
       iterator->next	 = intersection_iterator_next;
 
       intersection_find_common(iter1, iter2, iterator);
@@ -1622,8 +1622,8 @@ intersection_iterator_next (iterator_t iterator)
   iterator_struct_t * 	iter1;
   iterator_struct_t * 	iter2;
 
-  iter1 = iterator->ptr1;
-  iter2 = iterator->ptr2;
+  iter1 = iterator->internal1.pointer;
+  iter2 = iterator->internal2.pointer;
 
   ucl_iterator_next(iter1);
   ucl_iterator_next(iter2);
@@ -1681,8 +1681,8 @@ ucl_map_iterator_complintersect	(ucl_iterator_t iter1, ucl_iterator_t iter2, ucl
 
   if (ucl_iterator_more(iter1) || ucl_iterator_more(iter2))
     {
-      iterator->ptr1	 = iter1;
-      iterator->ptr2	 = iter2;
+      iterator->internal1.pointer	 = iter1;
+      iterator->internal2.pointer	 = iter2;
       iterator->next	 = complintersect_iterator_next;
 
       iterator->container = NULL;
@@ -1706,8 +1706,8 @@ complintersect_iterator_next (iterator_t iterator)
   int		v;
 
 
-  iter1 = iterator->ptr1;
-  iter2 = iterator->ptr2;
+  iter1 = iterator->internal1.pointer;
+  iter2 = iterator->internal2.pointer;
 
   compar = ((const map_struct_t *) (iter1->container))->keycmp;
 
@@ -1791,8 +1791,8 @@ ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_it
 
   if (ucl_iterator_more(iter1))
     {
-      iterator->ptr1	 = iter1;
-      iterator->ptr2	 = iter2;
+      iterator->internal1.pointer	 = iter1;
+      iterator->internal2.pointer	 = iter2;
       iterator->next	 = subtraction_iterator_next;
 
       iterator->container = (ucl_iterator_more(iter2))? NULL : iter1;
@@ -1860,7 +1860,7 @@ subtraction_iterator_next (iterator_t iterator)
     condition is recognised in the initialisation function.
   */
 
-  iter1 = iterator->ptr1;
+  iter1 = iterator->internal1.pointer;
   if (! ucl_iterator_more(iter1))
     {
       iterator->iterator = NULL;
@@ -1873,7 +1873,7 @@ subtraction_iterator_next (iterator_t iterator)
     return.
   */
 
-  iter2 = iterator->ptr2;
+  iter2 = iterator->internal2.pointer;
   if (! ucl_iterator_more(iter2))
     {
       goto Advance;

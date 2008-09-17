@@ -36,6 +36,38 @@ ucl_decl void * ucl_btree_step_levelorder (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_step_levelorder_backward (void * _cur_p)
 	__attribute__((__nonnull__,__pure__));
+ucl_decl void ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_inorder_backward (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_preorder (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_preorder_backward (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_postorder (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_postorder_backward (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_levelorder (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_inorder (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_preorder (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_postorder (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
+ucl_decl void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node)
+	__attribute__((__nonnull__));
 
 #endif /* not defined UCL_ENABLE_STUB */
 
@@ -54,6 +86,22 @@ typedef void * ucl_btree_step_postorder_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_postorder_backward_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_levelorder_proto_t (void * _cur_p);
 typedef void * ucl_btree_step_levelorder_backward_proto_t (void * _cur_p);
+typedef void ucl_btree_iterator_inorder_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_inorder_backward_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_preorder_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_preorder_backward_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_postorder_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_postorder_backward_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_levelorder_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_iterator_levelorder_backward_proto_t (ucl_iterator_t iterator, void * root_node);
+typedef void ucl_btree_subtree_iterator_inorder_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_inorder_backward_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_preorder_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_preorder_backward_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_postorder_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_postorder_backward_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_levelorder_proto_t (ucl_iterator_t iterator, void * node);
+typedef void ucl_btree_subtree_iterator_levelorder_backward_proto_t (ucl_iterator_t iterator, void * node);
 
 /* Stub table type declaration for the "btree" module.
    A struct holding a pointer for each function in the module
@@ -72,6 +120,22 @@ typedef struct ucl_btree_stub_table_t {
   ucl_btree_step_preorder_backward_proto_t * stub_ucl_btree_step_preorder_backward;
   ucl_btree_step_postorder_backward_proto_t * stub_ucl_btree_step_postorder_backward;
   ucl_btree_step_levelorder_backward_proto_t * stub_ucl_btree_step_levelorder_backward;
+  ucl_btree_iterator_inorder_proto_t  * stub_ucl_btree_iterator_inorder;
+  ucl_btree_iterator_inorder_backward_proto_t * stub_ucl_btree_iterator_inorder_backward;
+  ucl_btree_iterator_preorder_proto_t * stub_ucl_btree_iterator_preorder;
+  ucl_btree_iterator_preorder_backward_proto_t * stub_ucl_btree_iterator_preorder_backward;
+  ucl_btree_iterator_postorder_proto_t * stub_ucl_btree_iterator_postorder;
+  ucl_btree_iterator_postorder_backward_proto_t * stub_ucl_btree_iterator_postorder_backward;
+  ucl_btree_iterator_levelorder_backward_proto_t * stub_ucl_btree_iterator_levelorder_backward;
+  ucl_btree_iterator_levelorder_proto_t * stub_ucl_btree_iterator_levelorder;
+  ucl_btree_subtree_iterator_inorder_proto_t * stub_ucl_btree_subtree_iterator_inorder;
+  ucl_btree_subtree_iterator_inorder_backward_proto_t * stub_ucl_btree_subtree_iterator_inorder_backward;
+  ucl_btree_subtree_iterator_preorder_proto_t * stub_ucl_btree_subtree_iterator_preorder;
+  ucl_btree_subtree_iterator_preorder_backward_proto_t * stub_ucl_btree_subtree_iterator_preorder_backward;
+  ucl_btree_subtree_iterator_postorder_proto_t * stub_ucl_btree_subtree_iterator_postorder;
+  ucl_btree_subtree_iterator_postorder_backward_proto_t * stub_ucl_btree_subtree_iterator_postorder_backward;
+  ucl_btree_subtree_iterator_levelorder_proto_t * stub_ucl_btree_subtree_iterator_levelorder;
+  ucl_btree_subtree_iterator_levelorder_backward_proto_t * stub_ucl_btree_subtree_iterator_levelorder_backward;
 } ucl_btree_stub_table_t;
 
 /* Stub table macros definition for the "btree" module.
@@ -95,6 +159,22 @@ ucl_decl const ucl_btree_stub_table_t   ucl_btree_stub_table;
 #define ucl_btree_step_preorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_preorder_backward)
 #define ucl_btree_step_postorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_postorder_backward)
 #define ucl_btree_step_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_step_levelorder_backward)
+#define ucl_btree_iterator_inorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_inorder)
+#define ucl_btree_iterator_inorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_inorder_backward)
+#define ucl_btree_iterator_preorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_preorder)
+#define ucl_btree_iterator_preorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_preorder_backward)
+#define ucl_btree_iterator_postorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_postorder)
+#define ucl_btree_iterator_postorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_postorder_backward)
+#define ucl_btree_iterator_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_levelorder_backward)
+#define ucl_btree_iterator_levelorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_iterator_levelorder)
+#define ucl_btree_subtree_iterator_inorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_inorder)
+#define ucl_btree_subtree_iterator_inorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_inorder_backward)
+#define ucl_btree_subtree_iterator_preorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_preorder)
+#define ucl_btree_subtree_iterator_preorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_preorder_backward)
+#define ucl_btree_subtree_iterator_postorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_postorder)
+#define ucl_btree_subtree_iterator_postorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_postorder_backward)
+#define ucl_btree_subtree_iterator_levelorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder)
+#define ucl_btree_subtree_iterator_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder_backward)
 
 #endif /* defined UCL_ENABLE_STUB */
 

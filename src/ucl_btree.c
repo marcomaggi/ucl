@@ -378,9 +378,7 @@ ucl_btree_step_levelorder (void * _cur_p)
 
 
   if ((! cur_p->dad_p) && (! cur_p->son_p) && (! cur_p->bro_p))
-    {
-      return NULL;
-    }
+    return NULL;
 
   org_p = cur_p;
 
@@ -554,5 +552,174 @@ ucl_btree_step_levelorder_backward (void * _cur_p)
     }
   return cur_p;
 }
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Full tree iterators.
+ ** ----------------------------------------------------------*/
+
+static void __attribute__((__nonnull__))
+ucl_btree_generic_iteration_next (ucl_iterator_t iterator)
+{
+  iterator->iterator = iterator->internal2.pointer_map_function(iterator->iterator);
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-28-45) __attribute__((__nonnull__)) void
+ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_inorder(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_inorder;
+}
+stub(2008-09-17-14-29-02) __attribute__((__nonnull__)) void
+ucl_btree_iterator_inorder_backward (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_inorder_backward(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_inorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-29-21) __attribute__((__nonnull__)) void
+ucl_btree_iterator_preorder (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_preorder(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_preorder;
+}
+stub(2008-09-17-14-29-27) __attribute__((__nonnull__)) void
+ucl_btree_iterator_preorder_backward (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_preorder_backward(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_preorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-29-42) __attribute__((__nonnull__)) void
+ucl_btree_iterator_postorder (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_postorder(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_postorder;
+}
+stub(2008-09-17-14-29-47) __attribute__((__nonnull__)) void
+ucl_btree_iterator_postorder_backward (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_postorder_backward(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_postorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-30-11) __attribute__((__nonnull__)) void
+ucl_btree_iterator_levelorder (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_levelorder(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_levelorder;
+}
+stub(2008-09-17-14-30-06) __attribute__((__nonnull__)) void
+ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_node)
+{
+  iterator->iterator	= ucl_btree_first_levelorder_backward(root_node);
+  iterator->next	= ucl_btree_generic_iteration_next;
+  iterator->internal2.pointer_map_function = ucl_btree_step_levelorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Subtree iterators.
+ ** ----------------------------------------------------------*/
+
+static void __attribute__((__nonnull__))
+ucl_btree_subtree_generic_next (ucl_iterator_t iterator)
+{
+  iterator->iterator = (iterator->iterator == iterator->internal1.pointer)?
+    NULL : iterator->internal2.pointer_map_function(iterator->iterator);
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-47-48) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_inorder (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_inorder(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = ucl_btree_find_rightmost(node);	/* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_inorder;
+}
+stub(2008-09-17-14-48-34) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_inorder_backward(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = ucl_btree_find_leftmost(node);	/* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_inorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-14-57-14) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_preorder (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_preorder(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = ucl_btree_find_deepest_bro(node); /* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_preorder;
+}
+stub(2008-09-17-14-59-27) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_preorder_backward(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = ucl_btree_find_deepest_son(node); /* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_preorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-17-15-00-32) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_postorder (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_postorder(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = node; /* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_postorder;
+}
+stub(2008-09-17-15-01-24) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_postorder_backward(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = node; /* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_postorder_backward;
+}
+
+/* ------------------------------------------------------------ */
+
+#if 0
+stub(2008-09-17-15-01-33) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void * node)
+{
+  iterator->iterator	= ucl_btree_first_levelorder(node);
+  iterator->next	= ucl_btree_subtree_generic_next;
+  iterator->internal1.pointer = ucl_btree_find_rightmost(node);	/* the final node */
+  iterator->internal2.pointer_map_function = ucl_btree_step_levelorder;
+}
+stub(2008-09-17-15-01-37) __attribute__((__nonnull__)) void
+ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node)
+{
+}
+#endif
 
 /* end of file */

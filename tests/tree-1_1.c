@@ -1,5 +1,4 @@
-/* tree-1_1.c --
-   
+/*   
    Part of: Useless Containers Library
    Contents: tree test
    Date: Thu Dec 11, 2003
@@ -8,7 +7,7 @@
    
    
    
-   Copyright (c) 2003, 2005 Marco Maggi
+   Copyright (c) 2003, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -22,8 +21,6 @@
    
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
-   $Id: tree-1_1.c,v 1.1.1.2 2003/12/11 08:41:24 marco Exp $
 */
 
 #include "treetest.h"
@@ -31,14 +28,7 @@
 void
 test (void)
 {
-  ucl_tree_node_t *		n[100];
-  /*
-  ucl_tree_node_t *		node;
-  ucl_tree_node_t *		target;
-  ucl_tree_node_t *		root;
-  ucl_iterator_t		iterator;
-  int				i, j;
-  */
+  ucl_btree_node_t 	n[100];
 
 
   fill_tree(n);
@@ -196,9 +186,3 @@ test (void)
 }
 
 /* end of file */
-/*
-Local Variables:
-mode: c
-page-delimiter: "^$"
-End:
-*/

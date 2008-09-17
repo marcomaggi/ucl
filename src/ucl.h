@@ -80,13 +80,27 @@ UCL_BEGIN_C_DECL
 */
 
 #ifdef __GNUC__
-#define UCL_UNUSED __attribute__ ((unused))
+#  define UCL_UNUSED		__attribute__((unused))
 #else
-#define UCL_UNUSED
+#  define UCL_UNUSED		/* empty */
+#endif
+
+#ifndef __GNUC__
+#  define __attribute__(...)	/* empty */
 #endif
 
 /* ------------------------------------------------------------ */
 
+
+/** ------------------------------------------------------------
+ ** Declarations for inline functions.
+ ** ----------------------------------------------------------*/
+
+#define ucl_inline		static __inline__ __attribute__((__always_inline__,__nonnull__))
+#define ucl_inline_nonnull	static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+#define ucl_inline_pure		static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+
+/* ------------------------------------------------------------ */
 
 /** ------------------------------------------------------------
  ** Common type declarations.
@@ -137,6 +151,10 @@ typedef struct ucl_array_of_pointers_t {
   size_t	number_of_slots;
   void **	slots;
 } ucl_array_of_pointers_t;
+
+/* ------------------------------------------------------------ */
+
+typedef void * ucl_pointer_map_fun_t (void *);
 
 /* ------------------------------------------------------------ */
 
@@ -258,7 +276,7 @@ typedef struct ucl_byte_pointer_range_t {
 #define ucl_struct_clean(B,TYPE_T)	memset((B),'\0',sizeof(TYPE_T))
 #define ucl_struct_reset(B,TYPE_T)	ucl_struct_clean((B),(TYPE_T))
 
-static __inline__ void
+ucl_inline void
 ucl_p_struct_alloc (ucl_memory_allocator_t * allocator, void ** buffer_pp, size_t len)
 {
   void *	p = NULL;
@@ -286,24 +304,24 @@ typedef struct ucl_block_t {
 
 /* ------------------------------------------------------------ */
 
-static __inline__ void
+ucl_inline void
 ucl_block_set (ucl_block_t * block, void * p, size_t len)
 {
   block->ptr = p;
   block->len = len;
 }
-static __inline__ void
+ucl_inline void
 ucl_block_reset (ucl_block_t * block)
 {
   block->ptr = NULL;
   block->len = 0;
 }
-static __inline__ ucl_bool_t
+ucl_inline ucl_bool_t
 ucl_block_is_null (ucl_block_t block)
 {
   return (NULL == block.ptr);
 }
-static __inline__ void
+ucl_inline void
 ucl_block_clean_memory (ucl_block_t block)
 {
   memset(block.ptr, '\0', block.len);
@@ -311,7 +329,7 @@ ucl_block_clean_memory (ucl_block_t block)
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_block_t
+ucl_inline ucl_block_t
 ucl_block_alloc (ucl_memory_allocator_t allocator, size_t dim)
 {
   ucl_block_t	block = UCL_EMPTY_BLOCK;
@@ -320,14 +338,14 @@ ucl_block_alloc (ucl_memory_allocator_t allocator, size_t dim)
   block.len = dim;
   return block;
 }
-static __inline__ ucl_block_t
+ucl_inline ucl_block_t
 ucl_block_realloc (ucl_memory_allocator_t allocator, ucl_block_t block, size_t new_dim)
 {
   allocator.alloc(allocator.data, &(block.ptr), new_dim);
   block.len = new_dim;
   return block;
 }
-static __inline__ void
+ucl_inline void
 ucl_block_free (ucl_memory_allocator_t allocator, ucl_block_t block)
 {
   if (block.ptr)
@@ -454,7 +472,7 @@ typedef void ucl_callback_apply_fun_t (ucl_callback_t callback, ...);
 
 /* ------------------------------------------------------------ */
 
-static __inline__ __attribute__((__pure__)) ucl_bool_t
+ucl_inline_pure ucl_bool_t
 ucl_callback_is_present (ucl_callback_t callback)
 {
   return (NULL != callback.func);
@@ -467,33 +485,38 @@ ucl_callback_is_present (ucl_callback_t callback)
  ** Generic iterator.
  ** ----------------------------------------------------------*/
 
-typedef struct ucl_iterator_struct_t	ucl_iterator_struct_t;
-typedef void ucl_iterator_next_t	(ucl_iterator_struct_t *iterator);
+typedef struct ucl_iterator_tag_t	ucl_iterator_tag_t;
+typedef void ucl_iterator_next_t (ucl_iterator_tag_t *iterator);
 
-struct ucl_iterator_struct_t {
+typedef union {
+  void *			pointer;
+  ucl_pointer_map_fun_t *	pointer_map_function;
+} ucl_iterator_internal_data_t;
+
+struct ucl_iterator_tag_t {
   void *		iterator;
   const void *		container;
   ucl_iterator_next_t *	next;
 
-  void *		ptr1;
-  void *		ptr2;
+  ucl_iterator_internal_data_t internal1;
+  ucl_iterator_internal_data_t internal2;
 };
 
-typedef ucl_iterator_struct_t		ucl_iterator_t[1];
+typedef ucl_iterator_tag_t		ucl_iterator_t[1];
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_bool_t	
+ucl_inline_pure ucl_bool_t	
 ucl_iterator_more (ucl_iterator_t iterator_p)
 {
   return (iterator_p->iterator != 0);
 }
-static __inline__ void
+ucl_inline void
 ucl_iterator_next (ucl_iterator_t iterator_p)
 {
   iterator_p->next(iterator_p);
 }
-static __inline__ void *
+ucl_inline_pure void *
 ucl_iterator_ptr (ucl_iterator_t iterator_p)
 {
   return iterator_p->iterator;
@@ -558,123 +581,6 @@ typedef ucl_btree_node_tag_t *	ucl_btree_node_t;
 
 /* ------------------------------------------------------------ */
 
-#if (defined __GNUC__)
-#  if !(defined ucl_btree_decl)
-#    define ucl_btree_decl		\
-  __attribute__((__always_inline__,__nonnull__))
-#    define ucl_btree_decl_null		\
-  __attribute__((__always_inline__,__nonnull__(1)))
-#    define ucl_btree_decl_pure		\
-  __attribute__((__always_inline__,__pure__,__nonnull__))
-#  else
-#    define ucl_btree_decl		/* empty */
-#    define ucl_btree_decl		/* empty */
-#  endif /* not defined ucl_btree_decl */
-#endif /* defined __GNUC__ */
-
-/* ------------------------------------------------------------ */
-/* setters */
-
-static __inline__ ucl_btree_decl_null void
-ucl_btree_setbro (void * self, void * bro_p)
-{
-  ((ucl_btree_node_t)self)->bro_p = bro_p;
-}
-static __inline__ ucl_btree_decl_null void
-ucl_btree_setson (void * self, void * son_p)
-{
-  ((ucl_btree_node_t)self)->son_p = son_p;
-}
-static __inline__ ucl_btree_decl_null void
-ucl_btree_setdad (void * self, void * dad_p)
-{
-  ((ucl_btree_node_t)self)->dad_p = dad_p;
-}
-static __inline__ ucl_btree_decl void
-ucl_btree_dadbro (void * dad_p, void * bro_p)
-{
-  ucl_btree_setdad(bro_p, dad_p);
-  ucl_btree_setbro(dad_p, bro_p);
-}
-static __inline__ ucl_btree_decl void
-ucl_btree_dadson (void * dad_p, void * son_p)
-{
-  ucl_btree_setdad(son_p, dad_p);
-  ucl_btree_setson(dad_p, son_p);
-}
-static __inline__ ucl_btree_decl void
-ucl_btree_dadsonbro (void * dad_p, void * son_p, void * bro_p)
-{
-  ucl_btree_setdad(son_p, dad_p);
-  ucl_btree_setdad(bro_p, dad_p);
-  ucl_btree_setson(dad_p, son_p);
-  ucl_btree_setbro(dad_p, bro_p);
-}
-
-/* ------------------------------------------------------------ */
-/* getters */
-
-static __inline__ ucl_btree_decl_pure void *
-ucl_btree_getbro (void * self)
-{
-  return ((ucl_btree_node_t)self)->bro_p;
-}
-static __inline__ ucl_btree_decl_pure void *
-ucl_btree_getson (void * self)
-{
-  return ((ucl_btree_node_t)self)->son_p;
-}
-static __inline__ ucl_btree_decl_pure void *
-ucl_btree_getdad (void * self)
-{
-  return ((ucl_btree_node_t)self)->dad_p;
-}
-static __inline__ ucl_btree_decl_pure void *
-ucl_btree_data (void * self)
-{
-  typedef struct {
-    ucl_btree_node_t	dad_p;
-    ucl_btree_node_t	bro_p;
-    ucl_btree_node_t	son_p;
-    uint8_t		data[];
-  } ucl_btree_embedded_node_tag_t;
-
-  return ((ucl_btree_embedded_node_tag_t *)self)->data;
-}
-
-/* ------------------------------------------------------------ */
-/* detaching */
-
-static __inline__ ucl_btree_decl void *
-ucl_btree_detach_son (void * self)
-{
-  ucl_btree_node_t	son_p = ucl_btree_getson(self);
-
-  ucl_btree_setson(self, NULL);
-  ucl_btree_setdad(son_p, NULL);
-  return son_p;
-}
-static __inline__ ucl_btree_decl void *
-ucl_btree_detach_bro (void * self)
-{
-  ucl_btree_node_t	bro_p = ucl_btree_getbro(self);
-
-  ucl_btree_setbro(self, NULL);
-  ucl_btree_setdad(bro_p, NULL);
-  return bro_p;
-}
-static __inline__ ucl_btree_decl void *
-ucl_btree_detach_dad (void * self)
-{
-  ucl_btree_node_t	dad_p = ucl_btree_getdad(self);
-
-  ucl_btree_setdad(self, NULL);
-  ucl_btree_setdad(dad_p, NULL);
-  return dad_p;
-}
-
-/* ------------------------------------------------------------ */
-
 
 /** ------------------------------------------------------------
  ** Circular list type definitions.
@@ -696,22 +602,22 @@ typedef ucl_circular_struct_t ucl_circular_t[1];
 
 /* ------------------------------------------------------------ */
 
-static __inline__ void
+ucl_inline void
 ucl_circular_constructor (ucl_circular_t this)
 {
   ucl_struct_clean(this, ucl_circular_t);
 }
-static __inline__ void
+ucl_inline void
 ucl_circular_destructor (ucl_circular_t this)
 {
   ucl_struct_clean(this, ucl_circular_t);
 }
-static __inline__ size_t
+ucl_inline size_t
 ucl_circular_size (ucl_circular_t this)
 {
   return this->size;
 }
-static __inline__ ucl_circular_link_t *
+ucl_inline ucl_circular_link_t *
 ucl_circular_current (ucl_circular_t this)
 {
   return this->current_link;
@@ -719,22 +625,22 @@ ucl_circular_current (ucl_circular_t this)
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_value_t
+ucl_inline ucl_value_t
 ucl_circular_data (ucl_circular_link_t * link_p)
 {
   return link_p->val;
 }
-static __inline__ ucl_value_t
+ucl_inline ucl_value_t
 ucl_circular_getval (ucl_circular_link_t * link_p)
 {
   return link_p->val;
 }
-static __inline__ void
+ucl_inline void
 ucl_circular_setval (ucl_circular_link_t * link_p, ucl_value_t newval)
 {
   link_p->val = newval;
 }
-static __inline__ void
+ucl_inline void
 ucl_circular_set_compar (ucl_circular_t this, ucl_comparison_t compar)
 {
   this->compar = compar;
@@ -918,68 +824,6 @@ static __inline__ void
 ucl_map_setval (ucl_map_link_t * link_p, ucl_value_t newval)
 {
   link_p->val = newval;
-}
-
-/* ------------------------------------------------------------ */
-
-
-/** ------------------------------------------------------------
- ** Tree container types definitions.
- ** ----------------------------------------------------------*/
-
-typedef struct ucl_tree_node_t {
-  struct ucl_tree_node_t *	dad_p;
-  struct ucl_tree_node_t *	bro_p;
-  struct ucl_tree_node_t *	son_p;
-} ucl_tree_node_t;
-
-/* ------------------------------------------------------------ */
-
-static __inline__ void
-ucl_tree_constructor (ucl_tree_node_t * this)
-{
-  ucl_struct_clean(this, ucl_tree_node_t);
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ ucl_bool_t
-ucl_tree_has_next (const ucl_tree_node_t * this)
-{
-  return (NULL != this->bro_p);
-}
-static __inline__ ucl_bool_t
-ucl_tree_has_son (const ucl_tree_node_t * this)
-{
-  return (NULL != this->son_p);
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ ucl_tree_node_t *
-ucl_tree_get_next (const ucl_tree_node_t * nod_p)
-{
-  return nod_p->bro_p;
-}
-static __inline__ ucl_tree_node_t *
-ucl_tree_get_son (const ucl_tree_node_t * nod_p)
-{
-  return nod_p->son_p;
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ void
-ucl_tree_set_son (ucl_tree_node_t * nod_p, ucl_tree_node_t * son_p)
-{
-  nod_p->son_p = son_p;
-  son_p->dad_p = nod_p;
-}
-static __inline__ void
-ucl_tree_set_bro (ucl_tree_node_t * nod_p, ucl_tree_node_t * bro_p)
-{
-  nod_p->bro_p = bro_p;
-  bro_p->dad_p = nod_p;
 }
 
 /* ------------------------------------------------------------ */
@@ -1293,6 +1137,185 @@ typedef struct ucl_graph_dfs_item_t {
 
 
 /** ------------------------------------------------------------
+ ** Binary tree functions: setters.
+ ** ----------------------------------------------------------*/
+
+ucl_inline_nonnull void
+ucl_btree_setbro (void * self, void * bro_p)
+{
+  ((ucl_btree_node_t)self)->bro_p = bro_p;
+}
+ucl_inline_nonnull void
+ucl_btree_setson (void * self, void * son_p)
+{
+  ((ucl_btree_node_t)self)->son_p = son_p;
+}
+ucl_inline_nonnull void
+ucl_btree_setdad (void * self, void * dad_p)
+{
+  ((ucl_btree_node_t)self)->dad_p = dad_p;
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline void
+ucl_btree_dadbro (void * dad_p, void * bro_p)
+{
+  ucl_btree_setdad(bro_p, dad_p);
+  ucl_btree_setbro(dad_p, bro_p);
+}
+ucl_inline void
+ucl_btree_dadson (void * dad_p, void * son_p)
+{
+  ucl_btree_setdad(son_p, dad_p);
+  ucl_btree_setson(dad_p, son_p);
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline void
+ucl_btree_dadsonbro (void * dad_p, void * son_p, void * bro_p)
+{
+  ucl_btree_setdad(son_p, dad_p);
+  ucl_btree_setdad(bro_p, dad_p);
+  ucl_btree_setson(dad_p, son_p);
+  ucl_btree_setbro(dad_p, bro_p);
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Binary tree functions: getters.
+ ** ----------------------------------------------------------*/
+
+ucl_inline_pure void *
+ucl_btree_getbro (void * self)
+{
+  return ((ucl_btree_node_t)self)->bro_p;
+}
+ucl_inline_pure void *
+ucl_btree_getson (void * self)
+{
+  return ((ucl_btree_node_t)self)->son_p;
+}
+ucl_inline_pure void *
+ucl_btree_getdad (void * self)
+{
+  return ((ucl_btree_node_t)self)->dad_p;
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline_pure void *
+ucl_btree_data (void * self)
+{
+  typedef struct {
+    ucl_btree_node_t	dad_p;
+    ucl_btree_node_t	bro_p;
+    ucl_btree_node_t	son_p;
+    uint8_t		data[];
+  } ucl_btree_embedded_node_tag_t;
+
+  return ((ucl_btree_embedded_node_tag_t *)self)->data;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Binary tree functions: detaching nodes.
+ ** ----------------------------------------------------------*/
+
+ucl_inline void *
+ucl_btree_detach_son (void * self)
+{
+  ucl_btree_node_t	son_p = ucl_btree_getson(self);
+
+  ucl_btree_setson(self, NULL);
+  ucl_btree_setdad(son_p, NULL);
+  return son_p;
+}
+ucl_inline void *
+ucl_btree_detach_bro (void * self)
+{
+  ucl_btree_node_t	bro_p = ucl_btree_getbro(self);
+
+  ucl_btree_setbro(self, NULL);
+  ucl_btree_setdad(bro_p, NULL);
+  return bro_p;
+}
+ucl_inline void *
+ucl_btree_detach_dad (void * self)
+{
+  ucl_btree_node_t	dad_p = ucl_btree_getdad(self);
+
+  ucl_btree_setdad(self, NULL);
+  ucl_btree_setdad(dad_p, NULL);
+  return dad_p;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Binary tree functions: iteration.
+ ** ----------------------------------------------------------*/
+
+ucl_inline_pure void *
+ucl_btree_first_inorder (void * root_node)
+{
+  return ucl_btree_find_leftmost(root_node);
+}
+ucl_inline_pure void *
+ucl_btree_first_inorder_backward (void * root_node)
+{
+  return ucl_btree_find_rightmost(root_node);
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline_pure void *
+ucl_btree_first_preorder (void * root_node)
+{
+  return root_node;
+}
+ucl_inline_pure void *
+ucl_btree_first_preorder_backward (void * root_node)
+{
+  return root_node;
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline_pure void *
+ucl_btree_first_postorder (void * root_node)
+{
+  return ucl_btree_find_deepest_son(root_node);
+}
+ucl_inline_pure void *
+ucl_btree_first_postorder_backward (void * root_node)
+{
+  return ucl_btree_find_deepest_bro(root_node);
+}
+
+/* ------------------------------------------------------------ */
+
+ucl_inline_pure void *
+ucl_btree_first_levelorder (void * root_node)
+{
+  return root_node;
+}
+ucl_inline_pure void *
+ucl_btree_first_levelorder_backward (void * root_node)
+{
+  return root_node;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
  ** Other functions.
  ** ----------------------------------------------------------*/
 
@@ -1329,31 +1352,36 @@ ucl_map_extract (ucl_map_t this, ucl_map_link_t * _link)
 
 /* ------------------------------------------------------------ */
 
-static __inline__ void *
+
+/** ------------------------------------------------------------
+ ** Vector functions.
+ ** ----------------------------------------------------------*/
+
+ucl_inline_pure void *
 ucl_vector_front (const ucl_vector_t vector)
 {
   return ucl_vector_index_to_slot(vector, 0);
 }
-static __inline__ void *
+ucl_inline void *
 ucl_vector_back (const ucl_vector_t vector)
 {
   return ucl_vector_index_to_slot(vector, ucl_vector_last_index(vector));
 }
-static __inline__ void *
+ucl_inline_pure void *
 ucl_vector_increment_slot (const ucl_vector_t self, void * slot)
 {
   uint8_t *	p = slot;
 
   return p + self->slot_dimension;
 }
-static __inline__ void *
+ucl_inline_pure void *
 ucl_vector_decrement_slot (const ucl_vector_t self, void * slot)
 {
   uint8_t *	p = slot;
 
   return p - self->slot_dimension;
 }
-static __inline__ int
+ucl_inline_pure int
 ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb)
 {
   return (0 == ucl_vector_compare_range(a, ra, b, rb));
@@ -1361,7 +1389,12 @@ ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t
 
 /* ------------------------------------------------------------ */
 
-static __inline__ size_t
+
+/** ------------------------------------------------------------
+ ** Hash table functions.
+ ** ----------------------------------------------------------*/
+
+ucl_inline_pure size_t
 ucl_hash_number_of_buckets (const ucl_hash_table_t self)
 {
   return ucl_vector_size(self->buckets);

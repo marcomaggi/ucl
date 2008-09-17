@@ -8,7 +8,7 @@
    
    
    
-   Copyright (c) 2003, 2004, 2005 Marco Maggi
+   Copyright (c) 2003, 2004, 2005, 2008 Marco Maggi
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -30,11 +30,11 @@
 void
 test (void)
 {
-  ucl_tree_node_t *		n[100];
-  ucl_tree_node_t *		node;
-  ucl_tree_node_t *		order[30];
-  ucl_iterator_t		iterator;
-  int				i;
+  ucl_btree_node_t 	n[100];
+  ucl_btree_node_t 	node;
+  ucl_btree_node_t 	order[30];
+  ucl_iterator_t	iterator;
+  int			i;
 
 
   fill_tree(n);

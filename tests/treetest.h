@@ -42,13 +42,13 @@
 /* The following helper  functions are not used by all  the tests, so we
    do  not declare  them "static"  to avoid  the annoying  warning about
    "defined but not used" function. */
-ucl_tree_node_t * alloc_link(void);
-int find_node(ucl_tree_node_t **n, ucl_tree_node_t *node);
-void assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
-		  ucl_tree_node_t *son, ucl_tree_node_t *nxt,
-		  ucl_tree_node_t *fst, ucl_tree_node_t *lst);
-void fill_tree(ucl_tree_node_t **n);
-void clean_tree(ucl_tree_node_t **n);
+ucl_btree_node_t  alloc_link(void);
+int find_node(ucl_btree_node_t *n, ucl_btree_node_t node);
+void assert_node (ucl_btree_node_t dad, ucl_btree_node_t nod,
+		  ucl_btree_node_t son, ucl_btree_node_t nxt,
+		  ucl_btree_node_t fst, ucl_btree_node_t lst);
+void fill_tree(ucl_btree_node_t *n);
+void clean_tree(ucl_btree_node_t *n);
 
 /* ------------------------------------------------------------ */
 
@@ -57,12 +57,12 @@ void clean_tree(ucl_tree_node_t **n);
  ** Helper functions.
  ** ----------------------------------------------------------*/
 
-ucl_tree_node_t *
+ucl_btree_node_t 
 alloc_link(void)
 {
-  ucl_tree_node_t *linkPtr;
+  ucl_btree_node_t linkPtr;
 
-  linkPtr = (ucl_tree_node_t *) malloc(sizeof(ucl_tree_node_t));
+  linkPtr = malloc(sizeof(ucl_btree_node_tag_t));
   if (linkPtr == NULL) {
     printf("error allocating memory\n");
     exit(EXIT_FAILURE);
@@ -70,7 +70,7 @@ alloc_link(void)
   return linkPtr;
 }
 int
-find_node(ucl_tree_node_t **n, ucl_tree_node_t *node)
+find_node(ucl_btree_node_t *n, ucl_btree_node_t node)
 {
   int i;
 
@@ -84,19 +84,19 @@ find_node(ucl_tree_node_t **n, ucl_tree_node_t *node)
   return -1;
 }
 void
-assert_node (ucl_tree_node_t *dad, ucl_tree_node_t *nod,
-	     ucl_tree_node_t *son, ucl_tree_node_t *nxt,
-	     ucl_tree_node_t *fst, ucl_tree_node_t *lst)
+assert_node (ucl_btree_node_t dad, ucl_btree_node_t nod,
+	     ucl_btree_node_t son, ucl_btree_node_t nxt,
+	     ucl_btree_node_t fst, ucl_btree_node_t lst)
 {
   /*	    printf("node %d\n", find_node(nod));fflush(0);*/
-  assert(ucl_tree_get_dad(nod)  == dad);
-  assert(ucl_tree_get_son(nod)  == son);
-  assert(ucl_tree_get_next(nod) == nxt);
+  assert(ucl_btree_getdad(nod)  == dad);
+  assert(ucl_btree_getson(nod)  == son);
+  assert(ucl_btree_getbro(nod) == nxt);
   assert(ucl_tree_get_first(nod) == fst);
   assert(ucl_tree_get_last(nod) == lst);
 }
 void
-fill_tree(ucl_tree_node_t **n)
+fill_tree(ucl_btree_node_t *n)
 {
   int i;
 
@@ -121,28 +121,23 @@ fill_tree(ucl_tree_node_t **n)
   22--23--24--20
   */
 
-  for (i=0; i<50; ++i)
-    {
-      ucl_tree_constructor(n[i]);
-    }
+  ucl_btree_setson(n[0], n[1]);
 
-  ucl_tree_set_son(n[0], n[1]);
+  ucl_btree_setbro(n[1], n[2]);
+  ucl_btree_setbro(n[2], n[3]);
+  ucl_btree_setbro(n[3], n[4]);
+  ucl_btree_setbro(n[4], n[5]);
 
-  ucl_tree_set_bro(n[1], n[2]);
-  ucl_tree_set_bro(n[2], n[3]);
-  ucl_tree_set_bro(n[3], n[4]);
-  ucl_tree_set_bro(n[4], n[5]);
+  ucl_btree_setson(n[1], n[6]);
+  ucl_btree_setbro(n[6], n[7]);
+  ucl_btree_setbro(n[7], n[8]);
 
-  ucl_tree_set_son(n[1], n[6]);
-  ucl_tree_set_bro(n[6], n[7]);
-  ucl_tree_set_bro(n[7], n[8]);
+  ucl_btree_setson(n[6], n[9]);
+  ucl_btree_setson(n[9], n[10]);
 
-  ucl_tree_set_son(n[6], n[9]);
-  ucl_tree_set_son(n[9], n[10]);
-
-  ucl_tree_set_son(n[7], n[11]);
-  ucl_tree_set_son(n[8], n[12]);
-  ucl_tree_set_bro(n[12], n[13]);
+  ucl_btree_setson(n[7], n[11]);
+  ucl_btree_setson(n[8], n[12]);
+  ucl_btree_setbro(n[12], n[13]);
 
   /*
     0
@@ -158,29 +153,29 @@ fill_tree(ucl_tree_node_t **n)
     22--23--24--20
   */
 
-  ucl_tree_set_son(n[3],  n[14]);
-  ucl_tree_set_son(n[14], n[15]);
-  ucl_tree_set_son(n[15], n[17]);
-  ucl_tree_set_bro(n[15], n[16]);
+  ucl_btree_setson(n[3],  n[14]);
+  ucl_btree_setson(n[14], n[15]);
+  ucl_btree_setson(n[15], n[17]);
+  ucl_btree_setbro(n[15], n[16]);
 
-  ucl_tree_set_bro(n[4],  n[5]);
-  ucl_tree_set_son(n[4],  n[18]);
-  ucl_tree_set_son(n[18], n[19]);
+  ucl_btree_setbro(n[4],  n[5]);
+  ucl_btree_setson(n[4],  n[18]);
+  ucl_btree_setson(n[18], n[19]);
 
-  ucl_tree_set_son(n[19], n[21]);
-  ucl_tree_set_son(n[21], n[22]);
-  ucl_tree_set_bro(n[22], n[23]);
-  ucl_tree_set_bro(n[23], n[24]);
-  ucl_tree_set_bro(n[24], n[20]);
+  ucl_btree_setson(n[19], n[21]);
+  ucl_btree_setson(n[21], n[22]);
+  ucl_btree_setbro(n[22], n[23]);
+  ucl_btree_setbro(n[23], n[24]);
+  ucl_btree_setbro(n[24], n[20]);
 
-  ucl_tree_set_bro(n[19], n[25]);
-  ucl_tree_set_son(n[25], n[26]);
-  ucl_tree_set_bro(n[25], n[27]);
-  ucl_tree_set_bro(n[27], n[28]);
-  ucl_tree_set_son(n[28], n[29]);
+  ucl_btree_setbro(n[19], n[25]);
+  ucl_btree_setson(n[25], n[26]);
+  ucl_btree_setbro(n[25], n[27]);
+  ucl_btree_setbro(n[27], n[28]);
+  ucl_btree_setson(n[28], n[29]);
 }
 void
-clean_tree(ucl_tree_node_t **n)
+clean_tree(ucl_btree_node_t *n)
 {
   int i;
 

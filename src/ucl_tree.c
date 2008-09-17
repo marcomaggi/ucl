@@ -95,36 +95,29 @@ static ucl_iterator_next_t	tree_levelorder_iterator_next;
  ** Testing relationships.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-15-09) ucl_bool_t
-ucl_tree_is_dad (const ucl_tree_node_t *nod_p, const ucl_tree_node_t *cld_p)
+stub(2005-09-23-18-15-09) __attribute__((__nonnull__)) ucl_bool_t
+ucl_tree_is_dad (ucl_btree_node_t nod_p, ucl_btree_node_t cld_p)
 {
-  assert(nod_p != NULL);
-  assert(cld_p != NULL);
-
-  if (ucl_tree_has_son(nod_p))
+  if (ucl_btree_getson(nod_p))
     {
-      nod_p = ucl_tree_get_son(nod_p);
+      nod_p = ucl_btree_getson(nod_p);
 
       do
 	{
 	  if (nod_p == cld_p)
-	    {
-	      return 1;
-	    }
+	    return 1;
 	  else
-	    {
-	      nod_p = ucl_tree_get_next(nod_p);
-	    }
+	    nod_p = ucl_btree_getbro(nod_p);
 	}
       while (nod_p);
     }
 
   return 0;
 }
-stub(2005-09-23-18-15-12) ucl_bool_t
-ucl_tree_is_bro (const ucl_tree_node_t *nod_p, const ucl_tree_node_t *bro_p)
+stub(2005-09-23-18-15-12) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+ucl_tree_is_bro (ucl_btree_node_t nod_p, ucl_btree_node_t bro_p)
 {
-  const ucl_tree_node_t *	tmp_p;
+  ucl_btree_node_t 	tmp_p;
 
 
   /* Check if the potential brother is on the right of "*nod_p". */
@@ -132,9 +125,7 @@ ucl_tree_is_bro (const ucl_tree_node_t *nod_p, const ucl_tree_node_t *bro_p)
   while (tmp_p)
     {
       if (tmp_p == bro_p)
-	{
-	  return 1;
-	}
+	return 1;
       tmp_p = tmp_p->bro_p;
     }
 
@@ -143,9 +134,7 @@ ucl_tree_is_bro (const ucl_tree_node_t *nod_p, const ucl_tree_node_t *bro_p)
   while (tmp_p && (tmp_p->bro_p == nod_p))
     {
       if (tmp_p == bro_p)
-	{
-	  return 1;
-	}
+	return 1;
       nod_p = tmp_p;
       tmp_p = nod_p->dad_p;
     }
@@ -155,27 +144,22 @@ ucl_tree_is_bro (const ucl_tree_node_t *nod_p, const ucl_tree_node_t *bro_p)
 }
 /* Remember that if the "dad_p" of the node is not NULL, it doesn't mean
    that the node has a parent: it could be a brother to the left. */
-stub(2005-09-23-18-15-15) ucl_bool_t
-ucl_tree_has_dad (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-15) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+ucl_tree_has_dad (ucl_btree_node_t nod_p)
 {
-  assert(nod_p);
-
   nod_p = ucl_tree_get_first(nod_p);
   return (nod_p->dad_p != NULL);
 }
 /* Remember that if the "dad_p" of the node is not NULL, it doesn't mean
    that the node  has a brother to  the left: it could be  the father of
    the node. */
-stub(2005-09-23-18-15-18) ucl_bool_t
-ucl_tree_has_prev (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-18) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+ucl_tree_has_prev (ucl_btree_node_t nod_p)
 {
-  const ucl_tree_node_t *	dad_p;
-
-
-  assert(nod_p);
+  ucl_btree_node_t 	dad_p;
 
   dad_p = nod_p->dad_p;
-  return ((dad_p != NULL) && (dad_p->bro_p == nod_p))? 1 : 0;
+  return ((dad_p != NULL) && (dad_p->bro_p == nod_p));
 }
 
 /* ------------------------------------------------------------ */
@@ -185,44 +169,43 @@ ucl_tree_has_prev (const ucl_tree_node_t *nod_p)
  ** Getters.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-15-21) ucl_tree_node_t *
-ucl_tree_get_dad (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-21) __attribute__((__nonnull__,__pure__)) void *
+ucl_tree_get_dad (void * _nod_p)
 {
-  ucl_tree_node_t *	tmp_p;
-
-  assert(nod_p != NULL);
+  ucl_btree_node_t	nod_p = _nod_p;
+  ucl_btree_node_t 	tmp_p;
 
   tmp_p = ucl_tree_get_first(nod_p);
   return (tmp_p->dad_p)? tmp_p->dad_p : NULL;
 }
-stub(2005-09-23-18-15-24) ucl_tree_node_t *
-ucl_tree_get_prev (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-24) __attribute__((__nonnull__,__pure__)) void *
+ucl_tree_get_prev (void * _nod_p)
 {
-  assert(nod_p != NULL);
+  ucl_btree_node_t	nod_p = _nod_p;
 
   return (ucl_tree_has_prev(nod_p))? nod_p->dad_p : NULL;
 }
-stub(2005-09-23-18-15-27) ucl_tree_node_t *
-ucl_tree_get_first (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-27) __attribute__((__nonnull__,__pure__)) void *
+ucl_tree_get_first (void * _nod_p)
 {
-  assert(nod_p);
+  ucl_btree_node_t	nod_p = _nod_p;
 
   while (nod_p->dad_p && (nod_p->dad_p->son_p != nod_p))
     {
       nod_p = nod_p->dad_p;
     }
-  return (ucl_tree_node_t *)nod_p;
+  return nod_p;
 }
-stub(2005-09-23-18-15-30) ucl_tree_node_t *
-ucl_tree_get_last (const ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-30) __attribute__((__nonnull__,__pure__)) void *
+ucl_tree_get_last (void * _nod_p)
 {
-  assert(nod_p);
+  ucl_btree_node_t	nod_p = _nod_p;
 
   while (nod_p->bro_p)
     {
       nod_p = nod_p->bro_p;
     }
-  return (ucl_tree_node_t *)nod_p;
+  return (ucl_btree_node_t )nod_p;
 }
 
 /* ------------------------------------------------------------ */
@@ -253,9 +236,9 @@ ucl_tree_get_last (const ucl_tree_node_t *nod_p)
 */
 
 stub(2005-09-23-18-15-33) void
-ucl_tree_insert_dad (ucl_tree_node_t *nod_p, ucl_tree_node_t *dad_p)
+ucl_tree_insert_dad (ucl_btree_node_t nod_p, ucl_btree_node_t dad_p)
 {
-  ucl_tree_node_t *	tmp_p;
+  ucl_btree_node_t 	tmp_p;
 
 
   nod_p = ucl_tree_get_first(nod_p);
@@ -288,7 +271,7 @@ ucl_tree_insert_dad (ucl_tree_node_t *nod_p, ucl_tree_node_t *dad_p)
 */
 
 stub(2005-09-23-18-15-36) void
-ucl_tree_insert_son (ucl_tree_node_t * nod_p, ucl_tree_node_t * son_p)
+ucl_tree_insert_son (ucl_btree_node_t  nod_p, ucl_btree_node_t  son_p)
 {
   assert(nod_p);
   assert(son_p);
@@ -323,9 +306,9 @@ ucl_tree_insert_son (ucl_tree_node_t * nod_p, ucl_tree_node_t * son_p)
 */
 
 stub(2005-09-23-18-15-40) void
-ucl_tree_insert_next (ucl_tree_node_t * nod_p, ucl_tree_node_t * nxt_p)
+ucl_tree_insert_next (ucl_btree_node_t  nod_p, ucl_btree_node_t  nxt_p)
 {
-  ucl_tree_node_t *	tmp_p;
+  ucl_btree_node_t 	tmp_p;
 
 
   assert(nod_p);
@@ -356,9 +339,9 @@ ucl_tree_insert_next (ucl_tree_node_t * nod_p, ucl_tree_node_t * nxt_p)
 */
 
 stub(2005-09-23-18-15-43) void
-ucl_tree_insert_prev (ucl_tree_node_t * nod_p, ucl_tree_node_t * prv_p)
+ucl_tree_insert_prev (ucl_btree_node_t  nod_p, ucl_btree_node_t  prv_p)
 {
-  ucl_tree_node_t *	tmp_p;
+  ucl_btree_node_t 	tmp_p;
 
 
   assert(nod_p);
@@ -403,12 +386,12 @@ ucl_tree_insert_prev (ucl_tree_node_t * nod_p, ucl_tree_node_t * prv_p)
    reset to NULL.
 */
 
-stub(2005-09-23-18-15-46) ucl_tree_node_t *
-ucl_tree_extract_dad (ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-46) ucl_btree_node_t 
+ucl_tree_extract_dad (ucl_btree_node_t nod_p)
 {
-  ucl_tree_node_t *	dad_p;
-  ucl_tree_node_t *	frst_p;
-  ucl_tree_node_t *	last_p;
+  ucl_btree_node_t 	dad_p;
+  ucl_btree_node_t 	frst_p;
+  ucl_btree_node_t 	last_p;
 
 
   assert(nod_p);
@@ -438,7 +421,7 @@ ucl_tree_extract_dad (ucl_tree_node_t *nod_p)
 	  last_p->bro_p->dad_p = last_p;
 	}
 
-      memset(dad_p, '\0', sizeof(ucl_tree_node_t));
+      memset(dad_p, '\0', sizeof(ucl_btree_node_t));
     }
 
   return dad_p;
@@ -469,11 +452,11 @@ ucl_tree_extract_dad (ucl_tree_node_t *nod_p)
    reset to NULL.
 */
 
-stub(2005-09-23-18-15-49) ucl_tree_node_t *
-ucl_tree_extract_son (ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-49) ucl_btree_node_t 
+ucl_tree_extract_son (ucl_btree_node_t nod_p)
 {
-  ucl_tree_node_t *	son_p;
-  ucl_tree_node_t *	last_p;
+  ucl_btree_node_t 	son_p;
+  ucl_btree_node_t 	last_p;
 
 
   assert(nod_p);
@@ -499,7 +482,7 @@ ucl_tree_extract_son (ucl_tree_node_t *nod_p)
 	  nod_p->son_p->dad_p = nod_p;
 	}
 
-      memset(son_p, '\0', sizeof(ucl_tree_node_t));
+      memset(son_p, '\0', sizeof(ucl_btree_node_t));
     }
 
   return son_p;
@@ -530,12 +513,12 @@ ucl_tree_extract_son (ucl_tree_node_t *nod_p)
    structure are reset to NULL.
 */
 
-stub(2005-09-23-18-15-52) ucl_tree_node_t *
-ucl_tree_extract_prev (ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-52) ucl_btree_node_t 
+ucl_tree_extract_prev (ucl_btree_node_t nod_p)
 {
-  ucl_tree_node_t *	prv_p;
-  ucl_tree_node_t *	dad_p;
-  ucl_tree_node_t *	son_p;
+  ucl_btree_node_t 	prv_p;
+  ucl_btree_node_t 	dad_p;
+  ucl_btree_node_t 	son_p;
 
 
   assert(nod_p);
@@ -592,7 +575,7 @@ ucl_tree_extract_prev (ucl_tree_node_t *nod_p)
 	  nod_p->dad_p = NULL;
 	}
 
-      memset(prv_p, '\0', sizeof(ucl_tree_node_t));
+      memset(prv_p, '\0', sizeof(ucl_btree_node_t));
     }
 
   return prv_p;
@@ -619,12 +602,12 @@ ucl_tree_extract_prev (ucl_tree_node_t *nod_p)
    structure are reset to NULL.
 */
 
-stub(2005-09-23-18-15-55) ucl_tree_node_t *
-ucl_tree_extract_next (ucl_tree_node_t *nod_p)
+stub(2005-09-23-18-15-55) ucl_btree_node_t 
+ucl_tree_extract_next (ucl_btree_node_t nod_p)
 {
-  ucl_tree_node_t *	nxt_p;
-  ucl_tree_node_t *	bro_p;
-  ucl_tree_node_t *	son_p;
+  ucl_btree_node_t 	nxt_p;
+  ucl_btree_node_t 	bro_p;
+  ucl_btree_node_t 	son_p;
 
 
   assert(nod_p);
@@ -659,7 +642,7 @@ ucl_tree_extract_next (ucl_tree_node_t *nod_p)
 	  nod_p->bro_p = NULL;
 	}
 
-      memset(nxt_p, '\0', sizeof(ucl_tree_node_t));
+      memset(nxt_p, '\0', sizeof(ucl_btree_node_t));
     }
 
   return nxt_p;
@@ -673,18 +656,18 @@ ucl_tree_extract_next (ucl_tree_node_t *nod_p)
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-15-58) void
-ucl_tree_iterator_inorder (const ucl_tree_node_t * nod_p, ucl_iterator_t iterator)
+ucl_tree_iterator_inorder (ucl_btree_node_t  nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);
   assert(iterator);
 
 
   iterator->container	= nod_p;
-  iterator->iterator	= ucl_btree_find_leftmost((const bnode_t *)nod_p);
+  iterator->iterator	= ucl_btree_find_leftmost(nod_p);
   iterator->next	= tree_inorder_iterator_next;
 }
 stub(2005-09-23-18-16-01) void
-ucl_tree_iterator_preorder (const ucl_tree_node_t *nod_p, ucl_iterator_t iterator)
+ucl_tree_iterator_preorder (ucl_btree_node_t nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);
   assert(iterator);
@@ -695,14 +678,14 @@ ucl_tree_iterator_preorder (const ucl_tree_node_t *nod_p, ucl_iterator_t iterato
   iterator->next	= tree_preorder_iterator_next;
 }
 stub(2005-09-23-18-16-04) void
-ucl_tree_iterator_postorder (const ucl_tree_node_t *nod_p, ucl_iterator_t iterator)
+ucl_tree_iterator_postorder (ucl_btree_node_t nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);
   assert(iterator);
 
 
   iterator->container	= nod_p;
-  iterator->iterator	= ucl_btree_find_deepest_son((const bnode_t *) nod_p);
+  iterator->iterator	= ucl_btree_find_deepest_son( nod_p);
   iterator->next	= tree_postorder_iterator_next;
 }
 static void
