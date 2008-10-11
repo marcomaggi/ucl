@@ -12,9 +12,8 @@
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_heap_constructor (ucl_heap_t this, ucl_comparison_t compar);
-ucl_decl void ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p);
-ucl_decl ucl_heap_node_t * ucl_heap_extract (ucl_heap_t this);
+ucl_decl void ucl_heap_insert (ucl_heap_t this, void * _node_p);
+ucl_decl ucl_node_t  ucl_heap_extract (ucl_heap_t this);
 ucl_decl void ucl_heap_merge (ucl_heap_t this, ucl_heap_t other);
 
 #endif /* not defined UCL_ENABLE_STUB */
@@ -22,9 +21,8 @@ ucl_decl void ucl_heap_merge (ucl_heap_t this, ucl_heap_t other);
 /* Function type declarations for the "heap" module.
    A typedef for each function in the module. */
 
-typedef void ucl_heap_constructor_proto_t (ucl_heap_t this, ucl_comparison_t compar);
-typedef void ucl_heap_insert_proto_t (ucl_heap_t this, ucl_heap_node_t *node_p);
-typedef ucl_heap_node_t * ucl_heap_extract_proto_t (ucl_heap_t this);
+typedef void ucl_heap_insert_proto_t (ucl_heap_t this, void * _node_p);
+typedef ucl_node_t  ucl_heap_extract_proto_t (ucl_heap_t this);
 typedef void ucl_heap_merge_proto_t (ucl_heap_t this, ucl_heap_t other);
 
 /* Stub table type declaration for the "heap" module.
@@ -32,7 +30,6 @@ typedef void ucl_heap_merge_proto_t (ucl_heap_t this, ucl_heap_t other);
    sorted by timestamp. */
 
 typedef struct ucl_heap_stub_table_t {
-  ucl_heap_constructor_proto_t        * stub_ucl_heap_constructor;
   ucl_heap_insert_proto_t             * stub_ucl_heap_insert;
   ucl_heap_extract_proto_t            * stub_ucl_heap_extract;
   ucl_heap_merge_proto_t              * stub_ucl_heap_merge;
@@ -47,7 +44,6 @@ typedef struct ucl_heap_stub_table_t {
 ucl_decl const ucl_heap_stub_table_t * ucl_heap_stub_table_p;
 ucl_decl const ucl_heap_stub_table_t   ucl_heap_stub_table;
 
-#define ucl_heap_constructor       ((ucl_heap_stub_table_p)->stub_ucl_heap_constructor)
 #define ucl_heap_insert            ((ucl_heap_stub_table_p)->stub_ucl_heap_insert)
 #define ucl_heap_extract           ((ucl_heap_stub_table_p)->stub_ucl_heap_extract)
 #define ucl_heap_merge             ((ucl_heap_stub_table_p)->stub_ucl_heap_merge)

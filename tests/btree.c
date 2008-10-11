@@ -43,7 +43,7 @@ typedef void	iterator_start_fun_t (ucl_iterator_t, void *);
  ** ----------------------------------------------------------*/
 
 typedef struct node_tag_t {
-  ucl_btree_node_tag_t	node;
+  ucl_node_tag_t	node;
   int			idx;
 } node_tag_t;
 typedef node_tag_t *	node_t;
@@ -83,7 +83,7 @@ node_clean (node_t p)
 static void
 free_tree (node_t * n)
 {
-  for (int i=0; i<12; ++i)
+  for (int i=1; i<13; ++i)
     {
       node_final(n[i]);
     }
@@ -106,25 +106,25 @@ build_tree (node_t * n)
       n[i] = node_make(i);
     }
 
-  ucl_btree_dadson(n[5],  n[1]);
-  ucl_btree_dadbro(n[1],  n[3]);
-  ucl_btree_dadson(n[3],  n[2]);
-  ucl_btree_dadbro(n[3],  n[4]);
-  ucl_btree_dadbro(n[5],  n[10]);
-  ucl_btree_dadson(n[10], n[7]);
-  ucl_btree_dadson(n[7],  n[6]);
-  ucl_btree_dadbro(n[7],  n[9]);
-  ucl_btree_dadson(n[9],  n[8]);
-  ucl_btree_dadbro(n[10], n[12]);
-  ucl_btree_dadson(n[12], n[11]);
+  ucl_btree_set_dadson(n[5],  n[1]);
+  ucl_btree_set_dadbro(n[1],  n[3]);
+  ucl_btree_set_dadson(n[3],  n[2]);
+  ucl_btree_set_dadbro(n[3],  n[4]);
+  ucl_btree_set_dadbro(n[5],  n[10]);
+  ucl_btree_set_dadson(n[10], n[7]);
+  ucl_btree_set_dadson(n[7],  n[6]);
+  ucl_btree_set_dadbro(n[7],  n[9]);
+  ucl_btree_set_dadson(n[9],  n[8]);
+  ucl_btree_set_dadbro(n[10], n[12]);
+  ucl_btree_set_dadson(n[12], n[11]);
 
 #if 0
   for (int i=1; i<12; ++i)
     {
       debug("node %d: %p, dad=%p, son=%p, bro=%p, idx=%d", i, n[i],
-	    ucl_btree_getdad(n[i]),
-	    ucl_btree_getson(n[i]),
-	    ucl_btree_getbro(n[i]),
+	    ucl_btree_ref_dad(n[i]),
+	    ucl_btree_ref_son(n[i]),
+	    ucl_btree_ref_bro(n[i]),
 	    *((int *)ucl_btree_data(n[i])));
     }
 
@@ -186,6 +186,11 @@ _validate_iteration_result_range (const char * funcname, int linenum,
 {
   for (int i=begin; i<=end; ++i)
     {
+      if (0)
+	{
+	  fprintf(stderr, "%s (%d): validating index %d expected %d, got %d\n",
+		  funcname, linenum, i, expected[i], result[i]);
+	}
       if (result[i] != expected[i])
 	{
 	  fprintf(stderr, "%s error (%d): *********************** at index %d expected %d, got %d\n",
@@ -233,17 +238,17 @@ test_constructor_functions (void)
   */
 
 
-  ucl_btree_dadson(a, b);
-  ucl_btree_dadbro(a, c);
-  ucl_btree_dadson(c, d);
+  ucl_btree_set_dadson(a, b);
+  ucl_btree_set_dadbro(a, c);
+  ucl_btree_set_dadson(c, d);
 
-  assert((a == ucl_btree_getdad(b)) && (b == ucl_btree_getson(a)));
-  assert((a == ucl_btree_getdad(c)) && (c == ucl_btree_getbro(a)));
-  assert((c == ucl_btree_getdad(d)) && (d == ucl_btree_getson(c)));
-  assert(ucl_btree_getdad(a) == NULL);
-  assert(ucl_btree_getbro(c) == NULL);
-  assert((ucl_btree_getson(b) == NULL) && (ucl_btree_getbro(b) == NULL));
-  assert((ucl_btree_getson(d) == NULL) && (ucl_btree_getbro(d) == NULL));
+  assert((a == ucl_btree_ref_dad(b)) && (b == ucl_btree_ref_son(a)));
+  assert((a == ucl_btree_ref_dad(c)) && (c == ucl_btree_ref_bro(a)));
+  assert((c == ucl_btree_ref_dad(d)) && (d == ucl_btree_ref_son(c)));
+  assert(ucl_btree_ref_dad(a) == NULL);
+  assert(ucl_btree_ref_bro(c) == NULL);
+  assert((ucl_btree_ref_son(b) == NULL) && (ucl_btree_ref_bro(b) == NULL));
+  assert((ucl_btree_ref_son(d) == NULL) && (ucl_btree_ref_bro(d) == NULL));
   
   assert(0 == *((int *)ucl_btree_data(a)));
   assert(1 == *((int *)ucl_btree_data(b)));
@@ -353,6 +358,27 @@ test_hierarchy_finder_functions (void)
   assert( ucl_btree_find_deepest_bro(n[10])== n[11]);
   assert( ucl_btree_find_deepest_bro(n[11])== n[11]);
   assert( ucl_btree_find_deepest_bro(n[12])== n[11]);
+
+  /*
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+
+  assert( ucl_btree_find_root(n[1]) == n[5] );
+  assert( ucl_btree_find_root(n[2]) == n[5] );
+  assert( ucl_btree_find_root(n[3]) == n[5] );
+  assert( ucl_btree_find_root(n[4]) == n[5] );
+  assert( ucl_btree_find_root(n[5]) == n[5] );
+  assert( ucl_btree_find_root(n[6]) == n[5] );
+  assert( ucl_btree_find_root(n[7]) == n[5] );
+  assert( ucl_btree_find_root(n[8]) == n[5] );
+  assert( ucl_btree_find_root(n[9]) == n[5] );
+  assert( ucl_btree_find_root(n[10])== n[5] );
+  assert( ucl_btree_find_root(n[11])== n[5] );
+  assert( ucl_btree_find_root(n[12])== n[5] );
 
   free_tree(n);
 }
@@ -488,24 +514,63 @@ test_whole_iterations (void)
  ** Test subtree and range iterations.
  ** ----------------------------------------------------------*/
 
+#define subtree_iteration_with_iterator(BTREE,ITERATOR_START,ROOT,EXPECTED,BEGIN,END) \
+  _subtree_iteration_with_iterator(__func__,__LINE__,BTREE,ITERATOR_START,ROOT,EXPECTED,BEGIN,END)
+
+static void
+_subtree_iteration_with_iterator (const char * funcname, int linenum,
+				  node_t * btree, iterator_start_fun_t iterator_start,
+				  int root,
+				  const int * expected, int begin, int end)
+{
+  ucl_iterator_t iterator;
+  int		result[13] = { -1 };
+  int		i=0;
+  node_t	cur;
+
+  for (iterator_start(iterator, btree[root]);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      cur = ucl_iterator_ptr(iterator);
+      result[++i] = cur->idx;
+    }
+  _validate_iteration_result_range(funcname,linenum,result,expected,begin,end);
+}
 static void
 test_subtree_and_range_iterations (void)
 {
-  int		i;
-  node_t	n[13];
-  node_t	result[13];
-  node_t	expected[14];
-  node_t	cur;
-
+  node_t	btree[13];
   
-  build_tree(n);
+  build_tree(btree);
 
 /* ------------------------------------------------------------ */
 
+  /* Inorder
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[13] = { -1, 1, 2, 3, 4 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,1,expected,1,4); }
+  { int	expected[13] = { -1, 2 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,2,expected,1,1); }
+  { int	expected[13] = { -1, 2, 3, 4 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,3,expected,1,1); }
+  { int	expected[13] = { -1, 4 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,4,expected,1,1); }
+  { int	expected[13] = { -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,5,expected,1,12); }
+  { int	expected[13] = { -1, 6 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,6,expected,1,1); }
+  { int	expected[13] = { -1, 6, 7, 8, 9 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,7,expected,1,12); }
 
 /* ------------------------------------------------------------ */
 
-  free_tree(n);
+  free_tree(btree);
 }
 
 /* ------------------------------------------------------------ */
@@ -521,7 +586,7 @@ test (void)
   test_constructor_functions();
   test_hierarchy_finder_functions();
   test_whole_iterations();
-/*   test_subtree_and_range_iterations(); */
+  test_subtree_and_range_iterations();
 }
 
 

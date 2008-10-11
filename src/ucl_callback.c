@@ -43,31 +43,6 @@ ucl_callback_apply_fun_t * ucl_callback_application_function = ucl_callback_appl
  ** Functions.
  ** ----------------------------------------------------------*/
 
-stub(2008-09-15-13-34-00) void
-ucl_callback_apply (ucl_callback_t callback, ...)
-{
-  if (ucl_callback_is_present(callback))
-    {
-      va_list	ap;
-
-      va_start(ap,callback);
-      callback.func(callback.data, ap);
-
-      /* This  does nothing  with  the GNU  C  Library; it  is here  for
-	 compatibility.  If  the callback function  raises an exception:
-	 nothing ba happend with the GNU C Library. */
-      va_end(ap);
-    }
-}
-stub(2008-09-15-13-43-41) void
-ucl_callback_eval_thunk (ucl_callback_t callback)
-{
-  if (ucl_callback_is_present(callback))
-    callback.func(callback.data,NULL);
-}
-
-/* ------------------------------------------------------------ */
-
 stub(2008-09-16-17-05-42) void
 ucl_callback_set_application_function (ucl_callback_apply_fun_t * f)
 {

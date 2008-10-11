@@ -1,0 +1,142 @@
+@node heap
+@section The heap structure
+
+
+@cindex Heap container
+
+@menu
+* heap creation::             Creating and destroying heaps.
+* heap adding::               Adding elements to a heaps.
+* heap removing::             Removing elements from a heaps.
+* heap ops::                  Various operations on a heaps.
+@end menu
+
+
+@noindent
+The heap container allows us to insert a bunch of values and extract
+them sorted, from the lesser to the greater according to a custom
+comparison function.
+
+The heap is implemented as a binary tree, with nodes of type
+@code{ucl_node_t}.  It is possible to use the heap to implement the heap
+sorting algorithm for the @ucl{} containers that make use of
+@code{ucl_node_t} nodes.
+
+
+@deftp {Struct Typedef} ucl_heap_tag_t
+@deftpx {Pointer Typedef} ucl_heap_t
+The base structure and pointer of the heap container.  The base
+structure stores the context associated to a heap: the value extraction
+function for the nodes; the comparison function for the nodes; the
+current number of elements in the heap.
+@end deftp
+
+
+@c ------------------------------------------------------------
+
+@c page
+@node heap creation
+@subsection Creating and destroying heap
+
+
+@noindent
+The base structure of a heap container must be allocated by the client
+code; all its bytes should be set to zero.
+
+When a heap must be destroyed: all its node must be extracted and
+released with the appropriate function.  Example of heap destruction:
+
+@example
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+ucl_node_t      node_p;
+
+while (ucl_heap_size(heap))
+  @{
+    node_p = ucl_heap_extract(heap);
+    allocator.alloc(allocator.data, &node_p, 0);
+  @}
+@end example
+
+The comparison function will get as arguments pointers to the heap nodes
+in the @code{pointer} fields of the @code{ucl_value_t} union; it is its
+responsibility to know how to extract the values from there.
+
+
+@c ------------------------------------------------------------
+
+@c page
+@node heap adding
+@subsection Adding elements to a heap
+
+
+@deftypefun void ucl_heap_insert (ucl_heap_t @var{self}, ucl_node_t @var{node})
+Insert a new node in the heap.
+@end deftypefun
+
+
+Example of node insertion:
+
+@example
+typedef struct @{
+  ucl_node_t    node;
+  int           value;
+@} node_tag_t;
+
+typedef node_tag_t *    node_t;
+
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+node_t          node = NULL;
+
+allocator.alloc(allocator.data, &node, sizeof(node_tag_t));
+node->value = 123;
+ucl_heap_insert(heap, node);
+@end example
+
+@c ------------------------------------------------------------
+
+@c page
+@node heap removing
+@subsection Removing elements from a heap
+
+
+@deftypefun ucl_node_t ucl_heap_extract (ucl_heap_t @var{self})
+Extract a node from the heap; return a pointer to it, or @null{} if the
+heap is empty.  The extracted node is the one with the smallest value.
+@end deftypefun
+
+
+Example of node extraction:
+
+@example
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+ucl_node_t      node;
+
+...
+
+node = ucl_heap_extract(heap);
+allocator.alloc(allocator.data, &node, 0);
+@end example
+
+@c ------------------------------------------------------------
+
+@c page
+@node heap ops
+@subsection Various operations on a heap
+
+
+@deftypefn {Inline Function} size_t ucl_heap_size (const ucl_heap_t @var{self})
+Return a value of type @code{size_t} representing the number of nodes in
+the heap.
+@end deftypefn
+
+
+@deftypefun void ucl_heap_merge (ucl_heap_t @var{this}, ucl_heap_t @var{other})
+Merge two heaps: nodes from @var{other} are extracted and inserted into
+@var{this}.  When the function returns @var{other} is empty.
+@end deftypefun
+
+
+@c end of file

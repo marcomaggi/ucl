@@ -33,9 +33,9 @@
 
 #define stubmodule		heap
 
+typedef ucl_node_tag_t		node_t;
 typedef ucl_value_t		value_t;
 typedef ucl_heap_t		heap_t;
-typedef ucl_heap_node_t		node_t;
 
 #if (DEBUGGING == 1)
 #  include <stdio.h>
@@ -45,41 +45,24 @@ static void	printlevel	(node_t *root_p);
 static void	assertnode	(node_t *node_p);
 #endif
 
-typedef struct Links {
-  node_t *	dad_p;
-  node_t *	bro_p;
-  node_t *	son_p;
-} Links;
-
-
-#define dad(link)		((link)->dad_p)
-#define bro(link)		((link)->bro_p)
-#define son(link)		((link)->son_p)
-
 #define SWAP(aptr, bptr)	tmp_p=(aptr);(aptr)=(bptr);(bptr)=tmp_p
-#define LINKS(link)		*((Links *) (link))
 
 /* ------------------------------------------------------------ */
 
 
+/** ------------------------------------------------------------
+ ** Insertion.
+ ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-11-02) void
-ucl_heap_constructor (ucl_heap_t this, ucl_comparison_t compar)
-{
-  assert(this);
-  ucl_struct_clean(this, ucl_heap_struct_t);
-  this->compar	= compar;
-}
-
-
 stub(2005-09-23-18-11-04) void
-ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
+ucl_heap_insert (ucl_heap_t this, void * _node_p)
 {
-  node_t *	root_p;
-  node_t *	next_p;
-  node_t *	dad_p;
-  node_t *	tmp_p;
-  value_t	a, b;
+  ucl_node_t	node_p = _node_p;
+  ucl_node_t	root_p;
+  ucl_node_t	next_p;
+  ucl_node_t	dad;
+  ucl_node_t	tmp_p;
+  ucl_value_t	a, b;
   int		first;
 
 
@@ -92,24 +75,17 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
       return;
     }
 
-
-  next_p	= this->next_p;
-
-  son(node_p) = bro(node_p) = NULL;
+  next_p = this->next_p;
+  node_p->son = node_p->bro = NULL;
   if (this->state)
-    {
-      bro(next_p) = node_p;
-    }
+    next_p->bro = node_p;
   else 
-    {
-      son(next_p) = node_p;
-    }
-  dad_p = dad(node_p) = next_p;
+    next_p->son = node_p;
+  dad = node_p->dad = next_p;
 
-  a = ucl_heap_getval(dad_p);
-  b = ucl_heap_getval(node_p);
+  a.pointer = dad;
+  b.pointer = node_p;
   first = 2;
-
   while (this->compar.func(this->compar.data, a, b) > 0)
     {
       switch (first)
@@ -119,26 +95,22 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
 	  --first;
 	  break;
 	case 1:
-	  next_p = dad_p;
+	  next_p = dad;
 	  --first;
 	  break;
 	}
 
-      dad(node_p) = dad(dad_p);
-      dad(dad_p)  = node_p;
-      if (dad(node_p))
+      node_p->dad = dad->dad;
+      dad->dad    = node_p;
+      if (node_p->dad)
 	{
-	  if (son(dad(node_p)) == dad_p)
-	    {
-	      son(dad(node_p)) = node_p;
-	    }
+	  if (node_p->dad->son == dad)
+	    node_p->dad->son = node_p;
 	  else
-	    {
-	      bro(dad(node_p)) = node_p;
-	    }
+	    node_p->dad->bro = node_p;
 	}
 
-      if (son(dad_p) == node_p)
+      if (dad->son == node_p)
 	{
 	  /*
 		         |                        |
@@ -151,16 +123,16 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
                   ----                     ----
 	  */
 
-	  son(dad_p) = son(node_p);
-	  son(node_p) = dad_p;
+	  dad->son = node_p->son;
+	  node_p->son = dad;
 	  
-	  SWAP(bro(dad_p), bro(node_p));
-	  if (bro(node_p))
+	  SWAP(dad->bro, node_p->bro);
+	  if (node_p->bro)
 	    {
-	      dad(bro(node_p)) = node_p;
+	      node_p->bro->dad = node_p;
 	    }
 	}
-      else /* bro(dad_p) == node_p */
+      else /* dad->bro == node_p */
 	{
 	  /*
 		         |                         |
@@ -173,43 +145,43 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
                               ----                     ----
 	  */
 	  
-	  bro(dad_p) = bro(node_p);
-	  bro(node_p) = dad_p;
+	  dad->bro    = node_p->bro;
+	  node_p->bro = dad;
 
-	  SWAP(son(dad_p), son(node_p));
-	  if (son(node_p))
+	  SWAP(dad->son, node_p->son);
+	  if (node_p->son)
 	    {
-	      dad(son(node_p)) = node_p;
+	      node_p->son->dad = node_p;
 	    }
 	}
 
-      if (son(dad_p))
+      if (dad->son)
 	{
-	  dad(son(dad_p)) = dad_p;
+	  dad->son->dad = dad;
 	}
-      if (bro(dad_p))
+      if (dad->dad)
 	{
-	  dad(bro(dad_p)) = dad_p;
+	  dad->bro->dad = dad;
 	}
       
-      if (dad_p == root_p)
+      if (dad == root_p)
 	{
 	  root_p = node_p;
-	  assert(dad(root_p) == NULL);
+	  assert(root_p->dad == NULL);
 	  break;
 	}
 
-      dad_p = dad(node_p);
-      a = ucl_heap_getval(dad_p);
-      b = ucl_heap_getval(node_p);
+      dad = node_p->dad;
+      a.pointer = dad;
+      b.pointer = node_p;
     }
 
-  if (this->state || bro(next_p))
+  if (this->state || next_p->bro)
     {
       next_p = (void *) ucl_btree_step_levelorder((void *) next_p);
     }
 
-  assert(! dad(root_p));
+  assert(! root_p->dad);
   assert(next_p);
 
   this->state	= !(this->state);
@@ -223,17 +195,23 @@ ucl_heap_insert (ucl_heap_t this, ucl_heap_node_t *node_p)
   printlevel(root_p);
 #endif
 }
-
 
-stub(2005-09-23-18-11-06) ucl_heap_node_t *
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Removal.
+ ** ----------------------------------------------------------*/
+
+stub(2005-09-23-18-11-06) ucl_node_t 
 ucl_heap_extract (ucl_heap_t this)
 {
-  node_t *	link_p;
-  node_t *	tmp_p;
-  node_t *	dad_p;
+  ucl_node_t	link_p;
+  ucl_node_t	tmp_p;
+  ucl_node_t	dad;
   value_t	a, b;
   int		first, v, fromleft=-1;
-  Links		links, links1;
+  ucl_node_tag_t	links, links1;
 
 
   assert(this != NULL);
@@ -262,16 +240,16 @@ ucl_heap_extract (ucl_heap_t this)
   printnode(this->root_p);
 #endif
 
-  links = LINKS(link_p);
+  links = *link_p;
   while (link_p)
     {
-      if (links.son_p && links.bro_p)
+      if (links.son && links.bro)
 	{
-	  a = ucl_heap_getval(links.son_p);
-	  b = ucl_heap_getval(links.bro_p);
+	  a.pointer = links.son;
+	  b.pointer = links.bro;
 	  v = (this->compar.func(this->compar.data, a, b) <= 0)? 1 : 0;
 	}
-      else if ((!links.son_p) && (!links.bro_p))
+      else if ((!links.son) && (!links.bro))
 	{
 	  /*
 	  if (son(link_p) == link_p)
@@ -307,7 +285,7 @@ ucl_heap_extract (ucl_heap_t this)
 	  --(this->size);
 	  goto End;
 	}
-      else if (links.son_p)
+      else if (links.son)
 	{
 	  v = 1;
 	}
@@ -316,14 +294,14 @@ ucl_heap_extract (ucl_heap_t this)
 	  v = 0;
 	}
 
-      dad_p = link_p;
+      dad = link_p;
       if (first)
 	{
-	  tmp_p	= dad_p;
+	  tmp_p	= dad;
 #if (DEBUGGING == 1)
 	  printf("extracting %d\n", tmp_p->val.integer);fflush(0);
 #endif
-	  dad(link_p) = dad_p = NULL;
+	  link_p->dad = dad = NULL;
 	}
       
       if (v)
@@ -331,7 +309,7 @@ ucl_heap_extract (ucl_heap_t this)
 #if (DEBUGGING == 1)
 	  printf("going left\n");fflush(0);
 #endif
-	  link_p = links.son_p;
+	  link_p = links.son;
 	  if (first)
 	    {
 	      this->root_p = link_p;
@@ -340,32 +318,28 @@ ucl_heap_extract (ucl_heap_t this)
 	  
 	  if (link_p)
 	    {
-	      links1  = LINKS(link_p);
-	      LINKS(link_p) = links;
-	      son(link_p)   = NULL;
-	      if (links.bro_p)
+	      links1  = *link_p;
+	      *link_p = links;
+	      link_p->son   = NULL;
+	      if (links.bro)
 		{
-		  dad(links.bro_p) = link_p;
+		  links.bro->dad = link_p;
 		}
-	      if (dad_p)
+	      if (dad)
 		{
 		  if (fromleft == 1)
-		    {
-		      son(dad_p) = link_p;
-		    }
+		    dad->son = link_p;
 		  else
-		    {
-		      bro(dad_p) = link_p;
-		    }
+		    dad->bro = link_p;
 		}
-	      dad(link_p) = dad_p;
+	      link_p->dad = dad;
 	      fromleft = 1;
 
 #if (DEBUGGING == 1)
-	      assertnode(dad_p);
+	      assertnode(dad);
 
 	      printf("new link\ndad is ");
-	      if (dad_p) { printnode(dad_p); } else { printf("NULL\n"); }
+	      if (dad) { printnode(dad); } else { printf("NULL\n"); }
 	      printnode(link_p);
 #endif
 	    }
@@ -375,7 +349,7 @@ ucl_heap_extract (ucl_heap_t this)
 #if (DEBUGGING == 1)
 	  printf("going right\n");fflush(0);
 #endif
-	  link_p = links.bro_p;
+	  link_p = links.bro;
 	  if (first)
 	    {
 	      this->root_p = link_p;
@@ -384,32 +358,26 @@ ucl_heap_extract (ucl_heap_t this)
 	  
 	  if (link_p)
 	    {
-	      links1 = LINKS(link_p);
-	      LINKS(link_p) = links;
-	      bro(link_p)   = NULL;
-	      if (links.son_p)
-		{
-		  dad(links.son_p) = link_p;
-		}
-	      if (dad_p)
+	      links1  = *link_p;
+	      *link_p = links;
+	      link_p->bro = NULL;
+	      if (links.son)
+		links.son->dad = link_p;
+	      if (dad)
 		{
 		  if (fromleft == 1)
-		    {
-		      son(dad_p) = link_p;
-		    }
+		    dad->son = link_p;
 		  else
-		    {
-		      bro(dad_p) = link_p;
-		    }
+		    dad->bro = link_p;
 		}
-	      dad(link_p) = dad_p;
+	      link_p->dad = dad;
 	      fromleft = 0;
 	      
 #if (DEBUGGING == 1)
-	      assertnode(dad_p);
+	      assertnode(dad);
 
 	      printf("new link\ndad is ");
-	      if (dad_p) { printnode(dad_p); } else { printf("NULL\n"); }
+	      if (dad) { printnode(dad); } else { printf("NULL\n"); }
 	      printnode(link_p);
 #endif
 	    }
@@ -430,15 +398,10 @@ ucl_heap_extract (ucl_heap_t this)
 stub(2007-09-09-09-35-41) void
 ucl_heap_merge (ucl_heap_t this, ucl_heap_t other)
 {
-  ucl_heap_node_t *	node_p;
+  ucl_node_t 	node_p;
 
-
-  for (node_p = ucl_heap_extract(other);
-       node_p != NULL;
-       node_p = ucl_heap_extract(other))
-    {
-      ucl_heap_insert(this, node_p);
-    }
+  while ((node_p = ucl_heap_extract(other)))
+    ucl_heap_insert(this, node_p);
 }
 
 /* ------------------------------------------------------------ */
@@ -469,23 +432,23 @@ printnode (node_t *node_p)
   assert(node_p);
 
   printf("node %d:", node_p->val.integer);
-  printf(" dad=%d", (dad(node_p))? dad(node_p)->val.integer : -1);
-  printf(" son=%d", (son(node_p))? son(node_p)->val.integer : -1);
-  printf(" bro=%d", (bro(node_p))? bro(node_p)->val.integer : -1);
+  printf(" dad=%d", (node_p->dad)? node_p->dad->val.integer : -1);
+  printf(" son=%d", (node_p->son)? node_p->son->val.integer : -1);
+  printf(" bro=%d", (node_p->bro)? node_p->bro->val.integer : -1);
   printf("\n");fflush(0);
 
-  if (dad(node_p))
+  if (node_p->dad)
     {
-      assert((son(dad(node_p)) == node_p)
-	     || (bro(dad(node_p)) == node_p));
+      assert((son(node_p->dad) == node_p)
+	     || (bro(node_p->dad) == node_p));
     }
-  if (son(node_p))
+  if (node_p->son)
     {
-      assert(dad(son(node_p)) == node_p);
+      assert(dad(node_p->son) == node_p);
     }
-  if (bro(node_p))
+  if (node_p->bro)
     {
-      assert(dad(bro(node_p)) == node_p);
+      assert(dad(node_p->bro) == node_p);
     }
 }
 
@@ -494,18 +457,18 @@ assertnode (node_t *node_p)
 {
   if (!node_p) return;
 
-  if (dad(node_p))
+  if (node_p->dad)
     {
-      assert((son(dad(node_p)) == node_p)
-	     || (bro(dad(node_p)) == node_p));
+      assert((son(node_p->dad) == node_p)
+	     || (bro(node_p->dad) == node_p));
     }
-  if (son(node_p))
+  if (node_p->son)
     {
-      assert(dad(son(node_p)) == node_p);
+      assert(dad(node_p->son) == node_p);
     }
-  if (bro(node_p))
+  if (node_p->bro)
     {
-      assert(dad(bro(node_p)) == node_p);
+      assert(dad(node_p->bro) == node_p);
     }
 }
 #endif

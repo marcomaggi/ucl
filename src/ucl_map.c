@@ -62,7 +62,7 @@
 typedef ucl_map_t		map_t;
 typedef ucl_map_struct_t	map_struct_t;
 typedef ucl_map_link_t		link_t;
-typedef ucl_btree_node_tag_t	node_t;
+typedef ucl_node_tag_t		node_t;
 typedef ucl_iterator_t		iterator_t;
 typedef ucl_iterator_tag_t	iterator_struct_t;
 typedef ucl_value_t		value_t;
@@ -154,7 +154,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
   */
 
   link_p->avl_status = BALANCED;
-  link_p->node.dad_p = link_p->node.bro_p = link_p->node.son_p = NULL;
+  link_p->node.dad = link_p->node.bro = link_p->node.son = NULL;
 
 
   /*
@@ -202,11 +202,11 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
       if ((v > 0)
 	  || ((v == 0) && (this->flags & UCL_ALLOW_MULTIPLE_OBJECTS)))
 	{
-	  tmp_p = (link_t *) cur_p->node.bro_p;
+	  tmp_p = (link_t *) cur_p->node.bro;
 	}
       else if (v < 0)
 	{
-	  tmp_p = (link_t *) cur_p->node.son_p;
+	  tmp_p = (link_t *) cur_p->node.son;
 	}
       else /* v == 0 && !(this->flag & UCL_ALLOW_MULTIPLE_OBJECTS) */
 	{
@@ -267,11 +267,11 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 
   if (v<0)
     {
-      cur_p->node.son_p  = (node_t *) link_p;
-      link_p->node.dad_p = (node_t *) cur_p;
+      cur_p->node.son  = (node_t *) link_p;
+      link_p->node.dad = (node_t *) cur_p;
       ++(this->size);
 	      
-      if (cur_p->node.bro_p != NULL)
+      if (cur_p->node.bro != NULL)
 	{
 	  cur_p->avl_status = BALANCED;
 /*  	  h = 0; */
@@ -285,11 +285,11 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
     }
   else
     {
-      cur_p->node.bro_p  = (node_t *) link_p;
-      link_p->node.dad_p = (node_t *) cur_p;
+      cur_p->node.bro  = (node_t *) link_p;
+      link_p->node.dad = (node_t *) cur_p;
       ++(this->size);
 
-      if (cur_p->node.son_p != NULL)
+      if (cur_p->node.son != NULL)
 	{
 	  cur_p->avl_status = BALANCED;
 /*  	  h = 0; */
@@ -318,7 +318,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
   for (;;)
     {
       tmp_p = cur_p;
-      cur_p = (link_t *) tmp_p->node.dad_p;
+      cur_p = (link_t *) tmp_p->node.dad;
       if (cur_p == NULL) { return; }
 
       /*
@@ -326,7 +326,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 	otherwise set it to "false".
       */
 
-      v = (cur_p->node.son_p == (node_t *) tmp_p)? 1 : 0;
+      v = (cur_p->node.son == (node_t *) tmp_p)? 1 : 0;
 
       if (v) /* stepping up from a left subtree */
 	{
@@ -430,37 +430,37 @@ static void
 rot_left (link_t **cur_pp)
 {
   link_t *	cur_p;
-  link_t *	son_p;
+  link_t *	son;
   link_t *	tmp_p;
 
 
   cur_p = *cur_pp;
-  son_p = (link_t *) cur_p->node.son_p;
+  son = (link_t *) cur_p->node.son;
 
-  tmp_p = (link_t *) son_p->node.bro_p;
-  cur_p->node.son_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) son->node.bro;
+  cur_p->node.son = (node_t *) tmp_p;
   if (tmp_p)
     {
-      tmp_p->node.dad_p = (node_t *) cur_p;
+      tmp_p->node.dad = (node_t *) cur_p;
     }
   
-  son_p->node.bro_p = (node_t *) cur_p;
-  son_p->node.dad_p = cur_p->node.dad_p;
-  cur_p->node.dad_p = (node_t *) son_p;
+  son->node.bro = (node_t *) cur_p;
+  son->node.dad = cur_p->node.dad;
+  cur_p->node.dad = (node_t *) son;
 
   cur_p->avl_status = 0;
 
-  *cur_pp = son_p;
-  tmp_p = (link_t *) son_p->node.dad_p;
+  *cur_pp = son;
+  tmp_p = (link_t *) son->node.dad;
   if (tmp_p)
     {
-      if (cur_p == (link_t *) tmp_p->node.bro_p)
+      if (cur_p == (link_t *) tmp_p->node.bro)
 	{
-	  tmp_p->node.bro_p = (node_t *) son_p;
+	  tmp_p->node.bro = (node_t *) son;
 	}
       else
 	{
-	  tmp_p->node.son_p = (node_t *) son_p;
+	  tmp_p->node.son = (node_t *) son;
 	}
     }
 }
@@ -488,53 +488,53 @@ static void
 rot_left_right (link_t **cur_pp)
 {
   link_t *	cur_p;
-  link_t *	son_p;
-  link_t *	bro_p;
+  link_t *	son;
+  link_t *	bro;
   link_t *	tmp_p;
 
 
   cur_p = *cur_pp;
-  son_p  = (link_t *) cur_p->node.son_p;
-  bro_p  = (link_t *) son_p->node.bro_p;
+  son  = (link_t *) cur_p->node.son;
+  bro  = (link_t *) son->node.bro;
 
-  tmp_p = (link_t *) bro_p->node.son_p;
-  son_p->node.bro_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) bro->node.son;
+  son->node.bro = (node_t *) tmp_p;
   if (tmp_p) /* useless test? */
     {
-      tmp_p->node.dad_p = (node_t *) son_p;
+      tmp_p->node.dad = (node_t *) son;
     }
 
-  bro_p->node.son_p = (node_t *) son_p;
-  son_p->node.dad_p = (node_t *) bro_p;
+  bro->node.son = (node_t *) son;
+  son->node.dad = (node_t *) bro;
 
-  tmp_p = (link_t *) bro_p->node.bro_p;
-  cur_p->node.son_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) bro->node.bro;
+  cur_p->node.son = (node_t *) tmp_p;
   if (tmp_p)
     {
-      tmp_p->node.dad_p = (node_t *) cur_p;
+      tmp_p->node.dad = (node_t *) cur_p;
     }
 
-  bro_p->node.bro_p = (node_t *) cur_p;
-  bro_p->node.dad_p = cur_p->node.dad_p;
-  cur_p->node.dad_p = (node_t *) bro_p;
+  bro->node.bro = (node_t *) cur_p;
+  bro->node.dad = cur_p->node.dad;
+  cur_p->node.dad = (node_t *) bro;
 
   cur_p->avl_status = \
-    (bro_p->avl_status == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
+    (bro->avl_status == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
 
-  son_p->avl_status = \
-    (bro_p->avl_status == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
+  son->avl_status = \
+    (bro->avl_status == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
 
-  *cur_pp = bro_p;
-  tmp_p = (link_t *) bro_p->node.dad_p;
+  *cur_pp = bro;
+  tmp_p = (link_t *) bro->node.dad;
   if (tmp_p)
     {
-      if (cur_p == (link_t *) tmp_p->node.bro_p)
+      if (cur_p == (link_t *) tmp_p->node.bro)
 	{
-	  tmp_p->node.bro_p = (node_t *) bro_p;
+	  tmp_p->node.bro = (node_t *) bro;
 	}
       else
 	{
-	  tmp_p->node.son_p = (node_t *) bro_p;
+	  tmp_p->node.son = (node_t *) bro;
 	}
     }
 }
@@ -562,35 +562,35 @@ static void
 rot_right (link_t **cur_pp)
 {
   link_t *	cur_p;
-  link_t *	bro_p;
+  link_t *	bro;
   link_t *	tmp_p;
 
 
   cur_p = *cur_pp;
-  bro_p  = (link_t *) cur_p->node.bro_p;
+  bro  = (link_t *) cur_p->node.bro;
 
-  tmp_p = (link_t *) bro_p->node.son_p;
-  cur_p->node.bro_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) bro->node.son;
+  cur_p->node.bro = (node_t *) tmp_p;
   if (tmp_p)
     {
-      tmp_p->node.dad_p = (node_t *) cur_p;
+      tmp_p->node.dad = (node_t *) cur_p;
     }
 
-  bro_p->node.son_p = (node_t *) cur_p;
-  bro_p->node.dad_p = cur_p->node.dad_p;
-  cur_p->node.dad_p = (node_t *) bro_p;
+  bro->node.son = (node_t *) cur_p;
+  bro->node.dad = cur_p->node.dad;
+  cur_p->node.dad = (node_t *) bro;
 
-  *cur_pp = bro_p;
-  tmp_p = (link_t *) bro_p->node.dad_p;
+  *cur_pp = bro;
+  tmp_p = (link_t *) bro->node.dad;
   if (tmp_p)
     {
-      if (cur_p == (link_t *) tmp_p->node.bro_p)
+      if (cur_p == (link_t *) tmp_p->node.bro)
 	{
-	  tmp_p->node.bro_p = (node_t *) bro_p;
+	  tmp_p->node.bro = (node_t *) bro;
 	}
       else
 	{
-	  tmp_p->node.son_p = (node_t *) bro_p;
+	  tmp_p->node.son = (node_t *) bro;
 	}
     }
 }
@@ -618,59 +618,59 @@ static void
 rot_right_left (link_t **cur_pp)
 {
   link_t *	cur_p;
-  link_t *	son_p;
-  link_t *	bro_p;
+  link_t *	son;
+  link_t *	bro;
   link_t *	tmp_p;
 
 
   cur_p = *cur_pp;
-  bro_p = (link_t *) cur_p->node.bro_p;
-  son_p = (link_t *) bro_p->node.son_p;
+  bro = (link_t *) cur_p->node.bro;
+  son = (link_t *) bro->node.son;
 
   
-  tmp_p = (link_t *) son_p->node.bro_p;
-  bro_p->node.son_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) son->node.bro;
+  bro->node.son = (node_t *) tmp_p;
   if (tmp_p)
     {
-      tmp_p->node.dad_p = (node_t *) bro_p;
+      tmp_p->node.dad = (node_t *) bro;
     }
   
-  son_p->node.bro_p = (node_t *) bro_p;
-  bro_p->node.dad_p = (node_t *) son_p;
+  son->node.bro = (node_t *) bro;
+  bro->node.dad = (node_t *) son;
 
-  tmp_p = (link_t *) son_p->node.son_p;
-  cur_p->node.bro_p = (node_t *) tmp_p;
+  tmp_p = (link_t *) son->node.son;
+  cur_p->node.bro = (node_t *) tmp_p;
   if (tmp_p)
     {
-      tmp_p->node.dad_p = (node_t *) cur_p;
+      tmp_p->node.dad = (node_t *) cur_p;
     }
 
-  son_p->node.son_p = (node_t *) cur_p;
-  son_p->node.dad_p = cur_p->node.dad_p;
-  cur_p->node.dad_p = (node_t *) son_p;
+  son->node.son = (node_t *) cur_p;
+  son->node.dad = cur_p->node.dad;
+  cur_p->node.dad = (node_t *) son;
 
   /*
-    We have to update the parent  of cur_p to point to son_p, we'll do
+    We have to update the parent  of cur_p to point to son, we'll do
     it later.
   */
 
   cur_p->avl_status = \
-    (son_p->avl_status == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
+    (son->avl_status == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
 
-  bro_p->avl_status = \
-    (son_p->avl_status == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
+  bro->avl_status = \
+    (son->avl_status == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
 
-  *cur_pp = son_p;
-  tmp_p = (link_t *) son_p->node.dad_p;
+  *cur_pp = son;
+  tmp_p = (link_t *) son->node.dad;
   if (tmp_p)
     {
-      if (cur_p == (link_t *) tmp_p->node.bro_p)
+      if (cur_p == (link_t *) tmp_p->node.bro)
 	{
-	  tmp_p->node.bro_p = (node_t *) son_p;
+	  tmp_p->node.bro = (node_t *) son;
 	}
       else
 	{
-	  tmp_p->node.son_p = (node_t *) son_p;
+	  tmp_p->node.son = (node_t *) son;
 	}
     }
 }
@@ -746,25 +746,25 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
   tmpval = ucl_map_getval(cur_p);
   del_p = cur_p;
 
-  while (cur_p->node.son_p || cur_p->node.bro_p)
+  while (cur_p->node.son || cur_p->node.bro)
     {
-      if (cur_p->node.son_p)
+      if (cur_p->node.son)
 	{
-	  link_p = (link_t *) ucl_btree_find_rightmost(cur_p->node.son_p);
+	  link_p = (link_t *) ucl_btree_find_rightmost(cur_p->node.son);
 	}
       else
 	{
-	  link_p = (link_t *) ucl_btree_find_leftmost(cur_p->node.bro_p);
+	  link_p = (link_t *) ucl_btree_find_leftmost(cur_p->node.bro);
 	}
 
       /*
 	Here "link_p" can't be NULL. It's possible that:
 
-		link_p == cur_p->node.bro_p
+		link_p == cur_p->node.bro
 
         or that:
 
-		link_p == cur_p->node.son_p
+		link_p == cur_p->node.son
 
         but these are not problems.
       */
@@ -791,11 +791,11 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
     rotations when needed.
   */
 
-  link_p = (link_t *) cur_p->node.dad_p; 
-  if (cur_p == (link_t *) link_p->node.son_p)
+  link_p = (link_t *) cur_p->node.dad; 
+  if (cur_p == (link_t *) link_p->node.son)
     {
-      link_p->node.son_p = NULL;
-      if (link_p->node.bro_p)
+      link_p->node.son = NULL;
+      if (link_p->node.bro)
 	{
 	  /*
 	    Before  this link  was BALANCED,  now the  right  subtree is
@@ -819,10 +819,10 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 /*  	  h = 1; */
 	}
     }
-  else /* cur_p == link_p->node.bro_p */
+  else /* cur_p == link_p->node.bro */
     {
-      link_p->node.bro_p = NULL;
-      if (link_p->node.son_p)
+      link_p->node.bro = NULL;
+      if (link_p->node.son)
 	{
 	  /*
 	    Before  this link  was  BALANCED, now  the  left subtree  is
@@ -851,7 +851,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
   for (;;)
     {
       tmp_p  = link_p;
-      link_p = (link_t *) tmp_p->node.dad_p;
+      link_p = (link_t *) tmp_p->node.dad;
       if (!link_p)
 	{
 	  break;
@@ -862,7 +862,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 	  root_flag = 1;
 	}
 
-      if (tmp_p == (link_t *) link_p->node.son_p)
+      if (tmp_p == (link_t *) link_p->node.son)
 	{
 	  if (link_p->avl_status == LEFT_HIGHER)
 	    {
@@ -878,7 +878,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 	    }
 	  else /* link_p->avl_status == RIGHT_HIGHER */
 	    {
-	      tmp_p = (link_t *) link_p->node.bro_p;
+	      tmp_p = (link_t *) link_p->node.bro;
 
 	      if (tmp_p->avl_status == RIGHT_HIGHER)
 		{
@@ -892,7 +892,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 	      link_p->avl_status = BALANCED;
 	    }
 	}
-      else /* tmp_p == link_p->node.bro_p */
+      else /* tmp_p == link_p->node.bro */
 	{
 	  if (link_p->avl_status == RIGHT_HIGHER)
 	    {
@@ -908,7 +908,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 	    }
 	  else /* link_p->avl_status == LEFT_HIGHER */
 	    {
-	      tmp_p = (link_t *) link_p->node.son_p;
+	      tmp_p = (link_t *) link_p->node.son;
 
 	      if (tmp_p->avl_status == LEFT_HIGHER)
 		{
@@ -973,11 +973,11 @@ ucl_map_find (const ucl_map_t this, const ucl_value_t key)
       v = keycmp.func(keycmp.data, key, ucl_map_getkey(cur_p));
       if (v > 0)
 	{
-	  cur_p = (link_t *) cur_p->node.bro_p;
+	  cur_p = (link_t *) cur_p->node.bro;
 	}
       else if (v < 0)
 	{
-	  cur_p = (link_t *) cur_p->node.son_p;
+	  cur_p = (link_t *) cur_p->node.son;
 	}
       else
 	{
@@ -1081,11 +1081,11 @@ ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
       v = keycmp.func(keycmp.data, key, ucl_map_getkey(cur_p));
       if (v > 0)
 	{
-	  cur_p = (link_t *) last_p->node.bro_p;
+	  cur_p = (link_t *) last_p->node.bro;
 	}
       else if (v < 0)
 	{
-	  cur_p = (link_t *) last_p->node.son_p;
+	  cur_p = (link_t *) last_p->node.son;
 	}
       else /* v == 0 */
 	{
@@ -1171,11 +1171,11 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
       v = keycmp.func(keycmp.data, key, ucl_map_getkey(cur_p));
       if (v > 0)
 	{
-	  cur_p = (link_t *) last_p->node.bro_p;
+	  cur_p = (link_t *) last_p->node.bro;
 	}
       else if (v < 0)
 	{
-	  cur_p = (link_t *) last_p->node.son_p;
+	  cur_p = (link_t *) last_p->node.son;
 	}
       else /* v == 0 */
 	{

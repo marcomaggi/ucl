@@ -24,7 +24,11 @@ C_WARNINGS := $(filter-out -Wcast-qual,$(C_WARNINGS))
 ## Libraries.
 ## ------------------------------------------------------------
 
+ucl_PREREQUISITES	= $(wildcard $(addprefix $(ucl_SRCDIR)/,\
+				$(ucl_stubsrc_HEADER_FILE) internal.h debug.h ucl_*.h))
+
 $(eval $(call ds-c-library-with-stub,ucl))
+$(eval $(call ds-h-files-installer,ucl_headers,$(ucl_SRCDIR),ucl_*.h))
 
 ## ------------------------------------------------------------
 
@@ -33,11 +37,14 @@ $(eval $(call ds-c-library-with-stub,ucl))
 ## Tests.
 ## ------------------------------------------------------------
 
+PATTERNS	?= *.c
+
 ifeq ($(strip $(ds_config_ENABLE_SHARED)),yes)
 
 ucl_shared_tests_MAIN_SECTION		= shared-tests
 ucl_shared_tests_programs_MAIN_SECTION	= shared-tests
 
+ucl_shared_tests_PATTERNS		= $(PATTERNS)
 ucl_shared_tests_BUILDDIR		= $(builddir)/shared-tests.d
 ucl_shared_tests_PREREQUISITES		= $(ucl_SRCDIR)/ucl.h $(srcdir)/tests/testmain.h
 ucl_shared_tests_CC_COMPILE_MORE_FLAGS	= -I$(ucl_SRCDIR) -I$(ucl_stubsrc_BUILDDIR)
@@ -51,6 +58,16 @@ $(eval $(call ds-c-test-programs,ucl_shared))
 test:		shared-tests
 test-clean:	shared-tests-clean
 test-realclean:	shared-tests-realclean
+
+test-btree:	; $(MAKE) test PATTERNS=btree.c
+test-circular:	; $(MAKE) test PATTERNS=circular.c
+test-hash:	; $(MAKE) test PATTERNS=hash.c
+test-heap:	; $(MAKE) test PATTERNS=heap.c
+test-list:	; $(MAKE) test PATTERNS=list.c
+test-map:	; $(MAKE) test PATTERNS=map.c
+test-tree:	; $(MAKE) test PATTERNS=tree.c
+test-vector:	; $(MAKE) test PATTERNS=vector.c
+test-graph:	; $(MAKE) test PATTERNS=graph.c
 
 endif # ds_config_ENABLE_SHARED = yes
 

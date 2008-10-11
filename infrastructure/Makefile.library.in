@@ -629,10 +629,11 @@ endef
 ## Module's installation functions.
 
 define ds-install-module
-$(call ds-echo,'installing $(1) files...')
+$(call ds-echo,'## ------------------------------------------------------------')
+$(call ds-echo,'## Installing $(1) files...')
 $(call ds-install-directory,$(1))
 $(call ds-install-files,$(1),$(2))
-$(call ds-echo,'------------------------------------------- completed.')
+$(call ds-echo,'## done.')
 endef
 
 define ds-install-data
@@ -813,7 +814,7 @@ $$(eval $$(call ds-srcdir,ds_autoconf,$$(srcdir)/autoconf))
 
 ds_autoconf_NAMES	= $$(addsuffix .m4,$$(call ds-ornull,$2,$$(PACKAGE_NAME_LOWERCASE)))
 ds_autoconf_INSTLST	= $$(call ds-glob,ds_autoconf,$$(ds_autoconf_NAMES))
-ds_autoconf_INSTDIR	= $$(datadir)/aclocal
+ds_autoconf_INSTDIR	= $$(datadir)/aclocal/$$(PKG_DIR)
 
 ifneq ($$(strip $$(ds_autoconf_INSTLST)),)
 $$(eval $$(call ds-module,ds_autoconf,dev,DATA))
@@ -874,7 +875,8 @@ ds_uninstall_$(1)_scripts_REALCLEANFILES	= $$(ds_uninstall_$(1)_scripts_TARGETS)
 $$(eval $$(call ds-module,ds_uninstall_$(1)_scripts,$(1),BIN))
 
 $$(ds_uninstall_$(2)_SCRIPT):
-	$$(call ds-echo,'building $(1) uninstall script...')
+	$$(call ds-echo,'## ------------------------------------------------------------')
+	$$(call ds-echo,'## Building $(1) uninstall script...')
 # This is not required because the first 'echo' outputs with '>'.
 #	-@test -f $$(@) && $(RM) $$(@)
 	@echo '#!/bin/sh'							>$$(@)
@@ -889,7 +891,7 @@ $$(ds_uninstall_$(2)_SCRIPT):
 	@echo									>>$$(@)
 	@$(MAKE) --silent $(1)-print-uninstall-script >>$$(@)
 	@printf '\n### end of file\n' >>$$(@)
-	$$(call ds-echo,'------------------------------------------------------------ done.')
+	$$(call ds-echo,'## done.')
 
 endef
 
@@ -1489,7 +1491,7 @@ ifneq ($$(strip $$($(1)_shared_library_LINK_ID)),)
 	test -L $$($(1)_shared_library_LINK_NAME) || \
 	$$(SYMLINK) $$($(1)_shared_library_NAME) $$($(1)_shared_library_LINK_NAME)
 endif # $(1)_shared_library_LINK_ID = ""
-	$$(call ds-echo,'## ------------------------------------------------------------ done.')
+	$$(call ds-echo,'## done.')
 
 ## ------------------------------------------------------------
 
@@ -1545,7 +1547,7 @@ $$($(1)_static_library_PATHNAME) : $$($(1)_static_library_OBJECTS)
 	$$(call ds-echo,'## Building static library $$($(1)_static_library_NAME)')
 	$$(AR) $$(@) $$(^)
 	-($$(RANLIB) $$(@) || true) >/dev/null 2>&1
-	$$(call ds-echo,'## ------------------------------------------------------------ done.')
+	$$(call ds-echo,'## done.')
 
 endif # ds_config_ENABLE_STATIC = yes
 endef

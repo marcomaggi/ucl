@@ -1,22 +1,12 @@
 /* 
-   Part of: Useless Container Library (UCL).
-   Contents: source code for the linked list container.
+   Part of: Useless Container Library
+   Contents: linked list
 
    Abstract:
 
-        This file must  be included in all the modules  that make use of
-        the list container.
+	Lisp-like lists using the "ucl_node_t" structure.
 
-	  The  UCL list container  is an  implementation of  the classic
-	double  linked list:  elements are  stored in  little structures
-	chained  together with  pointers  that allow  the  user code  to
-	iterate forward and backward.
-
-	  The handling  of list  links is derived  from the  handling of
-	elements in the  TCL (Tool Command Language) hash  table by John
-	Ousterhout and others (<http://www.tcl.tk> for more about TCL).
-
-   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2008 Marco Maggi
+   Copyright (c) 2001-2005, 2008 Marco Maggi <marcomaggi@gna.org>
    
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -32,6 +22,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    
 */
+
 
 /** ------------------------------------------------------------
  ** Header files.
@@ -45,357 +36,197 @@
 
 
 /** ------------------------------------------------------------
- ** Type declarations.
+ ** Inspection.
  ** ----------------------------------------------------------*/
 
-typedef ucl_list_link_t		link_t;
-typedef ucl_list_t		list_t;
+stub(2008-09-25-10-08-48) size_t
+ucl_list_length (ucl_node_t node)
+{
+  size_t	length = 0;
+
+  while ((node = node->bro))
+    ++length;
+  return length;
+}
+
+/* ------------------------------------------------------------ */
 
 
-stub(2005-09-23-18-11-16) ucl_list_link_t *
-ucl_list_index (ucl_list_t this, size_t idx)
+/** ------------------------------------------------------------
+ ** Getters.
+ ** ----------------------------------------------------------*/
+
+stub(2008-09-25-10-53-15) ucl_node_t
+ucl_list_caar (ucl_node_t node)
 {
-  size_t	m;
-  size_t	i;
-  link_t *	link_p;
+  ucl_node_t	N = NULL;
 
-
-  if (idx >= this->size)
-    {
-      return NULL;
-    }
-  else if (idx == 0)
-    {
-      return this->front;
-    }
-  else if (idx == this->size-1)
-    {
-      return this->back;
-    }
-  else if (this->li == idx)
-    {
-      return this->ll;
-    }
-  else if (this->li+1 == idx)
-    {
-      ++(this->li);
-      return (this->ll = this->ll->next);
-    }
-  else if (this->li-1 == idx)
-    {
-      --(this->li);
-      return (this->ll = this->ll->prev);
-    }
-
-  m = this->li - idx;
-
-  /* m = abs(m) */
-  m = (m>0)? m : -m;
-
-  if (idx <= m)
-    {
-      /*
-	"idx"  is near the  beginning more  than it's  near "this->li"
-	start from the beginning.
-      */
-
-      link_p = this->front;
-      for (i=0; i<idx; ++i)
-	{
-	  link_p = link_p->next;
-	}
-    }
-  else if (this->size-idx-1 < m)
-    {
-      /*
-	"idx" is near the end more than it's near "this->li"
-	start from the end.
-      */
-
-      link_p = this->back;
-      for (i=this->size-1; i>idx; --i)
-	{
-	  link_p = link_p->prev;
-	}
-    }
-  else
-    {
-      /*
-	"idx" is near "this->li"
-      */
-
-      link_p = this->ll;
-      if (this->li > idx)
-	{
-	  /* from "this->li" backward */
-	  for (i=this->li; i>idx; --i)
-	    {
-	      link_p = link_p->prev;
-	    }
-	}
-      else
-	{
-	  /* fromt "this->li" forward */
-	  for (i=this->li; i<idx; ++i)
-	  {
-	    link_p = link_p->next;
-	  }
-	}
-    }
-
-  this->li = idx;
-  this->ll = link_p;
-  return link_p;
+  if (node->son)
+    N = node->son->son;
+  return N;
 }
+stub(2008-09-25-10-54-52) ucl_node_t
+ucl_list_cadr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->son)
+    N = node->son->bro;
+  return N;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-25-10-55-08) ucl_node_t
+ucl_list_cdar (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro)
+    N = node->bro->son;
+  return N;
+}
+stub(2008-09-25-10-55-30) ucl_node_t
+ucl_list_cddr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro)
+    N = node->bro->bro;
+  return N;
+}
+
+/* ------------------------------------------------------------ */
+
+stub(2008-09-25-10-57-06) ucl_node_t
+ucl_list_caaar (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->son && node->son->son)
+    N = node->son->son->son;
+  return N;
+}
+stub(2008-09-25-10-58-45) ucl_node_t
+ucl_list_caadr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->son && node->son->son)
+    N = node->son->son->bro;
+  return N;
+}
+stub(2008-09-25-10-59-03) ucl_node_t
+ucl_list_cadar (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->son && node->son->bro)
+    N = node->son->bro->son;
+  return N;
+}
+stub(2008-09-25-10-59-38) ucl_node_t
+ucl_list_caddr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->son && node->son->bro)
+    N = node->son->bro->bro;
+  return N;
+}
+stub(2008-09-25-11-01-32) ucl_node_t
+ucl_list_cdaar (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro && node->bro->son)
+    N = node->bro->son->son;
+  return N;
+}
+stub(2008-09-25-11-01-36) ucl_node_t
+ucl_list_cdadr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro && node->bro->son)
+    N = node->bro->son->bro;
+  return N;
+}
+stub(2008-09-25-11-01-39) ucl_node_t
+ucl_list_cddar (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro && node->bro->bro)
+    N = node->bro->bro->son;
+  return N;
+}
+stub(2008-09-25-11-01-43) ucl_node_t
+ucl_list_cdddr (ucl_node_t node)
+{
+  ucl_node_t	N = NULL;
+
+  if (node->bro && node->bro->bro)
+    N = node->bro->bro->bro;
+  return N;
+}
+
+/* ------------------------------------------------------------ */
+
 
-/* ucl_list_insertbefore --
+/** ------------------------------------------------------------
+ ** Removal.
+ ** ----------------------------------------------------------*/
 
-	Inserts a new link before a selected link.
-
-   Arguments:
-
-	this -		pointer to the base structure
-	link_p -	pointer to a link in the list, it must be the
-			return value of a previous invocation of
-			ucl_list_index()
-	new_p -	pointer to a new list link
-
-   Results:
-
-        The  new  link is  inserted  before  the  selected one;  if  the
-        selected link  is the first in  the chain, the  new link becomes
-        the first in the chain.
-
-   Side effects:
-
-	This function  can't be  used to insert  an element in  an empty
-	list.
-
-*/
-
-stub(2005-09-23-18-11-20) void
-ucl_list_insertbefore (ucl_list_t this, ucl_list_link_t *link_p, ucl_list_link_t *new_p)
+stub(2008-09-25-10-14-25) ucl_node_t
+ucl_list_remove (ucl_node_t node)
 {
-  link_t *	tmp_p;
+  ucl_node_t	dad = node->dad;
+  ucl_node_t	bro = node->bro;
 
-
-  assert(this); assert(link_p); assert(new_p);
-  /*
-    Before:
-
-                 ----       -----
-                |prev|<--->|link |
-                 ----       -----
-
-    after:
-
-                 ----       -----       -----
-                |prev|<--->| new |<--->|link |
-                 ----       -----       -----
-  */
-
-  if (link_p == this->front)
+  if (dad && bro)
     {
-      this->front	= new_p;
-      new_p->prev	= NULL;
+      dad->bro = bro;
+      bro->dad = dad;
     }
-  else
+  else if (dad)
     {
-      new_p->prev = tmp_p = link_p->prev;
-      tmp_p->next = new_p;
+      assert(NULL == node->bro);
+      dad->bro  = NULL;
+      node->dad = NULL;
     }
-
-  link_p->prev	= new_p;
-  new_p->next	= link_p;
-
-  this->ll	= this->front;
-  this->li	= 0;
-  
-  ++(this->size);
+  else if (bro)
+    {
+      assert(NULL == node->dad);
+      bro->dad  = NULL;
+      node->bro = NULL;
+    }
+  return node;
 }
-
-/* ucl_list_insertafter --
-
-	Inserts a new link after a selected link.
-
-   Arguments:
-
-	this -		pointer to the base structure
-	link_p -	pointer to a link in the list, it must be the
-			return value of a previous invocation of
-			ucl_list_index()
-	new_p -	pointer to a new list link
-
-   Results:
-
-        The new link is inserted after the selected one; if the selected
-        link is the last in the  chain, the new link becomes the last in
-        the chain.
-
-   Side effects:
-
-	This function  can't be  used to insert  an element in  an empty
-	list.
-
-*/
-
-stub(2005-09-23-18-11-24) void
-ucl_list_insertafter (ucl_list_t this, ucl_list_link_t *link_p, ucl_list_link_t *new_p)
+stub(2008-09-25-10-14-25) ucl_node_t
+ucl_list_popfront (ucl_node_t node)
 {
-  link_t *	tmp_p;
+  ucl_node_t	first = ucl_tree_get_first(node);
 
-
-  assert(this); assert(link_p); assert(new_p);
-  /*
-    Before:
-
-                 ----       ----
-                |link|<--->|next|
-                 ----       ----
-
-    after:
-
-                 ----       -----       ----
-                |link|<--->| new |<--->|next|
-                 ----       -----       ----
-  */
-
-  if (link_p == this->back)
+  if (first->bro)
     {
-      this->back	= new_p;
-      new_p->next	= NULL;
+      first->bro->dad = NULL;
+      first->bro      = NULL;
     }
-  else
-    {
-      new_p->next = tmp_p = link_p->next;
-      tmp_p->prev = new_p;
-    }
-
-  link_p->next	= new_p;
-  new_p->prev	= link_p;
-  
-  this->ll	= this->front;
-  this->li	= 0;
-
-  ++(this->size);
+  return first;
 }
-
-stub(2005-09-23-18-11-26) void
-ucl_list_pushfront (ucl_list_t this, ucl_list_link_t *link_p)
+stub(2008-09-25-10-18-48) ucl_node_t
+ucl_list_popback (ucl_node_t node)
 {
-  assert(this); assert(link_p);
+  ucl_node_t	last = ucl_tree_get_last(node);
 
-  if (! this->front)
+  if (last->dad)
     {
-      link_p->next = NULL;
-      this->ll = this->back = link_p;
-      this->li = 0;
+      last->dad->bro = NULL;
+      last->dad      = NULL;
     }
-  else
-    {
-      link_p->next = this->front;
-      this->front->prev = link_p;
-      ++(this->li);
-    }
-  link_p->prev = NULL;
-  this->front = link_p;
-  ++(this->size);
+  return last;
 }
-stub(2005-09-23-18-11-28) void
-ucl_list_pushback (ucl_list_t this, ucl_list_link_t *link_p)
-{
-  assert(this); assert(link_p);
 
-  if (! this->back)
-    {
-      link_p->prev = NULL;
-      this->ll = this->front = link_p;
-      this->li = 0;
-    }
-  else
-    {
-      link_p->prev = this->back;
-      this->back->next = link_p;
-    }
-  link_p->next = NULL;
-  this->back = link_p;
-  ++(this->size);
-}
-
-/* ucl_list_extract --
-
-	Removes an element from the list.
-
-   Arguments:
-
-	this -		pointer to the base structure
-	link_p -	pointer to a list link, it must be the return
-			value of a previous invocation of
-			ucl_list_index()
-
-   Results:
-
-        The selected link is extracted from the list.
-
-   Side effects:
-
-        none
-
-*/
-
-stub(2005-09-23-18-11-32) void
-ucl_list_extract (ucl_list_t this, ucl_list_link_t *link_p)
-{
-  link_t	*tmp_p;
-
-
-  assert(this);
-  assert(link_p);
-
-  if (1 == this->size)
-    {
-      assert(link_p == this->back);
-      assert(link_p == this->front);
-      
-      this->front = this->back = this->ll = NULL;
-      this->li    = 0;
-    }
-  else if (link_p == this->front)
-    {
-      this->front	  = link_p->next;
-      link_p->next->prev = NULL;
-
-      if (this->li == 0)
-	{
-	  this->ll = this->front;
-	}
-      else 
-	{
-	  --(this->li);
-	}
-    }
-  else if (link_p == this->back)
-    {
-      this->back	  = link_p->prev;
-      link_p->prev->next = NULL;
-
-      if (this->li == ((this->size) - 1))
-	{
-	  --(this->li); /* this is because we decrement this->size */
-	  this->ll = this->back;
-	}
-    }
-  else
-    {
-      tmp_p		= link_p->prev;
-      tmp_p->next	= link_p->next;
-      link_p->next->prev = tmp_p;
-
-      this->li	= 0;
-      this->ll	= NULL;
-    }
-
-  --(this->size);
-}
 
 /* end of file */

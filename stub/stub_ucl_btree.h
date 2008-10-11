@@ -12,29 +12,31 @@
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void * ucl_btree_find_leftmost (void * _node_p)
+ucl_decl void * ucl_btree_find_leftmost (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_find_rightmost (void * _node_p)
+ucl_decl void * ucl_btree_find_rightmost (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_find_deepest_son (void * _node_p)
+ucl_decl void * ucl_btree_find_deepest_son (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_find_deepest_bro (void * _node_p)
+ucl_decl void * ucl_btree_find_deepest_bro (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_inorder (void * _cur_p)
+ucl_decl void * ucl_btree_find_root (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_inorder_backward (void * _cur_p)
+ucl_decl void * ucl_btree_step_inorder (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_preorder (void * _cur_p)
+ucl_decl void * ucl_btree_step_inorder_backward (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_preorder_backward (void * _cur_p)
+ucl_decl void * ucl_btree_step_preorder (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_postorder (void * _cur_p)
+ucl_decl void * ucl_btree_step_preorder_backward (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_postorder_backward (void * _cur_p)
+ucl_decl void * ucl_btree_step_postorder (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_levelorder (void * _cur_p)
+ucl_decl void * ucl_btree_step_postorder_backward (void * node)
 	__attribute__((__nonnull__,__pure__));
-ucl_decl void * ucl_btree_step_levelorder_backward (void * _cur_p)
+ucl_decl void * ucl_btree_step_levelorder (void * node)
+	__attribute__((__nonnull__,__pure__));
+ucl_decl void * ucl_btree_step_levelorder_backward (void * node)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node)
 	__attribute__((__nonnull__));
@@ -74,18 +76,19 @@ ucl_decl void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t ite
 /* Function type declarations for the "btree" module.
    A typedef for each function in the module. */
 
-typedef void * ucl_btree_find_leftmost_proto_t (void * _node_p);
-typedef void * ucl_btree_find_rightmost_proto_t (void * _node_p);
-typedef void * ucl_btree_find_deepest_son_proto_t (void * _node_p);
-typedef void * ucl_btree_find_deepest_bro_proto_t (void * _node_p);
-typedef void * ucl_btree_step_inorder_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_inorder_backward_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_preorder_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_preorder_backward_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_postorder_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_postorder_backward_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_levelorder_proto_t (void * _cur_p);
-typedef void * ucl_btree_step_levelorder_backward_proto_t (void * _cur_p);
+typedef void * ucl_btree_find_leftmost_proto_t (void * node);
+typedef void * ucl_btree_find_rightmost_proto_t (void * node);
+typedef void * ucl_btree_find_deepest_son_proto_t (void * node);
+typedef void * ucl_btree_find_deepest_bro_proto_t (void * node);
+typedef void * ucl_btree_find_root_proto_t (void * node);
+typedef void * ucl_btree_step_inorder_proto_t (void * node);
+typedef void * ucl_btree_step_inorder_backward_proto_t (void * node);
+typedef void * ucl_btree_step_preorder_proto_t (void * node);
+typedef void * ucl_btree_step_preorder_backward_proto_t (void * node);
+typedef void * ucl_btree_step_postorder_proto_t (void * node);
+typedef void * ucl_btree_step_postorder_backward_proto_t (void * node);
+typedef void * ucl_btree_step_levelorder_proto_t (void * node);
+typedef void * ucl_btree_step_levelorder_backward_proto_t (void * node);
 typedef void ucl_btree_iterator_inorder_proto_t (ucl_iterator_t iterator, void * root_node);
 typedef void ucl_btree_iterator_inorder_backward_proto_t (ucl_iterator_t iterator, void * root_node);
 typedef void ucl_btree_iterator_preorder_proto_t (ucl_iterator_t iterator, void * root_node);
@@ -136,6 +139,7 @@ typedef struct ucl_btree_stub_table_t {
   ucl_btree_subtree_iterator_postorder_backward_proto_t * stub_ucl_btree_subtree_iterator_postorder_backward;
   ucl_btree_subtree_iterator_levelorder_proto_t * stub_ucl_btree_subtree_iterator_levelorder;
   ucl_btree_subtree_iterator_levelorder_backward_proto_t * stub_ucl_btree_subtree_iterator_levelorder_backward;
+  ucl_btree_find_root_proto_t         * stub_ucl_btree_find_root;
 } ucl_btree_stub_table_t;
 
 /* Stub table macros definition for the "btree" module.
@@ -175,6 +179,7 @@ ucl_decl const ucl_btree_stub_table_t   ucl_btree_stub_table;
 #define ucl_btree_subtree_iterator_postorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_postorder_backward)
 #define ucl_btree_subtree_iterator_levelorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder)
 #define ucl_btree_subtree_iterator_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder_backward)
+#define ucl_btree_find_root        ((ucl_btree_stub_table_p)->stub_ucl_btree_find_root)
 
 #endif /* defined UCL_ENABLE_STUB */
 
