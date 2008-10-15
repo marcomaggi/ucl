@@ -97,7 +97,7 @@ UCL_BEGIN_C_DECL
  ** ----------------------------------------------------------*/
 
 #define ucl_inline		static __inline__ __attribute__((__always_inline__,__nonnull__))
-#define ucl_inline_nonnull	static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+#define ucl_inline_nonnull1	static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
 #define ucl_inline_pure		static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 
 /* ------------------------------------------------------------ */
@@ -158,7 +158,14 @@ typedef union ucl_value_t {
 
 /* ------------------------------------------------------------ */
 
-typedef int ucl_comparison_fun_t(ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
+typedef int ucl_value_comparison_fun_t(ucl_value_t data, const ucl_value_t a, const ucl_value_t b);
+
+typedef struct ucl_value_comparison_t {
+  ucl_value_t			data;
+  ucl_value_comparison_fun_t *	func;
+} ucl_value_comparison_t;
+
+typedef int ucl_comparison_fun_t(ucl_value_t data, const void * a, const void * b);
 
 typedef struct ucl_comparison_t {
   ucl_value_t			data;

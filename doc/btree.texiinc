@@ -3,14 +3,13 @@
 
 
 @cindex Binary tree container
-@cindex BTree container
 
 @menu
 * btree typedefs::              Implementation and type definitions.
 * btree examples::              Usage examples.
 * btree creation::              Building btree hierarchies.
 * btree inspection::            Accessing nodes.
-* btree removing::              Removing elements from a btree.
+* btree removing::              Removing elements.
 * btree find::                  Finding values.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
@@ -24,7 +23,7 @@
 
 
 @noindent
-The btree container is an implementation of binary tree; it is built as
+This section presents an implementation of binary tree; the container is
 a chain of structures:
 
 @example
@@ -54,7 +53,7 @@ fields:
 
 @table @code
 @item ucl_node_t dad
-pointer to the partent of this node; @null{} if this node has no parent;
+pointer to the parent of this node; @null{} if this node has no parent;
 
 @item ucl_node_t son
 pointer to the son of this node; @null{} if this node has no son;
@@ -73,13 +72,12 @@ pointer to the bro of this node; @null{} if this node has no bro.
 
 @noindent
 Let's say that we want to organise a set of characters in a binary tree;
-we define the tree node type and allocation functions of the node like
-these:
+we define the tree node type and allocation functions like these:
 
 @example
 typedef struct node_tag_t @{
   ucl_node_tag_t  node;
-  char                  c;
+  char            c;
 @} node_tag_t;
 
 typedef node_tag_t *    node_t;
@@ -123,7 +121,7 @@ node_set (node_t p, void * data)
 @{
   p->c = *((char *)data);
 @}
-__inline__ char *
+__inline__ void *
 node_get (node_t p)
 @{
   return &(p->c);
@@ -145,7 +143,7 @@ Now if we want the following hierarchy:
 @end example
 
 @noindent
-we do it like this, taking advantage of the fact that the btree
+we do it like this, taking advantage of the fact that the binary tree
 functions accept @code{void *} values as arguments:
 
 @example
@@ -189,9 +187,9 @@ NULL == ucl_btree_getson(d)
 
 
 @noindent
-The correct way of building btrees is to allocate node structures with a
-function that cleans them up, like @function{calloc}, then use the
-following functions to initialise the fields.  If a structure must be
+The correct way of building binary trees is to allocate node structures
+with a function that cleans them up, like @function{calloc}, then use
+the following functions to initialise the fields.  If a structure is
 recycled, we must reset its fields to zero first.
 
 All the following functions accept @code{void *} values as arguments:
@@ -282,11 +280,16 @@ Return true if the node is a leaf (no brother and no son).
 @end deftypefn
 
 
+@deftypefn {Inline Function} ucl_bool_t ucl_btree_is_root (void * @var{self})
+Return true if the node is the root of a binary tree: it has no dad.
+@end deftypefn
+
+
 @c ------------------------------------------------------------
 
 @c page
 @node btree removing
-@subsection Removing elements from a btree
+@subsection Removing elements
 
 
 @noindent
@@ -337,11 +340,30 @@ return @code{void *} values; internally these pointers are cast to
 @code{ucl_node_t}.
 
 
-@deftypefun {void *} ucl_btree_find_value (void * @var{root}, ucl_comparison_t @var{compar})
+@deftypefun {void *} ucl_btree_find_value (void * @var{root}, void * @var{value}, ucl_comparison_t @var{compar})
 Interpret @var{root} as a pointer to the root node of a btree (whose dad
-is @null{}) and find
-@end deftypefun
+is @null{}) and find a node equal to @var{value} according to the
+comparison closure.  @var{compar} is invoked like this:
 
+@example
+@var{compar}.func(@var{compar}.data, @var{value}, node);
+@end example
+
+@noindent
+where @code{node} is the current node; if the return value is:
+
+@table @asis
+@item zero
+the node is returned;
+@item negative
+the search goes on in the son subtree;
+@item positive
+the search goes on in the bro subtree;
+@end table
+
+@noindent
+if @var{value} is not found, the return value is @null{}.
+@end deftypefun
 
 
 @c ------------------------------------------------------------

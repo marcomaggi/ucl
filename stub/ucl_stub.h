@@ -9,17 +9,6 @@
  ** --------------------------------------------------------- */
 
 #include <stub_ucl_btree.h>
-#include <stub_ucl.h>
-#include <stub_ucl_callback.h>
-#include <stub_ucl_circular.h>
-#include <stub_ucl_graph.h>
-#include <stub_ucl_hash.h>
-#include <stub_ucl_heap.h>
-#include <stub_ucl_list.h>
-#include <stub_ucl_map.h>
-#include <stub_ucl_memory.h>
-#include <stub_ucl_tree.h>
-#include <stub_ucl_vector.h>
 
 
 /** ------------------------------------------------------------ 

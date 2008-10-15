@@ -138,24 +138,25 @@ ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
    Written by Douglas C. Schmidt (schmidt@ics.uci.edu).
    Modified by Marco Maggi (marcomaggi@gna.org).
 
-   The GNU C Library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
+   The GNU  C Library is free  software; you can  redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public License as
+   published by the Free Software  Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   The GNU C Library is distributed  in the hope that it will be useful,
+   but  WITHOUT  ANY WARRANTY;  without  even  the  implied warranty  of
+   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    Lesser General Public License for more details.
 
-   You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library; if not, write to the Free
-   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+   You  should have received  a copy  of the  GNU Lesser  General Public
+   License  along with  the GNU  C Library;  if not,  write to  the Free
+   Software  Foundation, Inc., 59  Temple Place,  Suite 330,  Boston, MA
    02111-1307 USA.  */
 
-/* If you consider tuning this algorithm, you should consult first:
-   Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
-   Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
+/* If  you consider  tuning this  algorithm, you  should  consult first:
+   Engineering  a sort  function; Jon  Bentley and  M.  Douglas McIlroy;
+   Software  -  Practice  and   Experience;  Vol.  23  (11),  1249-1265,
+   1993.  */
 
 #include <alloca.h>
 #include <limits.h>
@@ -223,7 +224,7 @@ typedef struct
       stack size is needed (actually O(1) in this case)!  */
 
 stub(2007-09-14-20-54-48) void
-ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp)
+ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_value_comparison_t cmp)
 {
   register char *	base_ptr = (char *) pbase;
   const size_t		max_thresh = MAX_THRESH * size;

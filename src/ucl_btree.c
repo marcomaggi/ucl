@@ -50,7 +50,34 @@
 
 
 /** ------------------------------------------------------------
- ** Traversing.
+ ** Finding values.
+ ** ----------------------------------------------------------*/
+
+stub(2008-10-15-10-49-33) __attribute__((__nonnull__,__pure__)) void *
+ucl_btree_find_value (void * node, void * value, ucl_comparison_t compar)
+{
+  ucl_node_t	N = node;
+  int		v;
+
+
+  while (NULL != node)
+    {
+      v = compar.func(compar.data, value, N);
+      if (v > 0)
+	N = N->bro;
+      else if (v < 0)
+	N = N->son;
+      else
+	return N;
+    }
+  return NULL;
+}
+
+/* ------------------------------------------------------------ */
+
+
+/** ------------------------------------------------------------
+ ** Traversing, finding node.
  ** ----------------------------------------------------------*/
 
 stub(2005-09-23-18-09-13) __attribute__((__nonnull__,__pure__)) void *
@@ -565,7 +592,7 @@ ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_nod
  ** Subtree iterators.
  ** ----------------------------------------------------------*/
 
-static void __attribute__((__nonnull__))
+static void __attribute__((__nonnull__,__hot__))
 ucl_btree_subtree_generic_next (ucl_iterator_t iterator)
 {
   iterator->iterator = (iterator->iterator == iterator->internal1.pointer)?

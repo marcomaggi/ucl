@@ -514,17 +514,21 @@ test_whole_iterations (void)
  ** Test subtree and range iterations.
  ** ----------------------------------------------------------*/
 
-#define subtree_iteration_with_iterator(BTREE,ITERATOR_START,ROOT,EXPECTED,BEGIN,END) \
-  _subtree_iteration_with_iterator(__func__,__LINE__,BTREE,ITERATOR_START,ROOT,EXPECTED,BEGIN,END)
+#define subtree_iteration_with_iterator(BTREE,ITERATOR_START,ROOT,EXPECTED) \
+  _subtree_iteration_with_iterator(__func__,__LINE__,BTREE,ITERATOR_START,ROOT,EXPECTED)
 
 static void
 _subtree_iteration_with_iterator (const char * funcname, int linenum,
 				  node_t * btree, iterator_start_fun_t iterator_start,
 				  int root,
-				  const int * expected, int begin, int end)
+				  const int * expected)
 {
   ucl_iterator_t iterator;
-  int		result[13] = { -1 };
+  int		result[14] = { -1, -1, -1,
+			       -1, -1, -1,
+			       -1, -1, -1,
+			       -1, -1, -1,
+			       -1, -1 };
   int		i=0;
   node_t	cur;
 
@@ -535,7 +539,7 @@ _subtree_iteration_with_iterator (const char * funcname, int linenum,
       cur = ucl_iterator_ptr(iterator);
       result[++i] = cur->idx;
     }
-  _validate_iteration_result_range(funcname,linenum,result,expected,begin,end);
+  _validate_iteration_result_range(funcname,linenum,result,expected,0,13);
 }
 static void
 test_subtree_and_range_iterations (void)
@@ -553,20 +557,203 @@ test_subtree_and_range_iterations (void)
 		   |     |  |
 		   2     6  8
   */
-  { int	expected[13] = { -1, 1, 2, 3, 4 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,1,expected,1,4); }
-  { int	expected[13] = { -1, 2 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,2,expected,1,1); }
-  { int	expected[13] = { -1, 2, 3, 4 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,3,expected,1,1); }
-  { int	expected[13] = { -1, 4 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,4,expected,1,1); }
-  { int	expected[13] = { -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,5,expected,1,12); }
-  { int	expected[13] = { -1, 6 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,6,expected,1,1); }
-  { int	expected[13] = { -1, 6, 7, 8, 9 };
-    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,7,expected,1,12); }
+  { int	expected[14] = { -1, +1, +2, +3, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,2,expected); }
+  { int	expected[14] = { -1, +2, +3, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,4,expected); }
+  { int	expected[14] = { -1, +1, +2, +3, +4, +5, +6, +7, +8, +9, 10, 11, 12, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,6,expected); }
+  { int	expected[14] = { -1, +6, +7, +8, +9, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,8,expected); }
+  { int	expected[14] = { -1, +8, +9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,9,expected); }
+  { int	expected[14] = { -1, +6, +7, +8, +9, 10, 11, 12, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,11,expected); }
+  { int	expected[14] = { -1, 11, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder,12,expected); }
+
+/* ------------------------------------------------------------ */
+
+  /* Preorder
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[14] = { -1, +1, +3, +2, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,2,expected); }
+  { int	expected[14] = { -1, +3, +2, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,4,expected); }
+  { int	expected[14] = { -1, +5, +1, +3, +2, +4, 10, +7, +6, +9, +8, 12, 11, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,6,expected); }
+  { int	expected[14] = { -1, +7, +6, +9, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,8,expected); }
+  { int	expected[14] = { -1, +9, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,9,expected); }
+  { int	expected[14] = { -1, 10, +7, +6, +9, +8, 12, 11, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,11,expected); }
+  { int	expected[14] = { -1, 12, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder,12,expected); }
+
+/* ------------------------------------------------------------ */
+
+  /* Postorder
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[14] = { -1, +2, +4, +3, +1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,2,expected); }
+  { int	expected[14] = { -1, +2, +4, +3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,4,expected); }
+  { int	expected[14] = { -1, +2, +4, +3, +1, +6, +8, +9, +7, 11, 12, 10, +5, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,6,expected); }
+  { int	expected[14] = { -1, +6, +8, +9, +7, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,8,expected); }
+  { int	expected[14] = { -1, +8, +9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,9,expected); }
+  { int	expected[14] = { -1, +6, +8, +9, +7, 11, 12, 10, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,11,expected); }
+  { int	expected[14] = { -1, 11, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder,12,expected); }
+
+/* ------------------------------------------------------------ */
+
+  /* Inorder backward
+
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[14] = { -1, +4, +3, +2, +1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,2,expected); }
+  { int	expected[14] = { -1, +4, +3, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,4,expected); }
+  { int	expected[14] = { -1, 12, 11, 10, +9, +8, +7, +6, +5, +4, +3, +2, +1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,6,expected); }
+  { int	expected[14] = { -1, +9, +8, +7, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,8,expected); }
+  { int	expected[14] = { -1, +9, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,9,expected); }
+  { int	expected[14] = { -1, 12, 11, 10, +9, +8, +7, +6, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,11,expected); }
+  { int	expected[14] = { -1, 12, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_inorder_backward,12,expected); }
+
+/* ------------------------------------------------------------ */
+
+  /* Preorder backward
+
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[14] = { -1, +1, +3, +4, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,2,expected); }
+  { int	expected[14] = { -1, +3, +4, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,4,expected); }
+  { int	expected[14] = { -1, +5, 10, 12, 11, +7, +9, +8, +6, +1, +3, +4, +2, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,6,expected); }
+  { int	expected[14] = { -1, +7, +9, +8, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,8,expected); }
+  { int	expected[14] = { -1, +9, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,9,expected); }
+  { int	expected[14] = { -1, 10, 12, 11, +7, +9, +8, +6, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,11,expected); }
+  { int	expected[14] = { -1, 12, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_preorder_backward,12,expected); }
+
+/* ------------------------------------------------------------ */
+
+  /* Postorder backward
+
+		5-------10----12
+		|        |     |
+		1--3--4  7--9 11
+		   |     |  |
+		   2     6  8
+  */
+  { int	expected[14] = { -1, +4, +2, +3, +1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,1,expected); }
+  { int	expected[14] = { -1, +2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,2,expected); }
+  { int	expected[14] = { -1, +4, +2, +3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,3,expected); }
+  { int	expected[14] = { -1, +4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,4,expected); }
+  { int	expected[14] = { -1, 11, 12, +8, +9, +6, +7, 10, +4, +2, +3, +1, +5, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,5,expected); }
+  { int	expected[14] = { -1, +6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,6,expected); }
+  { int	expected[14] = { -1, +8, +9, +6, +7, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,7,expected); }
+  { int	expected[14] = { -1, +8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,8,expected); }
+  { int	expected[14] = { -1, +8, +9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,9,expected); }
+  { int	expected[14] = { -1, 11, 12, +8, +9, +6, +7, 10, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,10,expected); }
+  { int	expected[14] = { -1, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,11,expected); }
+  { int	expected[14] = { -1, 11, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    subtree_iteration_with_iterator(btree,ucl_btree_subtree_iterator_postorder_backward,12,expected); }
 
 /* ------------------------------------------------------------ */
 

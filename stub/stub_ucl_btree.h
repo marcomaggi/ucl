@@ -12,6 +12,8 @@
 
 #ifndef UCL_ENABLE_STUB
 
+ucl_decl void * ucl_btree_find_value (void * node, void * value, ucl_comparison_t compar)
+	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_find_leftmost (void * node)
 	__attribute__((__nonnull__,__pure__));
 ucl_decl void * ucl_btree_find_rightmost (void * node)
@@ -76,6 +78,7 @@ ucl_decl void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t ite
 /* Function type declarations for the "btree" module.
    A typedef for each function in the module. */
 
+typedef void * ucl_btree_find_value_proto_t (void * node, void * value, ucl_comparison_t compar);
 typedef void * ucl_btree_find_leftmost_proto_t (void * node);
 typedef void * ucl_btree_find_rightmost_proto_t (void * node);
 typedef void * ucl_btree_find_deepest_son_proto_t (void * node);
@@ -140,6 +143,7 @@ typedef struct ucl_btree_stub_table_t {
   ucl_btree_subtree_iterator_levelorder_proto_t * stub_ucl_btree_subtree_iterator_levelorder;
   ucl_btree_subtree_iterator_levelorder_backward_proto_t * stub_ucl_btree_subtree_iterator_levelorder_backward;
   ucl_btree_find_root_proto_t         * stub_ucl_btree_find_root;
+  ucl_btree_find_value_proto_t        * stub_ucl_btree_find_value;
 } ucl_btree_stub_table_t;
 
 /* Stub table macros definition for the "btree" module.
@@ -180,6 +184,7 @@ ucl_decl const ucl_btree_stub_table_t   ucl_btree_stub_table;
 #define ucl_btree_subtree_iterator_levelorder  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder)
 #define ucl_btree_subtree_iterator_levelorder_backward  ((ucl_btree_stub_table_p)->stub_ucl_btree_subtree_iterator_levelorder_backward)
 #define ucl_btree_find_root        ((ucl_btree_stub_table_p)->stub_ucl_btree_find_root)
+#define ucl_btree_find_value       ((ucl_btree_stub_table_p)->stub_ucl_btree_find_value)
 
 #endif /* defined UCL_ENABLE_STUB */
 

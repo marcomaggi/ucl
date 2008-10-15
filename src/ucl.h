@@ -106,22 +106,6 @@ typedef ucl_embedded_node_tag_t *	ucl_embedded_node_t;
 
 /* ------------------------------------------------------------ */
 
-typedef struct ucl_circular_link_t {
-  struct ucl_circular_link_t *	next;
-  struct ucl_circular_link_t *	prev;
-  ucl_value_t			val;
-} ucl_circular_link_t;
-
-typedef struct ucl_circular_struct_t {
-  ucl_circular_link_t *	current_link;
-  size_t		size;
-  ucl_comparison_t	compar;
-} ucl_circular_struct_t;
-
-typedef ucl_circular_struct_t ucl_circular_t[1];
-
-/* ------------------------------------------------------------ */
-
 typedef struct ucl_heap_tag_t {
   size_t		size;
   ucl_node_t		root_p;
@@ -169,7 +153,7 @@ typedef struct ucl_hash_entry_t {
 typedef struct ucl_hash_table_tag_t {
   ucl_vector_t		buckets;
   ucl_hash_t		hash;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   size_t		size;
   size_t		number_of_used_buckets;
 } ucl_hash_table_tag_t;
@@ -461,17 +445,17 @@ typedef struct ucl_graph_dfs_item_t {
  ** Binary tree functions: setters.
  ** ----------------------------------------------------------*/
 
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_btree_set_bro (void * self, void * bro)
 {
   ((ucl_node_t)self)->bro = bro;
 }
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_btree_set_son (void * self, void * son)
 {
   ((ucl_node_t)self)->son = son;
 }
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_btree_set_dad (void * self, void * dad)
 {
   ((ucl_node_t)self)->dad = dad;
@@ -536,7 +520,14 @@ ucl_btree_is_leaf (void * _self)
 {
   ucl_node_t	self = _self;
 
-  return ((NULL == self->bro) %% (NULL == self->son));
+  return ((NULL == self->bro) && (NULL == self->son));
+}
+ucl_inline_pure ucl_bool_t
+ucl_btree_is_root (void * _self)
+{
+  ucl_node_t	self = _self;
+
+  return (NULL == self->dad);
 }
 
 /* ------------------------------------------------------------ */
@@ -646,17 +637,17 @@ ucl_btree_first_levelorder_backward (void * root_node)
  ** Tree functions: setters.
  ** ----------------------------------------------------------*/
 
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_tree_set_next (void * self, void * next)
 {
   ucl_btree_set_bro(self,next);
 }
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_tree_set_son (void * self, void * son)
 {
   ucl_btree_set_son(self,son);
 }
-ucl_inline_nonnull void
+ucl_inline_nonnull1 void
 ucl_tree_set_prev (void * self, void * prev)
 {
   ucl_btree_set_dad(self,prev);
@@ -710,62 +701,6 @@ ucl_inline_pure size_t
 ucl_heap_size (const ucl_heap_t this)
 {
   return this->size;
-}
-
-/* ------------------------------------------------------------ */
-
-
-/** ------------------------------------------------------------
- ** Circular list functions.
- ** ----------------------------------------------------------*/
-
-ucl_inline void
-ucl_circular_backward (ucl_circular_t this, int times)
-{
-  ucl_circular_forward(this, -times);
-}
-ucl_inline void
-ucl_circular_constructor (ucl_circular_t this)
-{
-  ucl_struct_clean(this, ucl_circular_t);
-}
-ucl_inline void
-ucl_circular_destructor (ucl_circular_t this)
-{
-  ucl_struct_clean(this, ucl_circular_t);
-}
-ucl_inline size_t
-ucl_circular_size (ucl_circular_t this)
-{
-  return this->size;
-}
-ucl_inline ucl_circular_link_t *
-ucl_circular_current (ucl_circular_t this)
-{
-  return this->current_link;
-}
-
-/* ------------------------------------------------------------ */
-
-ucl_inline ucl_value_t
-ucl_circular_data (ucl_circular_link_t * link_p)
-{
-  return link_p->val;
-}
-ucl_inline ucl_value_t
-ucl_circular_getval (ucl_circular_link_t * link_p)
-{
-  return link_p->val;
-}
-ucl_inline void
-ucl_circular_setval (ucl_circular_link_t * link_p, ucl_value_t newval)
-{
-  link_p->val = newval;
-}
-ucl_inline void
-ucl_circular_set_compar (ucl_circular_t this, ucl_comparison_t compar)
-{
-  this->compar = compar;
 }
 
 /* ------------------------------------------------------------ */

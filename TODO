@@ -10,7 +10,6 @@
   to the iterator function that stops the path when going upward.
 * Write the btree range iterators.
 
-* Test the btree subtree iterators.
 * Test the btree range iterators.
 
 ## ------------------------------------------------------------

@@ -12,7 +12,7 @@
 
 #ifndef UCL_ENABLE_STUB
 
-ucl_decl void ucl_hash_initialise (ucl_hash_table_t this, ucl_comparison_t compar, ucl_hash_t hash);
+ucl_decl void ucl_hash_initialise (ucl_hash_table_t this, ucl_value_comparison_t compar, ucl_hash_t hash);
 ucl_decl void ucl_hash_constructor (ucl_hash_table_t this);
 ucl_decl void ucl_hash_destructor (ucl_hash_table_t this);
 ucl_decl void ucl_hash_insert (ucl_hash_table_t this, ucl_hash_entry_t *entry_p);
@@ -31,7 +31,7 @@ ucl_decl double ucl_hash_average_search_distance (const ucl_hash_table_t this);
 /* Function type declarations for the "hash" module.
    A typedef for each function in the module. */
 
-typedef void ucl_hash_initialise_proto_t (ucl_hash_table_t this, ucl_comparison_t compar, ucl_hash_t hash);
+typedef void ucl_hash_initialise_proto_t (ucl_hash_table_t this, ucl_value_comparison_t compar, ucl_hash_t hash);
 typedef void ucl_hash_constructor_proto_t (ucl_hash_table_t this);
 typedef void ucl_hash_destructor_proto_t (ucl_hash_table_t this);
 typedef void ucl_hash_insert_proto_t (ucl_hash_table_t this, ucl_hash_entry_t *entry_p);

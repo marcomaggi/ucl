@@ -36,7 +36,8 @@ const ucl_btree_stub_table_t ucl_btree_stub_table = {
   ucl_btree_subtree_iterator_postorder_backward,
   ucl_btree_subtree_iterator_levelorder,
   ucl_btree_subtree_iterator_levelorder_backward,
-  ucl_btree_find_root
+  ucl_btree_find_root,
+  ucl_btree_find_value
 };
 
 

@@ -59,7 +59,7 @@ static ucl_iterator_next_t	iterator_next;
  ** ----------------------------------------------------------*/
 
 stub(2007-11-12-10-03-54) void
-ucl_hash_initialise (ucl_hash_table_t this, ucl_comparison_t compar, ucl_hash_t hash)
+ucl_hash_initialise (ucl_hash_table_t this, ucl_value_comparison_t compar, ucl_hash_t hash)
 {
   assert(this);
   assert(hash.func);
@@ -231,9 +231,9 @@ ucl_hash_extract (ucl_hash_table_t this, ucl_hash_entry_t *entry_p)
 stub(2005-09-23-18-10-50) ucl_hash_entry_t *
 ucl_hash_find (const ucl_hash_table_t this, const ucl_value_t key)
 {
-  entry_t **		bucket_p;
-  entry_t *		entry_in_list_p;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
+  entry_t **	bucket_p;
+  entry_t *	entry_in_list_p;
 
 
   assert(this);
