@@ -1,0 +1,140 @@
+
+		 Useless Containers Library
+		 ==========================
+
+		       by Marco Maggi
+
+Topics
+------
+
+   1. Overview
+   2. License
+   3. Usage
+   4. Make and install
+   A. Credits
+   B. Bug reports
+   C. Resources
+
+
+1. Overview
+-----------
+
+The Useless Containers Library (UCL) is an implementation of
+generic  data  type  containers  for the  C  language.   The
+containers are:
+
+* list, double linked list;
+
+* circular, a circular double linked list;
+
+* vector,  an   array  with  arrangements   that  allow  the
+  minimisation of memory reallocations;
+
+* map,  an  AVL  tree   used  to  implement  an  associative
+  container;
+
+* tree, a not binary tree structure;
+
+* heap, a map used as priority queue;
+
+* graph, one day it will be implemented.
+
+  The library  is developed  and tested under  the Linux+GNU
+system, requires  the GNU C  library and compiles  fine with
+the GNU C compiler ("-std=c99 -pedantic" switches).
+
+
+2 License
+---------
+
+Copyright (c) 2001-2008 Marco Maggi. 
+
+This  program  is free  software:  you  can redistribute  it
+and/or modify it  under the terms of the  GNU General Public
+License as published by the Free Software Foundation, either
+version  3 of  the License,  or (at  your option)  any later
+version.
+
+This  program is  distributed in  the hope  that it  will be
+useful, but  WITHOUT ANY WARRANTY; without  even the implied
+warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
+PURPOSE.   See  the  GNU  General Public  License  for  more
+details.
+
+You should  have received a  copy of the GNU  General Public
+License   along   with    this   program.    If   not,   see
+<http://www.gnu.org/licenses/>.
+
+
+2. Usage
+--------
+
+Read the documentation in Texinfo format.
+
+  The  library can  be  built for  both  static linking  and
+dynamic linking.  There are containers that depends on other
+containers.  It  is enough to  include the main  header file
+"ucl.h".
+
+  All the  function names and  data types are  prefixed with
+"ucl_".
+
+
+3. Make and install
+-------------------
+
+Do this:
+
+    $ cd ucl-xxx
+    $ mkdir "=build"
+    $ ../configure [options]
+    $ make
+    $ make install
+    
+to test the shared, the static and the stub library:
+
+    $ make test
+    $ make static-tests
+    $ make stub-tests
+
+  Warning:  the  code makes  (sometimes  heavy)  use of  the
+"assert()" macro; to exclude them use the "--disable-assert"
+option of "configure".
+
+
+A. Credits
+----------
+
+The  stuff was  written  by Marco  Maggi.   If this  package
+exists it's because of the  great GNU software tools that he
+uses all the time.
+
+  The last  portion of "src/ucl.c" is a  modified version of
+"stdlib/qsort.c" from  the GNU C Library version  2.4; it is
+Copyright  (C)  1991,1992,1996,1997,1999,2004 Free  Software
+Foundation, Inc.
+
+
+B. Bug reports
+--------------
+
+A bug in UCL is  my fault only. Bug reports are appreciated,
+register them at the GNA!  site.
+
+
+C. Resources
+------------
+
+The GNU Project software can be found here:
+
+		   <http://www.gnu.org/>
+
+the latest version of this package should be found here:
+
+	       <http://gna.org/projects/ucl/>
+
+
+### end of file
+# Local Variables:
+# mode: text
+# End:

@@ -1,0 +1,81 @@
+
+		       Useless Containers Library
+		       ==========================
+
+			  List of things to do
+			  --------------------
+
+
+* Do the subtree binary tree levelorder iterator, adding a root argument
+  to the iterator function that stops the path when going upward.
+* Write the btree range iterators.
+
+* Test the btree range iterators.
+
+## ------------------------------------------------------------
+
+0.9
+---
+
+* Understand  why   in  hell   when  upgrading  the   Slackware  package
+  'doinst.sh' is executed twice.
+
+## ------------------------------------------------------------
+
+Candidates
+----------
+
+* Look for soft heaps. 
+* Look for Splay trees.
+
+
+Graph
+-----
+
+* Tests.
+* Path-between-nodes existence predicate after DFS. 
+* Add algorithms
+
+   - connected graph  predicate (DFS-not-honor on a node,  then check if
+     all the nodes have been touched);
+
+   - acyclic graph predicate;
+
+   - linearisation of nodes for  DAGs (directed acyclic graphs): build a
+     string of  nodes in which  the order left-to-right honors  the link
+     horders (based upon DFS-honor);
+
+   ... see the book on graph algorithms
+
+* Document algorithms.
+
+
+Tree
+----
+
+* Write the  levelorder iterator for  the tree container? Also  known as
+  breadth first.
+
+* Write the "string"  iterator for the tree. An  iterator whose value is
+  the string of nodes from the root to the currently selected one.
+
+
+Binary tree
+-----------
+
+* Write the "string" iterator for the binary tree?
+
+
+Heap
+----
+
+* Tests for merge.
+
+
+### end of file
+# Local Variables:
+# mode: text
+# coding: iso-latin-1-unix
+# fill-column: 72
+# paragraph-start: "*"
+# End:
