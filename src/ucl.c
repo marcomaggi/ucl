@@ -102,7 +102,6 @@ ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
  ** Quick sort.
  ** ----------------------------------------------------------------- */
 
-
 /* If  you consider  tuning this  algorithm, you  should  consult first:
    Engineering  a sort function;  Jon Bentley  and M.   Douglas McIlroy;
    Software  -  Practice  and  Experience;  Vol.   23  (11),  1249-1265,
@@ -117,9 +116,9 @@ ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
 #define SWAP(a, b, size)			\
   do {						\
     register size_t __size = (size);		\
-    register char *__a = (a), *__b = (b);	\
+    register uint8_t *__a = (a), *__b = (b);	\
     do {					\
-      char __tmp = *__a;			\
+      uint8_t __tmp = *__a;			\
       *__a++ = *__b;				\
       *__b++ = __tmp;				\
     } while (--__size > 0);			\
@@ -133,8 +132,8 @@ ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
 /* Stack   node  declarations  used   to  store   unfulfilled  partition
    obligations. */
 typedef struct {
-  char *lo;
-  char *hi;
+  uint8_t *lo;
+  uint8_t *hi;
 } stack_node;
 
 /* The next 4 #defines implement a very fast in-line stack abstraction. */
@@ -174,7 +173,155 @@ typedef struct {
 
 void
 ucl_quicksort (void *const pbase, size_t total_elems, size_t size,
-	       ucl_comparison_t cmp)
+	       ucl_value_comparison_t cmp)
+{
+  ucl_value_t	base = { .bytes = (uint8_t *)pbase };
+  const size_t	max_thresh = MAX_THRESH * size;
+  ucl_value_t	a, b;
+
+
+  if (total_elems == 0)
+    /* Avoid lossage with unsigned arithmetic below.  */
+    return;
+
+  if (total_elems > MAX_THRESH) {
+    ucl_value_t lo = { .bytes = base.bytes };
+    ucl_value_t hi = { .bytes = &lo.bytes[size * (total_elems - 1)] };
+    stack_node stack[STACK_SIZE];
+    stack_node *top = stack;
+
+    PUSH (NULL, NULL);
+
+    while (STACK_NOT_EMPTY) {
+      ucl_value_t left;
+      ucl_value_t right;
+
+      /* Select median value  from among LO, MID, and  HI.  Rearrange LO
+	 and  HI  so the  three  values  are  sorted.  This  lowers  the
+	 probability of  picking a pathological pivot value  and skips a
+	 comparison for both the LEFT.BYTES and RIGHT.BYTES in the while
+	 loops. */
+
+      ucl_value_t mid = { .bytes = lo.bytes + size * ((hi.bytes - lo.bytes) / size >> 1) };
+
+      if (cmp.func(cmp.data, mid, lo) < 0)
+	SWAP (mid.bytes, lo.bytes, size);
+      if (cmp.func(cmp.data, hi, mid) < 0)
+	SWAP (mid.bytes, hi.bytes, size);
+      else
+	goto jump_over;
+      if (cmp.func(cmp.data, mid, lo) < 0)
+	SWAP (mid.bytes, lo.bytes, size);
+    jump_over:;
+      left.bytes  = lo.bytes + size;
+      right.bytes = hi.bytes - size;
+
+      /* Here's the famous ``collapse the walls'' section of quicksort.
+	 Gotta like those tight inner loops!  They are the main reason
+	 that this algorithm runs much faster than others. */
+      do {
+	while (cmp.func(cmp.data, left, mid) < 0) {
+	  left.bytes += size;
+	  a.bytes = left.bytes;
+	}
+	while (cmp.func(cmp.data, mid, right) < 0) {
+	  right.bytes -= size;
+	  b.bytes = right.bytes;
+	}
+	if (left.bytes < right.bytes) {
+	  SWAP (left.bytes, right.bytes, size);
+	  if (mid.bytes == left.bytes)
+	    mid.bytes = right.bytes;
+	  else if (mid.bytes == right.bytes)
+	    mid.bytes = left.bytes;
+	  left.bytes  += size;
+	  right.bytes -= size;
+	} else if (left.bytes == right.bytes) {
+	  left.bytes  += size;
+	  right.bytes -= size;
+	  break;
+	}
+      } while (left.bytes <= right.bytes);
+
+      /* Set up  pointers for  next iteration.  First  determine whether
+	 left and right partitions are below the threshold size.  If so,
+	 ignore  one or  both.  Otherwise,  push the  larger partition's
+	 bounds on the stack and continue sorting the smaller one. */
+
+      if ((size_t) (right.bytes - lo.bytes) <= max_thresh) {
+	if ((size_t) (hi.bytes - left.bytes) <= max_thresh)
+	  /* Ignore both small partitions. */
+	  POP (lo.bytes, hi.bytes);
+	else
+	  /* Ignore small left partition. */
+	  lo.bytes = left.bytes;
+      } else if ((size_t) (hi.bytes - left.bytes) <= max_thresh)
+	/* Ignore small right partition. */
+	hi.bytes = right.bytes;
+      else if ((right.bytes - lo.bytes) > (hi.bytes - left.bytes)) {
+	/* Push larger left partition indices. */
+	PUSH (lo.bytes, right.bytes);
+	lo.bytes = left.bytes;
+      } else {
+	/* Push larger right partition indices. */
+	PUSH (left.bytes, hi.bytes);
+	hi.bytes = right.bytes;
+      }
+    }
+  }
+
+  /* Once the BASE.BYTES array is partially sorted by quicksort the rest
+     is completely sorted using  insertion sort, since this is efficient
+     for  partitions below  MAX_THRESH  size. BASE.BYTES  points to  the
+     beginning of the array to sort, and END_PTR points at the very last
+     element in the array (*not* one beyond it!). */
+
+#define min(x, y) ((x) < (y) ? (x) : (y))
+
+  {
+    uint8_t *const end_ptr = &base.bytes[size * (total_elems - 1)];
+    uint8_t *thresh = min(end_ptr, base.bytes + max_thresh);
+    ucl_value_t run, tmp = base;
+
+    /* Find  smallest element  in first  threshold and  place it  at the
+       array's beginning.   This is the smallest array  element, and the
+       operation speeds up insertion sort's inner loop. */
+    for (run.bytes = tmp.bytes + size; run.bytes <= thresh; run.bytes += size) {
+      if (cmp.func(cmp.data, run, tmp) < 0)
+	tmp.bytes = run.bytes;
+    }
+    if (tmp.bytes != base.bytes)
+      SWAP (tmp.bytes, base.bytes, size);
+
+    /* Insertion    sort,   running    from    left-hand-side   up    to
+       right-hand-side.  */
+    run.bytes = base.bytes + size;
+    while ((run.bytes += size) <= end_ptr) {
+      tmp.bytes = run.bytes - size;
+      while (cmp.func(cmp.data, run, tmp) < 0) {
+	tmp.bytes -= size;
+	b.bytes = (void *) tmp.bytes;
+      }
+      tmp.bytes += size;
+      if (tmp.bytes != run.bytes) {
+	uint8_t *trav;
+	trav = run.bytes + size;
+	while (--trav >= run.bytes) {
+	  uint8_t c = *trav;
+	  uint8_t *hi, *lo;
+	  for (hi = lo = trav; (lo -= size) >= tmp.bytes; hi = lo)
+	    *hi = *lo;
+	  *hi = c;
+	}
+      }
+    }
+  }
+}
+
+#if 0
+void
+ucl_quicksort (void *const pbase, size_t total_elems, size_t size,
+	       ucl_value_comparison_t cmp)
 {
   register char *	base_ptr = (char *) pbase;
   const size_t		max_thresh = MAX_THRESH * size;
@@ -319,5 +466,7 @@ ucl_quicksort (void *const pbase, size_t total_elems, size_t size,
     }
   }
 }
+#endif
+
 
 /* end of file */

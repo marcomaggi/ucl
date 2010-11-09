@@ -331,17 +331,6 @@ High level functions
 @chapter Overview of the library
 
 
-@menu
-* overview using::              Using the library.
-* overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
-* overview pkgconfig::          Using pkgconfig to load @ucl{}.
-* overview error::              Error handling.
-* overview size::               Structures size.
-* overview const::              Constification.
-@end menu
-
-
-@noindent
 This container library may be thought of as ``low level''.  Methods are
 provided to handle collected data, but no container can be used without
 wrapping it in a module whose functions ``know'' how to deal with the
@@ -359,14 +348,22 @@ structure and we will come back later to take it out.
 
 All the function and data type names are prefixed with @code{ucl_}.
 There is no error reporting system: it is our responsibility to validate
-function's arguments using the appropriate functions.  With the single
-exception of the vector module: @ucl{} does no memory allocation.
+function's arguments using the appropriate @ucl{} functions.  With the
+single exception of the vector module: @ucl{} does no memory allocation.
 
 The library is developed and tested under the Linux+@gnu{} system and
 officially it supports only the @gnu{} infrastructure: requires the
 @gnu{} C library and compiles fine with the @gnu{} C compiler
 (@code{-std=c99 -pedantic} switches).
 
+@menu
+* overview using::              Using the library.
+* overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
+* overview pkgconfig::          Using pkgconfig to load @ucl{}.
+* overview error::              Error handling.
+* overview size::               Structures size.
+* overview const::              Constification.
+@end menu
 
 @c ------------------------------------------------------------
 
@@ -381,14 +378,11 @@ officially it supports only the @gnu{} infrastructure: requires the
 
 @include overview-using.texiinc
 
-@c ------------------------------------------------------------
-
 @c page
 @node overview error
 @section Error handling
 
 
-@noindent
 The design of methods tries to be the one that maximises the number of
 functions that cannot fail.  This sometimes leads to ``strange'' or
 ``dangerous'' methods: functions that will cause the application to
@@ -400,14 +394,11 @@ For example: if a vector index is out of range, we have to make sure not
 to hand it to an insertion/extraction method; we have to test it first
 and make use of it only if the test result is good.
 
-@c ------------------------------------------------------------
-
 @c page
 @node overview size
 @section Structures size
 
 
-@noindent
 Under the tests directory of the source tree there is a small program
 that links to the library and prints the size of the @ucl{} data
 structures.  On a @code{i686-pc-linux-gnu} the output is:
@@ -455,14 +446,11 @@ ucl_graph_node_t        28
 ucl_graph_link_t        28
 @end example
 
-@c ------------------------------------------------------------
-
 @c page
 @node overview const
 @section Constification
 
 
-@noindent
 This library has the need to write functions, conceptually, like this
 one:
 
@@ -516,8 +504,6 @@ the_function (const data_type_t * p)
 
 It is not beautiful.  But the ugliness is only in the @ucl{} code, the
 user does not see it.
-
-@c ------------------------------------------------------------
 
 @c page
 @node memory

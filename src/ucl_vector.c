@@ -217,7 +217,7 @@ PRINT_POINTER_INSPECTION (ucl_vector_t self, const char *title)
 \t\t(first_used < last_used)? = %s", title,
 	self->first_allocated_slot, self->first_used_slot,
 	self->last_allocated_slot, self->last_used_slot,
-	question(self->first_used_slot < self->last_used_slot));
+	debug_question(self->first_used_slot < self->last_used_slot));
 }
 #else
 #  define PRINT_SLOT_INSPECTION(VECTOR, TITLE)		/* empty */
@@ -287,9 +287,10 @@ ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
 
   config->allocator.alloc(config->allocator.data, &p, number_of_bytes);
   assert(p);
+  self->slot_dimension		= dim;
   self->step_up			= dim * config->step_up;
   self->step_down		= dim * config->step_down;
-  self->size_of_padding_area	= dim * config->step_up;
+  self->size_of_padding_area	= dim * config->size_of_padding_area;
   self->allocator		= config->allocator;
   self->compar			= config->compar;
   self->first_allocated_slot	= p;
@@ -551,8 +552,8 @@ ucl_vector_insert (ucl_vector_t self, void *_pointer_to_slot_p)
   ASSERT_INVARIANTS(self);
   ASSERT_IS_POINTER_TO_NEW_SLOT(self, pointer_to_slot_p);
   debug("room at beg: %s, room at end: %s",
-	question(there_is_room_at_the_beginning(self)),
-	question(there_is_room_at_the_end(self)));
+	debug_question(there_is_room_at_the_beginning(self)),
+	debug_question(there_is_room_at_the_end(self)));
   PRINT_SLOT_INSPECTION(self, "before insertion");
   ASSERT_THERE_IS_ROOM(self);
   if (vector_is_empty(self))
@@ -672,70 +673,70 @@ insert_slot_moving_data_toward_the_end (self, pointer_to_slot_p)
 void *
 ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
 {
-  uint8_t *		p = NULL;
+  ucl_value_t		inner = { .bytes = NULL };
   ucl_vector_index_t	size;
 
-
-  ASSERT_INVARIANTS(self); ASSERT_COMPAR_FUNCTION_IS_SET(self); assert(data_p);
+  ASSERT_INVARIANTS(self);
+  ASSERT_COMPAR_FUNCTION_IS_SET(self);
+  assert(data_p);
 
   size = ucl_vector_size(self);
   if (! size)
-    p = ucl_vector_index_to_new_slot(self, 0);
-  else if (size <= SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH) {
-    ucl_comparison_t	compar = self->compar;
-    debug("linear search (size %u)", size);
-    for (p = self->first_used_slot;
-	 p <= self->last_used_slot;
-	 p += self->slot_dimension) {
-      debug("current %d", *(int *)p);
-      if (compar.func(compar.data, data_p, p) <= 0) {
-	debug("it's it!!");
-	break;
-      }
-    }
-  } else {
-    size_t			i, lower_index_limit, upper_index_limit;
-    size_t			current_index, new_current_index;
-    int			match;
-    ucl_comparison_t	compar = self->compar;
-    debug("binary search (size %u)", size);
-    lower_index_limit	= 0;
-    upper_index_limit	= size-1;
-    /* Doing shift-right-1 on  2*N will return N, on  2*N+1 will return N,
-       too (tested with the [expr] command of TCL). */
-    current_index		= size >> 1;
-    for (i=0; i<size; ++i) {
-      p = ucl_vector_index_to_slot(self, current_index);
-      match = compar.func(compar.data, data_p, p);
-      if (0 == match)
-	break;
-      else if (match < 0) { /* the new item is less */
-	upper_index_limit = current_index - 1;
-	new_current_index = lower_index_limit +
-	  ((current_index - lower_index_limit) >> 1);
-	current_index     = (new_current_index < current_index)?
-	  new_current_index : (new_current_index-1);
-	if (current_index < lower_index_limit) {
-	  debug("lower %d", current_index+1);
-	  p = ucl_vector_index_to_new_slot(self, current_index+1);
+    inner.bytes = ucl_vector_index_to_new_slot(self, 0);
+  else {
+    ucl_value_t	outer = { .bytes = data_p };
+    if (size <= SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH) {
+      ucl_value_comparison_t	compar = self->compar;
+      debug("linear search (size %u)", size);
+      for (inner.bytes = self->first_used_slot;
+	   inner.bytes <= self->last_used_slot;
+	   inner.bytes += self->slot_dimension) {
+	debug("current %d", *(int *)inner.bytes);
+	if (compar.func(compar.data, outer, inner) <= 0) {
+	  debug("it's it!!");
 	  break;
 	}
-      } else { /* match > 0 */ /* the new item is greater */
-	lower_index_limit = current_index + 1;
-	new_current_index = current_index +
-	  ((upper_index_limit - current_index) >> 1);
-	current_index     = (new_current_index > current_index)?
-	  new_current_index : (new_current_index+1);
-	if (current_index > upper_index_limit) {
-	  p = ucl_vector_index_to_new_slot(self, current_index);
-	  debug("upper %d", current_index);
+      }
+    } else {
+      size_t			i, lower_index_limit, upper_index_limit;
+      size_t			current_index, new_current_index;
+      int			match;
+      ucl_value_comparison_t	compar = self->compar;
+      debug("binary search (size %u)", size);
+      lower_index_limit	= 0;
+      upper_index_limit	= size-1;
+      /* Doing shift-right-1 on  2*N will return N, on  2*N+1 will return N,
+	 too (tested with the [expr] command of TCL). */
+      current_index	= size >> 1;
+      for (i=0; i<size; ++i) {
+	inner.bytes = ucl_vector_index_to_slot(self, current_index);
+	match = compar.func(compar.data, outer, inner);
+	if (0 == match)
 	  break;
+	else if (match < 0) { /* the new item is less */
+	  upper_index_limit = current_index - 1;
+	  new_current_index = lower_index_limit + ((current_index - lower_index_limit) >> 1);
+	  current_index = (new_current_index < current_index)? new_current_index : (new_current_index-1);
+	  if (current_index < lower_index_limit) {
+	    debug("lower %d", current_index+1);
+	    inner.bytes = ucl_vector_index_to_new_slot(self, current_index+1);
+	    break;
+	  }
+	} else { /* match > 0 */ /* the new item is greater */
+	  lower_index_limit = current_index + 1;
+	  new_current_index = current_index + ((upper_index_limit - current_index) >> 1);
+	  current_index = (new_current_index > current_index)? new_current_index : (new_current_index+1);
+	  if (current_index > upper_index_limit) {
+	    inner.bytes = ucl_vector_index_to_new_slot(self, current_index);
+	    debug("upper %d", current_index);
+	    break;
+	  }
 	}
       }
     }
   }
-  debug("exiting %p (%d)", p, *((int *)p));
-  return ucl_vector_insert(self, p);
+  debug("exiting %p (%d)", inner.bytes, *((int *)inner.bytes));
+  return ucl_vector_insert(self, inner.bytes);
 }
 
 /** ------------------------------------------------------------
@@ -831,7 +832,7 @@ ucl_vector_size (const ucl_vector_t self)
   return compute_used_slots(self);
 }
 void
-ucl_vector_set_compar (ucl_vector_t self, ucl_comparison_t compar)
+ucl_vector_set_compar (ucl_vector_t self, ucl_value_comparison_t compar)
 {
   self->compar = compar;
 }
@@ -913,11 +914,11 @@ ucl_bool_t
 ucl_vector_sorted (ucl_vector_t self)
 {
   size_t		size   = ucl_vector_size(self);
-  ucl_comparison_t	compar = self->compar;
+  ucl_value_comparison_t	compar = self->compar;
   for (size_t i=1; i<size; ++i) {
-    if (0 < compar.func(compar.data,
-			ucl_vector_index_to_slot(self, i-1),
-			ucl_vector_index_to_slot(self, i)))
+    ucl_value_t	a = { .bytes = ucl_vector_index_to_slot(self, i-1) };
+    ucl_value_t	b = { .bytes = ucl_vector_index_to_slot(self, i)   };
+    if (0 < compar.func(compar.data, a, b))
       return 0;
   }
   return 1;
@@ -1126,7 +1127,7 @@ ucl_vector_enlarge_for_slots (ucl_vector_t self, size_t required_free_slots)
 	  / self->slot_dimension));
 
   number_of_free_slots = ucl_vector_number_of_free_slots(self);
-  debug("reallocating? %s", question(number_of_free_slots < required_free_slots));
+  debug("reallocating? %s", debug_question(number_of_free_slots < required_free_slots));
   if (number_of_free_slots < required_free_slots) {
     number_of_slots_to_allocate = required_free_slots - number_of_free_slots;
     debug("slots to be allocated: %d", number_of_slots_to_allocate);
@@ -1269,15 +1270,18 @@ reallocate_block (ucl_vector_t self, size_t new_number_of_allocated_bytes)
 void *
 ucl_vector_find (const ucl_vector_t self, const void * data_p)
 {
-  uint8_t *	p;
-  ASSERT_INVARIANTS(self); ASSERT_COMPAR_FUNCTION_IS_SET(self); assert(data_p);
+  ucl_value_t	inner;
+  ucl_value_t	outer = { .bytes = (uint8_t *)data_p };
+  ASSERT_INVARIANTS(self);
+  ASSERT_COMPAR_FUNCTION_IS_SET(self);
+  assert(data_p);
   if (ucl_vector_size(self)) {
-    ucl_comparison_t	compar = self->compar;
-    for (p = self->first_used_slot;
-	 p <= self->last_used_slot;
-	 p += self->slot_dimension)
-      if (0 == compar.func(compar.data, data_p, p))
-	return p;
+    ucl_value_comparison_t	compar = self->compar;
+    for (inner.bytes = self->first_used_slot;
+	 inner.bytes <= self->last_used_slot;
+	 inner.bytes += self->slot_dimension)
+      if (0 == compar.func(compar.data, outer, inner))
+	return inner.bytes;
   }
   return NULL;
 }
@@ -1296,9 +1300,10 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
 {
   size_t	size, i, lower_index_limit, upper_index_limit;
   size_t	current_index, new_current_index;
-  uint8_t *	p;
+  ucl_value_t	inner;
+  ucl_value_t	outer = { .ptr = (uint8_t *)data_p };
   int		match;
-  ucl_comparison_t	compar = self->compar;
+  ucl_value_comparison_t	compar = self->compar;
   size = ucl_vector_size(self);
   lower_index_limit	= 0;
   upper_index_limit	= size-1;
@@ -1306,10 +1311,10 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
      too (tested with the [expr] command of TCL). */
   current_index = size >> 1;
   for (i=0; i<size; ++i)    {
-    p = ucl_vector_index_to_slot(self, current_index);
-    match = compar.func(compar.data, data_p, p);
+    inner.bytes = ucl_vector_index_to_slot(self, current_index);
+    match = compar.func(compar.data, outer, inner);
     if (0 == match)
-      return p;
+      return inner.bytes;
     else if (match < 0) {
       if (0 == current_index) return NULL;
       upper_index_limit = current_index - 1;
@@ -1682,18 +1687,16 @@ int
 ucl_vector_compare_range (const ucl_vector_t a, ucl_range_t ra,
 			  const ucl_vector_t b, ucl_range_t rb)
 {
-  uint8_t *		pa;
-  uint8_t *		pb;
   ucl_vector_index_t	i;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   int			result=0;
   if (ucl_range_size(ra) > ucl_range_size(rb))
     ucl_range_set_size_on_min(ra, ucl_range_size(rb));
   compar = a->compar;
   for (i=0; i<ucl_range_size(ra); ++i) {
-    pa = ucl_vector_index_to_slot(a, ucl_range_min(ra)+i);
-    pb = ucl_vector_index_to_slot(b, ucl_range_min(rb)+i);
-    debug("%d %d", *pa, *pb);
+    ucl_value_t pa = { .ptr = ucl_vector_index_to_slot(a, ucl_range_min(ra)+i) };
+    ucl_value_t pb = { .ptr = ucl_vector_index_to_slot(b, ucl_range_min(rb)+i) };
+    debug("%d %d", *(int *)pa.ptr, *(int *)pb.ptr);
     result = compar.func(compar.data, pa, pb);
     if (result != 0)
       return result;
@@ -1820,7 +1823,7 @@ ucl_vector_for_each_multiple (ucl_callback_t callback, const ucl_vector_t first,
       .number_of_vectors	= counter,
       .vectors			= vectors
     };
-    vectors[0] = first;
+    vectors[0] = (ucl_vector_tag_t *)first;
     va_start(ap, first);
     for (size_t i=1; i<counter; ++i)
       vectors[i] = va_arg(ap, void *);
@@ -1942,7 +1945,7 @@ ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, const ucl
       .number_of_vectors	= counter,
       .vectors			= vectors
     };
-    vectors[0] = first;
+    vectors[0] = (ucl_vector_tag_t *)first;
     va_start(ap, first);
     for (size_t i=1; i<counter; ++i)
       vectors[i] = va_arg(ap, void *);
@@ -2125,7 +2128,7 @@ move_used_bytes_leave_requested_at_end (ucl_vector_t self, size_t bytes_requeste
       ASSERT_INVARIANTS(self);
       assert(bytes_requested_at_end <= number_of_free_bytes);
 
-      debug("moving? %s",question(bytes_requested_at_end > compute_bytes_at_end(self)));
+      debug("moving? %s",debug_question(bytes_requested_at_end > compute_bytes_at_end(self)));
       if (bytes_requested_at_end > compute_bytes_at_end(self))
 	{
 	  size_t	bytes_at_end_after_moving_on_padding;

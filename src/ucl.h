@@ -91,7 +91,7 @@ typedef void * ucl_pointer_map_fun_t (void *);
 typedef union ucl_value_t {
   char		t_char;
   unsigned char	t_unsigned_char;
-  int			t_int;
+  int		t_int;
   unsigned int	t_unsigned_int;
   long		t_long;
   unsigned long	t_unsigned_long;
@@ -108,6 +108,7 @@ typedef union ucl_value_t {
 
   void *	pointer;
   uint8_t *	bytes;
+  char *	chars;
   char *	string;
 
   /* to be removed */
@@ -190,7 +191,7 @@ extern ucl_value_comparison_fun_t	ucl_ptrintcmp;
 extern ucl_hash_fun_t			ucl_hash_string;
 
 extern void	ucl_quicksort (void *const pbase, size_t total_elems,
-			       size_t size, ucl_comparison_t cmp);
+			       size_t size, ucl_value_comparison_t cmp);
 
 
 /** --------------------------------------------------------------------
@@ -743,7 +744,7 @@ typedef struct ucl_vector_config_tag_t {
   ucl_index_t			size_of_padding_area;
   size_t			slot_dimension;
   size_t			number_of_slots;
-  ucl_comparison_t		compar;
+  ucl_value_comparison_t	compar;
   ucl_memory_allocator_t	allocator;
 } ucl_vector_config_tag_t;
 
@@ -755,7 +756,7 @@ typedef struct ucl_vector_tag_t {
   ucl_index_t	size_of_padding_area;
   ucl_index_t	slot_dimension;
 
-  ucl_comparison_t		compar;
+  ucl_value_comparison_t	compar;
   ucl_memory_allocator_t	allocator;
 
   uint8_t *	first_allocated_slot;
@@ -765,23 +766,6 @@ typedef struct ucl_vector_tag_t {
 } ucl_vector_tag_t;
 
 typedef ucl_vector_tag_t ucl_vector_t[1];
-
-typedef struct ucl_vector_view_tag_t {
-  ucl_index_t	step_up;
-  ucl_index_t	step_down;
-  ucl_index_t	size_of_padding_area;
-  ucl_index_t	slot_dimension;
-
-  ucl_comparison_t		compar;
-  ucl_memory_allocator_t	allocator;
-
-  uint8_t *	first_used_slot;
-  uint8_t *	last_used_slot;
-  uint8_t *	last_allocated_slot;
-  uint8_t *	first_allocated_slot;
-} ucl_vector_view_tag_t;
-
-typedef ucl_vector_view_tag_t *		ucl_vector_view_t;
 
 typedef struct ucl_vector_array_t {
   size_t		number_of_vectors;
@@ -1660,7 +1644,7 @@ extern void * ucl_vector_insert_sort (ucl_vector_t self, void *data_p);
 extern void ucl_vector_erase (ucl_vector_t self, void *_pointer_to_slot_p);
 extern size_t ucl_vector_slot_dimension (const ucl_vector_t self);
 extern size_t ucl_vector_size (const ucl_vector_t self);
-extern void ucl_vector_set_compar (ucl_vector_t self, ucl_comparison_t compar);
+extern void ucl_vector_set_compar (ucl_vector_t self, ucl_value_comparison_t compar);
 extern ucl_block_t ucl_vector_get_memory_block (const ucl_vector_t self);
 extern ucl_block_t ucl_vector_get_data_block (const ucl_vector_t self);
 extern ucl_block_t ucl_vector_get_free_block_at_end (ucl_vector_t self, size_t requested_slots);

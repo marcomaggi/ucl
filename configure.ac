@@ -32,7 +32,7 @@ dnl --------------------------------------------------------------------
 dnl Setup.
 dnl --------------------------------------------------------------------
 
-AC_INIT([ucl],[0.1a1],[marco.maggi-ipsu@poste.it])
+AC_INIT([ucl],[1.0a1],[marco.maggi-ipsu@poste.it])
 DS_BEGIN([./src/ucl.c])
 
 DS_C99_LANGUAGE_COMMON_SETUP

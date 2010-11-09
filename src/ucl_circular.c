@@ -31,104 +31,88 @@
 
 
 void
-ucl_circular_insert (ucl_circular_t this, ucl_circular_link_t *new)
+ucl_circular_insert (ucl_circular_t self, ucl_circular_link_t *new)
 {
-  assert(this);
-
-  if (! this->current_link)
-    {
-      this->current_link	= new;
-      new->next			= new;
-      new->prev			= new;
-    }
-  else if (1 == this->size)
-    {
-      new->next			= this->current_link;
-      new->prev			= this->current_link;
-      this->current_link->next	= new;
-      this->current_link->prev	= new;
-      this->current_link	= new;
-    }
-  else
-    {
-      new->next			= this->current_link->next;
-      this->current_link->next->prev = new;
-      new->prev			= this->current_link;
-      this->current_link->next	= new;
-      this->current_link	= new;
-    }
-
-  ++(this->size);
+  assert(self);
+  if (! self->current_link) {
+    self->current_link		= new;
+    new->next			= new;
+    new->prev			= new;
+  } else if (1 == self->size) {
+    new->next			= self->current_link;
+    new->prev			= self->current_link;
+    self->current_link->next	= new;
+    self->current_link->prev	= new;
+    self->current_link		= new;
+  } else {
+    new->next			= self->current_link->next;
+    self->current_link->next->prev = new;
+    new->prev			= self->current_link;
+    self->current_link->next	= new;
+    self->current_link		= new;
+  }
+  ++(self->size);
 }
 
-__attribute__((__noinline__)) ucl_circular_link_t *
-ucl_circular_extract (ucl_circular_t this)
+ucl_circular_link_t *
+ucl_circular_extract (ucl_circular_t self)
 {
   ucl_circular_link_t *	cur;
-  assert(this);
-  if (this->size) {
-    if (1 == this->size) {
-      cur = this->current_link;
-      this->current_link = NULL;
+  assert(self);
+  if (self->size) {
+    if (1 == self->size) {
+      cur = self->current_link;
+      self->current_link = NULL;
     } else {
-      cur		= this->current_link;
+      cur		= self->current_link;
       cur->next->prev	= cur->prev;
       cur->prev->next	= cur->next;
-      this->current_link= cur->next;
+      self->current_link= cur->next;
     }
-    --(this->size);
+    --(self->size);
     return cur;
   } else return NULL;
 }
 
 void
-ucl_circular_forward (ucl_circular_t this, int times)
+ucl_circular_forward (ucl_circular_t self, int times)
 {
-  assert(this);
-  if (this->current_link && times)
-    {
-      int	i;
-
-      if (times > 0)
-	{
-	  for (i=0; i<times; ++i)
-	    {
-	      assert(this->current_link->next);
-	      this->current_link = this->current_link->next;
-	    }
-	}
-      else
-	{
-	  for (i=0; i<-times; ++i)
-	    {
-	      assert(this->current_link->prev);
-	      this->current_link = this->current_link->prev;
-	    }
-	}
+  assert(self);
+  if (self->current_link && times) {
+    int		i;
+    if (times > 0) {
+      for (i=0; i<times; ++i) {
+	assert(self->current_link->next);
+	self->current_link = self->current_link->next;
+      }
+    } else {
+      for (i=0; i<-times; ++i) {
+	assert(self->current_link->prev);
+	self->current_link = self->current_link->prev;
+      }
     }
+  }
 }
 
 ucl_circular_link_t *
-ucl_circular_find (ucl_circular_t this, ucl_value_t val)
+ucl_circular_find (ucl_circular_t self, ucl_value_t val)
 {
-  ucl_circular_link_t *	cur_p;
+  ucl_circular_link_t *		cur_p;
   ucl_value_comparison_t	compar;
-
-  assert(this);
-  compar = this->compar;
+  assert(self);
+  compar = self->compar;
   assert(compar.func);
-
-  if (this->size == 0)
+  if (self->size == 0)
     return NULL;
-  cur_p = this->current_link;
+  cur_p = self->current_link;
   do {
     if (0 == compar.func(compar.data, val, cur_p->val)) {
-      this->current_link = cur_p;
+      self->current_link = cur_p;
       return cur_p;
     }
     cur_p = cur_p->next;
   }
-  while (cur_p != this->current_link);
+  while (cur_p != self->current_link);
   return NULL;
 }
 
