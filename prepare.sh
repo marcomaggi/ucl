@@ -15,10 +15,7 @@ set -x
 
 ../configure \
     --with-abi=local-slackware                          \
-    --enable-static                                     \
     --enable-doc-html                                   \
-    --enable-doc-pdf                                    \
-    --enable-doc-dvi                                    \
     --enable-doc-ps                                     \
     CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
 

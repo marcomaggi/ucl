@@ -7,7 +7,7 @@
 
 
 
-   Copyright (c) 2003-2010 Marco Maggi <marcomaggi@gna.org>
+   Copyright (c) 2003-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -21,7 +21,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -53,40 +52,19 @@ static ucl_iterator_next_t	iterator_next;
  ** -----------------------------------------------------------------*/
 
 void
-ucl_hash_initialise (ucl_hash_table_t this, ucl_value_comparison_t compar,
-		     ucl_hash_t hash)
+ucl_hash_initialise (ucl_hash_table_t self, ucl_vector_t buckets,
+		     ucl_value_comparison_t compar, ucl_hash_t hash)
 {
-  assert(this);
+  /* ucl_vector_config_t	config; */
+  assert(self);
   assert(hash.func);
   assert(compar.func);
-
-  ucl_vector_initialise(this->buckets, sizeof(entry_t **));
-  ucl_vector_initialise_size	 (this->buckets, UCL_HASH_DEFAULT_SIZE);
-  ucl_vector_initialise_pad	 (this->buckets, 0);
-  ucl_vector_initialise_step_up	 (this->buckets, UCL_HASH_DEFAULT_STEP_UP);
-  ucl_vector_initialise_step_down(this->buckets, UCL_HASH_DEFAULT_STEP_DOWN);
-
-  this->hash	= hash;
-  this->compar	= compar;
-}
-void
-ucl_hash_constructor (ucl_hash_table_t this)
-{
-  assert(this);
-
-  ucl_vector_initialise_pad(this->buckets, 0);
-  ucl_vector_constructor(this->buckets);
-  ucl_vector_mark_all_slots_as_used(this->buckets);
-  ucl_vector_set_memory_to_zero(this->buckets);
-  this->size	= 0;
-  this->number_of_used_buckets = 0;
-}
-void
-ucl_hash_destructor (ucl_hash_table_t this)
-{
-  assert(this);
-  ucl_vector_destructor(this->buckets);
-  ucl_struct_clean(this, ucl_hash_table_tag_t);
+  /* ucl_vector_initialise_config_hash(config); */
+  self->buckets			= buckets;
+  self->size			= 0;
+  self->number_of_used_buckets	= 0;
+  self->hash			= hash;
+  self->compar			= compar;
 }
 
 

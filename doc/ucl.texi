@@ -122,7 +122,7 @@ pointers.
 The package is distributed under the terms of the @gnu{} General Public
 License (@gpl{}) and can be downloaded from:
 
-@center @url{http://gna.org/projects/@value{PACKAGE_NICKNAME}}
+@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}/}
 
 @noindent
 Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
@@ -900,7 +900,7 @@ Reset to zero the fields.
 @end deftypefun
 
 
-@deftypefun ucl_ascii_t ucl_ascii_const (const char * @var{string})
+@deftypefun ucl_ascii_t ucl_ascii_const (char * @var{string})
 Build and return a structure initialised with @var{string}.  The length
 is determined with the standard @function{strlen} function.
 @end deftypefun

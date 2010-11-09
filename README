@@ -2,7 +2,6 @@
 		 Useless Containers Library
 		 ==========================
 
-		       by Marco Maggi
 
 Topics
 ------
@@ -23,9 +22,9 @@ The Useless Containers Library (UCL) is an implementation of
 generic  data  type  containers  for the  C  language.   The
 containers are:
 
-* list, double linked list;
+* list, double-linked list;
 
-* circular, a circular double linked list;
+* circular, a circular double-linked list;
 
 * vector,  an   array  with  arrangements   that  allow  the
   minimisation of memory reallocations;
@@ -33,9 +32,9 @@ containers are:
 * map,  an  AVL  tree   used  to  implement  an  associative
   container;
 
-* tree, a not binary tree structure;
+* tree, a not-binary tree structure;
 
-* heap, a map used as priority queue;
+* heap, sorts elements;
 
 * graph, one day it will be implemented.
 
@@ -47,7 +46,7 @@ the GNU C compiler ("-std=c99 -pedantic" switches).
 2 License
 ---------
 
-Copyright (c) 2001-2008 Marco Maggi. 
+Copyright (c) 2001-2008, 2010 Marco Maggi.
 
 This  program  is free  software:  you  can redistribute  it
 and/or modify it  under the terms of the  GNU General Public
@@ -90,12 +89,10 @@ Do this:
     $ ../configure [options]
     $ make
     $ make install
-    
-to test the shared, the static and the stub library:
 
-    $ make test
-    $ make static-tests
-    $ make stub-tests
+to test the library:
+
+    $ make tests
 
   Warning:  the  code makes  (sometimes  heavy)  use of  the
 "assert()" macro; to exclude them use the "--disable-assert"
@@ -118,20 +115,24 @@ Foundation, Inc.
 B. Bug reports
 --------------
 
-A bug in UCL is  my fault only. Bug reports are appreciated,
-register them at the GNA!  site.
+A bug in UCL is my fault only.  Bug reports are appreciated,
+register them with the issue tracker at the Github site.
 
 
 C. Resources
 ------------
 
-The GNU Project software can be found here:
+The latest version of this package can be downloaded from:
+
+	<http://github.com/marcomaggi/ucl/downloads>
+
+development takes place at:
+
+	    <http://github.com/marcomaggi/ucl/>
+
+the GNU Project software can be found here:
 
 		   <http://www.gnu.org/>
-
-the latest version of this package should be found here:
-
-	       <http://gna.org/projects/ucl/>
 
 
 ### end of file

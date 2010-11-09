@@ -6,26 +6,25 @@
 
   Abstract:
 
-  The  UCL vector container  is an  implementation of  the classic
-  array, with  hysteresis in  memory allocation.  This  module was
-  inspired by the book on C++  by Bjarne Stroustrup and by the STL
-  C++ (Standard Template Library).
+	The  UCL vector container  is an  implementation of  the classic
+	array, with  hysteresis in  memory allocation.  This  module was
+	inspired by the book on C++  by Bjarne Stroustrup and by the STL
+	C++ (Standard Template Library).
 
-  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marcomaggi@gna.org>
+  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
-  This program is free software:  you can redistribute it and/or modify
-  it under the terms of the  GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or (at
+  This program is  free software: you can redistribute  it and/or modify
+  it under the  terms of the GNU General Public  License as published by
+  the Free Software Foundation, either  version 3 of the License, or (at
   your option) any later version.
 
-  This program is  distributed in the hope that it  will be useful, but
-  WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-  MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
+  This program  is distributed in the  hope that it will  be useful, but
+  WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+  MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
   General Public License for more details.
 
-  You should  have received  a copy of  the GNU General  Public License
+  You  should have received  a copy  of the  GNU General  Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -33,7 +32,9 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define DEBUGGING		0
+#ifndef DEBUGGING
+#  define DEBUGGING		0
+#endif
 #include "internal.h"
 #include <limits.h>
 
@@ -225,9 +226,7 @@ PRINT_POINTER_INSPECTION (ucl_vector_t self, const char *title)
 
 
 void
-ucl_vector_initialise_config (ucl_vector_config_t config,
-			      size_t slot_dimension,
-			      size_t number_of_slots)
+ucl_vector_initialise_config (ucl_vector_config_t config, size_t slot_dimension, size_t number_of_slots)
 {
   assert(config);
   assert(slot_dimension);
@@ -242,6 +241,7 @@ ucl_vector_initialise_config (ucl_vector_config_t config,
 void
 ucl_vector_initialise_config_buffer (ucl_vector_config_t config)
 {
+  assert(config);
   config->step_up		= UCL_VECTOR_BUFFER_PAGE_SIZE;
   config->step_down		= UCL_VECTOR_BUFFER_PAGE_SIZE;
   config->size_of_padding_area	= 0;
@@ -250,12 +250,38 @@ ucl_vector_initialise_config_buffer (ucl_vector_config_t config)
   config->allocator.data	= NULL;
   config->allocator.alloc	= ucl_memory_alloc;
 }
-ucl_vector_t
-ucl_vector_alloc (ucl_vector_config_t config)
+void
+ucl_vector_initialise_config_hash (ucl_vector_config_t config)
 {
-  ucl_vector_t	self = NULL;
+  assert(config);
+  config->step_up		= UCL_HASH_DEFAULT_STEP_UP;
+  config->step_down		= UCL_HASH_DEFAULT_STEP_DOWN;
+  config->size_of_padding_area	= 0;
+  config->slot_dimension	= sizeof(void *);
+  config->number_of_slots	= UCL_HASH_DEFAULT_SIZE;
+  config->allocator.data	= NULL;
+  config->allocator.alloc	= ucl_memory_alloc;
+}
+void
+ucl_vector_initialise_config_dfs (ucl_vector_config_t config)
+{
+  assert(config);
+  config->step_up		= UCL_GRAPH_DFS_STEP_UP;
+  config->step_down		= UCL_GRAPH_DFS_STEP_DOWN;
+  config->size_of_padding_area	= 0;
+  config->slot_dimension	= sizeof(ucl_graph_dfs_item_t);
+  config->number_of_slots	= UCL_GRAPH_DFS_INITIAL_VECTOR_SIZE;
+  config->allocator.data	= NULL;
+  config->allocator.alloc	= ucl_memory_alloc;
+}
+void
+ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
+{
+  assert(self);
+  assert(config);
   size_t	dim  = config->slot_dimension;
   size_t	number_of_bytes = dim * config->number_of_slots;
+  uint8_t *	p;
 
   ASSERT_INITIALISE_CONDITIONS(config);
 
@@ -265,20 +291,22 @@ ucl_vector_alloc (ucl_vector_config_t config)
   self->step_down		= dim * config->step_down;
   self->size_of_padding_area	= dim * config->step_up;
   self->allocator		= config->allocator;
-  self->compare			= config->compare;
-  self->last_allocated_slot	=
-    self->first_allocated_slot + number_of_bytes - dim;
+  self->compar			= config->compar;
+  self->first_allocated_slot	= p;
+  self->last_allocated_slot	= self->first_allocated_slot + number_of_bytes - dim;
   set_pointers_for_empty_vector(self);
   PRINT_SLOT_INSPECTION(self, "construction");
   PRINT_POINTER_INSPECTION(self, "construction");
   ASSERT_INVARIANTS(self);
-  return self;
 }
 void
 ucl_vector_free (ucl_vector_t self)
 {
   ASSERT_INVARIANTS(self);
-  self->allocator.alloc(self->allocator.data,self,0);
+  self->allocator.alloc(self->allocator.data, &(self->first_allocated_slot), 0);
+  self->last_allocated_slot	= NULL;
+  self->first_used_slot		= NULL;
+  self->last_used_slot		= NULL;
 }
 void
 ucl_vector_swallow_block (ucl_vector_t self, ucl_block_t block)
@@ -291,8 +319,7 @@ ucl_vector_swallow_block (ucl_vector_t self, ucl_block_t block)
 
   assert(0 == (block.len % self->slot_dimension));
   self->first_allocated_slot = self->first_used_slot = block.ptr;
-  self->last_allocated_slot  = self->last_used_slot  =
-    block.ptr + block.len - self->slot_dimension;
+  self->last_allocated_slot  = self->last_used_slot  = block.ptr + block.len - self->slot_dimension;
 
   ASSERT_INVARIANTS(self);
   PRINT_SLOT_INSPECTION(self, "construction");
@@ -962,7 +989,7 @@ iterator_backward_next (ucl_iterator_t iterator)
 static void
 iterator_next (ucl_iterator_t iterator, ucl_bool_t forward)
 {
-  const ucl_vector_t 	self = iterator->container;
+  const ucl_vector_tag_t * self = iterator->container;
   uint8_t *		current_p = iterator->iterator;
   ASSERT_INVARIANTS(self);
   if (forward) {
@@ -1021,7 +1048,7 @@ iterator_range_backward_next (ucl_iterator_t iterator)
 static void
 iterator_range_next (ucl_iterator_t iterator, ucl_bool_t forward)
 {
-  const ucl_vector_t 	self = iterator->container;
+  const ucl_vector_tag_t * 	self = iterator->container;
   uint8_t *			current_p = iterator->iterator;
   uint8_t *			last_p = iterator->internal1.pointer;
 
@@ -1249,7 +1276,7 @@ ucl_vector_find (const ucl_vector_t self, const void * data_p)
     for (p = self->first_used_slot;
 	 p <= self->last_used_slot;
 	 p += self->slot_dimension)
-      if (0 == compar.func(compar.data, (void *)data_p, p))
+      if (0 == compar.func(compar.data, data_p, p))
 	return p;
   }
   return NULL;
@@ -1280,7 +1307,7 @@ ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
   current_index = size >> 1;
   for (i=0; i<size; ++i)    {
     p = ucl_vector_index_to_slot(self, current_index);
-    match = compar.func(compar.data, (void *)data_p, p);
+    match = compar.func(compar.data, data_p, p);
     if (0 == match)
       return p;
     else if (match < 0) {
@@ -1430,7 +1457,7 @@ ucl_vector_append_range (ucl_vector_t target, const ucl_vector_t source, ucl_ran
 void
 ucl_vector_append_more (ucl_vector_t target, const ucl_vector_t source, ...)
 {
-  ucl_vector_t 	other_source;
+  ucl_vector_tag_t * 	other_source;
   va_list		ap;
   ucl_vector_append(target, source);
   va_start(ap, source);
@@ -1780,7 +1807,7 @@ ucl_vector_for_each_multiple (ucl_callback_t callback, const ucl_vector_t first,
 #endif
   /* Count how many vectors are there. */
   {
-    ucl_vector_t 	V;
+    ucl_vector_tag_t * 	V;
     va_start(save, first);
     for (V = va_arg(save, void *); V; V = va_arg(save, void *))
       ++counter;
@@ -1788,10 +1815,10 @@ ucl_vector_for_each_multiple (ucl_callback_t callback, const ucl_vector_t first,
   }
   /* Store the vectors in an array, then do the iteration. */
   {
-    ucl_vector_t		vectors[counter];
+    ucl_vector_tag_t * 	vectors[counter];
     ucl_vector_array_t	array = {
       .number_of_vectors	= counter,
-      .vectors		= (ucl_vector_t *)vectors
+      .vectors			= vectors
     };
     vectors[0] = first;
     va_start(ap, first);
@@ -1898,30 +1925,22 @@ ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, const ucl
 {
   size_t	counter = 1;
   va_list	ap, save;
-
-
 #ifdef __va_copy
   __va_copy(save, ap);
 #else
   save = ap;
 #endif
-
-  /* Count how many vectors are there. */
-  {
-    ucl_vector_t 	V;
-
+  { /* Count how many vectors are there. */
     va_start(save, first);
-    for (V = va_arg(save, void *); V; V = va_arg(save, void *))
+    for (ucl_vector_tag_t * V = va_arg(save, void *); V; V = va_arg(save, void *))
       ++counter;
     va_end(save);
   }
-
-  /* Store the vectors in an array, then do the iteration. */
-  {
-    ucl_vector_t			vectors[counter];
+  { /* Store the vectors in an array, then do the iteration. */
+    ucl_vector_tag_t *		vectors[counter];
     const ucl_vector_array_t	array = {
       .number_of_vectors	= counter,
-      .vectors		= (ucl_vector_t *)vectors
+      .vectors			= vectors
     };
     vectors[0] = first;
     va_start(ap, first);

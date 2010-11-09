@@ -6,7 +6,7 @@
 
 	Define a set of generic macros and functions.
 
-   Copyright (c) 2008, 2009 Marco Maggi <marcomaggi@gna.org>
+   Copyright (c) 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -20,7 +20,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 #ifndef DEBUG_H

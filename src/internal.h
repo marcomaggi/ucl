@@ -8,7 +8,7 @@
 	This header  file must  be included in  all the source  files of
 	UCL.
 
-   Copyright (c) 2004-2005, 2007-2010 Marco Maggi <marcomaggi@gna.org>
+   Copyright (c) 2004-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -22,7 +22,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -37,8 +36,6 @@
 #include <stdio.h>	/* sometimes useful for debugging */
 #include "ucl.h"
 #include "debug.h"
-
-/* ------------------------------------------------------------ */
 
 extern ucl_callback_apply_fun_t * ucl_callback_application_function;
 

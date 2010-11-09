@@ -23,7 +23,7 @@
 	the  book "Algoritmi +  Strutture Dati  = Programmi"  di Niklaus
 	Wirth, 1987 Tecniche Nuove.
 
-   Copyright (c) 2001-2010 Marco Maggi
+   Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -37,7 +37,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -46,12 +45,6 @@
  ** -----------------------------------------------------------------*/
 
 #include "internal.h"
-
-/* Values   of   the   "avl_status"   field  in   the   "ucl_map_link_t"
-   structure. */
-#define LEFT_HIGHER		0x00
-#define BALANCED		0x01
-#define RIGHT_HIGHER		0x02
 
 /* These will make the code easier to read. */
 typedef ucl_map_t		map_t;
@@ -90,31 +83,26 @@ static void	union_find_next			(iterator_t iter1,
 static void	complintersect_iterator_next (iterator_t iterator);
 static void	subtraction_iterator_next (iterator_t iterator);
 
-
 
 /** ------------------------------------------------------------
  ** Construction and destruction.
  ** ----------------------------------------------------------*/
 
 void
-ucl_map_constructor (ucl_map_t		this,
-		     unsigned int	flags,
-		     ucl_comparison_t	keycmp)
+ucl_map_constructor (ucl_map_t self, unsigned int flags, ucl_value_comparison_t keycmp)
 {
-  assert(this); assert(keycmp.func);
-
-  this->root		= 0;
-  this->size		= 0;
-  this->keycmp		= keycmp;
-  this->flags		= flags;
+  assert(self);
+  assert(keycmp.func);
+  self->root		= 0;
+  self->size		= 0;
+  self->keycmp		= keycmp;
+  self->flags		= flags;
 }
 void
-ucl_map_destructor (ucl_map_t this)
+ucl_map_destructor (ucl_map_t self)
 {
-  ucl_struct_clean((this), ucl_map_t);
+  ucl_struct_clean((self), ucl_map_t);
 }
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -124,16 +112,15 @@ ucl_map_destructor (ucl_map_t this)
 __attribute__((__nonnull__,__pure__)) void
 ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 {
-  ucl_comparison_t	keycmp;
+  ucl_value_comparison_t	keycmp;
   int		v, root_flag;
   link_t *	tmp_p;
   link_t *	cur_p;
   value_t	key;
 
-  /*
-    A flag  used in the loop below,  when stepping up in  the tree doing
-    rotation and  "avl_status" updates: true  if the subtree  from which
-    we're coming has gotten higher, otherwise false.
+  /* A flag used  in the loop below, when stepping up  in the tree doing
+     rotation and  "avl_status" updates: true if the  subtree from which
+     we're coming has gotten higher, otherwise false.
 
     Mr. Niklaus Wirth calls it "h" in his book.
 
@@ -955,7 +942,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 ucl_map_link_t *
 ucl_map_find (const ucl_map_t this, const ucl_value_t key)
 {
-  ucl_comparison_t	keycmp;
+  ucl_value_comparison_t	keycmp;
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
@@ -1055,7 +1042,7 @@ ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
-  ucl_comparison_t	keycmp;
+  ucl_value_comparison_t	keycmp;
 
 
   assert(this != 0);
@@ -1140,7 +1127,7 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
-  ucl_comparison_t	keycmp;
+  ucl_value_comparison_t	keycmp;
 
   assert(this != 0);
 
@@ -1229,7 +1216,7 @@ ucl_map_count (const ucl_map_t this, const ucl_value_t key)
 {
   size_t		count;
   link_t *		link_p;
-  ucl_comparison_t	keycmp;
+  ucl_value_comparison_t	keycmp;
 
 
   assert(this != 0);
@@ -1455,7 +1442,7 @@ map_upperbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);
   if (link_p != NULL)
     {
-      ucl_comparison_t	keycmp = this->keycmp;
+      ucl_value_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1482,7 +1469,7 @@ map_lowerbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder((node_t *) link_p);
   if (link_p != NULL)
     {
-      ucl_comparison_t	keycmp = this->keycmp;
+      ucl_value_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1549,7 +1536,7 @@ union_find_next (iter1, iter2, iterator)
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   int			v;
 
 
@@ -1635,7 +1622,7 @@ intersection_find_common (iter1, iter2, iterator)
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   int			v;
 
 
@@ -1695,7 +1682,7 @@ complintersect_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
@@ -1842,7 +1829,7 @@ subtraction_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  ucl_comparison_t	compar;
+  ucl_value_comparison_t	compar;
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;

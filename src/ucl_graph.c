@@ -7,7 +7,7 @@
 
       Graph container.
 
-   Copyright (c) 2005-2010 Marco Maggi <marcomaggi@gna.org>
+   Copyright (c) 2005-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -21,7 +21,6 @@
 
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 */
 
 
@@ -356,40 +355,25 @@ ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_link_t * out)
  ** ----------------------------------------------------------*/
 
 void
-ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * search_handle)
+ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * search_handle, ucl_vector_t visited_nodes)
 {
-  ucl_vector_t	items = &(search_handle->visited_nodes[0]);
-
-
-  ucl_vector_initialise(items, sizeof(ucl_graph_dfs_item_t));
-  ucl_vector_initialise_size(items, UCL_GRAPH_DFS_INITIAL_VECTOR_SIZE);
-  ucl_vector_initialise_pad(items, 0);
-  ucl_vector_initialise_step_up(items, UCL_GRAPH_DFS_STEP_UP);
-  ucl_vector_constructor(items);
-
-  search_handle->counter = 0;
+  search_handle->counter	= 0;
+  search_handle->visited_nodes	= visited_nodes;
 }
 void
 ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * search_handle)
 {
-  ucl_vector_t			items = &(search_handle->visited_nodes[0]);
-  ucl_iterator_t		iterator;
-  ucl_graph_dfs_item_t *	item;
-  ucl_value_t			mark;
-
-  mark.integer = 0;
-
+  ucl_vector_tag_t *	items = search_handle->visited_nodes;
+  ucl_iterator_t	iterator;
+  ucl_graph_dfs_item_t *item;
+  ucl_value_t		mark = { .integer = 0 };
   for (ucl_vector_iterator_forward(items, iterator);
        ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
-    {
-      item = ucl_iterator_ptr(iterator);
-      ucl_graph_node_set_mark(item->node_p, mark);
-    }
-
-  ucl_vector_destructor(items);
+       ucl_iterator_next(iterator)) {
+    item = ucl_iterator_ptr(iterator);
+    ucl_graph_node_set_mark(item->node_p, mark);
+  }
 }
-
 void
 ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * root_p)
 {
@@ -450,7 +434,5 @@ dfs_leave_node (ucl_graph_dfs_t * search_handle, ucl_graph_dfs_item_t * dfs_node
 {
   dfs_node->out_counter = (search_handle->counter)++;
 }
-
-
 
 /* end of file */

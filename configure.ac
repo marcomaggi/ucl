@@ -32,35 +32,27 @@ dnl --------------------------------------------------------------------
 dnl Setup.
 dnl --------------------------------------------------------------------
 
-AC_INIT(ucl, 1.0d6)
-AC_PREREQ(2.63)
-AC_CONFIG_AUX_DIR(infrastructure)
-AC_CONFIG_SRCDIR(./src/ucl.c)
+AC_INIT([ucl],[0.1a1],[marco.maggi-ipsu@poste.it])
+DS_BEGIN([./src/ucl.c])
 
-DS_INCLUDES
-DS_OPTIONS
-DS_PROGRAMS
-DS_PACKAGING
-
-DS_INCLUDE_DEV_RULES=yes
-
-DS_C_LANGUAGE_SYSTEM_SETUP
-DS_C_LANGUAGE
-DS_C_LANGUAGE_LIBRARIES
-DS_C_LANGUAGE_LIBRARY(ucl,2,0,ucl)
+DS_C99_LANGUAGE_COMMON_SETUP
+DS_EXCLUDE_SECTION([DOC_RULES])
+DS_EXCLUDE_SECTION([DEV_RULES])
+DS_EXCLUDE_SECTION([CONFIG_INSPECTION_SCRIPT])
+DS_EXCLUDE_SECTION([AUTOCONF])
+DS_EXCLUDE_SECTION([PKGCONFIG])
+DS_C_LANGUAGE_LIBRARY([ucl],2,0,[ucl])
 
 dnl page
 dnl --------------------------------------------------------------------
 dnl Done.
 dnl --------------------------------------------------------------------
 
-AC_CONFIG_FILES([meta.d/ucl-config:meta/ucl-config.in])
-AC_CONFIG_FILES([meta.d/ucl.pc:meta/ucl.pc.in])
-AC_CONFIG_FILES([meta.d/slackware/bin/slack-desc:meta/slackware/bin/slack-desc.in])
-AC_CONFIG_FILES([meta.d/slackware/doc/slack-desc:meta/slackware/doc/slack-desc.in])
-AC_CONFIG_FILES([meta.d/slackware/dev/slack-desc:meta/slackware/dev/slack-desc.in])
-DS_CONFIG_FILES
-AC_OUTPUT
-
+DS_CONFIG_FILE_PKGCONFIG
+DS_CONFIG_FILE_INSPECTION_SCRIPT
+DS_CONFIG_FILE_SLACKWARE_BIN_DESC
+DS_CONFIG_FILE_SLACKWARE_DOC_DESC
+DS_CONFIG_FILE_SLACKWARE_DEV_DESC
+DS_END
 
 ### end of file
