@@ -1,5 +1,5 @@
-/* 
-   Part of: Useless Container Library
+/*
+   Part of: Useless Containers Library
    Contents: code for the tree container.
    Date: early 2002
 
@@ -42,22 +42,22 @@
 	B.bro == A        ->         A   and  B  are   brothers,  and
 					children  of   the  same  parent
 					node;
- 
-   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2007, 2008 Marco Maggi
+
+   Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marcomaggi@gna.org>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or (at
    your option) any later version.
-   
+
    This program is  distributed in the hope that it  will be useful, but
    WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
    MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
-   
+
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
+
 */
 
 
@@ -66,10 +66,6 @@
  ** ----------------------------------------------------------*/
 
 #include "internal.h"
-
-#define stubmodule		tree
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -92,7 +88,7 @@ static ucl_iterator_next_t	tree_levelorder_iterator_next;
  ** Testing relationships.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-15-09) __attribute__((__nonnull__)) ucl_bool_t
+__attribute__((__nonnull__)) ucl_bool_t
 ucl_tree_is_dad (ucl_node_t nod_p, ucl_node_t cld_p)
 {
   if (ucl_btree_ref_son(nod_p))
@@ -111,7 +107,7 @@ ucl_tree_is_dad (ucl_node_t nod_p, ucl_node_t cld_p)
 
   return 0;
 }
-stub(2005-09-23-18-15-12) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+__attribute__((__nonnull__,__pure__)) ucl_bool_t
 ucl_tree_is_bro (ucl_node_t nod_p, ucl_node_t bro)
 {
   ucl_node_t 	tmp_p;
@@ -141,7 +137,7 @@ ucl_tree_is_bro (ucl_node_t nod_p, ucl_node_t bro)
 }
 /* Remember that if the "dad" of the node is not NULL, it doesn't mean
    that the node has a parent: it could be a brother to the left. */
-stub(2005-09-23-18-15-15) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+__attribute__((__nonnull__,__pure__)) ucl_bool_t
 ucl_tree_has_dad (ucl_node_t nod_p)
 {
   nod_p = ucl_tree_get_first(nod_p);
@@ -150,7 +146,7 @@ ucl_tree_has_dad (ucl_node_t nod_p)
 /* Remember that if the "dad" of the node is not NULL, it doesn't mean
    that the node  has a brother to  the left: it could be  the father of
    the node. */
-stub(2005-09-23-18-15-18) __attribute__((__nonnull__,__pure__)) ucl_bool_t
+__attribute__((__nonnull__,__pure__)) ucl_bool_t
 ucl_tree_has_prev (ucl_node_t nod_p)
 {
   ucl_node_t 	dad;
@@ -166,7 +162,7 @@ ucl_tree_has_prev (ucl_node_t nod_p)
  ** Getters.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-15-21) __attribute__((__nonnull__,__pure__)) void *
+__attribute__((__nonnull__,__pure__)) void *
 ucl_tree_get_dad (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
@@ -175,14 +171,14 @@ ucl_tree_get_dad (void * _nod_p)
   tmp_p = ucl_tree_get_first(nod_p);
   return (tmp_p->dad)? tmp_p->dad : NULL;
 }
-stub(2005-09-23-18-15-24) __attribute__((__nonnull__,__pure__)) void *
+__attribute__((__nonnull__,__pure__)) void *
 ucl_tree_get_prev (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
 
   return (ucl_tree_has_prev(nod_p))? nod_p->dad : NULL;
 }
-stub(2005-09-23-18-15-27) __attribute__((__nonnull__,__pure__)) void *
+__attribute__((__nonnull__,__pure__)) void *
 ucl_tree_get_first (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
@@ -193,7 +189,7 @@ ucl_tree_get_first (void * _nod_p)
     }
   return nod_p;
 }
-stub(2005-09-23-18-15-30) __attribute__((__nonnull__,__pure__)) void *
+__attribute__((__nonnull__,__pure__)) void *
 ucl_tree_get_last (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
@@ -212,7 +208,7 @@ ucl_tree_get_last (void * _nod_p)
    node and the first son of the old "dad" (if any).
 
    If the node is the first child of it's father:
-	
+
 
 		 ---------           ---------
 		| *old_p |         | *old_p |
@@ -232,7 +228,7 @@ ucl_tree_get_last (void * _nod_p)
 
 */
 
-stub(2005-09-23-18-15-33) void
+void
 ucl_tree_insert_dad (ucl_node_t nod_p, ucl_node_t dad)
 {
   ucl_node_t 	tmp_p;
@@ -267,7 +263,7 @@ ucl_tree_insert_dad (ucl_node_t nod_p, ucl_node_t dad)
 
 */
 
-stub(2005-09-23-18-15-36) void
+void
 ucl_tree_insert_son (ucl_node_t  nod_p, ucl_node_t  son)
 {
   assert(nod_p);
@@ -286,7 +282,7 @@ ucl_tree_insert_son (ucl_node_t  nod_p, ucl_node_t  son)
     {
       nod_p->son = son;
     }
-  son->dad = nod_p;  
+  son->dad = nod_p;
 }
 
 /* ------------------------------------------------------------ */
@@ -302,7 +298,7 @@ ucl_tree_insert_son (ucl_node_t  nod_p, ucl_node_t  son)
    brother to the right becomes brother of "*nxt_p".
 */
 
-stub(2005-09-23-18-15-40) void
+void
 ucl_tree_insert_next (ucl_node_t  nod_p, ucl_node_t  nxt_p)
 {
   ucl_node_t 	tmp_p;
@@ -335,7 +331,7 @@ ucl_tree_insert_next (ucl_node_t  nod_p, ucl_node_t  nxt_p)
    brother to the left becomes brother of "*prv_p".
 */
 
-stub(2005-09-23-18-15-43) void
+void
 ucl_tree_insert_prev (ucl_node_t  nod_p, ucl_node_t  prv_p)
 {
   ucl_node_t 	tmp_p;
@@ -383,7 +379,7 @@ ucl_tree_insert_prev (ucl_node_t  nod_p, ucl_node_t  prv_p)
    reset to NULL.
 */
 
-stub(2005-09-23-18-15-46) ucl_node_t 
+ucl_node_t
 ucl_tree_extract_dad (ucl_node_t nod_p)
 {
   ucl_node_t 	dad;
@@ -449,7 +445,7 @@ ucl_tree_extract_dad (ucl_node_t nod_p)
    reset to NULL.
 */
 
-stub(2005-09-23-18-15-49) ucl_node_t 
+ucl_node_t
 ucl_tree_extract_son (ucl_node_t nod_p)
 {
   ucl_node_t 	son;
@@ -510,7 +506,7 @@ ucl_tree_extract_son (ucl_node_t nod_p)
    structure are reset to NULL.
 */
 
-stub(2005-09-23-18-15-52) ucl_node_t 
+ucl_node_t
 ucl_tree_extract_prev (ucl_node_t nod_p)
 {
   ucl_node_t 	prv_p;
@@ -599,7 +595,7 @@ ucl_tree_extract_prev (ucl_node_t nod_p)
    structure are reset to NULL.
 */
 
-stub(2005-09-23-18-15-55) ucl_node_t 
+ucl_node_t
 ucl_tree_extract_next (ucl_node_t nod_p)
 {
   ucl_node_t 	nxt_p;
@@ -652,7 +648,7 @@ ucl_tree_extract_next (ucl_node_t nod_p)
  ** Iterators.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-15-58) void
+void
 ucl_tree_iterator_inorder (ucl_node_t  nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);
@@ -663,7 +659,7 @@ ucl_tree_iterator_inorder (ucl_node_t  nod_p, ucl_iterator_t iterator)
   iterator->iterator	= ucl_btree_find_leftmost(nod_p);
   iterator->next	= tree_inorder_iterator_next;
 }
-stub(2005-09-23-18-16-01) void
+void
 ucl_tree_iterator_preorder (ucl_node_t nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);
@@ -674,7 +670,7 @@ ucl_tree_iterator_preorder (ucl_node_t nod_p, ucl_iterator_t iterator)
   iterator->iterator	= (void *)nod_p;
   iterator->next	= tree_preorder_iterator_next;
 }
-stub(2005-09-23-18-16-04) void
+void
 ucl_tree_iterator_postorder (ucl_node_t nod_p, ucl_iterator_t iterator)
 {
   assert(nod_p);

@@ -71,18 +71,13 @@
 @code{\NAME\()}
 @end macro
 
-@macro null{}
+@macro cfunc{NAME}
+@code{\NAME\()}
+@end macro
+
+@macro cnull{}
 @code{NULL}
 @end macro
-
-@c ------------------------------------------------------------
-@c Other programming language macros
-
-@macro module{NAME}
-@code{\NAME\}
-@end macro
-
-@c ------------------------------------------------------------
 
 @c page
 @c ------------------------------------------------------------
@@ -106,13 +101,12 @@
 
 @c To be used as @value{AUTHOR_EMAIL} whenever we need to include the
 @c email of the *single* author of this document.
-@set AUTHOR_EMAIL               @email{marcomaggi@@gna.org}
+@set AUTHOR_EMAIL               @email{marco.maggi-ipsu@@poste.it}
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
-@set COPYRIGHT_YEARS            2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+@set COPYRIGHT_YEARS            2001-2010
 
-@c ------------------------------------------------------------
 
 @c page
 @c ------------------------------------------------------------
@@ -135,15 +129,15 @@ Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_E
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
-under the terms of the @gnu{} Free Documentation License, Version 1.2 or
+under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with no
-Invariant Sections, no Front--Cover Texts, and no Back--Cover Texts.  A
-copy of the license is included in the section entitled ``@gnu{} Free
-Documentation License''.
+Invariant Sections being ``@gnu{} Free Documentation License'' and
+``@gnu{} General Public License'', no Front-Cover Texts, and no
+Back-Cover Texts.  A copy of the license is included in the section
+entitled ``GNU Free Documentation License''.
 @end quotation
 @end copying
 
-@c ------------------------------------------------------------
 
 @c page
 @c ------------------------------------------------------------
@@ -164,7 +158,7 @@ Documentation License''.
 @ifnottex
 @dircategory Development
 @direntry
-* UCL: (ucl).                   Useless Containers Library. 
+* ucl: (ucl).                   Useless Containers Library.
 @end direntry
 @end ifnottex
 
@@ -176,7 +170,6 @@ Documentation License''.
 @syncodeindex fn cp
 @end ignore
 
-@c ------------------------------------------------------------
 
 @c page
 @ifnottex
@@ -188,23 +181,21 @@ Documentation License''.
 @menu
 * overview::                    Overview of the library.
 * memory::                      Memory allocation.
-* typedefs::                    Data types you have to know. 
-* containers::                  The data structures. 
+* typedefs::                    Data types you have to know.
+* containers::                  The data structures.
 * iterators::                   Container iteration.
 * generic::                     Generic functions.
-* stub::                        The stubs mechanism.
 
 Appendices
 
 * library version::             How to interpret the library version.
-* stub mechanism::              The stub mechanism.
 * Package License::             GNU General Public License.
 * Documentation License::       GNU Free Documentation License.
-* references::                  Bibliography and references. 
-* concept index::               An entry for each concept. 
-* function index::              An entry for each function. 
-* type index::                  An entry for each type. 
-* variable index::              An entry for each variable. 
+* references::                  Bibliography and references.
+* concept index::               An entry for each concept.
+* function index::              An entry for each function.
+* type index::                  An entry for each type.
+* variable index::              An entry for each variable.
 
 @detailmenu
  --- The Detailed Node Listing ---
@@ -334,7 +325,6 @@ High level functions
 
 @end ifnottex
 
-@c ------------------------------------------------------------
 
 @c page
 @node overview
@@ -371,8 +361,6 @@ All the function and data type names are prefixed with @code{ucl_}.
 There is no error reporting system: it is our responsibility to validate
 function's arguments using the appropriate functions.  With the single
 exception of the vector module: @ucl{} does no memory allocation.
-
-@ref{stub} for details about how to use the stub mechanism.
 
 The library is developed and tested under the Linux+@gnu{} system and
 officially it supports only the @gnu{} infrastructure: requires the
@@ -536,17 +524,17 @@ user does not see it.
 @chapter Memory allocation
 
 
-@noindent
-The @ucl{} tries to avoid as much as possible the responsibility to
-allocate and free memory.  Dynamic structures based on trees or linked
-lists do not call any memory allocation function: the responsibility to
-allocate @ucl{} data structures is delegated to the user's code.
+@ucl{} tries to avoid as much as possible the responsibility to allocate
+and free memory.  Dynamic structures based on trees or linked lists do
+not call any memory allocation function: the responsibility to allocate
+@ucl{} data structures is delegated to the user's code.
 
 This makes the library a little more complex to use, but it also makes
-library's code simpler by reducing the error cases that have to be dealt
-with.  Also, user's code can implement a custom allocator and feed
-memory blocks to the @ucl{} functions.  This may come in handy because
-the @ucl{} makes use of a lot of little data structures.
+the code simpler by reducing the error cases that have to be dealt with.
+Also, user's code can implement a custom allocator and feed memory
+blocks to @ucl{}'s functions.  This behaviour can be leveraged to
+improve performance, because the @ucl{} makes use of a lot of little
+data structures.
 
 When needed: the library makes use of a default allocator that reverts
 to the standard @function{malloc}, @function{realloc} and
@@ -560,12 +548,21 @@ to the standard @function{malloc}, @function{realloc} and
 * memory macros::               Miscellaneous macros.
 @end menu
 
-@c ------------------------------------------------------------
-
 @c page
 @node memory typedefs
 @section Data types
 
+
+The following @api{} has two main purposes:
+
+@enumerate
+@item
+to implement the classic alloc, realloc and free operations;
+
+@item
+to define an allocator data structure that is small enough to be used
+directly as function argument (that is: passed by value).
+@end enumerate
 
 
 @deftp {Struct Typedef} ucl_memory_allocator_t
@@ -574,9 +571,9 @@ select a memory allocation policy.  Fields description follows.
 
 @table @code
 @item void * data
-Pointer to an allocator data structure, which holds the state of the
+Pointer to an allocator data structure holding the state of the
 allocator; it is used as first argument to the allocator function, it
-can be @null{}.
+can be @cnull{}.
 
 @item ucl_memory_alloc_fun_t * alloc
 Pointer to a function used to allocate/reallocate/free a memory block.
@@ -584,12 +581,21 @@ Pointer to a function used to allocate/reallocate/free a memory block.
 @end deftp
 
 
-@deftypefun void ucl_memory_alloc_fun_t (void * @var{data}, void * @var{pp}, size_t @var{dim})
-Function prototype declaration for the function that allocates memory
-blocks.  @var{data} is the value of the @code{data} field in the
-allocator data structure; @var{pp} is internally cast to @code{void **}
-and is a pointer to the variable that holds the pointer to handle;
-@var{dim} is the dimension, in bytes, of the memory block.
+@deftypefn {Function Prototype} void ucl_memory_alloc_fun_t (void * @var{data}, void * @var{pp}, size_t @var{dim})
+Allocate, reallocate or free memory blocks.
+
+@table @var
+@item data
+The value of the @code{data} field in the allocator data structure.
+
+@item pp
+Internally cast to @code{void **}, it is a pointer to the variable that
+holds the pointer to handle.
+
+@item dim
+The dimension of the memory block.  It is expressed in bytes for the
+@ucl{} functions.
+@end table
 
 The protocol:
 
@@ -599,9 +605,9 @@ if @var{dim} is zero:
 
 @itemize
 @item
-if @code{*@var{pp}} is @null{}: nothing happens,
+if @code{*@var{pp}} is @cnull{}: nothing happens,
 @item
-else @code{*@var{pp}} is not @null{}: the referenced memory is
+else @code{*@var{pp}} is not @cnull{}: the referenced memory is
 freed;
 @end itemize
 
@@ -610,11 +616,11 @@ else @var{dim} is positive:
 
 @itemize
 @item
-if @code{*@var{pp}} is @null{}: a new block of memory is allocated
+if @code{*@var{pp}} is @cnull{}: a new block of memory is allocated
 and a pointer to it stored in @code{*@var{pp}};
 
 @item
-else @code{*@var{pp}} is not @null{}: the block of memory referenced
+else @code{*@var{pp}} is not @cnull{}: the block of memory referenced
 by @code{*@var{pp}} is reallocated and a pointer to the new block is
 stored in @code{*@var{pp}}.
 @end itemize
@@ -625,7 +631,10 @@ This function must work like @function{malloc}, @function{realloc} and
 it must not return.  What it does instead of returning is not the
 business of @ucl{}; the default allocator will terminate the process
 with an invocation to @function{exit} with code @code{EXIT_FAILURE}.
-@end deftypefun
+The @ucl{} guarantees that an error allocating memory will not corrupt
+any container (so the alloc function can longjump somewhere in case of
+error).
+@end deftypefn
 
 
 Example of new memory block allocation:
@@ -648,7 +657,7 @@ allocator.alloc(allocator.data, &p, 4096);
 @end example
 
 @noindent
-example of memory releasing:
+example of memory release:
 
 @example
 ucl_memory_allocator_t allocator;
@@ -657,20 +666,19 @@ void * p = ...;
 allocator.alloc(allocator.data, &p, 0);
 @end example
 
-
-@c ------------------------------------------------------------
-
 @c page
 @node memory functions
 @section Public interface
 
 
 @deftypefun void ucl_memory_alloc (void * @var{data}, void * @var{q}, size_t @var{dim})
-Allocate, reallocate or free a block of memory.  @var{data} is ignored:
-it is perfectly correct to invoke this function with @var{data} set to
-@null{}.
-@end deftypefun
+Allocate, reallocate or free a block of memory using the standard
+@cfunc{calloc}, @cfunc{realloc} and @cfunc{free} functions.  @var{data}
+is ignored: it is perfectly correct to invoke this function with
+@var{data} set to @cnull{}.
 
+This function can be used as @code{alloc} function in a
+@code{ucl_memory_allocator_t}.
 
 The implementation is:
 
@@ -692,7 +700,8 @@ ucl_memory_alloc (void * dummy, void * q, size_t dim)
     @}
   else
     @{
-      p = (NULL == *pp)? calloc(1, dim) : realloc(*pp, dim);
+      p = (NULL == *pp)?
+            calloc(1, dim) : realloc(*pp, dim);
       if (NULL == p)
         @{
           perror(strerror(errno));
@@ -702,18 +711,24 @@ ucl_memory_alloc (void * dummy, void * q, size_t dim)
     @}
 @}
 @end example
+@end deftypefun
 
 
-@c ------------------------------------------------------------
+@deftypefun {void *} ucl_malloc (ucl_memory_allocator_t @var{allocator}, size_t @var{dim})
+@deftypefunx {void *} ucl_realloc (ucl_memory_allocator_t @var{allocator}, void * @var{p}, size_t @var{dim})
+@deftypefunx void ucl_free (ucl_memory_allocator_t @var{allocator}, void * @var{p})
+These functions implement the classic alloc, realloc and free operations
+using the selected allocator.
+@end deftypefun
+
 
 @c page
 @node memory blocks
 @section Memory blocks
 
 
-@noindent
-This module offers a set of functions to handle memory blocks.  All the
-functions are declared as @code{__inline__}.
+This module offers a set of functions to handle memory blocks.  Many of
+the following functions are declared @code{__inline__}.
 
 
 @deftp {Struct Typedef} ucl_block_t
@@ -724,21 +739,44 @@ The type of memory block.  Fields description follows.
 The number of bytes in the block; can be zero.
 
 @item uint8_t * ptr
-Pointer to the memory block or @null{}.
+Pointer to the memory block or @cnull{}.
 @end table
 @end deftp
 
 
-@defmac UCL_BLOCK_NULL_VALUE
-@defmacx UCL_BLOCK_EMPTY
-@defmacx UCL_EMPTY_BLOCK
-Define the nil values to initialise a block.  To be used like this:
+To initialise a block to empty state do this:
 
 @example
-ucl_block_t     B = UCL_BLOCK_NULL_VALUE;
+ucl_block_t     B = @{ .ptr = NULL, .len = 0 @};
 @end example
-@end defmac
 
+@noindent
+or this:
+
+@example
+ucl_block_t     B;
+
+ucl_block_reset(&B);
+@end example
+
+
+@subsubheading Memory allocation
+
+
+@deftypefun ucl_block_t ucl_block_alloc (ucl_memory_allocator_t @var{allocator}, size_t @var{dim})
+@deftypefunx ucl_block_t ucl_block_realloc (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block}, size_t @var{new_dim})
+Allocate or reallocate a memory block using the @var{allocator} and
+return the resulting block.
+@end deftypefun
+
+
+@deftypefun void ucl_block_free (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block})
+If the @code{ptr} field of @var{block} is not @cnull{}: free the
+referenced memory block using @var{allocator}.
+@end deftypefun
+
+
+@subsubheading Setting
 
 @deftypefun void ucl_block_set (ucl_block_t * @var{block}, void * @var{ptr}, size_t @var{len})
 Set the fields of the block structure.
@@ -750,9 +788,15 @@ Reset to zero all the fields of the block.
 @end deftypefun
 
 
+@subsubheading Inspection
+
+
 @deftypefun bool ucl_block_is_null (ucl_block_t @var{block})
-Return true if the @code{ptr} field of @var{block} is @null{}.
+Return true if the @code{ptr} field of @var{block} is @cnull{}.
 @end deftypefun
+
+
+@subsubheading Memory operations
 
 
 @deftypefun void ucl_block_clean_memory (ucl_block_t @var{block})
@@ -760,20 +804,41 @@ Reset to zero all the bytes in the memory block.
 @end deftypefun
 
 
-@deftypefun ucl_block_t ucl_block_alloc (ucl_memory_allocator_t @var{allocator}, size_t @var{dim})
-@deftypefunx ucl_block_t ucl_block_realloc (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block}, size_t @var{new_dim})
-Allocate or reallocate a memory block using the @var{allocator} and
-return the resulting block.
+@subsubheading Block operations
+
+
+@deftypefun void ucl_block_shift_x (ucl_block_t * @var{block}, ssize_t @var{offset}, size_t @var{dim})
+Shift the memory reference in @var{block} by @var{offset} slots each of
+@var{dim} bytes.  @var{offset} can be zero, positive or negative.
 @end deftypefun
 
 
-@deftypefun void ucl_block_free (ucl_memory_allocator_t @var{allocator}, ucl_block_t @var{block})
-If the @code{ptr} field of @var{block} is not @null{}: free the
-referenced memory block using @var{allocator}.
+@deftypefun ucl_block_t ucl_block_shift (ucl_block_t @var{block}, ssize_t @var{offset}, size_t @var{dim})
+Like @cfunc{ucl_block_shift_x}, but produce a new block.
 @end deftypefun
 
 
-@c ------------------------------------------------------------
+@deftypefun ucl_block_t ucl_block_difference (ucl_block_t @var{a}, ucl_block_t @var{b})
+This function assumes that @var{b} is contiguous to or included in
+@var{a}; return a new block @var{c} referencing the first portion of
+@var{a} not in @var{b}.
+
+@example
+          @var{c}.len             @var{b}.len
+  |.........................|.................|
+
+@var{c}.ptr                     @var{b}.ptr
+  v                         v
+  |-------------------------|---------------------|
+  ^
+@var{a}.ptr
+
+  |...............................................|
+                       @var{a}.len
+
+@end example
+@end deftypefun
+
 
 @c page
 @node memory ascii
@@ -795,7 +860,7 @@ The number of characters in the block; can be zero; it does @strong{not}
 include the terminating null character.
 
 @item char * ptr
-Pointer to the memory block or @null{}; the last @code{char} must be
+Pointer to the memory block or @cnull{}; the last @code{char} must be
 zero.
 @end table
 @end deftp
@@ -842,7 +907,7 @@ is determined with the standard @function{strlen} function.
 
 
 @deftypefun bool ucl_ascii_is_null (ucl_ascii_t @var{ascii})
-Return true if the pointer field is set to @null{}.
+Return true if the pointer field is set to @cnull{}.
 @end deftypefun
 
 
@@ -869,12 +934,10 @@ the block, with the @strong{exclusion} of the terminating zero.
 
 
 @deftypefun void ucl_ascii_free (ucl_memory_allocator_t @var{allocator}, ucl_ascii_t @var{ascii})
-If the @code{ptr} field of @var{ascii} is not @null{}: free the
+If the @code{ptr} field of @var{ascii} is not @cnull{}: free the
 referenced memory block using @var{allocator}.
 @end deftypefun
 
-
-@c ------------------------------------------------------------
 
 @c page
 @node memory macros
@@ -906,8 +969,6 @@ ucl_struct_alloc(allocator, p, a_t);
 @end example
 @end defmac
 
-@c ------------------------------------------------------------
-
 @c page
 @node typedefs
 @chapter Data types you have to know
@@ -924,9 +985,6 @@ sections dedicated to containers.  Here common data types are described.
 * typedefs hash::               Hash functions.
 * typedefs callback::           Callback functions.
 @end menu
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node typedefs value
@@ -1127,9 +1185,6 @@ allocator.alloc(allocator.data, &preallocated_links,
 @end example
 
 
-
-@c ------------------------------------------------------------
-
 @c page
 @node typedefs ranges
 @section Range selectors
@@ -1142,8 +1197,6 @@ allocator.alloc(allocator.data, &preallocated_links,
 * typedefs ranges types::       Type of ranges.
 @end menu
 
-
-@c ------------------------------------------------------------
 
 @c page
 @node typedefs ranges macros
@@ -1206,8 +1259,6 @@ Return true if the ranges are equal.
 @end defmac
 
 
-@c ------------------------------------------------------------
-
 @c page
 @node typedefs ranges types
 @subsection Type of ranges
@@ -1235,9 +1286,6 @@ selecting the indexes.  The fields are of type @code{size_t}.
 @deftpx {Struct Typedef} ucl_pointer_range_t
 Ranges of values.
 @end deftp
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node typedefs compar
@@ -1284,8 +1332,6 @@ result = compar.func(compar.data, a, v);
 @end example
 
 
-@c ------------------------------------------------------------
-
 @c page
 @node typedefs hash
 @section Hash functions
@@ -1308,8 +1354,6 @@ pointer to the function that computes the hash value.
 Type of hash functions used by the hash table.  The return value must be
 the ``position'' of the key in a vector.  @ref{hash} for details.
 @end deftypefn
-
-@c ------------------------------------------------------------
 
 @c page
 @node typedefs callback
@@ -1337,7 +1381,7 @@ them.
 
 
 @deftypefn {Inline Function} ucl_bool_t ucl_callback_is_present (ucl_callback_t @var{cb})
-Return true if the @code{func} field of @var{cb} is not @null{}.
+Return true if the @code{func} field of @var{cb} is not @cnull{}.
 @end deftypefn
 
 
@@ -1355,7 +1399,7 @@ value is a @code{ucl_value_t} with all the bytes set to zero.
 
 @deftypefun ucl_value_t ucl_callback_eval_thunk (ucl_callback_t @var{cb})
 Like @function{ucl_callback_invoke} but the @code{va_list} argument is
-replaced by @null{}.  Return the return value of the callback function.
+replaced by @cnull{}.  Return the return value of the callback function.
 @end deftypefun
 
 
@@ -1424,8 +1468,6 @@ int             b  = 456;
 ucl_callback_apply(cb, a, b);
 @end example
 
-@c ------------------------------------------------------------
-
 @c page
 @node containers
 @chapter The data structures
@@ -1444,11 +1486,1684 @@ ucl_callback_apply(cb, a, b);
 @end menu
 
 
-@include btree.texiinc
-@include tree.texiinc
-@include heap.texiinc
+@c page
+@node btree
+@section The binary tree container
+
+
+@cindex Binary tree container
+
+@menu
+* btree typedefs::              Implementation and type definitions.
+* btree examples::              Usage examples.
+* btree creation::              Building btree hierarchies.
+* btree inspection::            Accessing nodes.
+* btree removing::              Removing elements.
+* btree find::                  Finding values.
+* btree visitors::              Finding nodes.
+* btree iteration::             Iterations in a btree hierarchy.
+@end menu
+
+
+@c page
+@node btree typedefs
+@subsection Implementation and type definitions
+
+
+@noindent
+This section presents an implementation of binary tree; the container is
+a chain of structures:
+
+@example
+  ------  bro   ------
+ | node |----->| node |
+ |   1  |<-----|   2  |
+  ------  dad   ------
+   | ^
+son| |dad
+   v |
+  ------
+ | node |
+ |   3  |
+  ------
+@end example
+
+@noindent
+each node data structure is a collection of pointers and of metadata
+fields whose usage is reserved by @ucl{}; there's no data field.
+
+
+@deftp {Struct Typedef} ucl_node_tag_t
+@deftpx {Pointer Typedef} ucl_node_t
+The data type of the node structure and of the pointer to the node
+structure; nodes must be allocated and freed by client code.  Public
+fields:
+
+@table @code
+@item ucl_node_t dad
+pointer to the parent of this node; @cnull{} if this node has no parent;
+
+@item ucl_node_t son
+pointer to the son of this node; @cnull{} if this node has no son;
+
+@item ucl_node_t bro
+pointer to the bro of this node; @cnull{} if this node has no bro.
+@end table
+@end deftp
+
+
+@c page
+@node btree examples
+@subsection Usage examples
+
+
+@noindent
+Let's say that we want to organise a set of characters in a binary tree;
+we define the tree node type and allocation functions like these:
+
+@example
+typedef struct node_tag_t @{
+  ucl_node_tag_t  node;
+  char            c;
+@} node_tag_t;
+
+typedef node_tag_t *    node_t;
+
+ucl_memory_allocator_t  allocator = @{
+  .data  = NULL,
+  .alloc = ucl_memory_alloc
+@};
+
+node_t
+node_make (char c)
+@{
+  node_t        p = NULL;
+
+  allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
+  p->c = c;
+  return p;
+@}
+void
+node_final (node_t p)
+@{
+  allocator.alloc(allocator.data, &p, 0);
+@}
+__inline__ void
+node_clean (node_t p)
+@{
+  ucl_struct_clean(p, node_tag_t);
+@}
+@end example
+
+@noindent
+and we remember that the built in @ucl{} allocation function,
+@function{ucl_memory_alloc}, sets to zero all the bytes of newly
+allocated blocks.
+
+We define the getter/setter functions in ``generic'' form, like these:
+
+@example
+__inline__ void
+node_set (node_t p, void * data)
+@{
+  p->c = *((char *)data);
+@}
+__inline__ void *
+node_get (node_t p)
+@{
+  return &(p->c);
+@}
+@end example
+
+
+Now if we want the following hierarchy:
+
+@example
+       ---  bro  ---
+      | a |---->| c |
+       ---       ---
+        |         |
+    son v     son v
+       ---       ---
+      | b |     | d |
+       ---       ---
+@end example
+
+@noindent
+we do it like this, taking advantage of the fact that the binary tree
+functions accept @code{void *} values as arguments:
+
+@example
+node_t  a, b, c, d;
+
+a = node_make('a');
+b = node_make('b');
+c = node_make('c');
+d = node_make('d');
+
+ucl_btree_dadson(a, b);
+ucl_btree_dadbro(a, c);
+ucl_btree_dadson(c, d);
+@end example
+
+@noindent
+the following expressions are true:
+
+@example
+NULL == ucl_btree_getdad(a)
+a    == ucl_btree_getdad(b)
+a    == ucl_btree_getdad(c)
+c    == ucl_btree_getdad(d)
+
+c    == ucl_btree_getbro(a)
+NULL == ucl_btree_getbro(b)
+NULL == ucl_btree_getbro(c)
+NULL == ucl_btree_getbro(d)
+
+b    == ucl_btree_getson(a)
+NULL == ucl_btree_getson(b)
+d    == ucl_btree_getson(c)
+NULL == ucl_btree_getson(d)
+@end example
+
+
+@c page
+@node btree creation
+@subsection Building btrees hierarchies
+
+
+@noindent
+The correct way of building binary trees is to allocate node structures
+with a function that cleans them up, like @function{calloc}, then use
+the following functions to initialise the fields.  If a structure is
+recycled, we must reset its fields to zero first.
+
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast @code{ucl_node_t}.
+
+
+@subsubsection Single link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_set_dad (void * @var{self}, void * @var{dad})
+Select a new parent node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_set_bro (void * @var{self}, void * @var{bro})
+Select a new brother node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_set_son (void * @var{self}, void * @var{son})
+Select a new child node for @var{self}.
+@end deftypefn
+
+
+@subsubsection Double link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_set_dadson (void * @var{dad}, void * @var{son})
+Link @var{dad} and @var{son} to be the parent and the son respectively.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_btree_set_dadbro (void * @var{dad}, void * @var{bro})
+Link @var{dad} and @var{bro} to be the parent and the bro respectively.
+@end deftypefn
+
+
+@subsubsection Triple link setters
+
+
+@deftypefn {Inline Function} void ucl_btree_set_dadsonbro (void * @var{dad}, void * @var{son}, void * @var{bro})
+Link @var{dad}, @var{son} and @var{bro} to be the parent, the son and
+the bro respectively.
+@end deftypefn
+
+
+@c page
+@node btree inspection
+@subsection Accessing nodes
+
+
+@noindent
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_ref_dad (void * @var{self})
+Return a pointer to the parent of @var{self} or @cnull{} if the node
+has no parent.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_ref_bro (void * @var{self})
+Return a pointer to the brother of @var{self} or @cnull{} if the node has
+no brother.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_ref_son (void * @var{self})
+Return a pointer to the son of @var{self} or @cnull{} if the node has no
+son.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_data (void * @var{self})
+Assuming that the first field of the memory block referenced by
+@var{self} is a structure of type @code{ucl_node_tag_t}, return a
+pointer to the first byte after that structure.  The returned pointer
+references the first byte of the data area of the tree node.
+@end deftypefn
+
+
+@deftypefn {Inline Function} ucl_bool_t ucl_btree_is_leaf (void * @var{self})
+Return true if the node is a leaf (no brother and no son).
+@end deftypefn
+
+
+@deftypefn {Inline Function} ucl_bool_t ucl_btree_is_root (void * @var{self})
+Return true if the node is the root of a binary tree: it has no dad.
+@end deftypefn
+
+
+@c page
+@node btree removing
+@subsection Removing elements
+
+
+@noindent
+It's a matter of setting pointers to @cnull{}; care must be taken not to
+loose references to subtrees.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_son (void * @var{self})
+Detach the son of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_bro (void * @var{self})
+Detach the bro of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_detach_dad (void * @var{self})
+Detach the dad of @var{self} and return a pointer to it.  The two nodes
+hold references to each other no more.
+@end deftypefn
+
+
+@deftypefun void ucl_btree_clean (void * @var{self})
+Set to zero all the bytes in the node structure.
+@end deftypefun
+
+
+@c page
+@node btree find
+@subsection Finding values
+
+
+@noindent
+The purpose of a binary tree is to organise values in a hierarchy; the
+functions described in this section can be used to find values.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefun {void *} ucl_btree_find_value (void * @var{root}, void * @var{value}, ucl_comparison_t @var{compar})
+Interpret @var{root} as a pointer to the root node of a btree (whose dad
+is @cnull{}) and find a node equal to @var{value} according to the
+comparison closure.  @var{compar} is invoked like this:
+
+@example
+@var{compar}.func(@var{compar}.data, @var{value}, node);
+@end example
+
+@noindent
+where @code{node} is the current node; if the return value is:
+
+@table @asis
+@item zero
+the node is returned;
+@item negative
+the search goes on in the son subtree;
+@item positive
+the search goes on in the bro subtree;
+@end table
+
+@noindent
+if @var{value} is not found, the return value is @cnull{}.
+@end deftypefun
+
+
+@c page
+@node btree visitors
+@subsection Finding nodes
+
+
+@noindent
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefun {void *} ucl_btree_find_leftmost (void * @var{self})
+Find the leftmost node in the subtree of the supplied node.  To do this,
+we traverse the tree choosing always the son of the current node.
+
+Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+starting from @code{5} the selected node is @code{1}, starting from
+@code{10} the selected node is @code{6}.
+
+Return a pointer to the leftmost node in the @var{self} sub--hierarchy
+or to @var{self} itself if it has no son.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_find_rightmost (void * @var{self})
+Find the rightmost node in the subtree of the supplied node.  To do this,
+we traverse the tree choosing always the brother of the current node.
+
+Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+starting from @code{5} the selected node is @code{12}, starting from
+@code{7} the selected node is @code{9}.
+
+Return a pointer to the rightmost node in the @var{self} sub--hierarchy
+or to @var{self} itself if it has no brother.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_find_deepest_son (void * @var{self})
+Find the deepest leftmost son in a subtree.  This is different from
+@function{ucl_btree_find_leftmost}.
+
+Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+starting from @code{5} the selected node is @code{2}, starting from
+@code{10} the selected node is @code{6}.
+
+Return a pointer to the deepest son in the @var{self} sub--hierarchy, or
+@var{self} itself if it has no son.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_find_deepest_bro (void * @var{self})
+Find the deepest rightmost bro in a subtree.  This is different from
+@function{ucl_btree_find_rightmost}.
+
+Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+starting from @code{5} the selected node is @code{11}, starting from
+@code{1} the selected node is @code{4}.
+
+Return a pointer to the deepest bro in the @var{self} sub--hierarchy, or
+@var{self} itself if it has no son.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_find_root (void * @var{node})
+Step up the hierarchy, dad by dad, and return a pointer to a node that
+has @cnull{} as dad.
+@end deftypefun
+
+
+@c page
+@node btree iteration
+@subsection Iterations in a btree hierarchy
+
+
+@menu
+* btree inorder iteration::     Inorder iteration.
+* btree preorder iteration::    Preorder iteration.
+* btree postorder iteration::   Postorder iteration.
+* btree level iteration::       Level order iteration.
+@end menu
+
+
+@c page
+@node btree inorder iteration
+@subsubsection Inorder iteration
+
+
+@noindent
+Forward inorder iteration: visit all the nodes from the leftmost to the
+rightmost.  Backward inorder iteration: visit all the nodes from the
+rightmost to the leftmost.  Example: given the tree:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+the inorder iteration is:
+
+@example
+forward:   1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12
+backward: 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1
+@end example
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_first_inorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_inorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of an
+inorder iteration.  For the forward iteration: it is the leftmost node;
+for the backward iteration: it is the rightmost node.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_inorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_inorder_backward (void * @var{current})
+Advance an inorder iteration.  Given a pointer to a node in a tree:
+perform a single step and return a pointer to the next node, or @cnull{}
+if the iteration is over.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_iterator_inorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_inorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_inorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_inorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_inorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+
 
 @c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
+To perform a complete forward inorder iteration, we have to start from
+the leftmost node (@code{0} in the picture above), already visited, and
+begin from there.  Example:
+
+@example
+ucl_node_t   cur = get_the_top_node();
+
+for (cur = ucl_btree_find_leftmost(cur);
+     cur;
+     cur = ucl_btree_step_inorder(cur));
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+To restrict the iteration to a subtree of a tree or to a range of nodes
+in a tree, we have to select the first and last nodes and check when the
+iterator reaches the last.
+
+Example of subtree restriction: does an inorder iteration from the top
+of a subtree to the rightmost node in the subtree:
+
+@example
+ucl_node_t        cur, end;
+
+cur = get_a_node(...);
+end = ucl_btree_find_rightmost(cur);
+
+for (cur = ucl_btree_find_leftmost(cur);
+     cur != end;
+     cur = ucl_btree_step_inorder(cur))
+  @{
+    do_something_with(cur);
+  @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
+@end example
+
+@noindent
+@code{cur} can't be @cnull{} because @code{end} is in the subtree of the
+top node; this code will work even when @code{cur == end} at the
+beginning.
+
+Example of range restriction: does an iteration starting from a node
+(not the leftmost) to the rightmost one:
+
+@example
+ucl_node_t        root, cur, end;
+
+root	= get_a_node();
+end	= ucl_btree_find_rightmost(root);
+
+for (cur = select_first(root, ...);
+     cur != end;
+     cur = ucl_btree_step_inorder(cur))
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+@noindent
+@code{cur} can't be @cnull{} because we selected the first and last nodes
+in a subtree; this code will work even when @code{root == cur == end} at
+the beginning.
+
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of backward iteration
+
+
+@noindent
+To perform a complete backward iteration, we have to start from the
+rightmost node (@code{12} in the picture above), already visited, and
+begin from there.  Example:
+
+@example
+ucl_node_t   cur = get_the_top_node();
+
+for (cur = ucl_btree_find_rightmost(cur);
+     cur;
+     cur = ucl_btree_step_inorder_backward(cur))
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+To restrict the iteration to a subtree of a tree or to a range of nodes
+in a tree, we have to select the first and last nodes and check when the
+iterator reaches the last.
+
+Example of subtree restriction: does an iteration from the rightmost to
+the leftmost nodes in a subtree:
+
+@example
+ucl_node_t        cur, end;
+
+cur = get_a_node(...);
+end = ucl_btree_find_leftmost(cur);
+
+for (cur = ucl_btree_find_rightmost(cur);
+     cur != end;
+     cur = ucl_btree_step_inorder_backward(cur))
+  @{
+    do_something_with(cur);
+  @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
+@end example
+
+@noindent
+@code{cur} can't be @cnull{} because @code{end} is in the subtree of the
+top node; this code will work even when @code{cur == end} at the
+beginning.
+
+Example of range restriction:
+
+@example
+ucl_node_t        root, cur, end;
+
+root	= get_a_node();
+end	= ucl_btree_find_leftmost(root);
+
+for (cur = select_first(root, ...);
+     cur != end;
+     cur = ucl_btree_step_inorder_backward(cur))
+  @{
+    do_something_with(cur);
+  @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
+@end example
+
+@noindent
+@code{cur} can't be @cnull{} since we selected the first and last nodes
+in a subtree; this code will work even when @code{root == cur == end} a
+the beginning.
+
+
+@c page
+@node btree preorder iteration
+@subsubsection Preorder iteration
+
+
+@noindent
+Preorder iteration: visit the current node then the son then the
+brother.  Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+the preorder iteration is:
+
+@example
+forward:    5,  1,  3,  2,  4, 10,  7,  6,  9,  8, 12, 11
+backward:   5, 10, 12, 11,  7,  9,  8,  6,  1,  3,  4,  2
+@end example
+
+@noindent
+the forward iteration is a ``worm that always turns right'', while the
+backward iteration is a ``worm that always turns left''.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_first_preorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_preorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+preorder iteration.  For both the forward and backward iterations: it is
+the root node itself.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_preorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_preorder_backward (void * @var{current})
+Advance a preorder iteration.  Given a node in a btree: perform a single
+step and return a pointer to the next node, or @cnull{} if the iteration
+is over.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_iterator_preorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_preorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_preorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_preorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_preorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
+To perform a complete iteration, we have to start from the top node of
+the tree (@code{5} in the picture above), already visited, and begin
+from there.  Example:
+
+@example
+ucl_node_t        cur;
+
+for (cur = select_the_top_node();
+     cur;
+     cur = ucl_btree_step_pre(cur))
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+@noindent
+this works because the top node of a btree has a @cnull{} value in the
+dad pointer field.
+
+To restrict the iteration to a subtree of a tree: we cannot loop until
+the function returns @cnull{}, because the top node of a subtree has a
+non--@cnull{} value in the dad pointer field.  With reference to the
+picture above: we select the top node (number 10) and we visit it; then
+we step to the next (number 7) and visit it; then we enter the loop
+until the iterator reaches the top node (number 10 again).
+
+Example:
+
+@example
+ucl_node_t        cur, end;
+
+end = cur = get_a_node();
+
+do_something_with(cur);
+for (cur = ucl_btree_step_preorder(cur);
+     cur != end;
+     cur = ucl_btree_step_preorder(cur))
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+@c page
+@node btree postorder iteration
+@subsubsection Postorder iteration
+
+
+@noindent
+Postorder iteration: visit the son, then the brother, then the parent
+node.  Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+the postorder iteration is:
+
+@example
+forward:    2,  4,  3,  1,  6,  8,  9,  7, 11, 12, 10,  5
+backward:  11, 12,  8,  9,  6,  7, 10,  4,  2,  3,  1,  5
+@end example
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_first_postorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_postorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+postorder iteration.  For the forward iteration: it is the deepest son
+found by @function{ucl_btree_find_deepest_son}; for the backward
+iteration: it is the deepest bro found by
+@function{ucl_btree_find_deepest_bro}.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_postorder (void * @var{current})
+@deftypefunx {void *} ucl_btree_step_postorder_backward (void * @var{current})
+Advance a forward postorder iteration.  Given a node in a btree: perform
+a single step and return a pointer to the next node, or @cnull{} if the
+iteration is over.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_iterator_postorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_postorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_subtree_iterator_postorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_postorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_postorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
+To perform a complete iteration, we have to select the deepest leftmost
+son in the tree (@code{2} in the example) and begin from there.  Example:
+
+@example
+ucl_node_t        cur;
+
+cur = get_a_node();
+for (cur = ucl_btree_find_deepest_son(cur);
+     cur != NULL;
+     cur = ucl_btree_step_postorder(cur));
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+To restrict the iteration to a subtree of a tree, we have to check when
+the iterator reaches the top node.  Example:
+
+To restrict the iteration to a subtree of a tree: we cannot loop until
+the function returns @cnull{}, because the top node of a subtree has a
+non--@cnull{} value in the parent pointer field.  With reference to the
+tree in the picture above: we select the top node (number 10); then we
+move to the deepest son (number 6) and we visit it; then we enter the
+loop until the iterator reaches the top node (number 10 again).
+
+Example:
+
+@example
+ucl_node_t        cur, end;
+
+cur = end = get_a_node();
+
+for (cur = ucl_btree_find_deepest_son(cur);
+     cur != end;
+     cur = ucl_btree_step_postorder(cur));
+  @{
+    do_something_with(cur);
+  @}
+
+/* Here "cur == end" and we visit it. */
+do_something_with(cur);
+@end example
+
+@noindent
+@code{cur} can't be null in the loop.
+
+
+@c page
+@node btree level iteration
+@subsubsection Level order iteration
+
+
+@noindent
+Level order iteration: visit the tree level by level.  Example:
+
+@example
+      5-------10----12
+      |        |     |
+      1--3--4  7--9 11
+         |     |  |
+         2     6  8
+@end example
+
+@noindent
+the order of the forward iteration is: 5, 1, 10, 3, 7, 12, 2, 4, 6, 9,
+11, 8.  To do it we need a moving cursor that always ``turns right''
+keeping the count of the level.  The order of the backward iteration is:
+5, 10, 1, 12, 7, 3, 11, 9, 6, 4, 2, 8.
+
+All the following functions accept @code{void *} values as arguments and
+return @code{void *} values; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefn {Inline Function} {void *} ucl_btree_first_levelorder (void * @var{root})
+@deftypefnx {Inline Function} {void *} ucl_btree_first_levelorder_backward (void * @var{root})
+Given a pointer to the root node of a tree, return the first node of a
+levelorder iteration.  For both the forward and backward iterations: it
+is the root node itself.
+@end deftypefn
+
+
+@deftypefun {void *} ucl_btree_step_levelorder (void * @var{self})
+@deftypefunx {void *} ucl_btree_step_levelorder_backward (void * @var{self})
+Advance a levelorder iteration.  Given a node in the three: perform a
+single step and return a pointer to the next node, or @cnull{} if the
+iteration is over.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_iterator_levelorder (ucl_iterator_t @var{iter}, void * @var{root})
+@deftypefunx void ucl_btree_iterator_levelorder_backward (ucl_iterator_t @var{iter}, void * @var{root})
+Initialise a whole tree iterator; @var{root} must be the root node of a
+btree.
+@end deftypefun
+
+
+@ignore
+@deftypefun void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t @var{iter}, void * @var{node})
+@deftypefunx void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t @var{iter}, void * @var{node})
+Initialise a subtree iterator; @var{node} must be the a node of a btree,
+and will be used as root node of the subtree.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_range_iterator_levelorder (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+@deftypefunx void ucl_btree_range_iterator_levelorder_backward (ucl_iterator_t @var{iter}, ucl_pointer_range_t @var{range})
+Initialise a range iterator over the range of nodes selected by
+@var{range} (remember that ranges are inclusive); the minimum field of
+@var{range} is interpreted as the starting node of the iteration, while
+the maximum field of @var{range} is interpreted as the ending node of
+the iteration.
+@end deftypefun
+@end ignore
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of forward iteration
+
+
+@noindent
+To perform a complete iteration, we just call the function until it
+returns @cnull{}.  Example:
+
+@example
+ucl_node_t cur;
+
+for (cur = get_the_top_node();
+     cur != NULL;
+     cur = ucl_btree_step_levelorder(cur));
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+@c ------------------------------------------------------------
+
+@subsubsection Examples of backward iteration
+
+
+@noindent
+To perform a complete iteration, we just call the function until it
+returns @cnull{}.  Example:
+
+@example
+ucl_node_t cur;
+
+for (cur = get_the_top_node();
+     cur != NULL;
+     cur = ucl_btree_step_levelorder_backward(cur));
+  @{
+    do_something_with(cur);
+  @}
+@end example
+
+@c page
+@node tree
+@section The tree structure
+
+
+@menu
+* tree implementation::         How it's done.
+* tree creation::               Creating a tree hierarchy.
+* tree testing::                Testing relationships between nodes.
+* tree relatives::              Accessing or setting the relatives of
+                                a node.
+* tree removing::               Removing elements from a tree.
+* tree iterators::              Traversing a tree.
+@end menu
+
+
+@c page
+@node tree implementation
+@subsection How it's done
+
+
+@noindent
+The implementation is a binary tree with nodes of type
+@code{ucl_node_t}; the only difference between the btree and the tree is
+the interpretation of the bro nodes.  This means that all the functions
+in the btree module can be used on a tree, and the tree module adds
+functions to establish the interpretation policy.
+
+In the following picture: the nodes @code{B}, @code{C}, @code{D} and
+@code{E} are all ``children'' of the node @code{A}; the node @code{A} is
+the father of the nodes @code{B}, @code{C}, @code{D} and @code{E}.  So
+in a tree a node can have and indefinite number of children.
+
+@example
+   -----
+  |  A  |
+   -----
+    ^ |son
+ dad| v
+   -----  bro   -----  bro   -----  bro   -----  bro
+  |  B  |----->|  C  |----->|  D  |----->|  E  |----->NULL
+   ----- <----- ----- <----- ----- <----- -----
+    ^ |   dad    ^ |   dad          dad
+ dad| vson    dad| vson
+   -----        -----
+  |  F  |      |  G  |
+   -----        -----
+@end example
+
+Pointers condition meaning:
+
+@table @code
+@item node.dad == NULL
+the node is the root node of a tree;
+
+@item node.bro == NULL
+the node has no brothers, so it's the last brother between the children
+of its father;
+
+@item node.son == NULL
+the node has no children;
+
+@item A.dad == B && B.son == A
+A is the first between the children of node B;
+
+@item A.dad == B && B.bro == A
+A and B are brothers, and children of the same parent node.
+@end table
+
+
+@c page
+@node tree creation
+@subsection Creating a tree hierarchy
+
+
+@noindent
+The node structures must be allocated by the client code and all the
+bytes set to zero before usage.  The btree functions can be used
+directly, but @ucl{} provides aliases for them when they must be used
+for a tree.
+
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast @code{ucl_node_t}.
+
+
+@subsubsection Single link setters
+
+
+@deftypefn {Inline Function} void ucl_tree_setdad (void * @var{self}, void * @var{dad})
+Select a new parent node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_tree_setbro (void * @var{self}, void * @var{bro})
+Select a new brother node for @var{self}.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_tree_setson (void * @var{self}, void * @var{son})
+Select a new child node for @var{self}.
+@end deftypefn
+
+
+@subsubsection Double link setters
+
+
+@deftypefn {Inline Function} void ucl_tree_dadson (void * @var{dad}, void * @var{son})
+Link @var{dad} and @var{son} to be the parent and the son respectively.
+@end deftypefn
+
+
+@deftypefn {Inline Function} void ucl_tree_dadbro (void * @var{dad}, void * @var{bro})
+Link @var{dad} and @var{bro} to be the parent and the bro respectively.
+@end deftypefn
+
+
+@subsubsection Triple link setters
+
+
+@deftypefn {Inline Function} void ucl_tree_dadsonbro (void * @var{dad}, void * @var{son}, void * @var{bro})
+Link @var{dad}, @var{son} and @var{bro} to be the parent, the son and
+the bro respectively.
+@end deftypefn
+
+
+
+@deftypefun void ucl_tree_set_son (void * @var{node}, void * @var{son})
+Link together the nodes referenced by @var{node} and @var{son} so
+that one is the son of the other.  The old reference to the son of
+@var{node} is lost; the old reference to the dad of @var{son} is
+lost.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_set_bro (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
+Link together the nodes referenced by @var{node} and @var{bro} so
+that one is the brother of the other.  The node referenced by @var{bro}
+becomes the right brother of the node referenced by @var{node}.  The old
+references to the brothers of the two nodes are lost.
+@end deftypefun
+
+
+The following functions are used to insert subtrees in a tree.  None of
+the nodes in the target tree are detached.  The links in the new subtrees
+that are not interested by the relations in these functions, are left
+untouched.
+
+
+@deftypefun void ucl_tree_insert_dad (ucl_node_t  @var{node}, ucl_node_t  @var{dad})
+Inserts a new dad for a node.  The dad node becomes the father of the
+node and the first son of the old dad (if any).
+
+@example
+ ---       ---
+| A |     | A |
+ ---       ---
+  |         |
+ ---       ---
+|nod| ->  |dad|
+ ---       ---
+            |
+           ---
+          |nod|
+           ---
+@end example
+@end deftypefun
+
+
+Example of dad insertion:
+
+@example
+ucl_tree_insert_dad( 1, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   A--C
+|  |            |         |
+5  6            B         1--2--3--4
+                          |  |
+                          5  6
+@end example
+
+@noindent
+the @code{D} and @code{B} nodes are detached and will be lost if we
+don't keep a reference to them.
+
+
+@deftypefun void ucl_tree_insert_son (ucl_node_t  @var{node}, ucl_node_t  @var{son})
+Insert a new child for a node.  The node referenced by @var{son} becomes
+the last between the children of the node referenced by @var{node}.
+
+@example
+ ---         ---
+|nod|       |nod|
+ ---         ---
+  |     ->    |
+ ---         ---     ---
+| A |       | A |-->|son|
+ ---         ---     ---
+@end example
+@end deftypefun
+
+
+Example of son insertion:
+
+@example
+ucl_tree_insert_son( 0, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--2--3--4--A--C
+|  |            |         |  |        |
+5  6            B         5  6        B
+@end example
+
+@noindent
+the node @code{D} is detached and will be lost if we don't keep a
+reference to it.
+
+
+@deftypefun void ucl_tree_insert_prev (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
+Insert a new brother for a node.  The node referenced by @var{bro}
+becomes the left brother of the node referenced by @var{node}.
+
+@example
+ ---    ---          ---    ---    ---
+| A |--|nod|   ->   | A |--|bro|--|nod|
+ ---    ---          ---    ---    ---
+@end example
+@end deftypefun
+
+
+Example of prev node insertion:
+
+@example
+ucl_tree_insert_prev( 2, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--A--2--3--4
+|  |            |         |  |  |
+5  6            B         5  B  6
+@end example
+
+@noindent
+the @code{D} and @code{C} nodes are detached and will be lost if we
+don't keep a reference to them.
+
+
+@deftypefun void ucl_tree_insert_next (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
+Insert a new brother for a node.  The node referenced by @var{bro}
+becomes the right brother of the node referenced by @var{node}.
+
+@example
+ ---    ---          ---    ---    ---
+|nod|--| A |   ->   |nod|--|bro|--| A |
+ ---    ---          ---    ---    ---
+@end example
+@end deftypefun
+
+
+Example of next brother insertion:
+
+@example
+ucl_tree_insert_next( 2, A )
+
+0               D         0
+|               |         |
+1--2--3--4  +   A--C  =   1--2--A--3--4
+|  |            |         |  |
+5  6            B         5  6
+@end example
+
+@noindent
+the @code{D}, @code{B} and @code{C} nodes are detached and will be lost
+if we don't keep a reference to them.
+
+
+@c page
+@node tree testing
+@subsection Testing relationships between nodes
+
+
+@deftypefun ucl_bool_t ucl_tree_is_dad (const ucl_node_t  @var{dad}, const ucl_node_t  @var{cld_p})
+Return true if the node referenced by @var{dad} is the father of the
+node referenced by @var{cld_p}, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_is_bro (const ucl_node_t  @var{node}, const ucl_node_t  @var{bro})
+Return true if the node referenced by @var{node} is a brother of the
+node referenced by @var{bro}, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_dad (const ucl_node_t  @var{self})
+Return true if the node referenced by @var{self} has a parent,
+otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_prev (const ucl_node_t  @var{self})
+Return true if the node referenced by @var{self} has a brother to the
+left, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_next (const ucl_node_t  @var{self})
+Return true if the node referenced by @var{self} has a brother to the
+right, otherwise return false.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_tree_has_son (const ucl_node_t  @var{self})
+Return true if the node referenced by @var{self} has a son, otherwise
+return false.
+@end deftypefun
+
+@c page
+@node tree relatives
+@subsection Accessing or setting the relatives of a node
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_dad (const ucl_node_t  @var{self})
+Return a pointer to the father of the node referenced by @var{self}; if
+the node has no parent: return @cnull{}.
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_prev (const ucl_node_t  @var{self})
+Return a pointer to the left brother of the node referenced by
+@var{self}; if the node has no left brother: return @cnull{}.
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_next (const ucl_node_t  @var{self})
+Return a pointer to the right brother of the node referenced by
+@var{self}; if the node has no right brother: return @cnull{}.
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_son (const ucl_node_t  @var{self})
+Return a pointer to the son of the node referenced by @var{self}; if the
+node has no child: return @cnull{}.
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_first (const ucl_node_t  @var{self})
+Return a pointer to the first between the brothers of the node
+referenced by @var{self}; it can be a pointer to @var{self} itself, if
+@var{self} is the first.
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_get_last (const ucl_node_t  @var{self})
+Return a pointer to the last between the brothers of the node
+referenced by @var{self}; it can be a pointer to @var{self} itself, if
+@var{self} is the last.
+@end deftypefun
+
+
+@c page
+@node tree removing
+@subsection Removing elements from a tree
+
+
+@noindent
+These functions will extract a node from a tree, returning a pointer to
+the extracted node.
+
+
+@deftypefun {ucl_node_t } ucl_tree_extract_dad (ucl_node_t  @var{node})
+Extract the dad of the node referenced by @var{node} from the tree.
+The referenced node and all its brothers are inserted in place of the
+extracted dad.
+
+Returns a pointer to the extracted node, or @cnull{} if the selected node
+has nod dad.  All the pointers in the extracted node structure are reset
+to @cnull{}.
+
+@example
+ ---    ---    ---       ---    ---    ---    ---
+| A |--|dad|--| B |     | A |--|nod|--| C |--| B |
+ ---    ---    ---       ---    ---    ---    ---
+         |          ->
+        ---    ---              ---
+       |nod|--| C |            |dad|
+        ---    ---              ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_extract_son (ucl_node_t  @var{node})
+Extract the son of the node referenced by @var{node} from the tree.
+The son of the selected node is extracted from the hierarchy.  All of its
+children become children of the selected node.
+
+Return a pointer to the extracted node or @cnull{} if the selected node
+has no son.  All the pointers in the extracted node structure are reset
+to @cnull{}.
+
+@example
+ ---               ---
+|nod|             |nod|
+ ---               ---
+  |                 |
+ ---    ---        ---    ---    ---
+|son|--| C |  ->  | A |--| B |--| C |
+ ---    ---        ---    ---    ---
+  |
+ ---    ---            ---
+| A |--| B |          |son|
+ ---    ---            ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_extract_prev (ucl_node_t  @var{node})
+Extract the left brother of the node referenced by @var{node}.  The
+left brother of the selected node is extracted from the hierarchy.  Its
+children become left brothers of the selected node.
+
+Return a pointer to the extracted node, or @cnull{} if the selected node
+has no left brother.   All the pointers in the extracted node structure
+are reset to @cnull{}.
+
+@example
+ ---               ---
+| A |             | A |
+ ---               ---
+  |                 |
+ ---    ---        ---    ---
+|prv|--|nod|  ->  | B |--|nod|
+ ---    ---        ---    ---
+  |
+ ---                   ---
+| B |                 |prv|
+ ---                   ---
+@end example
+@end deftypefun
+
+
+@deftypefun {ucl_node_t } ucl_tree_extract_next (ucl_node_t  @var{node})
+Extract the right brother of the node referenced by @var{node}.   The
+right brother of the selected node is extracted from the hierarchy.  Its
+children become right brothers of the selected node.
+
+Return a pointer to the extracted node, or @cnull{} if the selected node
+has no right brother.   All the pointers in the extracted node structure
+are reset to @cnull{}.
+
+@example
+ ---    ---    ---       ---    ---    ---
+|nod|--|nxt|--| A |     |nod|--| B |--| A |
+ ---    ---    ---       ---    ---    ---
+         |           ->
+        ---                 ---
+       | B |               |nxt|
+        ---                 ---
+@end example
+@end deftypefun
+
+@c page
+@node tree iterators
+@subsection Traversing a tree
+
+
+@noindent
+For the tree iterators, the return value of @function{ucl_iterator_ptr}
+is a pointer to the current node.
+
+
+@deftypefun void ucl_tree_iterator_inorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+Initialises an in--order iteration.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_iterator_preorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+Initialises a pre--order iteration.
+@end deftypefun
+
+
+@deftypefun void ucl_tree_iterator_postorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+Initialises a post--order iteration.
+@end deftypefun
+
+
+@c page
+@node heap
+@section The heap structure
+
+
+@cindex Heap container
+
+@menu
+* heap creation::             Creating and destroying heaps.
+* heap adding::               Adding elements to a heaps.
+* heap removing::             Removing elements from a heaps.
+* heap ops::                  Various operations on a heaps.
+@end menu
+
+
+@noindent
+The heap container allows us to insert a bunch of values and extract
+them sorted, from the lesser to the greater according to a custom
+comparison function.
+
+The heap is implemented as a binary tree, with nodes of type
+@code{ucl_node_t}.  It is possible to use the heap to implement the heap
+sorting algorithm for the @ucl{} containers that make use of
+@code{ucl_node_t} nodes.
+
+
+@deftp {Struct Typedef} ucl_heap_tag_t
+@deftpx {Pointer Typedef} ucl_heap_t
+The base structure and pointer of the heap container.  The base
+structure stores the context associated to a heap: the value extraction
+function for the nodes; the comparison function for the nodes; the
+current number of elements in the heap.
+@end deftp
+
+
+@c page
+@node heap creation
+@subsection Creating and destroying heap
+
+
+@noindent
+The base structure of a heap container must be allocated by the client
+code; all its bytes should be set to zero.
+
+When a heap must be destroyed: all its node must be extracted and
+released with the appropriate function.  Example of heap destruction:
+
+@example
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+ucl_node_t      node_p;
+
+while (ucl_heap_size(heap))
+  @{
+    node_p = ucl_heap_extract(heap);
+    allocator.alloc(allocator.data, &node_p, 0);
+  @}
+@end example
+
+The comparison function will get as arguments pointers to the heap nodes
+in the @code{pointer} fields of the @code{ucl_value_t} union; it is its
+responsibility to know how to extract the values from there.
+
+
+@c page
+@node heap adding
+@subsection Adding elements to a heap
+
+
+@deftypefun void ucl_heap_insert (ucl_heap_t @var{self}, ucl_node_t @var{node})
+Insert a new node in the heap.
+@end deftypefun
+
+
+Example of node insertion:
+
+@example
+typedef struct @{
+  ucl_node_t    node;
+  int           value;
+@} node_tag_t;
+
+typedef node_tag_t *    node_t;
+
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+node_t          node = NULL;
+
+allocator.alloc(allocator.data, &node, sizeof(node_tag_t));
+node->value = 123;
+ucl_heap_insert(heap, node);
+@end example
+
+
+@c page
+@node heap removing
+@subsection Removing elements from a heap
+
+
+@deftypefun ucl_node_t ucl_heap_extract (ucl_heap_t @var{self})
+Extract a node from the heap; return a pointer to it, or @cnull{} if the
+heap is empty.  The extracted node is the one with the smallest value.
+@end deftypefun
+
+
+Example of node extraction:
+
+@example
+ucl_memory_allocator_t  allocator;
+ucl_heap_t      heap;
+ucl_node_t      node;
+
+...
+
+node = ucl_heap_extract(heap);
+allocator.alloc(allocator.data, &node, 0);
+@end example
+
+
+@c page
+@node heap ops
+@subsection Various operations on a heap
+
+
+@deftypefn {Inline Function} size_t ucl_heap_size (const ucl_heap_t @var{self})
+Return a value of type @code{size_t} representing the number of nodes in
+the heap.
+@end deftypefn
+
+
+@deftypefun void ucl_heap_merge (ucl_heap_t @var{this}, ucl_heap_t @var{other})
+Merge two heaps: nodes from @var{other} are extracted and inserted into
+@var{this}.  When the function returns @var{other} is empty.
+@end deftypefun
+
 
 @c page
 @node circular
@@ -1591,7 +3306,7 @@ ucl_circular_insert(circ, link_p);
 
 
 @deftypefun {ucl_circular_link_t *} ucl_circular_extract (ucl_circular_t @var{self})
-Extract the current link and return a pointer to it, or @null{} if the
+Extract the current link and return a pointer to it, or @cnull{} if the
 list is empty.  The new current element is the next in the forward
 direction.
 @end deftypefun
@@ -1649,7 +3364,7 @@ Register the function to be used to compare elements.
 
 @deftypefun {ucl_circular_link_t *} ucl_circular_find (ucl_circular_t @var{self}, ucl_value_t @var{val})
 Move the current position to the first forward element whose value is
-equal to @var{val}; return a pointer to the link, or @null{} if the
+equal to @var{val}; return a pointer to the link, or @cnull{} if the
 value was not found.
 @end deftypefun
 
@@ -1666,7 +3381,7 @@ Return the number of elements in the container.
 
 
 @deftypefun {ucl_circular_link_t *} ucl_circular_current (ucl_circular_t @var{self})
-Return a pointer to the current link, or @null{} if the container is
+Return a pointer to the current link, or @cnull{} if the container is
 empty.
 @end deftypefun
 
@@ -1763,7 +3478,7 @@ into a simply linked list, but it is not mandatory to use it.
 Each node references two doubly linked lists of links: one for outgoing
 links and one for incoming links.
 
-@example   
+@example
                  ------
     NULL  ------| node |-----  NULL
       ^  |       ------      |  ^
@@ -1946,11 +3661,11 @@ The following two macros do the same loops described above.
 
 
 @defmac UCL_GRAPH_FIRST_INPUT_LINK_LOOP (@var{node}, @var{link})
-Loop over the first input link until it is @null{}.
+Loop over the first input link until it is @cnull{}.
 @end defmac
 
 @defmac UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP (@var{node}, @var{link})
-Loop over the first output link until it is @null{}.
+Loop over the first output link until it is @cnull{}.
 @end defmac
 
 With them the extraction code looks like this:
@@ -1996,7 +3711,7 @@ the following function does it.
 Erase a node from a graph finalising all the links.
 
 The node structure itself is not finalised: its link fields are set to
-@null{}, the value field is left untouched, the structure memory is
+@cnull{}, the value field is left untouched, the structure memory is
 not freed.  @var{node} can still be used as argument to
 @function{ucl_graph_get_next_node}.
 
@@ -2055,7 +3770,7 @@ its first node.
 Erase a node from a graph.
 
 The node structure itself is not finalised: its link fields are set to
-@null{}, the value field is left untouched, the structure memory is
+@cnull{}, the value field is left untouched, the structure memory is
 not freed.  @var{node} can still be used as argument to
 @function{ucl_graph_get_next_node}.
 
@@ -2192,7 +3907,7 @@ free_memory_of(in);
 @noindent
 Nodes can be chained in a simply linked list.  The @code{next_node_p}
 field of @code{ucl_graph_node_t} is a pointer that can be used to
-reference the ``next node''; if it is @null{} no next node exists.
+reference the ``next node''; if it is @cnull{} no next node exists.
 
 
 @subsubsection Setting/getting the next node
@@ -2200,13 +3915,13 @@ reference the ``next node''; if it is @null{} no next node exists.
 
 @deftypefun void ucl_graph_set_next_node (ucl_graph_node_t * @var{node}, const ucl_graph_node_t * @var{next})
 Store @var{next} into the ``next node'' field of @var{node}.  @var{next}
-can be @null{} to represent the end of the linked list.
+can be @cnull{} to represent the end of the linked list.
 @end deftypefun
 
 
 @deftypefun {ucl_graph_node_t *} ucl_graph_get_next_node (const ucl_graph_node_t * @var{node})
 Return the pointer stored in the ``next node'' field of @var{node}.  The
-return value can be @null{} if no next node exists.
+return value can be @cnull{} if no next node exists.
 @end deftypefun
 
 Example of building the chain:
@@ -2264,7 +3979,7 @@ after the invocation of this function the scenario is:
 @deftypefun void ucl_graph_insert_next_node (ucl_graph_node_t * @var{node}, ucl_graph_node_t * @var{next})
 Insert @var{next} in the list as next node of @var{node}.  The old next
 node becomes the next node of @var{next}.  This function works even when
-@var{node} is the last of the list and when @var{next} is @null{}.
+@var{node} is the last of the list and when @var{next} is @cnull{}.
 
 If, before the invocation of this function, the scenario is:
 
@@ -2461,13 +4176,13 @@ starting at @var{link}.  Return the first link.
 @deftypefun {ucl_graph_link_t *} ucl_graph_prev_input_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_prev_output_link (ucl_graph_link_t * @var{link})
 Return a pointer to the previous link in the chain.  The return value is
-@null{} if @var{link} is the first link.
+@cnull{} if @var{link} is the first link.
 @end deftypefun
 
 @deftypefun {ucl_graph_link_t *} ucl_graph_next_input_link (ucl_graph_link_t * @var{link})
 @deftypefunx {ucl_graph_link_t *} ucl_graph_next_output_link (ucl_graph_link_t * @var{link})
 Return a pointer to the next link in the chain.  The return value is
-@null{} if @var{link} is the last link.
+@cnull{} if @var{link} is the last link.
 @end deftypefun
 
 @c ------------------------------------------------------------
@@ -2724,7 +4439,7 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 
 @noindent
 A @ucl{} vector of pointers is allocated by the constructor; each
-pointer, called ``bucket'' in this document, can be @null{} (empty
+pointer, called ``bucket'' in this document, can be @cnull{} (empty
 bucket) or referencing an entry structure.  Entry structures are chained
 in a linked list.
 
@@ -2749,7 +4464,7 @@ The @ucl{} way of managing a vector is to allocate a block of memory,
 with hysteresis, and consider a sub--block of it as ``in use'', that is:
 as holding the collected data.  When the hash table is constructed all
 the slots are marked as used, even when the bucket is set to
-@null{}.  Reallocations can cause some of the slots to be unused, but if
+@cnull{}.  Reallocations can cause some of the slots to be unused, but if
 we never reallocate the vector all the memory is used to hold buckets.
 
 
@@ -2764,7 +4479,7 @@ bucket; then the bucket is examined:
 
 @itemize
 @item
-if it's @null{}, it's set to the entry pointer:
+if it's @cnull{}, it's set to the entry pointer:
 
 @example
 before the insertion           after the insertion
@@ -2779,7 +4494,7 @@ before the insertion           after the insertion
 @end example
 
 @item
-if it's not @null{}, the referenced entry is appended to the new entry
+if it's not @cnull{}, the referenced entry is appended to the new entry
 and the bucket is set to a pointer to the new entry:
 
 @example
@@ -3035,14 +4750,14 @@ if (NULL != entry_p)
 
 @deftypefun {ucl_hash_entry_t *} ucl_hash_find (const ucl_hash_t @var{self}, const ucl_value_t @var{key})
 Search in the table an entry associated with the selected key.  Return a
-pointer to the entry or @null{} if the key was not found.
+pointer to the entry or @cnull{} if the key was not found.
 @end deftypefun
 
 
 @deftypefun {ucl_hash_entry_t *} ucl_hash_first (const ucl_hash_t @var{self})
 Return a pointer to the first entry in the table: the first link in the
-list of the first non--@null{} bucket.  If the has table is empty: return
-@null{}.
+list of the first non--@cnull{} bucket.  If the has table is empty: return
+@cnull{}.
 @end deftypefun
 
 
@@ -3174,7 +4889,7 @@ for (ucl_hash_iterator(hash, iterator);
 @deftypefun size_t ucl_hash_string (const ucl_value_t @var{val})
 Return an unsigned integer representing the hash value for the string
 in @var{val}.  The @code{str} member of @var{val} must be a pointer to a
-@null{}--terminated string of characters.
+@cnull{}--terminated string of characters.
 
 The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 (@ref{references}).
@@ -3386,7 +5101,7 @@ Return the number of elements in the container.
 
 @deftypefun {ucl_list_link_t *} ucl_list_index (ucl_list_t @var{self}, size_t @var{index})
 Convers a position in a pointer to the corresponding list link.   Return
-a pointer to the selected link, or @null{} if the index is out of range.
+a pointer to the selected link, or @cnull{} if the index is out of range.
 @end deftypefun
 
 
@@ -3401,25 +5116,25 @@ Store a new value in a link.
 
 
 @deftypefun {ucl_list_link_t *} ucl_list_front (const ucl_list_t @var{self})
-Return a pointer to the first link in the list or @null{} if the list is
+Return a pointer to the first link in the list or @cnull{} if the list is
 empty.
 @end deftypefun
 
 
 @deftypefun {ucl_list_link_t *} ucl_list_back (const ucl_list_t @var{self})
-Return a pointer to the last link in the list or @null{} if the list is
+Return a pointer to the last link in the list or @cnull{} if the list is
 empty.
 @end deftypefun
 
 
 @deftypefun {ucl_list_link_t *} ucl_list_next (ucl_list_link_t * @var{link_p})
-Return a pointer to the link next to @var{link_p} or @null{} if
+Return a pointer to the link next to @var{link_p} or @cnull{} if
 @var{link_p} is the last in the chain.
 @end deftypefun
 
 
 @deftypefun {ucl_list_link_t *} ucl_list_prev (ucl_list_link_t * @var{link_p})
-Return a pointer to the previous link of @var{link_p} or @null{} if
+Return a pointer to the previous link of @var{link_p} or @cnull{} if
 @var{link_p} is the first in the chain.
 @end deftypefun
 
@@ -3689,12 +5404,12 @@ Store an value in a link.
 
 
 @deftypefun ucl_value_t ucl_map_getkey (ucl_map_link_t * @var{link_p})
-Return the key in a map link. 
+Return the key in a map link.
 @end deftypefun
 
 
 @deftypefun ucl_value_t ucl_map_getval (ucl_map_link_t * @var{link_p})
-Return the value in a map link. 
+Return the value in a map link.
 @end deftypefun
 
 @c ------------------------------------------------------------
@@ -3712,7 +5427,7 @@ simple maps.
 
 @deftypefun {ucl_map_link_t *} ucl_map_find (const ucl_map_t @var{self}, const ucl_value_t @var{key});
 Return a pointer to the (first found) element associated with
-@var{key}.  The return value is @null{} if such an element doesn't
+@var{key}.  The return value is @cnull{} if such an element doesn't
 exist.
 
 For a multimap, this function returns a pointer to the first element
@@ -3723,26 +5438,26 @@ invocations of @function{ucl_map_next}.
 
 @deftypefun {ucl_map_link_t *} ucl_map_first (const ucl_map_t @var{self})
 Return a pointer to the element with lesser key in the map, or
-@null{} if the map is empty.
+@cnull{} if the map is empty.
 @end deftypefun
 
 
 @deftypefun {ucl_map_link_t *} ucl_map_last (const ucl_map_t @var{self})
 Return a pointer to the element with greater key in the map, or
-@null{} if the map is empty.
+@cnull{} if the map is empty.
 @end deftypefun
 
 
 @deftypefun {ucl_map_link_t *} ucl_map_next (const ucl_map_link_t * @var{link_p})
 Return a pointer to the element adjacent to the one referenced by
-@var{link_p} with greater key, or @null{} if @var{link_p} has the
+@var{link_p} with greater key, or @cnull{} if @var{link_p} has the
 greater key in the map.
 @end deftypefun
 
 
 @deftypefun {ucl_map_link_t *} ucl_map_prev (const ucl_map_link_t * @var{link_p})
 Return a pointer to the element adjacent to the one referenced by
-@var{link_p} with lesser key, or @null{} if @var{link_p} has the
+@var{link_p} with lesser key, or @cnull{} if @var{link_p} has the
 lesser key in the map.
 @end deftypefun
 
@@ -3750,7 +5465,7 @@ lesser key in the map.
 @deftypefun {ucl_map_link_t *} ucl_map_find_or_next (const ucl_map_t @var{self}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the lesser key greater than the selected one.  Return a
-pointer to the requested link or @null{} if all the keys in the map
+pointer to the requested link or @cnull{} if all the keys in the map
 are lesser than the selected one.
 @end deftypefun
 
@@ -3758,7 +5473,7 @@ are lesser than the selected one.
 @deftypefun {ucl_map_link_t *} ucl_map_find_or_prev (const ucl_map_t @var{self}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the greater key lesser than the selected one.  Return a
-pointer to the requested link or @null{} if all the keys in the map
+pointer to the requested link or @cnull{} if all the keys in the map
 are greater than the selected one.
 @end deftypefun
 
@@ -3890,8 +5605,24 @@ Subtraction: 0 1 2 3
 
 @cindex Vector container
 
+
+The vector container is an implementation of array, with hysteresis in
+memory allocation.
+
+@quotation
+This module was inspired by the book on C++ by Bjarne Stroustrup and by
+the @acronym{STL} C++ (Standard Template Library).
+@end quotation
+
+@quotation
+In the following documentation, when describing valid values for vector
+indexes, we denote a range of values with @code{[min, max)}, where
+@code{[} means inclusive bound and @code{(} means exclusive bound.
+@end quotation
+
 @menu
 * vector implementation::       How it's done.
+* vector typedefs::             Type definitions
 * vector fields::               Fields and default configuration
                                 for vectors.
 * vector creation::             Creating and destroying vectors.
@@ -3906,66 +5637,20 @@ Subtraction: 0 1 2 3
 * vector high::                 High level functions.
 @end menu
 
-@noindent
-The @ucl{} vector container is an implementation of array, with
-hysteresis in memory allocation.  This module was inspired by the book
-on C++ by Bjarne Stroustrup and by the @acronym{STL} C++ (Standard
-Template Library).
-
-This container is heavyweight: its complexity is overkill for simple
-arrays with fixed size.
-
-In the following documentation, when describing valid values for vector
-indexes, we denote a range of values with @code{[min, max)}, where
-@code{[} means inclusive bound and @code{(} means exclusive bound.
-
-
-@deftp {Struct Typedef} ucl_vector_struct_t
-The data type of the base structure.  It must be allocated by the user
-code.
-@end deftp
-
-@deftp {Single Element Array Typedef} ucl_vector_t
-A one--element array of @code{ucl_vector_struct_t}.
-@end deftp
-
-@deftp {Struct Typedef} ucl_vector_array_t
-Holds an array of vectors.  Public slots:
-
-@table @code
-@item size_t number_of_vectors
-the number of vectors in the array;
-
-@item ucl_vector_struct_t ** vectors
-array of pointers to vectors; this type implies no assumption upon the
-origin of the array memory, it can be statically or dynamically
-allocated, or it can be on the stack.
-@end table
-
-To declare an array of vectors we can do:
-
-@example
-ucl_vector_struct_t * vectors[NUMBER];
-ucl_vector_array_t    array = @{
-  .number_of_vectors = NUMBER,
-  .vectors           = vectors
-@};
-@end example
-@end deftp
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector implementation
 @subsection How it's done
 
 
-@noindent
+This container is heavyweight: its complexity is overkill for simple
+arrays with fixed size.
+
 The vector structure can be allocated anywhere; the array is always
 dynamically allocated and it is described by four pointers:
 @code{first_allocated_slot}, @code{first_used_slot},
 @code{last_used_slot}, @code{last_allocated_slot}.  All the pointers are
-of byte type (usually @code{unsigned char}).
+of type @code{uint8_t *}.
 
 A "slot" is a section of the allocated memory that can hold an element;
 the dimension of the slots is configured at initialisation time.  A "free
@@ -3975,9 +5660,8 @@ is a slot that holds an element; used slots are always contiguous in the
 allocated memory.
 
 
-@subsubsection Pointer usage charts
+@subsubheading Pointer usage charts
 
-@noindent
 Pointers when some slot is used:
 
 @example
@@ -4038,8 +5722,8 @@ pointers when the allocated memory is full:
 |--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
 ^                                         ^
 |                        last_allocated_slot == last_used_slot
-|              
-|              
+|
+|
 |
 first_allocated_slot == first_used_slot
 @end example
@@ -4084,6 +5768,7 @@ first_allocated_slot
 pointers when the vector is empty and a zero pad area was configured:
 
 @example
+                    free slots
    |''''''''''''''''''''''''''''''''''''''''''''|
 |__|--|--|--|--|--|--|--|--|--|--|--|--|--|--|--|
 ^  ^                                         ^
@@ -4095,8 +5780,7 @@ last_used_slot
 @end example
 
 
-@subsubsection Pointers usage rules
-
+@subsubheading Pointers usage rules
 
 @itemize
 @item
@@ -4188,7 +5872,41 @@ The padding area, whose starting size can be configured, has the purpose
 of allowing fast insertion of elements at the beginning, with no
 reallocation of the memory block.
 
-@c ------------------------------------------------------------
+@c page
+@node vector typedefs
+@subsection Type definitions
+
+
+@deftp {Struct Typedef} ucl_vector_tag_t
+@deftpx {Struct Typedef Pointer} ucl_vector_t
+The data type of the base structure.  It must be allocated by the user
+code.
+@end deftp
+
+
+@deftp {Struct Typedef} ucl_vector_array_t
+Holds an array of vectors.  Public slots:
+
+@table @code
+@item size_t number_of_vectors
+the number of vectors in the array;
+
+@item ucl_vector_tag_t ** vectors
+array of pointers to vectors; this type implies no assumption upon the
+origin of the array memory, it can be statically or dynamically
+allocated, or it can be on the stack.
+@end table
+
+To declare an array of vectors we can do:
+
+@example
+ucl_vector_t *        vectors[NUMBER];
+ucl_vector_array_t    array = @{
+  .number_of_vectors = NUMBER,
+  .vectors           = vectors
+@};
+@end example
+@end deftp
 
 @c page
 @node vector fields
@@ -4478,7 +6196,7 @@ Register the function+context used to compare elements.
 Convert @var{index} into the corresponding pointer to a slot in the
 vector.
 
-Return a pointer to the selected slot, or @null{} if the selected index
+Return a pointer to the selected slot, or @cnull{} if the selected index
 is out of range.  The range of valid values for @var{index} is @code{[0,
 size)}, where @code{size} is the return value of
 @function{ucl_vector_size}.
@@ -4516,7 +6234,7 @@ vector: that way the returned value can be used with
 @function{ucl_vector_insert} to append an element to the end of the
 vector.
 
-Return a pointer to the selected slot, or @null{} if the selected index
+Return a pointer to the selected slot, or @cnull{} if the selected index
 is out of range.  The range of valid values for @var{index} is @code{[0,
 size]}, where @code{size} is the return value of
 @function{ucl_vector_size}.
@@ -4953,7 +6671,7 @@ the element to be found, it's used as first argument to the comparison
 function.
 
 The return value is always a pointer to the found element in the array,
-or @null{} if the element is not present.
+or @cnull{} if the element is not present.
 
 
 @deftypefun {void *} ucl_vector_find (const ucl_vector_t @var{self}, const void * @var{data_p})
@@ -5386,7 +7104,7 @@ of @var{target} by copying data with @function{memcpy}.
 @deftypefun void ucl_vector_append_more (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, @dots{})
 Append elements from a set of vectors to the end of @var{target}.  The
 @code{...} arguments are a list of @code{ucl_vector_t} values terminated
-by a @null{}.
+by a @cnull{}.
 
 @strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
 
@@ -5641,7 +7359,7 @@ Like @function{ucl_vector_for_each}, but apply the callback to an array
 of pointers to slots from the vectors used as arguments.
 
 This function must be invoked with a list of @code{ucl_vector_t}
-arguments ended by a @null{}.
+arguments ended by a @cnull{}.
 
 The callback function is invoked with a pointer to a
 @code{ucl_array_of_pointers_t} structure as custom value:
@@ -5733,7 +7451,7 @@ callback (ucl_value_t state UCL_UNUSED, ucl_value_t custom)
   ucl_array_of_pointers_t * slots   = custom.ptr;
   int *                     result  = slots.slots[0];
   int *                     operand = slots.slots[1];
-  
+
   *result = - *operand;
 @}
 
@@ -5766,7 +7484,7 @@ Like @function{ucl_vector_map}, but apply the callback to an array of
 pointers to slots from the vectors used as arguments.
 
 The function must be invoked with a list of @code{ucl_vector_t}
-arguments ended by @null{}.
+arguments ended by @cnull{}.
 
 The callback function is invoked with a pointer to a
 @code{ucl_array_of_pointers_t} structure as custom value:
@@ -5867,7 +7585,7 @@ Advance the iteration.
 
 @deftypefun {void *} ucl_iterator_ptr (ucl_iterator_t @var{iterator})
 Return a pointer referencing the current value.  If the iteration is
-already over: return @null{}.
+already over: return @cnull{}.
 @end deftypefun
 
 
@@ -5907,19 +7625,6 @@ for (ucl_map_iterator_inorder(this, iterator);
 Return a pointer to a string representing the version number.
 @end deftypefun
 
-@deftypefun {const char *} ucl_major_version (void)
-Return a pointer to a string representing the major version number.
-@end deftypefun
-
-@deftypefun {const char *} ucl_minor_version (void)
-Return a pointer to a string representing the minor version number.
-@end deftypefun
-
-@deftypefun {const char *} ucl_patch_version (void)
-Return a pointer to a string representing the patch level version
-number.
-@end deftypefun
-
 
 @section Interface version number
 
@@ -5943,7 +7648,7 @@ The following functions match the @code{ucl_valcmp_fun_t} prototype.
 
 
 @deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Compare the @code{num} fields of two values.  @var{data} must be @null{}.
+Compare the @code{num} fields of two values.  @var{data} must be @cnull{}.
 
 Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
 greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
@@ -5952,7 +7657,7 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 
 @deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Compare the @code{unum} fields of two values.  @var{data} must be
-@null{}.
+@cnull{}.
 
 Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
 greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
@@ -5961,7 +7666,7 @@ greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
 
 @deftypefun int ucl_strcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Wrapper for @function{strcmp}.  Compare the @code{str} fields of @var{a}
-and @code{b}.  @var{data} must be @null{}.
+and @code{b}.  @var{data} must be @cnull{}.
 @end deftypefun
 
 
@@ -5985,102 +7690,9 @@ version 2.4, modified to use @var{compar}.
 @end deftypefun
 
 
-
-@c ------------------------------------------------------------
-
-@c page
-@node stub
-@chapter The stubs mechanism
-
-
-@noindent
-For an explanation of the stubs mechanism @ref{stub mechanism}.
-
-
-@defmac UCL_ENABLE_STUB
-Preprocessor symbol to be defined to include stubs library declarations
-and definitions in the @ucl{} header file.
-@end defmac
-
-
-@deftypefun {const char *} ucl_init_stub_table (void)
-Initialise the stub table; to be called when using the stub library,
-before invoking any of the @ucl{} functions.
-
-Loads the @ucl{} library using the @code{dl} mechanism.  If no error
-returns @null{}, else returns the error string returned by
-@function{dlerror}.
-@end deftypefun
-
-
-@deftypefun int ucl_final_stub_table (void)
-Unloads the @ucl{} library using the @code{dl} mechanism.   If no error
-returns 0, else returns the error code returned by @function{dlclose}.
-@end deftypefun
-
-
-
-@appendixsubsec How to use the @ucl{} stub library
-
-@enumerate
-@item
-Write the the source code including the @file{ucl.h} header and invoking
-functions as usual.
-
-@item
-In the initialisation phase of our code invoke the @ucl{} stub
-initialisation function:
-
-@example
-const char * err = ucl_init_stub_table();
-if (NULL != err) goto error;
-@end example
-
-the return value is the error message returned by @function{dlerror}.
-
-@item
-Compile our code with the symbol @code{UCL_ENABLE_STUB}:
-
-@example
-gcc ourcode.c -DUCL_ENABLE_STUB -c -o ourcode.o
-@end example
-
-@item
-Link the code with the stub library and the @code{dl} library:
-
-@example
-gcc ourcode.o -ldl -lstubucl1.0
-@end example
-@end enumerate
-
-
-@appendixsubsec How not to use the @ucl{} stubs library
-
-@enumerate
-@item
-Write the the source code including the @file{ucl.h} header and invoking
-functions as usual.
-
-@item
-Compile our code @strong{without} the symbol @code{UCL_ENABLE_STUB}:
-
-@example
-gcc ourcode.c -c -o ourcode.o
-@end example
-
-@item
-Link the code with the shared library:
-
-@example
-gcc ourcode.o -lucl1.0
-@end example
-@end enumerate
-
-
 @c page
 
 @include libversion.texiinc
-@include stubmechanism.texiinc
 
 @c page
 @node references
@@ -6099,8 +7711,8 @@ Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 
 @c page
 
-@include gpl.texiinc
-@include fdl.texiinc
+@include gpl-3.0.texiinc
+@include fdl-1.3.texiinc
 
 @c page
 @node concept index
@@ -6111,15 +7723,15 @@ Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 @node function index
 @appendix An entry for each function
 @printindex fn
-     
+
 
 @node type index
-@appendix An entry for each type. 
+@appendix An entry for each type.
 @printindex tp
 
 
 @node variable index
-@appendix An entry for each variable. 
+@appendix An entry for each variable.
 @printindex vr
 
 

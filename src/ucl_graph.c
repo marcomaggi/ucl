@@ -1,38 +1,35 @@
-/*       
+/*
    Part of: Useless Containers Library
    Contents: graph container
    Date: Sat Apr 16, 2005
-      
+
    Abstract
-      
+
       Graph container.
-      
-   Copyright (c) 2005, 2006, 2007, 2008 Marco Maggi
-   
+
+   Copyright (c) 2005-2010 Marco Maggi <marcomaggi@gna.org>
+
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or (at
    your option) any later version.
-   
+
    This program is  distributed in the hope that it  will be useful, but
    WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
    MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
-   
+
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
+
 */
 
 
-/** ------------------------------------------------------------
- ** Header files.
- ** ----------------------------------------------------------*/
+/** --------------------------------------------------------------------
+ ** Headers.
+ ** -----------------------------------------------------------------*/
 
 #include "internal.h"
-
-#define stubmodule		graph
-
 
 /* Prototype of Depth First Search functions. */
 typedef void dfs_recurse_t (ucl_graph_dfs_t * search_handle,
@@ -42,24 +39,22 @@ typedef void dfs_recurse_t (ucl_graph_dfs_t * search_handle,
 static ucl_graph_dfs_item_t * dfs_enter_node (ucl_graph_dfs_t * search_handle,
 					      ucl_graph_node_t * node_p);
 
-static void dfs_leave_node (ucl_graph_dfs_t * search_handle, 
+static void dfs_leave_node (ucl_graph_dfs_t * search_handle,
 			    ucl_graph_dfs_item_t * dfs_node);
 
-/* ------------------------------------------------------------ */
-
 
-/** ------------------------------------------------------------
+/** --------------------------------------------------------------------
  ** Link doubly-linked list iterators.
- ** ----------------------------------------------------------*/
+ ** -----------------------------------------------------------------*/
 
-stub(2006-10-05-10-16-01) ucl_graph_link_t *
+ucl_graph_link_t *
 ucl_graph_last_output_link (ucl_graph_link_t * link_p)
 {
   while (NULL != link_p->output.next_link_p)
     link_p = link_p->output.next_link_p;
   return link_p;
 }
-stub(2006-10-05-10-16-11) ucl_graph_link_t *
+ucl_graph_link_t *
 ucl_graph_last_input_link (ucl_graph_link_t * link_p)
 {
   while (NULL != link_p->input.next_link_p)
@@ -69,14 +64,14 @@ ucl_graph_last_input_link (ucl_graph_link_t * link_p)
 
 /* ------------------------------------------------------------ */
 
-stub(2006-10-05-10-16-16) ucl_graph_link_t *
+ucl_graph_link_t *
 ucl_graph_first_output_link (ucl_graph_link_t * link_p)
 {
   while (NULL != link_p->output.prev_link_p)
     link_p = link_p->output.prev_link_p;
   return link_p;
 }
-stub(2006-10-05-10-16-44) ucl_graph_link_t *
+ucl_graph_link_t *
 ucl_graph_first_input_link (ucl_graph_link_t * link_p)
 {
   while (NULL != link_p->input.prev_link_p)
@@ -91,7 +86,7 @@ ucl_graph_first_input_link (ucl_graph_link_t * link_p)
  ** Link two nodes.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-10-25) void
+void
 ucl_graph_link (ucl_graph_node_t * s, ucl_graph_link_t * l, ucl_graph_node_t * d)
 {
   ucl_graph_link_t *	link_p;
@@ -129,7 +124,7 @@ ucl_graph_link (ucl_graph_node_t * s, ucl_graph_link_t * l, ucl_graph_node_t * d
     }
 }
 
-stub(2006-10-06-10-39-15) ucl_bool_t
+ucl_bool_t
 ucl_graph_nodes_are_linked (ucl_graph_node_t * src_p, ucl_graph_node_t * dst_p)
 {
   ucl_graph_link_t *	link_p;
@@ -139,7 +134,7 @@ ucl_graph_nodes_are_linked (ucl_graph_node_t * src_p, ucl_graph_node_t * dst_p)
       return 1;
   return 0;
 }
-stub(2006-10-06-10-41-28) ucl_bool_t
+ucl_bool_t
 ucl_graph_nodes_are_connected (ucl_graph_node_t * a, ucl_graph_node_t * b)
 {
   ucl_graph_link_t *	link_p;
@@ -155,7 +150,7 @@ ucl_graph_nodes_are_connected (ucl_graph_node_t * a, ucl_graph_node_t * b)
 
 /* ------------------------------------------------------------ */
 
-stub(2007-09-26-11-37-57) void
+void
 ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p)
 {
   node_p->next_node_p = (ucl_graph_node_t *)next_p;
@@ -168,14 +163,14 @@ ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * nex
  ** Unlink two nodes.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-10-28) void
+void
 ucl_graph_unlink (ucl_graph_link_t *link_p)
 {
   ucl_graph_node_t *	node_p;
   ucl_graph_link_t *	prev_p;
   ucl_graph_link_t *	next_p;
 
-  
+
   /* Remove the link from the chain of ingoing links. */
   prev_p = link_p->input.prev_link_p;
   next_p = link_p->input.next_link_p;
@@ -215,7 +210,7 @@ ucl_graph_node_reset_link_fields (ucl_graph_node_t * node_p)
   memset(&(node_p->output), '\0', sizeof(ucl_graph_link_list_base_t));
 }
 
-stub(2006-10-05-10-11-00) void
+void
 ucl_graph_erase_node_free_links (ucl_graph_node_t * node_p, void (* destructor)(void *))
 {
   ucl_graph_link_t * link_p;
@@ -235,7 +230,7 @@ ucl_graph_erase_node_free_links (ucl_graph_node_t * node_p, void (* destructor)(
 
   ucl_graph_node_reset_link_fields(node_p);
 }
-stub(2006-10-05-10-30-45) ucl_link_t *
+ucl_link_t *
 ucl_graph_erase_node_return_links (ucl_graph_node_t * node_p)
 {
   ucl_graph_link_t *	link_p;
@@ -278,7 +273,7 @@ ucl_graph_erase_node_return_links (ucl_graph_node_t * node_p)
  ** Node list.
  ** ----------------------------------------------------------*/
 
-stub(2006-10-05-11-47-29) ucl_graph_node_t *
+ucl_graph_node_t *
 ucl_graph_remove_next_node (ucl_graph_node_t * node_p)
 {
   ucl_graph_node_t *	next_p = node_p->next_node_p;
@@ -288,7 +283,7 @@ ucl_graph_remove_next_node (ucl_graph_node_t * node_p)
   return next_p;
 }
 
-stub(2006-10-05-11-48-50) void
+void
 ucl_graph_insert_next_node (ucl_graph_node_t * node_p, ucl_graph_node_t * next_p)
 {
   ucl_graph_node_t *	old_next_p = node_p->next_node_p;
@@ -305,7 +300,7 @@ ucl_graph_insert_next_node (ucl_graph_node_t * node_p, ucl_graph_node_t * next_p
  ** Merging links.
  ** ----------------------------------------------------------*/
 
-stub(2006-10-05-16-28-47) void
+void
 ucl_graph_merge_upon_input_link (ucl_graph_link_t * in, ucl_graph_link_t * out)
 {
   ucl_graph_link_t *	prev_p;
@@ -330,7 +325,7 @@ ucl_graph_merge_upon_input_link (ucl_graph_link_t * in, ucl_graph_link_t * out)
   in->input.next_link_p = out->input.next_link_p;
 }
 
-stub(2006-10-05-16-34-21) void
+void
 ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_link_t * out)
 {
   ucl_graph_link_t *	prev_p;
@@ -360,10 +355,10 @@ ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_link_t * out)
  ** Depth first search.
  ** ----------------------------------------------------------*/
 
-stub(2006-10-05-17-01-03) void
+void
 ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * search_handle)
 {
-  ucl_vector_struct_t *	items = &(search_handle->visited_nodes[0]);
+  ucl_vector_t	items = &(search_handle->visited_nodes[0]);
 
 
   ucl_vector_initialise(items, sizeof(ucl_graph_dfs_item_t));
@@ -374,14 +369,14 @@ ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * search_handle)
 
   search_handle->counter = 0;
 }
-stub(2006-10-06-09-52-54) void
+void
 ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * search_handle)
 {
-  ucl_vector_struct_t *		items = &(search_handle->visited_nodes[0]);
+  ucl_vector_t			items = &(search_handle->visited_nodes[0]);
   ucl_iterator_t		iterator;
   ucl_graph_dfs_item_t *	item;
   ucl_value_t			mark;
-  
+
   mark.integer = 0;
 
   for (ucl_vector_iterator_forward(items, iterator);
@@ -395,7 +390,7 @@ ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * search_handle)
   ucl_vector_destructor(items);
 }
 
-stub(2006-10-05-16-36-08) void
+void
 ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * root_p)
 {
   ucl_graph_link_t *	link_p;
@@ -405,7 +400,7 @@ ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_grap
   /* Test  if  the  node  is  marked,  that  is:  it  has  been  already
      visited. */
   if (ucl_graph_node_get_mark(root_p).integer) return;
-    
+
   dfs_node = dfs_enter_node(search_handle, root_p);
   {
     UCL_GRAPH_OUTPUT_LINKS_LOOP(root_p, link_p)
@@ -413,7 +408,7 @@ ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_grap
   }
   dfs_leave_node(search_handle, dfs_node);
 }
-stub(2006-10-05-17-29-24) void
+void
 ucl_graph_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * root_p)
 {
   ucl_graph_link_t *	link_p;

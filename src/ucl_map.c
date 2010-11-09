@@ -1,5 +1,5 @@
-/* 
-   Part of: Useless Container Library (UCL).
+/*
+   Part of: Useless Containers Library
    Contents: code for the map/multimap container.
 
    Abstract:
@@ -15,42 +15,37 @@
 	         |  ^     dad
              son |  | dad
                  v  |                 key(no3) < key(no1) <= key(no2)
-                 ----- 
+                 -----
                 | no3 |
-                 ----- 
+                 -----
 
 	  The knowledge on  how to implement AVL trees  was derived from
 	the  book "Algoritmi +  Strutture Dati  = Programmi"  di Niklaus
 	Wirth, 1987 Tecniche Nuove.
 
-   Copyright (c) 2001, 2002, 2003, 2004, 2005, 2007, 2008 Marco Maggi
+   Copyright (c) 2001-2010 Marco Maggi
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or (at
    your option) any later version.
-   
+
    This program is  distributed in the hope that it  will be useful, but
    WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
    MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
    General Public License for more details.
-   
+
    You should  have received  a copy of  the GNU General  Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
+
 */
+
 
-/** ------------------------------------------------------------
- ** Header files.
- ** ----------------------------------------------------------*/
+/** --------------------------------------------------------------------
+ ** Headers.
+ ** -----------------------------------------------------------------*/
 
 #include "internal.h"
-
-#define stubmodule		map
-
-#if (DEBUGGING == 1)
-#  include <stdio.h>
-#endif
 
 /* Values   of   the   "avl_status"   field  in   the   "ucl_map_link_t"
    structure. */
@@ -95,15 +90,16 @@ static void	union_find_next			(iterator_t iter1,
 static void	complintersect_iterator_next (iterator_t iterator);
 static void	subtraction_iterator_next (iterator_t iterator);
 
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
  ** Construction and destruction.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-11-41) void
-ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp)
+void
+ucl_map_constructor (ucl_map_t		this,
+		     unsigned int	flags,
+		     ucl_comparison_t	keycmp)
 {
   assert(this); assert(keycmp.func);
 
@@ -112,7 +108,7 @@ ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp
   this->keycmp		= keycmp;
   this->flags		= flags;
 }
-stub(2007-05-16-10-28-48) void
+void
 ucl_map_destructor (ucl_map_t this)
 {
   ucl_struct_clean((this), ucl_map_t);
@@ -125,7 +121,7 @@ ucl_map_destructor (ucl_map_t this)
  ** Insertion.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-11-44) __attribute__((__nonnull__,__pure__)) void
+__attribute__((__nonnull__,__pure__)) void
 ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 {
   ucl_comparison_t	keycmp;
@@ -140,7 +136,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
     we're coming has gotten higher, otherwise false.
 
     Mr. Niklaus Wirth calls it "h" in his book.
-    
+
     int		h;
   */
 
@@ -232,9 +228,9 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
                     -----
                    |link |
                     -----
- 
+
     There are two cases:
-    
+
     1) the brother  of "*cur_p" is NULL: "*cur_p"  was BALANCED before
        and becomes LEFT_HIGHER now;
 
@@ -251,9 +247,9 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
                       |
                   son v
                       ?
- 
+
     There are two cases:
-    
+
     3) the  son of "*cur_p" is NULL: "*cur_p" was BALANCED  before and
        becomes RIGHT_HIGHER now;
 
@@ -270,7 +266,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
       cur_p->node.son  = (node_t *) link_p;
       link_p->node.dad = (node_t *) cur_p;
       ++(this->size);
-	      
+
       if (cur_p->node.bro != NULL)
 	{
 	  cur_p->avl_status = BALANCED;
@@ -345,7 +341,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 	  else /* cur_p->avl_status == LEFT_HIGHER */
 	    {
 	      root_flag = (cur_p == this->root)? 1 : 0;
-		      
+
 	      if (tmp_p->avl_status == LEFT_HIGHER)
 		{
 		  rot_left(&cur_p);
@@ -391,7 +387,7 @@ ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 		  rot_right_left(&cur_p);
 		}
 	      cur_p->avl_status = BALANCED;
-	      
+
 	      if (root_flag)
 		{
 		  this->root = cur_p;
@@ -443,7 +439,7 @@ rot_left (link_t **cur_pp)
     {
       tmp_p->node.dad = (node_t *) cur_p;
     }
-  
+
   son->node.bro = (node_t *) cur_p;
   son->node.dad = cur_p->node.dad;
   cur_p->node.dad = (node_t *) son;
@@ -627,14 +623,14 @@ rot_right_left (link_t **cur_pp)
   bro = (link_t *) cur_p->node.bro;
   son = (link_t *) bro->node.son;
 
-  
+
   tmp_p = (link_t *) son->node.bro;
   bro->node.son = (node_t *) tmp_p;
   if (tmp_p)
     {
       tmp_p->node.dad = (node_t *) bro;
     }
-  
+
   son->node.bro = (node_t *) bro;
   bro->node.dad = (node_t *) son;
 
@@ -705,14 +701,14 @@ rot_right_left (link_t **cur_pp)
 	this -		pointer to the base structure
 	link_p -	pointer to the link holding the key/value pair
 			selected for extraction
-	
+
    Results:
 
 	A target  is extracted from the  tree. Returns a  pointer to the
 	extracted link.
 */
 
-stub(2005-09-23-18-11-51) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 {
   link_t *	del_p;
@@ -791,7 +787,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
     rotations when needed.
   */
 
-  link_p = (link_t *) cur_p->node.dad; 
+  link_p = (link_t *) cur_p->node.dad;
   if (cur_p == (link_t *) link_p->node.son)
     {
       link_p->node.son = NULL;
@@ -956,7 +952,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 
 */
 
-stub(2005-09-23-18-12-55) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_find (const ucl_map_t this, const ucl_value_t key)
 {
   ucl_comparison_t	keycmp;
@@ -1009,25 +1005,25 @@ ucl_map_find (const ucl_map_t this, const ucl_value_t key)
  ** Traversing.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-13-31) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_first (const ucl_map_t this)
 {
   return (this->size)? \
     (link_t *) ucl_btree_find_leftmost((node_t *) this->root) : NULL;
 }
 
-stub(2005-09-23-18-13-38) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_last (const ucl_map_t this)
 {
   return (this->size)? \
     (link_t *) ucl_btree_find_rightmost((node_t *) this->root) : NULL;
 }
-stub(2005-09-23-18-13-42) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_next (ucl_map_link_t *link_p)
 {
   return (link_t *) ucl_btree_step_inorder((node_t *) link_p);
 }
-stub(2005-09-23-18-13-45) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_prev (ucl_map_link_t *link_p)
 {
   return (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);
@@ -1053,7 +1049,7 @@ ucl_map_prev (ucl_map_link_t *link_p)
 
 */
 
-stub(2005-09-23-18-13-48) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
 {
   int			v;
@@ -1138,7 +1134,7 @@ ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
 
 */
 
-stub(2005-09-23-18-13-51) ucl_map_link_t *
+ucl_map_link_t *
 ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
 {
   int			v;
@@ -1183,7 +1179,7 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
 	    {
 	      do
 		{
-		  last_p = cur_p;		  
+		  last_p = cur_p;
 		  cur_p = (link_t *) \
 		    ucl_btree_step_inorder_backward((node_t *) last_p);
 		  if (cur_p == NULL)
@@ -1228,7 +1224,7 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
 
 */
 
-stub(2005-09-23-18-13-55) size_t
+size_t
 ucl_map_count (const ucl_map_t this, const ucl_value_t key)
 {
   size_t		count;
@@ -1252,7 +1248,7 @@ ucl_map_count (const ucl_map_t this, const ucl_value_t key)
 	}
       while ((link_p != NULL) && (keycmp.func(keycmp.data, key, ucl_map_getkey(link_p)) == 0));
     }
-  
+
   return count;
 }
 
@@ -1263,7 +1259,7 @@ ucl_map_count (const ucl_map_t this, const ucl_value_t key)
  ** Iterators.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-13-58) void
+void
 ucl_map_iterator_inorder (const ucl_map_t this, ucl_iterator_t iterator)
 {
   assert(this != 0);
@@ -1282,7 +1278,7 @@ ucl_map_iterator_inorder (const ucl_map_t this, ucl_iterator_t iterator)
       iterator->next	 = map_inorder_iterator_next;
     }
 }
-stub(2005-09-23-18-14-01) void
+void
 ucl_map_iterator_inorder_backward (const ucl_map_t this, ucl_iterator_t iterator)
 {
   assert(this != 0);
@@ -1301,7 +1297,7 @@ ucl_map_iterator_inorder_backward (const ucl_map_t this, ucl_iterator_t iterator
       iterator->next	 = map_inorder_backward_iterator_next;
     }
 }
-stub(2005-09-23-18-14-04) void
+void
 ucl_map_iterator_preorder (const ucl_map_t this, ucl_iterator_t iterator)
 {
   assert(this != 0);
@@ -1319,7 +1315,7 @@ ucl_map_iterator_preorder (const ucl_map_t this, ucl_iterator_t iterator)
       iterator->next	 = map_preorder_iterator_next;
     }
 }
-stub(2005-09-23-18-14-07) void
+void
 ucl_map_iterator_postorder (const ucl_map_t this, ucl_iterator_t iterator)
 {
   assert(this != 0);
@@ -1337,7 +1333,7 @@ ucl_map_iterator_postorder (const ucl_map_t this, ucl_iterator_t iterator)
       iterator->next	 = map_postorder_iterator_next;
     }
 }
-stub(2005-09-23-18-14-10) void
+void
 ucl_map_iterator_levelorder (const ucl_map_t this, ucl_iterator_t iterator)
 {
   assert(this != 0);
@@ -1355,7 +1351,7 @@ ucl_map_iterator_levelorder (const ucl_map_t this, ucl_iterator_t iterator)
       iterator->next	 = map_levelorder_iterator_next;
     }
 }
-stub(2005-09-23-18-14-14) void
+void
 ucl_map_lower_bound (const ucl_map_t this, ucl_iterator_t iterator, const ucl_value_t key)
 {
   assert(this != 0);
@@ -1374,7 +1370,7 @@ ucl_map_lower_bound (const ucl_map_t this, ucl_iterator_t iterator, const ucl_va
       iterator->next	 = map_lowerbound_iterator_next;
     }
 }
-stub(2005-09-23-18-14-17) void
+void
 ucl_map_upper_bound (const ucl_map_t this, ucl_iterator_t iterator, const ucl_value_t key)
 {
   link_t *	link_p;
@@ -1456,7 +1452,7 @@ map_upperbound_iterator_next (iterator_t iterator)
   link_p = iterator->iterator;
   key	  = ucl_map_getkey(link_p);
 
-  link_p = (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);  
+  link_p = (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);
   if (link_p != NULL)
     {
       ucl_comparison_t	keycmp = this->keycmp;
@@ -1483,7 +1479,7 @@ map_lowerbound_iterator_next (iterator_t iterator)
   link_p = iterator->iterator;
   key	  = ucl_map_getkey(link_p);
 
-  link_p = (link_t *) ucl_btree_step_inorder((node_t *) link_p);  
+  link_p = (link_t *) ucl_btree_step_inorder((node_t *) link_p);
   if (link_p != NULL)
     {
       ucl_comparison_t	keycmp = this->keycmp;
@@ -1504,7 +1500,7 @@ map_lowerbound_iterator_next (iterator_t iterator)
  ** Set iterators.
  ** ----------------------------------------------------------*/
 
-stub(2005-09-23-18-14-23) void
+void
 ucl_map_iterator_union (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator)
 {
   assert(iter1); assert(iter2); assert(iterator);
@@ -1563,7 +1559,7 @@ union_find_next (iter1, iter2, iterator)
 
       node1	= ucl_iterator_ptr(iter1);
       node2	= ucl_iterator_ptr(iter2);
-    
+
       key1	= ucl_map_getkey(node1);
       key2	= ucl_map_getkey(node2);
 
@@ -1573,7 +1569,7 @@ union_find_next (iter1, iter2, iterator)
 	  iterator->container = iter1;
 	  iterator->iterator  = iter1->iterator;
 	}
-      else 
+      else
 	{
 	  iterator->container = iter2;
 	  iterator->iterator  = iter2->iterator;
@@ -1589,7 +1585,7 @@ union_find_next (iter1, iter2, iterator)
       iterator->container = iter2;
       iterator->iterator  = iter2->iterator;
     }
-  else 
+  else
     {
       iterator->iterator = NULL;
     }
@@ -1597,7 +1593,7 @@ union_find_next (iter1, iter2, iterator)
 
 /* ------------------------------------------------------------ */
 
-stub(2005-09-23-18-14-29) void
+void
 ucl_map_iterator_intersection (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator)
 {
   assert(iter1); assert(iter2); assert(iterator);
@@ -1647,7 +1643,7 @@ intersection_find_common (iter1, iter2, iterator)
   while (ucl_iterator_more(iter1) && ucl_iterator_more(iter2))
     {
       node1	= ucl_iterator_ptr(iter1);
-      node2	= ucl_iterator_ptr(iter2);      
+      node2	= ucl_iterator_ptr(iter2);
 
       key1	= ucl_map_getkey(node1);
       key2	= ucl_map_getkey(node2);
@@ -1673,7 +1669,7 @@ intersection_find_common (iter1, iter2, iterator)
 
 /* ------------------------------------------------------------ */
 
-stub(2005-09-23-18-14-34) void
+void
 ucl_map_iterator_complintersect	(ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t 	iterator)
 {
   assert(iter1); assert(iter2); assert(iterator);
@@ -1733,12 +1729,12 @@ complintersect_iterator_next (iterator_t iterator)
 	{
 	  ucl_iterator_next(iter1);
 	  ucl_iterator_next(iter2);
-	  
+
 	  if ((! ucl_iterator_more(iter1)) || (! ucl_iterator_more(iter2)))
 	    {
 	      break;
 	    }
-	  
+
 	  node1 = ucl_iterator_ptr(iter1);
 	  node2 = ucl_iterator_ptr(iter2);
 
@@ -1783,7 +1779,7 @@ complintersect_iterator_next (iterator_t iterator)
 
 /* ------------------------------------------------------------ */
 
-stub(2005-09-23-18-14-38) void
+void
 ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator)
 {
   assert(iter1); assert(iter2); assert(iterator);
@@ -1805,7 +1801,7 @@ ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_it
 }
 /* subtraction_iterator_next --
 
-	Advances the subtraction iterator. 
+	Advances the subtraction iterator.
 
 	  When  this function  is invoked,  the iterators  for  both the
 	sequences  must be  already initialised.  The elements  from the

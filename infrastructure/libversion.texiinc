@@ -92,7 +92,7 @@ library bug, please signal this to the author using the bug tracking
 system.
 
 The only exception to this rule is the wrong behaviour caused by bugs;
-code that relies on buggy behaviour of a package version may, not work
+code that relies on buggy behaviour of a package version may not work
 with subsequent package versions with the same major interface number.
 
 @item minor
@@ -110,11 +110,6 @@ Even if the interface number has not changed, and the library file has
 the same name: when an installed shared library is updated to a new
 package version, programs and libraries depending on it will have to be
 recompiled, because the internals of the library file will have changed.
-
-If no error in the package distribution and version numberring is done
-and all the programs makes use of the stub mechanism: it makes sense to
-install only the last interface version of the library for each major
-interface number.
 
 
 
