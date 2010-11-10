@@ -28,6 +28,8 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
+#define MCL_DEBUGGING		0
+#include "mcl-test.h"
 #include <assert.h>
 #include <dlfcn.h>
 #include <stdio.h>
@@ -39,21 +41,12 @@
 #define NUMBER	1000
 #define DELTA	234
 
-#define SIZE		8
-#define STEP_UP		6
-#define STEP_DOWN	10
-#define PAD		0
-
-static void	fill (ucl_vector_t vect_p, int number, int first);
-static void	clean (ucl_vector_t vect_p);
-/* static int	intcmp (const int *a, const int *b); */
-
 
 /** ------------------------------------------------------------
  ** Helper functions.
  ** ----------------------------------------------------------*/
 
-void
+static void
 fill (ucl_vector_t vect, int number, int first)
 {
   int *	ptr;
@@ -64,7 +57,7 @@ fill (ucl_vector_t vect, int number, int first)
     *ptr = i + first;
   }
 }
-void
+static void
 clean (ucl_vector_t vect)
 {
   while(ucl_vector_size(vect)) {
@@ -73,16 +66,18 @@ clean (ucl_vector_t vect)
     ucl_vector_restrict(vect);
   }
 }
-/* int */
-/* intcmp (const int *a, const int *b) */
-/* { */
-/*   return ((*a == *b)? 0 : ((*a > *b)? 1 : -1)); */
-/* } */
 
 
-int
-main (void)
+static void
+test_allocation (void)
 {
+  const unsigned SIZE		= 8;
+  const unsigned STEP_UP	= 6;
+  const unsigned STEP_DOWN	= 10;
+  const unsigned PAD		= 0;
+
+  mcl_test_subtitle("allocation");
+  mcl_test_begin("vector-1", "allocation") {
   ucl_vector_config_t	config;
   ucl_vector_t		vector;
   ucl_block_t		allocated_memory;
@@ -104,6 +99,16 @@ main (void)
     assert( ucl_vector_slot_dimension(vector)		== slot_dimension );
   }
   ucl_vector_free(vector);
+  }
+  mcl_test_end();
+}
+
+int
+main (void)
+{
+  mcl_test_title("vector tests");
+
+  test_allocation();
 
   exit(EXIT_SUCCESS);
 }

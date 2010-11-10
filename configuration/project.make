@@ -21,7 +21,7 @@ $(eval $(call ds-h-files-installer,ucl_headers,$(ucl_SRCDIR),ucl*.h))
 ## Tests.
 ## ---------------------------------------------------------------------
 
-PATTERNS	?= *.c
+PATTERNS	?= test-*.c
 
 ucl_tests_PATTERNS		= $(PATTERNS)
 ucl_tests_PREREQUISITES		= $(ucl_PREREQUISITES)
@@ -41,8 +41,8 @@ test-tree:	; $(MAKE) tests PATTERNS=tree.c
 test-graph:	; $(MAKE) tests PATTERNS=graph.c
 
 test-vector: ucl_shlib-all
-	$(MAKE) tests PATTERNS=vector.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/vector
+	$(MAKE) tests PATTERNS=test-vector.c
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-vector
 
 #page
 ## ---------------------------------------------------------------------
