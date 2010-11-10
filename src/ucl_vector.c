@@ -290,6 +290,8 @@ ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
   self->slot_dimension		= dim;
   self->step_up			= dim * config->step_up;
   self->step_down		= dim * config->step_down;
+  if (self->step_up >= self->step_down)
+    self->step_down = self->step_up + dim;
   self->size_of_padding_area	= dim * config->size_of_padding_area;
   self->allocator		= config->allocator;
   self->compar			= config->compar;
@@ -359,19 +361,21 @@ void
 ucl_vector_update_number_of_step_up_slots (ucl_vector_t self, size_t step_up)
 {
   self->step_up = step_up * self->slot_dimension;
+  if (self->step_up >= self->step_down)
+    self->step_down = self->step_up + self->slot_dimension;
 }
 void
 ucl_vector_update_number_of_step_down_slots (ucl_vector_t self, size_t step_down)
 {
   self->step_down = step_down * self->slot_dimension;
+  if (self->step_up >= self->step_down)
+    self->step_down = self->step_up + self->slot_dimension;
 }
 void
 ucl_vector_update_number_of_padding_slots (ucl_vector_t self, size_t padding)
 {
   self->size_of_padding_area = padding * self->slot_dimension;
 }
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -1174,17 +1178,11 @@ ucl_vector_will_restrict (ucl_vector_t self)
 static size_t
 compute_restricted_size_in_bytes (ucl_vector_t self)
 {
-  size_t	number_of_allocated_bytes, new_number_of_allocated_bytes;
-  size_t	number_of_used_bytes, rest;
-
-
-  number_of_allocated_bytes	= compute_allocated_bytes(self);
-  number_of_used_bytes		= compute_used_bytes(self);
-
-  new_number_of_allocated_bytes = number_of_allocated_bytes - self->step_down;
-  rest = number_of_allocated_bytes % self->step_up;
+  size_t number_of_allocated_bytes	= compute_allocated_bytes(self);
+  /* size_t number_of_used_bytes		= compute_used_bytes(self); */
+  size_t new_number_of_allocated_bytes	= number_of_allocated_bytes - self->step_down;
+  size_t rest = number_of_allocated_bytes % self->step_up;
   new_number_of_allocated_bytes += (rest)? rest : self->step_up;
-
   /* The following  condition can be false when:  'step_up > step_down'.
      This  is why  'step_down' is  normalised  to a  value greater  than
      'step_up' by the constructor. */

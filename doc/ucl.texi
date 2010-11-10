@@ -6817,7 +6817,7 @@ new_size = 10 +  4 = 14
 @end example
 
 @noindent
-notice that if @code{step_up > step_down} it can result that
+notice that if @code{step_up >= step_down} it can result that
 @code{new_size >= old_size}, example:
 
 @example
@@ -6844,8 +6844,8 @@ new_size =  9 + 3 = 12
 @end example
 
 @noindent
-that is why @function{ucl_vector_constructor} sets @code{step_down} to a
-value greater than @code{step_up}.
+that is why @function{ucl_vector_alloc} sets @code{step_down} to a value
+greater than @code{step_up}.
 @end itemize
 
 
