@@ -1,6 +1,6 @@
 /*
    Part of: Useless Containers Library
-   Contents: preprocessor symbols
+   Contents: internal header file
    Date: Wed Nov  3, 2004
 
    Abstract
@@ -34,6 +34,7 @@
 #endif
 
 #include <stdio.h>	/* sometimes useful for debugging */
+#include <limits.h>
 #include "ucl.h"
 #include "debug.h"
 
