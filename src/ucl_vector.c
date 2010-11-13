@@ -47,10 +47,9 @@
 /* V stands for a pointer to  the vector struct.  P stands for a pointer
    to a slot.  Q stands for a generic pointer. */
 
-#define ASSERT_VECTOR_IS_EMPTY(V)		assert(vector_is_empty(V));
-
 #define ASSERT_VECTOR_POINTER(V)		assert((V))
 #define ASSERT_MEMORY_ALLOCATED(V)		assert((V)->first_allocated_slot)
+#define ASSERT_VECTOR_IS_EMPTY(V)		assert(vector_is_empty(V));
 
 #define ASSERT_FRONT_MIN_FRONT_RELATION(V)			\
   assert((V)->first_allocated_slot <= (V)->first_used_slot)

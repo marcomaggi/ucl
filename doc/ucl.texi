@@ -511,9 +511,9 @@ user does not see it.
 
 
 @ucl{} tries to avoid as much as possible the responsibility to allocate
-and free memory.  Dynamic structures based on trees or linked lists do
-not call any memory allocation function: the responsibility to allocate
-@ucl{} data structures is delegated to the user's code.
+and release memory.  Dynamic structures based on trees or linked lists
+do not call any memory allocation function: the responsibility to
+allocate @ucl{} data structures is delegated to the user's code.
 
 This makes the library a little more complex to use, but it also makes
 the code simpler by reducing the error cases that have to be dealt with.
@@ -618,8 +618,8 @@ it must not return.  What it does instead of returning is not the
 business of @ucl{}; the default allocator will terminate the process
 with an invocation to @function{exit} with code @code{EXIT_FAILURE}.
 The @ucl{} guarantees that an error allocating memory will not corrupt
-any container (so the alloc function can longjump somewhere in case of
-error).
+any container (so the @code{alloc} function can @cfunc{longjump} to
+somewhere in case of error).
 @end deftypefn
 
 
@@ -670,31 +670,23 @@ The implementation is:
 
 @example
 void
-ucl_memory_alloc (void * dummy, void * q, size_t dim)
+ucl_memory_alloc (void * dummy, void * qq, size_t dim)
 @{
-  void **  pp = q;
-  void *   p;
-
-
-  if (0 == dim)
-    @{
-      if (NULL != *pp)
-        @{
-          free(*pp);
-          *pp = NULL;
-        @}
+  void **       pp = qq;
+  void *        p;
+  if (0 == dim) @{
+    if (NULL != *pp) @{
+      free(*pp);
+      *pp = NULL;
     @}
-  else
-    @{
-      p = (NULL == *pp)?
-            calloc(1, dim) : realloc(*pp, dim);
-      if (NULL == p)
-        @{
-          perror(strerror(errno));
-          exit(EXIT_FAILURE);
-        @}
-      *pp = p;
+  @} else @{
+    p = (NULL == *pp)? calloc(1, dim) : realloc(*pp, dim);
+    if (NULL == p) @{
+      perror(strerror(errno));
+      exit(EXIT_FAILURE);
     @}
+    *pp = p;
+  @}
 @}
 @end example
 @end deftypefun
@@ -713,12 +705,16 @@ using the selected allocator.
 @section Memory blocks
 
 
-This module offers a set of functions to handle memory blocks.  Many of
-the following functions are declared @code{__inline__}.
+This module offers a set of functions to handle memory blocks; its
+purpose is to provide a small data structure (@code{ucl_block_t}) which
+can be used directly as argument to function and return value from
+function, instead of the couple: pointer to memory block, block length
+in bytes.  All the functions are defined in the header @file{ucl.h} and
+declared as @code{__inline__}.
 
 
 @deftp {Struct Typedef} ucl_block_t
-The type of memory block.  Fields description follows.
+The type of memory block; fields description follows:
 
 @table @code
 @item size_t len
@@ -727,8 +723,6 @@ The number of bytes in the block; can be zero.
 @item uint8_t * ptr
 Pointer to the memory block or @cnull{}.
 @end table
-@end deftp
-
 
 To initialise a block to empty state do this:
 
@@ -741,10 +735,11 @@ or this:
 
 @example
 ucl_block_t     B;
-
 ucl_block_reset(&B);
 @end example
+@end deftp
 
+@c ------------------------------------------------------------
 
 @subsubheading Memory allocation
 
@@ -825,20 +820,22 @@ This function assumes that @var{b} is contiguous to or included in
 @end example
 @end deftypefun
 
-
 @c page
 @node memory ascii
 @section Handling ASCII strings
 
 
-@noindent
 This module offers a set of functions to handle @ascii{} coded, zero
-terminated strings.  All the functions are declared as
-@code{__inline__}.
+terminated strings; its purpose is to provide a small data structure
+(@code{ucl_ascii_t}) which can be used directly as argument to function
+and return value from function, instead of the couple: pointer to memory
+block, block length in bytes.  All the functions are defined in the
+header @file{ucl.h} and declared as @code{__inline__}.
 
 
 @deftp {Struct Typedef} ucl_ascii_t
-The type of string.  Fields description follows.
+The type of zero--terminated @ascii{} strings; fields description
+follows:
 
 @table @code
 @item size_t len
@@ -849,6 +846,27 @@ include the terminating null character.
 Pointer to the memory block or @cnull{}; the last @code{char} must be
 zero.
 @end table
+
+To initialise an ascii to empty state do this:
+
+@example
+ucl_ascii_t     A = @{ .ptr = NULL, .len = 0 @};
+@end example
+
+@noindent
+or this:
+
+@example
+ucl_ascii_t     A;
+ucl_ascii_reset(&A);
+@end example
+
+@noindent
+or this:
+
+@example
+ucl_ascii_t     A = ucl_ascii_empty;
+@end example
 @end deftp
 
 
@@ -864,16 +882,10 @@ the array of pointers.
 @end deftp
 
 
-@defmac UCL_ASCII_NULL_VALUE
-@defmacx UCL_ASCII_EMPTY
-@defmacx UCL_EMPTY_ASCII
-Define the nil values to initialise a ascii.  To be used like this:
-
-@example
-ucl_ascii_t     B = UCL_ASCII_NULL_VALUE;
-@end example
-@end defmac
-
+@defvr Constant ucl_ascii_empty
+Represent an empty string.  It is a statically allocated structure,
+referencing a zero--terminated empty string.
+@end defvr
 
 
 @deftypefun void ucl_ascii_set (ucl_ascii_t * @var{ascii}, void * @var{ptr}, size_t @var{len})
@@ -897,8 +909,18 @@ Return true if the pointer field is set to @cnull{}.
 @end deftypefun
 
 
+@deftypefun ucl_bool_t ucl_ascii_is_terminated (ucl_ascii_t @var{ascii})
+Return true if the string referenced by @var{ascii} is zero--terminated.
+@end deftypefun
+
+
 @deftypefun void ucl_ascii_clean_memory (ucl_ascii_t @var{ascii})
 Reset the block of memory to zero bytes.
+@end deftypefun
+
+
+@deftypefun void ucl_ascii_terminate (ucl_ascii_t @var{ascii})
+Make sure that the string referenced by @var{ascii} is zero--terminated.
 @end deftypefun
 
 
@@ -941,7 +963,7 @@ pointed to by @var{struct_p}.
 
 
 @defmac ucl_struct_alloc (ucl_memory_allocator_t @var{allocator}, void * @var{p}, @var{type})
-Allocate a new structure of @var{type} using @var{alloctor} and store a
+Allocate a new structure of @var{type} using @var{allocator} and store a
 pointer to it in @var{p}.  Example:
 
 @example

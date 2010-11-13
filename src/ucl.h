@@ -195,7 +195,7 @@ extern void	ucl_quicksort (void *const pbase, size_t total_elems,
 
 
 /** --------------------------------------------------------------------
- ** Memory allocation.
+ ** Memory handling: allocation.
  ** -----------------------------------------------------------------*/
 
 typedef void ucl_memory_alloc_fun_t (void * dummy, void * pp, size_t dim);
@@ -231,7 +231,7 @@ ucl_free (ucl_memory_allocator_t allocator, void * p)
 
 
 /** --------------------------------------------------------------------
- ** Memory block macros.
+ ** Memory handling: blocks.
  ** -----------------------------------------------------------------*/
 
 typedef struct ucl_block_t {
@@ -328,7 +328,7 @@ ucl_block_difference (ucl_block_t A, ucl_block_t B)
 
 
 /** ------------------------------------------------------------
- ** ASCII string macros.
+ ** Memory handling: ASCII-coded, zero-terminated strings.
  ** ----------------------------------------------------------*/
 
 typedef struct ucl_ascii_t {
@@ -336,14 +336,12 @@ typedef struct ucl_ascii_t {
   char *	ptr;
 } ucl_ascii_t;
 
-typedef struct ucl_ascii_list_struct_t {
+typedef struct ucl_ascii_list_t {
   size_t	len;
   char **	ptr;
 } ucl_ascii_list_t;
 
-#define UCL_ASCII_NULL_VALUE	{ 0, NULL }
-#define UCL_ASCII_EMPTY		UCL_ASCII_NULL_VALUE
-#define UCL_EMPTY_ASCII		UCL_ASCII_NULL_VALUE
+extern const ucl_ascii_t ucl_ascii_empty;
 
 /* ------------------------------------------------------------ */
 
@@ -377,10 +375,23 @@ ucl_ascii_is_null (ucl_ascii_t ascii)
   return (NULL == ascii.ptr);
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))
+ucl_bool_t
+ucl_ascii_is_terminated (ucl_ascii_t ascii)
+{
+  return ('\0' == ascii.ptr[ascii.len]);
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))
 void
 ucl_ascii_clean_memory (ucl_ascii_t ascii)
 {
   memset(ascii.ptr,'\0',ascii.len);
+  ascii.ptr[ascii.len] = '\0';
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))
+void
+ucl_ascii_terminate (ucl_ascii_t ascii)
+{
+  ascii.ptr[ascii.len] = '\0';
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))
 ucl_ascii_t
@@ -434,6 +445,23 @@ ucl_ascii_free (ucl_memory_allocator_t allocator, ucl_ascii_t ascii)
   if (ascii.ptr)
     allocator.alloc(allocator.data, &(ascii.ptr), 0);
 }
+
+
+/** ------------------------------------------------------------
+ ** Memory handling: structures.
+ ** ----------------------------------------------------------*/
+
+#define ucl_struct_clean(B,TYPE_T)	memset((B),'\0',sizeof(TYPE_T))
+#define ucl_struct_reset(B,TYPE_T)	ucl_struct_clean((B),(TYPE_T))
+
+static __inline__ __attribute__((__always_inline__,__nonnull__))void
+ucl_p_struct_alloc (ucl_memory_allocator_t * allocator, void ** buffer_pp, size_t len)
+{
+  void *	p = NULL;
+  allocator->alloc(allocator->data, &p, len);
+  *buffer_pp = p;
+}
+#define ucl_struct_alloc(ALLOCATOR,P,TYPE_T)	ucl_p_struct_alloc(ALLOCATOR,&(P),sizeof(TYPE_T))
 
 
 /** ------------------------------------------------------------
@@ -528,29 +556,6 @@ typedef struct ucl_byte_pointer_range_t {
   uint8_t *	min;
   uint8_t *	max;
 } ucl_byte_pointer_range_t;
-
-
-
-/** ------------------------------------------------------------
- ** Struct macros.
- ** ----------------------------------------------------------*/
-
-#define ucl_struct_clean(B,TYPE_T)	memset((B),'\0',sizeof(TYPE_T))
-#define ucl_struct_reset(B,TYPE_T)	ucl_struct_clean((B),(TYPE_T))
-
-static __inline__ __attribute__((__always_inline__,__nonnull__))void
-ucl_p_struct_alloc (ucl_memory_allocator_t * allocator,
-		    void ** buffer_pp,
-		    size_t len)
-{
-  void *	p = NULL;
-
-  allocator->alloc(allocator->data, &p, len);
-  *buffer_pp = p;
-}
-#define ucl_struct_alloc(ALLOCATOR,P,TYPE_T)		\
-  ucl_p_struct_alloc(ALLOCATOR,&(P),sizeof(TYPE_T))
-
 
 
 /** ------------------------------------------------------------
