@@ -41,6 +41,19 @@ const ucl_callback_t	ucl_callback_null	= { .func = NULL, .data = { .ptr = 0 } };
 
 ucl_callback_apply_fun_t * ucl_callback_application_function = ucl_callback_apply;
 
+const ucl_comparison_t ucl_compare_int = {
+  .data = NULL, .func = ucl_compare_int_fun
+};
+const ucl_comparison_t ucl_compare_unsigned_int = {
+  .data = NULL, .func = ucl_compare_unsigned_int_fun
+};
+const ucl_comparison_t ucl_compare_string = {
+  .data = NULL, .func = ucl_compare_string_fun
+};
+const ucl_comparison_t ucl_compare_int_pointer = {
+  .data = NULL, .func = ucl_compare_int_pointer_fun
+};
+
 
 /** --------------------------------------------------------------------
  ** Callback functions.
@@ -79,32 +92,36 @@ ucl_interface_minor_version (void)
  ** ----------------------------------------------------------*/
 
 int
-ucl_intcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_compare_int_fun (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return ((a.t_int == b.t_int)? 0 : ((a.t_int > b.t_int)? 1 : -1));
 }
 int
-ucl_uintcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_compare_unsigned_int_fun (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return ((a.t_unsigned_int == b.t_unsigned_int)? 0 : ((a.t_unsigned_int > b.t_unsigned_int)? 1 : -1));
 }
 int
-ucl_strcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
+ucl_compare_string_fun (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
   return strcmp(a.chars, b.chars);
 }
 int
-ucl_ptrintcmp (ucl_value_t data, const ucl_value_t a, const ucl_value_t b)
+ucl_compare_int_pointer_fun (ucl_value_t data, const ucl_value_t a, const ucl_value_t b)
 {
-  ucl_value_t	A, B;
-  A.t_int = *((const int *) a.ptr);
-  B.t_int = *((const int *) b.ptr);
-  return ucl_intcmp(data, A, B);
+  ucl_value_t	A = { .t_int = *((const int *) a.ptr) };
+  ucl_value_t	B = { .t_int = *((const int *) b.ptr) };
+  return ucl_compare_int(data, A, B);
 }
-/* This comes from the C++ book of Bjarne Srtoustrup. */
+
+
+/** --------------------------------------------------------------------
+ ** Hash functions.
+ ** ----------------------------------------------------------------- */
+
 size_t
 ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
-{
+{ /* This comes from the C++ book of Bjarne Srtoustrup. */
   size_t	num=0, len;
   const char *	p = val.chars;
   len = strlen(p);

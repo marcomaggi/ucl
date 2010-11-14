@@ -1793,10 +1793,15 @@ extern const char * ucl_version (void);
 extern unsigned	ucl_interface_major_version (void);
 extern unsigned	ucl_interface_minor_version (void);
 
-extern ucl_comparison_fun_t	ucl_intcmp;
-extern ucl_comparison_fun_t	ucl_uintcmp;
-extern ucl_comparison_fun_t	ucl_strcmp;
-extern ucl_comparison_fun_t	ucl_ptrintcmp;
+extern ucl_comparison_fun_t	ucl_compare_int_fun;
+extern ucl_comparison_fun_t	ucl_compare_unsigned_int_fun;
+extern ucl_comparison_fun_t	ucl_compare_string_fun;
+extern ucl_comparison_fun_t	ucl_compare_int_pointer_fun;
+
+extern const ucl_comparison_t	ucl_compare_int;
+extern const ucl_comparison_t	ucl_compare_unsigned_int;
+extern const ucl_comparison_t	ucl_compare_string;
+extern const ucl_comparison_t	ucl_compare_int_pointer;
 
 extern ucl_hash_fun_t		ucl_hash_string;
 

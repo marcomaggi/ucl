@@ -184,7 +184,7 @@ entitled ``GNU Free Documentation License''.
 * typedefs::                    Data types you have to know.
 * containers::                  The data structures.
 * iterators::                   Container iteration.
-* generic::                     Generic functions.
+* misc::                        Miscellaneous functions.
 
 Appendices
 
@@ -350,6 +350,12 @@ High level functions
 * vector high access::          Setters and getters.
 * vector high compare::         Comparing vectors.
 * vector high apply::           Applying functions.
+
+Miscellaneous functions
+
+* misc version::                Version functions.
+* misc compar::                 Comparison functions.
+* misc sort::                   Sorting functions.
 
 @end detailmenu
 @end menu
@@ -913,10 +919,10 @@ the array of pointers.
 @end deftp
 
 
-@defvr Constant ucl_ascii_empty
+@deftypevar {const ucl_ascii_t} ucl_ascii_empty
 Represent an empty string.  It is a statically allocated structure,
 referencing a zero--terminated empty string.
-@end defvr
+@end deftypevar
 
 
 @deftypefun void ucl_ascii_set (ucl_ascii_t * @var{ascii}, void * @var{ptr}, size_t @var{len})
@@ -1063,10 +1069,10 @@ Fields for miscellaneous pointer types.
 @end deftp
 
 
-@defvr Constant ucl_value_t ucl_value_null
+@deftypevar {const ucl_value_t} ucl_value_null
 Constant value representing the null @code{ucl_value_t}; its fields are
 set to zero.
-@end defvr
+@end deftypevar
 
 
 @deftp {Alias Typedef} ucl_bool_t
@@ -1434,9 +1440,9 @@ ucl_callback_apply(cb, a, b);
 @end deftp
 
 
-@defvr Constant const ucl_callback_t ucl_callback_null
+@deftypevar {const ucl_callback_t} ucl_callback_null
 Statically allocated structure representing a null callback.
-@end defvr
+@end deftypevar
 
 
 @deftypefn {Function Prototype} ucl_value_t ucl_callback_fun_t (ucl_value_t @var{context}, va_list @var{ap})
@@ -4914,7 +4920,7 @@ for (ucl_hash_iterator(hash, iterator);
 @subsection Provided hash function
 
 
-@deftypefun size_t ucl_hash_string (const ucl_value_t @var{val})
+@deftypefun size_t ucl_hash_string (ucl_value_t @var{unused}, const ucl_value_t @var{val})
 Return an unsigned integer representing the hash value for the string
 in @var{val}.  The @code{str} member of @var{val} must be a pointer to a
 @cnull{}--terminated string of characters.
@@ -4922,8 +4928,6 @@ in @var{val}.  The @code{str} member of @var{val} must be a pointer to a
 The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 (@ref{references}).
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node list
@@ -7643,18 +7647,24 @@ for (ucl_map_iterator_inorder(this, iterator);
 @c ------------------------------------------------------------
 
 @c page
-@node generic
-@chapter Generic functions
+@node misc
+@chapter Miscellaneous functions
 
 
-@section Package version number
+@menu
+* misc version::                Version functions.
+* misc compar::                 Comparison functions.
+* misc sort::                   Sorting functions.
+@end menu
+
+@c page
+@node misc version
+@section Version functions
+
 
 @deftypefun {const char *} ucl_version (void)
 Return a pointer to a string representing the version number.
 @end deftypefun
-
-
-@section Interface version number
 
 
 @deftypefun unsigned ucl_interface_major_version (void)
@@ -7662,61 +7672,69 @@ Return a number representing the library interface major version
 number.
 @end deftypefun
 
+
 @deftypefun unsigned ucl_interface_minor_version (void)
 Return a number representing the library interface minor version
 number.
 @end deftypefun
 
-
-@section Values comparison
-
-
-@noindent
-The following functions match the @code{ucl_valcmp_fun_t} prototype.
+@c page
+@node misc compar
+@section Comparison functions
 
 
-@deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Compare the @code{num} fields of two values.  @var{data} must be @cnull{}.
+All the following function have prototype matching
+@code{ucl_comparison_fun_t}; for all of them @var{data} is unused and
+the return value is: @code{0} if @var{a} equals @var{b}; @code{1} if
+@var{a} is greater than @var{b}; @code{-1} if @var{a} is lesser than
+@var{b}.
 
-Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
-greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
+
+@deftypefun int ucl_compare_int_fun (ucl_value_t @var{data}, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+Compare the @code{t_int} fields of two values.
 @end deftypefun
 
 
-@deftypefun int ucl_intcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Compare the @code{unum} fields of two values.  @var{data} must be
-@cnull{}.
-
-Return: @code{0} if @var{a} equals @var{b}; @code{1} if @var{a} is
-greater than @var{b}; @code{-1} if @var{a} is lesser than @var{b}.
+@deftypefun int ucl_compare_unsigned_int_fun (ucl_value_t @var{data}, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+Compare the @code{unum} fields of two values.
 @end deftypefun
 
 
-@deftypefun int ucl_strcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
-Wrapper for @function{strcmp}.  Compare the @code{str} fields of @var{a}
-and @code{b}.  @var{data} must be @cnull{}.
+@deftypefun int ucl_compare_string_fun (ucl_value_t @var{data}, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+Wrapper for @cfunc{strcmp}.
 @end deftypefun
 
 
-@deftypefun int ucl_ptrintcmp (ucl_value_t data, const ucl_value_t @var{a}, const ucl_value_t @var{b})
+@deftypefun int ucl_compare_int_pointer_fun (ucl_value_t @var{data}, const ucl_value_t @var{a}, const ucl_value_t @var{b})
 Interpret the @code{ptr} fields of @var{a} and @var{b} as pointers of
 type @code{int}: compare the two referenced numbers by invoking
-@function{ucl_intcmp}.
+@cfunc{ucl_compare_int}.
 @end deftypefun
 
 
-@subsection Sorting
+@deftypevar {const ucl_comparison_t} ucl_compare_int
+@deftypevarx {const ucl_comparison_t} ucl_compare_unsigned_int
+@deftypevarx {const ucl_comparison_t} ucl_compare_string
+@deftypevarx {const ucl_comparison_t} ucl_compare_int_pointer
+Statically allocated comparison structures which use the comparison
+functions described above.
+@end deftypevar
+
+@c page
+@node misc sort
+@section Sorting functions
 
 
 @deftypefun void ucl_quicksort (void * @var{array}, size_t @var{count}, size_t @var{size}, ucl_comparison_t @var{compar})
 Like the standard @function{qsort}, but makes use of the comparison
-function and context in @var{compar}.   @var{array} is an array of
-@var{count} elements of size @var{size}.
+function and context in @var{compar}.  @var{array} is an array of
+@var{count} elements of @var{size}.
 
-This is indeed the @function{qsort} function from the @gnu{} C Library
-version 2.4, modified to use @var{compar}.
+@quotation
+@strong{NOTE} This is indeed the @function{qsort} function from the
+@gnu{} C Library version 2.4, modified to use @var{compar}.
+@end quotation
 @end deftypefun
-
 
 @c page
 
