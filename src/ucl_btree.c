@@ -1,39 +1,37 @@
 /*
-   Part of: Useless Containers Library
-   Contents: binary tree functions
-   Date: Fri Oct 11, 2002
+  Part of: Useless Containers Library
+  Contents: binary tree functions
+  Date: Fri Oct 11, 2002
 
-   Abstract
+  Abstract
 
 	The btree container is built as a chain of structures; each link
 	has a brother, a son and a parent.
 
-                 -----    bro     -----
-	        | no1 |--------->| no2 |
-	         ----- <--------- -----
-	         |  ^     dad
-             son |  | dad
-                 v  |
-                 -----
-                | no3 |
-                 -----
+              -----    bro     -----
+             | no1 |--------->| no2 |
+              ----- <--------- -----
+                |  ^     dad
+            son |  | dad
+                v  |
+               -----
+              | no3 |
+               -----
 
+  Copyright (c) 2002-2005, 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
-   Copyright (c) 2002-2005, 2008-2010 Marco Maggi <marcomaggi@gna.org>
+  This program is  free software: you can redistribute  it and/or modify
+  it under the  terms of the GNU General Public  License as published by
+  the Free Software Foundation, either  version 3 of the License, or (at
+  your option) any later version.
 
-   This program is free software:  you can redistribute it and/or modify
-   it under the terms of the  GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or (at
-   your option) any later version.
+  This program  is distributed in the  hope that it will  be useful, but
+  WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+  MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+  General Public License for more details.
 
-   This program is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   General Public License for more details.
-
-   You should  have received  a copy of  the GNU General  Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+  You  should have received  a copy  of the  GNU General  Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -41,18 +39,21 @@
  ** Header files.
  ** ----------------------------------------------------------*/
 
-#define DEBUGGING		0
+#ifndef DEBUGGING
+#  define DEBUGGING		0
+#endif
 #include "internal.h"
 
 
 void *
-ucl_btree_find_value (void * node, void * value,
-		      ucl_comparison_t compar)
+ucl_btree_find_value (void * root, ucl_value_t value, ucl_comparison_t compar)
 {
-  ucl_node_t	N = node;
+  ucl_node_t	N  = root;
+  ucl_value_t	D;
   int		v;
-  while (NULL != node) {
-    v = compar.func(compar.data, value, N);
+  while (NULL != root) {
+    D.pointer = N;
+    v = compar.func(compar.data, value, D);
     if (v > 0)
       N = N->bro;
     else if (v < 0)

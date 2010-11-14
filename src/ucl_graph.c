@@ -366,7 +366,7 @@ ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * search_handle)
   ucl_vector_tag_t *	items = search_handle->visited_nodes;
   ucl_iterator_t	iterator;
   ucl_graph_dfs_item_t *item;
-  ucl_value_t		mark = { .integer = 0 };
+  ucl_value_t		mark = { .t_int = 0 };
   for (ucl_vector_iterator_forward(items, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator)) {
@@ -383,7 +383,7 @@ ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_grap
 
   /* Test  if  the  node  is  marked,  that  is:  it  has  been  already
      visited. */
-  if (ucl_graph_node_get_mark(root_p).integer) return;
+  if (ucl_graph_node_get_mark(root_p).t_int) return;
 
   dfs_node = dfs_enter_node(search_handle, root_p);
   {
@@ -401,7 +401,7 @@ ucl_graph_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t 
 
   /* Test  if  the  node  is  marked,  that  is:  it  has  been  already
      visited. */
-  if (ucl_graph_node_get_mark(root_p).integer) return;
+  if (ucl_graph_node_get_mark(root_p).t_int) return;
   dfs_node = dfs_enter_node(search_handle, root_p);
   {
     UCL_GRAPH_OUTPUT_LINKS_LOOP(root_p, link_p)
@@ -421,7 +421,7 @@ dfs_enter_node (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * node_p)
   ucl_graph_dfs_item_t *	dfs_node;
 
 
-  node_p->mark.integer = 1;
+  node_p->mark.t_int = 1;
   /* Remember  that  'ucl_vector_push_back()'  is  a high  level  vector
      function that calls 'ucl_vector_enlarge()'. */
   dfs_node = ucl_vector_push_back(search_handle->visited_nodes);

@@ -35,7 +35,22 @@
 
 #include "internal.h"
 
-const ucl_ascii_t ucl_ascii_empty = { .ptr = "", .len = 0 };
+const ucl_ascii_t	ucl_ascii_empty		= { .ptr = (char *)"", .len = 0 };
+const ucl_value_t	ucl_value_null		= { .t_unsigned_long = 0 };
+const ucl_callback_t	ucl_callback_null	= { .func = NULL, .data = { .ptr = 0 } };
+
+ucl_callback_apply_fun_t * ucl_callback_application_function = ucl_callback_apply;
+
+
+/** --------------------------------------------------------------------
+ ** Callback functions.
+ ** -----------------------------------------------------------------*/
+
+void
+ucl_callback_set_application_function (ucl_callback_apply_fun_t * f)
+{
+  ucl_callback_application_function = f;
+}
 
 
 /** ------------------------------------------------------------
@@ -66,24 +81,24 @@ ucl_interface_minor_version (void)
 int
 ucl_intcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
-  return ((a.num == b.num)? 0 : ((a.num > b.num)? 1 : -1));
+  return ((a.t_int == b.t_int)? 0 : ((a.t_int > b.t_int)? 1 : -1));
 }
 int
 ucl_uintcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
-  return ((a.unum == b.unum)? 0 : ((a.unum > b.unum)? 1 : -1));
+  return ((a.t_unsigned_int == b.t_unsigned_int)? 0 : ((a.t_unsigned_int > b.t_unsigned_int)? 1 : -1));
 }
 int
 ucl_strcmp (ucl_value_t data UCL_UNUSED, const ucl_value_t a, const ucl_value_t b)
 {
-  return strcmp(a.str, b.str);
+  return strcmp(a.chars, b.chars);
 }
 int
 ucl_ptrintcmp (ucl_value_t data, const ucl_value_t a, const ucl_value_t b)
 {
   ucl_value_t	A, B;
-  A.num = *((const int *) a.ptr);
-  B.num = *((const int *) b.ptr);
+  A.t_int = *((const int *) a.ptr);
+  B.t_int = *((const int *) b.ptr);
   return ucl_intcmp(data, A, B);
 }
 /* This comes from the C++ book of Bjarne Srtoustrup. */
@@ -91,7 +106,7 @@ size_t
 ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
 {
   size_t	num=0, len;
-  const char *	p = val.str;
+  const char *	p = val.chars;
   len = strlen(p);
   while (len--)
     num = (num << 1)^*p++;
@@ -173,8 +188,7 @@ typedef struct {
    size is needed (actually O(1) in this case)!  */
 
 void
-ucl_quicksort (void *const pbase, size_t total_elems, size_t size,
-	       ucl_value_comparison_t cmp)
+ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp)
 {
   ucl_value_t	base = { .bytes = (uint8_t *)pbase };
   const size_t	max_thresh = MAX_THRESH * size;

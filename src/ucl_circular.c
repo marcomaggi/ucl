@@ -97,8 +97,8 @@ ucl_circular_forward (ucl_circular_t self, int times)
 ucl_circular_link_t *
 ucl_circular_find (ucl_circular_t self, ucl_value_t val)
 {
-  ucl_circular_link_t *		cur_p;
-  ucl_value_comparison_t	compar;
+  ucl_circular_link_t *	cur_p;
+  ucl_comparison_t	compar;
   assert(self);
   compar = self->compar;
   assert(compar.func);

@@ -1,8 +1,8 @@
 /*
-   Part of: Useless Containers Library
-   Contents: code for the map/multimap container.
+  Part of: Useless Containers Library
+  Contents: code for the map/multimap container.
 
-   Abstract:
+  Abstract:
 
 	The map container  is built as an AVL tree;  the brother of each
 	tree link holds an element  with greater or equal key, while the
@@ -23,20 +23,20 @@
 	the  book "Algoritmi +  Strutture Dati  = Programmi"  di Niklaus
 	Wirth, 1987 Tecniche Nuove.
 
-   Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
-   This program is free software:  you can redistribute it and/or modify
-   it under the terms of the  GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or (at
-   your option) any later version.
+  This program is  free software: you can redistribute  it and/or modify
+  it under the  terms of the GNU General Public  License as published by
+  the Free Software Foundation, either  version 3 of the License, or (at
+  your option) any later version.
 
-   This program is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   General Public License for more details.
+  This program  is distributed in the  hope that it will  be useful, but
+  WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+  MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+  General Public License for more details.
 
-   You should  have received  a copy of  the GNU General  Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You  should have received  a copy  of the  GNU General  Public License
+  along with this  program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -44,9 +44,11 @@
  ** Headers.
  ** -----------------------------------------------------------------*/
 
+#ifndef DEBUGGING
+#  define DEBUGGING		0
+#endif
 #include "internal.h"
 
-/* These will make the code easier to read. */
 typedef ucl_map_t		map_t;
 typedef ucl_map_struct_t	map_struct_t;
 typedef ucl_map_link_t		link_t;
@@ -54,8 +56,6 @@ typedef ucl_node_tag_t		node_t;
 typedef ucl_iterator_t		iterator_t;
 typedef ucl_iterator_tag_t	iterator_struct_t;
 typedef ucl_value_t		value_t;
-
-/* Static function prototypes. */
 
 static void	map_inorder_iterator_next	(iterator_t iterator);
 static void	map_inorder_backward_iterator_next (iterator_t iterator);
@@ -89,7 +89,7 @@ static void	subtraction_iterator_next (iterator_t iterator);
  ** ----------------------------------------------------------*/
 
 void
-ucl_map_constructor (ucl_map_t self, unsigned int flags, ucl_value_comparison_t keycmp)
+ucl_map_constructor (ucl_map_t self, unsigned int flags, ucl_comparison_t keycmp)
 {
   assert(self);
   assert(keycmp.func);
@@ -112,7 +112,7 @@ ucl_map_destructor (ucl_map_t self)
 __attribute__((__nonnull__,__pure__)) void
 ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
 {
-  ucl_value_comparison_t	keycmp;
+  ucl_comparison_t	keycmp;
   int		v, root_flag;
   link_t *	tmp_p;
   link_t *	cur_p;
@@ -942,7 +942,7 @@ ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p)
 ucl_map_link_t *
 ucl_map_find (const ucl_map_t this, const ucl_value_t key)
 {
-  ucl_value_comparison_t	keycmp;
+  ucl_comparison_t	keycmp;
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
@@ -1042,7 +1042,7 @@ ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key)
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
-  ucl_value_comparison_t	keycmp;
+  ucl_comparison_t	keycmp;
 
 
   assert(this != 0);
@@ -1127,7 +1127,7 @@ ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key)
   int			v;
   link_t *		cur_p;
   link_t *		last_p;
-  ucl_value_comparison_t	keycmp;
+  ucl_comparison_t	keycmp;
 
   assert(this != 0);
 
@@ -1216,7 +1216,7 @@ ucl_map_count (const ucl_map_t this, const ucl_value_t key)
 {
   size_t		count;
   link_t *		link_p;
-  ucl_value_comparison_t	keycmp;
+  ucl_comparison_t	keycmp;
 
 
   assert(this != 0);
@@ -1442,7 +1442,7 @@ map_upperbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder_backward((node_t *) link_p);
   if (link_p != NULL)
     {
-      ucl_value_comparison_t	keycmp = this->keycmp;
+      ucl_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1469,7 +1469,7 @@ map_lowerbound_iterator_next (iterator_t iterator)
   link_p = (link_t *) ucl_btree_step_inorder((node_t *) link_p);
   if (link_p != NULL)
     {
-      ucl_value_comparison_t	keycmp = this->keycmp;
+      ucl_comparison_t	keycmp = this->keycmp;
 
       key1 = ucl_map_getkey(link_p);
       iterator->iterator = (keycmp.func(keycmp.data, key, key1) == 0)? link_p : NULL;
@@ -1536,7 +1536,7 @@ union_find_next (iter1, iter2, iterator)
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
-  ucl_value_comparison_t	compar;
+  ucl_comparison_t	compar;
   int			v;
 
 
@@ -1622,7 +1622,7 @@ intersection_find_common (iter1, iter2, iterator)
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
-  ucl_value_comparison_t	compar;
+  ucl_comparison_t	compar;
   int			v;
 
 
@@ -1682,7 +1682,7 @@ complintersect_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  ucl_value_comparison_t	compar;
+  ucl_comparison_t	compar;
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;
@@ -1829,7 +1829,7 @@ subtraction_iterator_next (iterator_t iterator)
 {
   iterator_struct_t * 	iter1;
   iterator_struct_t *	iter2;
-  ucl_value_comparison_t	compar;
+  ucl_comparison_t	compar;
   value_t		key1, key2;
   link_t *		node1;
   link_t *		node2;

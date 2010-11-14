@@ -225,11 +225,6 @@ Data types you have to know
 * typedefs hash::               Hash functions.
 * typedefs callback::           Callback functions.
 
-Range selectors
-
-* typedefs ranges macros::      Macros to handle ranges.
-* typedefs ranges types::       Type of ranges.
-
 The data structures
 
 * btree::                       The binary tree structure.
@@ -241,6 +236,41 @@ The data structures
 * list::                        The linked list structure.
 * map::                         The map structure.
 * vector::                      The vector structure.
+
+The binary tree container
+
+* btree typedefs::              Implementation and type definitions.
+* btree examples::              Usage examples.
+* btree creation::              Building btree hierarchies.
+* btree inspection::            Accessing nodes.
+* btree removing::              Removing elements.
+* btree find::                  Finding values.
+* btree visitors::              Finding nodes.
+* btree iteration::             Iterations in a btree hierarchy.
+
+Iterations in a btree hierarchy
+
+* btree inorder iteration::     Inorder iteration.
+* btree preorder iteration::    Preorder iteration.
+* btree postorder iteration::   Postorder iteration.
+* btree level iteration::       Level order iteration.
+
+The tree structure
+
+* tree implementation::         How it's done.
+* tree creation::               Creating a tree hierarchy.
+* tree testing::                Testing relationships between nodes.
+* tree relatives::              Accessing or setting the relatives of
+                                a node.
+* tree removing::               Removing elements from a tree.
+* tree iterators::              Traversing a tree.
+
+The heap structure
+
+* heap creation::             Creating and destroying heaps.
+* heap adding::               Adding elements to a heaps.
+* heap removing::             Removing elements from a heaps.
+* heap ops::                  Various operations on a heaps.
 
 The circular list
 
@@ -297,6 +327,7 @@ The map structure
 The vector structure
 
 * vector implementation::       How it's done.
+* vector typedefs::             Type definitions
 * vector fields::               Fields and default configuration
                                 for vectors.
 * vector creation::             Creating and destroying vectors.
@@ -982,7 +1013,6 @@ ucl_struct_alloc(allocator, p, a_t);
 @chapter Data types you have to know
 
 
-@noindent
 The types of container structures and links/nodes are described in the
 sections dedicated to containers.  Here common data types are described.
 
@@ -1000,18 +1030,43 @@ sections dedicated to containers.  Here common data types are described.
 
 
 @deftp {Union Typedef} ucl_value_t
-The data type of objects that can be stored in the containers.  It's a
+The data type of objects that can be stored in the containers; it's a
 @code{union} with the following members:
 
 @table @code
-@item unsigned unum
-@item int num
-@item int integer
+@item char t_char
+@itemx unsigned char t_unsigned_char
+@itemx int t_int
+@itemx unsigned int t_unsigned_int
+@itemx long t_long
+@itemx unsigned long t_unsigned_long
+@itemx int8_t t_int8
+@itemx uint8_t t_uint8
+@itemx int16_t t_int16
+@itemx uint16_t t_uint16
+@itemx int32_t t_int32
+@itemx uint32_t t_uint32
+One field for each built in C language type.
+
+@itemx size_t t_size
+@itemx ssize_t t_ssize
+@itemx intptr_t t_intptr
+@itemx uintptr_t t_uintptr
+Fields for miscellaneous types.
+
 @item void * ptr
-@item char * str
-@item uint8_t * bytes
+@itemx void * pointer
+@itemx uint8_t * bytes
+@itemx char * chars
+Fields for miscellaneous pointer types.
 @end table
 @end deftp
+
+
+@defvr Constant ucl_value_t ucl_value_null
+Constant value representing the null @code{ucl_value_t}; its fields are
+set to zero.
+@end defvr
 
 
 @deftp {Alias Typedef} ucl_bool_t
@@ -1022,13 +1077,7 @@ standard defines also the @code{true} and @code{false} values (in the
 
 
 @deftp {Alias Typedef} ucl_index_t
-@deftpx {Alias Typedef} ucl_vector_index_t
-Alias for @code{size_t}.  @code{ucl_vector_index_t} is deprecated.
-@end deftp
-
-
-@deftp {Alias Typedef} ucl_data_t
-Alias for @code{void *}.
+Alias for @code{size_t}.
 @end deftp
 
 
@@ -1051,11 +1100,10 @@ to some function like a callback.
 @end table
 @end deftp
 
+@c ------------------------------------------------------------
 
-@subsection Temporary linked lists
+@subsubheading Temporary linked lists
 
-
-@noindent
 Let's say that we want to preallocate a set of structures to be used
 with the @ucl{}, for example: @code{ucl_list_link_t}, the structure
 representing a node in the @ucl{}'s doubly linked list.  We allocate them
@@ -1066,13 +1114,11 @@ with code like:
 ucl_memory_allocator    allocator;
 ucl_list_link_t *       link_p;
 
-
-for (size_t i=0; i<NUMBER_OF_PREALLOCATED_STRUCTS; ++i)
-  @{
-    link_p = NULL;
-    allocator.alloc(allocator.data, &link_p, sizeof(ucl_list_link_t));
-    /* here we have to put the links somewhere */
-  @}
+for (size_t i=0; i<NUMBER_OF_PREALLOCATED_STRUCTS; ++i) @{
+  link_p = NULL;
+  allocator.alloc(allocator.data, &link_p, sizeof(ucl_list_link_t));
+  /* here we have to put the links somewhere */
+@}
 @end example
 
 @noindent
@@ -1192,7 +1238,6 @@ allocator.alloc(allocator.data, &preallocated_links,
 @}
 @end example
 
-
 @c page
 @node typedefs ranges
 @section Range selectors
@@ -1200,22 +1245,32 @@ allocator.alloc(allocator.data, &preallocated_links,
 
 @center @strong{RANGES ARE INCLUSIVE}
 
-@menu
-* typedefs ranges macros::      Macros to handle ranges.
-* typedefs ranges types::       Type of ranges.
-@end menu
-
-
-@c page
-@node typedefs ranges macros
-@subsection Macros to handle ranges
-
-
-@center @strong{RANGES ARE INCLUSIVE}
-
 @noindent
 All these macros accept as @var{range} arguments the name of a range
-structure, @strong{not} the name of a pointer to the structure.
+structure, @strong{not} the name of a pointer to the structure.  Range
+stuff is written in macros, not @code{__inline__} functions, so that
+they work with all the type structures defined below.
+
+
+@deftp {Struct Typedef} ucl_range_t
+Data type used to describe a range of elements in a sequence, by
+selecting the indexes.  The fields are of type @code{size_t}.
+@end deftp
+
+
+@deftp {Struct Typedef} ucl_char_range_t
+@deftpx {Struct Typedef} ucl_unsigned_char_range_t
+@deftpx {Struct Typedef} ucl_int_range_t
+@deftpx {Struct Typedef} ucl_unsigned_range_t
+@deftpx {Struct Typedef} ucl_long_range_t
+@deftpx {Struct Typedef} ucl_unsigned_long_range_t
+@deftpx {Struct Typedef} ucl_size_t_range_t
+@deftpx {Struct Typedef} ucl_float_range_t
+@deftpx {Struct Typedef} ucl_double_range_t
+@deftpx {Struct Typedef} ucl_byte_pointer_range_t
+@deftpx {Struct Typedef} ucl_pointer_range_t
+Ranges of values.
+@end deftp
 
 
 @defmac ucl_range_set_min_max (@var{range}, @var{min}, @var{max})
@@ -1239,61 +1294,32 @@ Set the min to: @code{@var{max}-@var{size}+1}.
 @end defmac
 
 @defmac ucl_range_size (@var{range})
-Return the size of the range.
+Evaluate to the size of the range.
 @end defmac
 
 @defmac ucl_range_is_empty (@var{range})
-Return true if @var{range} is empty.
+Evaluate to true if @var{range} is empty.
 @end defmac
 
 @defmac ucl_range_min (@var{range})
-Return the min.
+Evaluate to the min.
 @end defmac
 
 @defmac ucl_range_max (@var{range})
-Return the max.
+Evaluate to the max.
 @end defmac
 
 @defmac ucl_range_value_is_in (@var{range}, @var{value})
-Return true if the value is inside the range.
+Evaluate to true if the value is inside the range.
 @end defmac
 
 @defmac ucl_range_value_is_out (@var{range}, @var{value})
-Return true if the value is outside the range.
+Evaluate to true if the value is outside the range.
 @end defmac
 
 @defmac ucl_range_equal (@var{range_a}, @var{range_b})
-Return true if the ranges are equal.
+Evaluate to true if the ranges are equal.
 @end defmac
-
-
-@c page
-@node typedefs ranges types
-@subsection Type of ranges
-
-
-@center @strong{RANGES ARE INCLUSIVE}
-
-
-@deftp {Struct Typedef} ucl_range_t
-Data type used to describe a range of elements in a sequence, by
-selecting the indexes.  The fields are of type @code{size_t}.
-@end deftp
-
-
-@deftp {Struct Typedef} ucl_char_range_t
-@deftpx {Struct Typedef} ucl_unsigned_char_range_t
-@deftpx {Struct Typedef} ucl_int_range_t
-@deftpx {Struct Typedef} ucl_unsigned_range_t
-@deftpx {Struct Typedef} ucl_long_range_t
-@deftpx {Struct Typedef} ucl_unsigned_long_range_t
-@deftpx {Struct Typedef} ucl_size_t_range_t
-@deftpx {Struct Typedef} ucl_float_range_t
-@deftpx {Struct Typedef} ucl_double_range_t
-@deftpx {Struct Typedef} ucl_byte_pointer_range_t
-@deftpx {Struct Typedef} ucl_pointer_range_t
-Ranges of values.
-@end deftp
 
 @c page
 @node typedefs compar
@@ -1332,13 +1358,15 @@ Example:
 
 @example
 ucl_comparison_fun_t    intcmp;
-ucl_comparison_t        compar = @{ NULL, intcmp @};
-ucl_value_t             a, b;
+ucl_comparison_t        compar = @{
+  .data = NULL, .func = intcmp
+@};
+ucl_value_t             a = ...;
+ucl_value_t             b = ...;
 int                     result;
 
-result = compar.func(compar.data, a, v);
+result = compar.func(compar.data, a, b);
 @end example
-
 
 @c page
 @node typedefs hash
@@ -1377,7 +1405,38 @@ pointer to the callback function;
 @item ucl_value_t data
 the context value.
 @end table
+
+To initialise a @code{ucl_callback_t} structure we can do:
+
+@example
+ucl_callback_t cb = @{
+  .func = pointer_to_function,
+  .data = @{ .ptr = pointer_to_data @}
+@};
+@end example
+
+@noindent
+to initialise to no--function and no--data:
+
+@example
+ucl_callback_t cb = ucl_callback_null;
+@end example
+
+Example of callback invocation:
+
+@example
+ucl_callback_t  cb = ...;
+int             a  = 123;
+int             b  = 456;
+
+ucl_callback_apply(cb, a, b);
+@end example
 @end deftp
+
+
+@defvr Constant const ucl_callback_t ucl_callback_null
+Statically allocated structure representing a null callback.
+@end defvr
 
 
 @deftypefn {Function Prototype} ucl_value_t ucl_callback_fun_t (ucl_value_t @var{context}, va_list @var{ap})
@@ -1410,13 +1469,11 @@ Like @function{ucl_callback_invoke} but the @code{va_list} argument is
 replaced by @cnull{}.  Return the return value of the callback function.
 @end deftypefun
 
-
 @c ------------------------------------------------------------
 
-@subsection Custom callback application
+@subsubheading Custom callback application
 
 
-@noindent
 The @ucl{} does not support any error reporting mechanism; this means
 that @function{ucl_callback_apply} does not expect the callback to fail.
 To avoid problems all the @ucl{} modules that need to apply a callback
@@ -1438,44 +1495,6 @@ callback.  The default application function is
 @function{ucl_callback_apply}.
 @end deftypefun
 
-
-@c ------------------------------------------------------------
-
-@subsection Example: callback initialisation
-
-
-@noindent
-To initialise a @code{ucl_callback_t} structure we can do:
-
-@example
-ucl_callback_t cb = @{
-  .func = pointer_to_function,
-  .data = @{ .ptr = pointer_to_data @}
-@};
-@end example
-
-@noindent
-to initialise to no--function and no--data:
-
-@example
-ucl_callback_t cb = UCL_CALLBACK_NULL_VALUE;
-@end example
-
-
-@subsection Example: callback invocation
-
-
-@noindent
-To invoke a callback we can do:
-
-@example
-ucl_callback_t  cb = ...;
-int             a  = 123;
-int             b  = 456;
-
-ucl_callback_apply(cb, a, b);
-@end example
-
 @c page
 @node containers
 @chapter The data structures
@@ -1492,7 +1511,6 @@ ucl_callback_apply(cb, a, b);
 * map::                         The map structure.
 * vector::                      The vector structure.
 @end menu
-
 
 @c page
 @node btree
@@ -1819,26 +1837,29 @@ Set to zero all the bytes in the node structure.
 @subsection Finding values
 
 
-@noindent
 The purpose of a binary tree is to organise values in a hierarchy; the
 functions described in this section can be used to find values.
 
-All the following functions accept @code{void *} values as arguments and
-return @code{void *} values; internally these pointers are cast to
+The following function accepts @code{void *} values as arguments and
+return a @code{void *} value; internally these pointers are cast to
 @code{ucl_node_t}.
 
 
-@deftypefun {void *} ucl_btree_find_value (void * @var{root}, void * @var{value}, ucl_comparison_t @var{compar})
+@deftypefun {void *} ucl_btree_find_value (void * @var{root}, ucl_value_t @var{value}, ucl_comparison_t @var{compar})
 Interpret @var{root} as a pointer to the root node of a btree (whose dad
 is @cnull{}) and find a node equal to @var{value} according to the
 comparison closure.  @var{compar} is invoked like this:
 
 @example
-@var{compar}.func(@var{compar}.data, @var{value}, node);
+ucl_node_t  N = ...;
+ucl_value_t D = @{ .pointer = N @};
+
+@var{compar}.func(@var{compar}.data, @var{value}, D);
 @end example
 
 @noindent
-where @code{node} is the current node; if the return value is:
+where @code{N} is the current node in the search; if the return value
+is:
 
 @table @asis
 @item zero
@@ -1852,7 +1873,6 @@ the search goes on in the bro subtree;
 @noindent
 if @var{value} is not found, the return value is @cnull{}.
 @end deftypefun
-
 
 @c page
 @node btree visitors
