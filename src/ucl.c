@@ -42,16 +42,16 @@ const ucl_callback_t	ucl_callback_null	= { .func = NULL, .data = { .ptr = 0 } };
 ucl_callback_apply_fun_t * ucl_callback_application_function = ucl_callback_apply;
 
 const ucl_comparison_t ucl_compare_int = {
-  .data = NULL, .func = ucl_compare_int_fun
+  .data = { .t_unsigned_long = 0 }, .func = ucl_compare_int_fun
 };
 const ucl_comparison_t ucl_compare_unsigned_int = {
-  .data = NULL, .func = ucl_compare_unsigned_int_fun
+  .data = { .t_unsigned_long = 0 }, .func = ucl_compare_unsigned_int_fun
 };
 const ucl_comparison_t ucl_compare_string = {
-  .data = NULL, .func = ucl_compare_string_fun
+  .data = { .t_unsigned_long = 0 }, .func = ucl_compare_string_fun
 };
 const ucl_comparison_t ucl_compare_int_pointer = {
-  .data = NULL, .func = ucl_compare_int_pointer_fun
+  .data = { .t_unsigned_long = 0 }, .func = ucl_compare_int_pointer_fun
 };
 
 
@@ -111,7 +111,7 @@ ucl_compare_int_pointer_fun (ucl_value_t data, const ucl_value_t a, const ucl_va
 {
   ucl_value_t	A = { .t_int = *((const int *) a.ptr) };
   ucl_value_t	B = { .t_int = *((const int *) b.ptr) };
-  return ucl_compare_int(data, A, B);
+  return ucl_compare_int_fun(data, A, B);
 }
 
 

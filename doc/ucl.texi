@@ -5635,6 +5635,7 @@ Subtraction: 0 1 2 3
 @node vector
 @section The vector structure
 
+
 @cindex Vector container
 
 
@@ -5642,8 +5643,8 @@ The vector container is an implementation of array, with hysteresis in
 memory allocation.
 
 @quotation
-This module was inspired by the book on C++ by Bjarne Stroustrup and by
-the @acronym{STL} C++ (Standard Template Library).
+@strong{NOTE} This module was inspired by the book on C++ by Bjarne
+Stroustrup and by the @acronym{STL} C++ (Standard Template Library).
 @end quotation
 
 @quotation
