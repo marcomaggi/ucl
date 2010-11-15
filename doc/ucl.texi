@@ -328,8 +328,6 @@ The vector structure
 
 * vector implementation::       How it's done.
 * vector typedefs::             Type definitions
-* vector fields::               Fields and default configuration
-                                for vectors.
 * vector creation::             Creating and destroying vectors.
 * vector indexes::              Converting indexes to pointers.
 * vector adding::               Adding elements to a vector.
@@ -340,6 +338,21 @@ The vector structure
 * vector memory::               Allocating and freeing memory.
 * vector as pqueue::            Using a vector as a priority queue.
 * vector high::                 High level functions.
+
+Converting indexes to pointers
+
+* vector indexes i2p::          Index to pointer conversion.
+* vector indexes p2i::          Pointer to index conversion.
+* vector indexes validation::   Validating indexes.
+* vector indexes range::        Range functions.
+* vector indexes block::        Range/block conversion.
+
+Allocating and freeing memory
+
+* vector memory intro::         Introduction to vector memory handling.
+* vector memory enlarge::       Enlarging allocated memory.
+* vector memory restrict::      Restricting allocated memory.
+* vector memory misc::          Miscellaneous memory functions.
 
 High level functions
 
@@ -5648,16 +5661,15 @@ Stroustrup and by the @acronym{STL} C++ (Standard Template Library).
 @end quotation
 
 @quotation
-In the following documentation, when describing valid values for vector
-indexes, we denote a range of values with @code{[min, max)}, where
-@code{[} means inclusive bound and @code{(} means exclusive bound.
+@strong{NOTE} In the following documentation, when describing valid
+values for vector indexes, we denote a range of values with @code{[min,
+max)}, where @code{[} means inclusive bound and @code{(} means exclusive
+bound.
 @end quotation
 
 @menu
 * vector implementation::       How it's done.
 * vector typedefs::             Type definitions
-* vector fields::               Fields and default configuration
-                                for vectors.
 * vector creation::             Creating and destroying vectors.
 * vector indexes::              Converting indexes to pointers.
 * vector adding::               Adding elements to a vector.
@@ -5670,7 +5682,6 @@ indexes, we denote a range of values with @code{[min, max)}, where
 * vector high::                 High level functions.
 @end menu
 
-
 @c page
 @node vector implementation
 @subsection How it's done
@@ -5679,19 +5690,23 @@ indexes, we denote a range of values with @code{[min, max)}, where
 This container is heavyweight: its complexity is overkill for simple
 arrays with fixed size.
 
-The vector structure can be allocated anywhere; the array is always
-dynamically allocated and it is described by four pointers:
-@code{first_allocated_slot}, @code{first_used_slot},
-@code{last_used_slot}, @code{last_allocated_slot}.  All the pointers are
-of type @code{uint8_t *}.
+The vector structure can be allocated anywhere; the data area is always
+dynamically allocated and it is described by four pointers of type
+@code{uint8_t *}:
 
-A "slot" is a section of the allocated memory that can hold an element;
-the dimension of the slots is configured at initialisation time.  A "free
-slot" is a slot that does not contain an element; free slots can be
-present at the beginning and end of the allocated memory.  A "used slot"
-is a slot that holds an element; used slots are always contiguous in the
-allocated memory.
+@example
+first_allocated_slot    first_used_slot
+last_allocated_slot     last_used_slot
+@end example
 
+A @dfn{slot} is a section of the allocated memory that can hold an
+element; the dimension of the slots is configured at vector
+initialisation time.  A @dfn{free slot} is a slot that does not contain
+an element; free slots can be present at the beginning and end of the
+allocated memory.  A @dfn{used slot} is a slot that holds an element;
+used slots are always contiguous in the allocated memory.
+
+@c ------------------------------------------------------------
 
 @subsubheading Pointer usage charts
 
@@ -5711,7 +5726,6 @@ Pointers when some slot is used:
 first_allocated_slot
 @end example
 
-
 @noindent
 pointers when the used area is attached to the beginning of the
 allocated memory:
@@ -5727,7 +5741,6 @@ allocated memory:
 |
 first_allocated_slot == first_used_slot
 @end example
-
 
 @noindent
 pointers when the used area is attached to the end of the allocated
@@ -5745,9 +5758,8 @@ memory:
 first_allocated_slot
 @end example
 
-
 @noindent
-pointers when the allocated memory is full:
+pointers when the allocated memory is full (all the slots are used):
 
 @example
                  used slots
@@ -5760,7 +5772,6 @@ pointers when the allocated memory is full:
 |
 first_allocated_slot == first_used_slot
 @end example
-
 
 @noindent
 pointers when only one slot is used:
@@ -5777,7 +5788,6 @@ pointers when only one slot is used:
 |
 first_allocated_slot
 @end example
-
 
 @noindent
 pointers when the vector is empty and a non-zero pad area was
@@ -5812,6 +5822,7 @@ pointers when the vector is empty and a zero pad area was configured:
 last_used_slot
 @end example
 
+@c ------------------------------------------------------------
 
 @subsubheading Pointers usage rules
 
@@ -5831,8 +5842,8 @@ memory (not the last byte, unless the size of the slot is one); its
 value is modified only when the memory is reallocated and is always:
 
 @example
-last_allocated_slot =
-    first_allocated_slot + slot_dimension * allocated_slot_number
+last_allocated_slot == first_allocated_slot
+  + slot_dimension * allocated_slot_number
 @end example
 
 It represents the maximum allowed value for @code{last_used_slot}; when
@@ -5872,7 +5883,7 @@ first_used_slot <= last_used_slot
 the two are equal when only one slot is used; it must always be:
 
 @example
-number_of_used_slots * slot_dimension =
+number_of_used_slots * slot_dimension ==
      last_used_slot - first_used_slot + slot_dimension
 @end example
 
@@ -5889,7 +5900,7 @@ padding area.  We use this definition of empty vector so that it is
 possible to iterate with:
 
 @example
-ucl_byte_t *   p;
+uint8_t *   p;
 
 for (p =  vector->first_used_slot;
      p <= vector->last_used_slot;
@@ -5911,9 +5922,49 @@ reallocation of the memory block.
 
 
 @deftp {Struct Typedef} ucl_vector_tag_t
-@deftpx {Struct Typedef Pointer} ucl_vector_t
-The data type of the base structure.  It must be allocated by the user
-code.
+@deftpx {One Element Array Typedef} ucl_vector_t
+The data type of the base structure; it must be allocated by the user
+code.  @ref{vector memory} for deatils on (re)allocation.
+@end deftp
+
+
+@deftp {Struct Typedef} ucl_vector_config_tag_t
+@deftpx {One Element Array Typedef} ucl_vector_config_t
+Data structure used to configure a vector; it must be allocated by the
+user code; public fields description follows.
+
+@table @code
+@item size_t slot_dimension
+This is the array stride, which, in simple cases, is the size, in bytes,
+of the elements the vector will hold; it should be the result of the
+@code{sizeof()} operator applied to the data type, possibly normalised
+to a multiple of @math{4} or something.
+
+@item size_t number_of_slots
+The number of slots to allocate.
+
+@item ucl_index_t step_up
+The number of slots to add when reallocating the array to enlarge it, it
+must be a non--zero positive integer.
+
+@item ucl_index_t step_down
+The number of free slots that will trigger the reallocation of he array
+for restriction, it must be a non--zero positive integer.
+
+@item ucl_index_t size_of_padding_area
+The numer of slots to keep free, if possible, at the beginning of the
+array when moving elements (during insertion, removal and reallocation),
+it must be non--negative integer.
+
+@item ucl_comparison_t compar
+Function and context used to compare elements; this function is used
+only by the sort operations, so this field can be left blank if no sort
+operations are required; @ref{typedefs compar} for details.
+
+@item ucl_memory_allocator_t allocator
+The memory allocator to use for the data area; @ref{memory typedefs} for
+details.
+@end table
 @end deftp
 
 
@@ -5933,7 +5984,9 @@ allocated, or it can be on the stack.
 To declare an array of vectors we can do:
 
 @example
-ucl_vector_t *        vectors[NUMBER];
+#define NUMBER  1000
+
+ucl_vector_tag_t *    vectors[NUMBER];
 ucl_vector_array_t    array = @{
   .number_of_vectors = NUMBER,
   .vectors           = vectors
@@ -5942,138 +5995,113 @@ ucl_vector_array_t    array = @{
 @end deftp
 
 @c page
-@node vector fields
-@subsection Fields and configuration for vectors
-
-
-@noindent
-The public fields in the @code{ucl_vector_t} structure are:
-
-@table @code
-@item size_t size
-it has two manings, depending on the vector's situation:
-
-@table @emph
-@item at initialisation
-the number of slots to allocate for the new vector, it must be a
-non--null positive integer;
-@item in the lifetime of the vector
-the number of elements in the container;
-@end table
-
-@item size_t step_up
-the number of slots to add when reallocating the array to enlarge it, it
-must be a non--zero positive integer;
-
-@item size_t step_down
-the number of free slots that will trigger the reallocation of he array
-for restriction, it must be a non--zero positive integer;
-
-@item size_t pad
-the numer of slots to keep free, if possible, at the beginning of the
-array when moving elements (during insertion, removal and reallocation),
-it must be a positive or null integer; at initialisation it must be
-lesser than @code{size};
-
-@item size_t dim
-the size, in bytes, of the elements that the vector will hold, this
-should be the result of the @code{sizeof()} operator applied to the data
-type;
-
-@item ucl_comparison_t compar
-function+context used to compare elements; this function is used only by
-the sort operations, so this field can be left blank if no sort
-operations are required.
-@end table
-
-@noindent
-@ref{vector memory} for deatils on (re)allocation.
-
-
-The following are the default values: a set of preprocessor symbols
-declared in @file{ucl.h}, they are set at initialisation time and can be
-overridden before constructing the vector.
-
-@defmac UCL_VECTOR_DEFAULT_SIZE
-Default value for the @code{size} structure field.  Value: 16.
-@end defmac
-
-
-@defmac UCL_VECTOR_DEFAULT_STEP_UP
-Default value for the @code{step_up} structure field.  Value: 8.
-@end defmac
-
-
-@defmac UCL_VECTOR_DEFAULT_STEP_DOWN
-Default value for the @code{step_down} structure field.  Value: 10.
-@end defmac
-
-
-@defmac UCL_VECTOR_DEFAULT_PAD
-Default value for the @code{pad} structure field.  Value: 3.
-@end defmac
-
-The declaration allows overriding, for example:
-
-@example
-#ifndef UCL_VECTOR_DEFAULT_SIZE
-#  define UCL_VECTOR_DEFAULT_SIZE       16
-#endif
-@end example
-
-@c page
 @node vector creation
 @subsection Creating and destroying vectors
 
 
-@noindent
-The construction of a new vector is a three step sequence: declaration,
-initialisation, allocation:
+The construction of a new vector is a @math{3}--step sequence:
+declaration, configuration, allocation:
 
 @example
-ucl_vector_t V;
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+size_t  slot_dimension  = ...;
+size_t  number_of_slots = ...;
 
-ucl_vector_initialise(V, sizeof(int));
-ucl_vector_initialise_size(V, 100);
-ucl_vector_constructor(V);
+ucl_vector_initialise_config(C, slot_dimension, number_of_slots);
+ucl_vector_alloc(V, C);
+@end example
+
+@noindent
+if we want to set custom values:
+
+@example
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+size_t  slot_dimension  =   16;
+size_t  number_of_slots = 1024;
+
+ucl_vector_initialise_config(C, slot_dimension, number_of_slots);
+C->step_up              = 128;
+C->step_down            = 264;
+C->size_of_padding_area =  32;
+ucl_vector_alloc(V, C);
+@end example
+
+@c ------------------------------------------------------------
+
+@subsubheading Configuration functions
+
+
+After the invocation to the configuration functions, the user's code may
+override the default values by explicitly setting them before invoking
+the allocator function.  All the functions select
+@cfunc{ucl_memory_alloc} as allocation function and set to zero the
+comparison structure.
+
+
+@deftypefun void ucl_vector_initialise_config (ucl_vector_config_t @var{C}, size_t @var{slot_dimension}, size_t @var{number_of_slots})
+Initialise a vector configuration structure with default values.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_initialise_config_buffer (ucl_vector_config_t @var{C})
+Initialise a vector configuration structure for a vector used as byte
+buffer.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_initialise_config_hash (ucl_vector_config_t @var{C})
+Initialise a vector configuration structure for a vector used as hash
+table buckets collector.
+@end deftypefun
+
+
+@deftypefun void ucl_vector_initialise_config_dfs (ucl_vector_config_t @var{C})
+Initialise a vector configuration structure for a vector used as
+depth--first search data for the graph container.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@subsubheading Default values
+
+
+The following are the default values
+@cfunc{ucl_vector_initialise_config} puts into the
+@code{ucl_vector_config_t} structure: a set of preprocessor symbols
+declared in @file{ucl.h}.  The declarations allow overriding, they are
+in the form:
+
+@example
+#ifndef UCL_VECTOR_DEFAULT_STEP_UP
+#  define UCL_VECTOR_DEFAULT_STEP_UP     8
+#endif
 @end example
 
 
-@subsubsection Initialisation functions
-
-@deftypefun void ucl_vector_initialise (ucl_vector_t @var{self}, size_t @var{dim})
-Initialise the members of the structure with the default values.  After
-the invocation to this function, the user's code may override the default
-values by explicitly setting them before invoking the constructor.
-
-@var{dim} is the dimension of the elements that will be stored in the
-array.
-@end deftypefun
+@defmac UCL_VECTOR_DEFAULT_STEP_UP 8
+Default value for the @code{step_up} structure field.
+@end defmac
 
 
-@deftypefun void ucl_vector_initialise_size (ucl_vector_t @var{self}, size_t @var{size})
-Initialise the requested size of the vector.
-@end deftypefun
-
-@deftypefun void ucl_vector_initialise_pad (ucl_vector_t @var{self}, size_t @var{pad})
-Initialise the requested size of the padding area, in slot size units.
-@end deftypefun
-
-@deftypefun void ucl_vector_initialise_step_up (ucl_vector_t @var{self}, size_t @var{step_up})
-Initialise the requested size of the step up value, in slot size units.
-@end deftypefun
-
-@deftypefun void ucl_vector_initialise_step_down (ucl_vector_t @var{self}, size_t @var{step_down})
-Initialise the requested size of the step down value, in slot size
-units.
-@end deftypefun
+@defmac UCL_VECTOR_DEFAULT_STEP_DOWN 10
+Default value for the @code{step_down} structure field.
+@end defmac
 
 
-@subsubsection Construction and destruction functions
+@defmac UCL_VECTOR_DEFAULT_PAD 3
+Default value for the @code{size_of_padding_area} structure field.
+@end defmac
 
-@deftypefun void ucl_vector_constructor (ucl_vector_t @var{self})
-Allocate memory with the current @ucl{} allocator and initialise the
-fields of @var{self}.
+@c ------------------------------------------------------------
+
+@subsubheading Construction and destruction functions
+
+
+@deftypefun void ucl_vector_alloc (ucl_vector_t @var{V}, ucl_vector_config_t @var{C})
+Allocate memory with the selected @ucl{} allocator and initialise the
+fields of @var{V}.
 
 If the @code{step_up} field holds a value greater than the
 @code{step_down} field: the @code{step_down} field is changed to
@@ -6081,285 +6109,256 @@ If the @code{step_up} field holds a value greater than the
 @end deftypefun
 
 
-@deftypefun void ucl_vector_destructor (ucl_vector_t @var{self})
-Destroy the structure pointed by @var{self}, only if it has been built
-(it is safe to call this function on an already destroyed vector).  The
-structure itself is not deallocated.  Any block of dynamically allocated
-memory is freed.   All the structure fields are reset to zero.
-
-If the contained values need some sort of destruction, it is
-responsibility of the user's code to extract them before invoking this
-function.
+@deftypefun void ucl_vector_free (ucl_vector_t @var{V})
+Release the memory allocate in @var{V} and set to zero all its fields.
 @end deftypefun
 
-@deftypefun ucl_bool_t ucl_vector_running (const ucl_vector_t @var{self})
+
+@deftypefun ucl_bool_t ucl_vector_running (const ucl_vector_t @var{V})
 Return true if the vector has been constructed.
 @end deftypefun
 
+@c ------------------------------------------------------------
 
-@subsubsection Inspection functions
+@subsubheading Inspection functions
 
 
-@deftypefun size_t ucl_vector_number_of_step_up_slots (const ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_step_up_slots (const ucl_vector_t @var{V})
 Return the number of stup up slots.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_number_of_step_down_slots (const ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_step_down_slots (const ucl_vector_t @var{V})
 Return the number of step down slots.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_number_of_padding_slots (const ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_padding_slots (const ucl_vector_t @var{V})
 Return the number of padding slots.
 @end deftypefun
 
+@c ------------------------------------------------------------
 
-@subsubsection Updating configuration functions
+@subsubheading Updating configuration functions
 
 
-@deftypefun void ucl_vector_update_number_of_step_up_slots (ucl_vector_t @var{self}, size_t @var{step_up})
+The following functions can be applied to an already constructed vector.
+
+
+@deftypefun void ucl_vector_update_number_of_step_up_slots (ucl_vector_t @var{V}, size_t @var{step_up})
 Update the number of the step up slots.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_update_number_of_step_down_slots (ucl_vector_t @var{self}, size_t @var{step_down})
+@deftypefun void ucl_vector_update_number_of_step_down_slots (ucl_vector_t @var{V}, size_t @var{step_down})
 Update the number of the step down slots.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_update_number_of_padding_slots (ucl_vector_t @var{self}, size_t @var{padding})
+@deftypefun void ucl_vector_update_number_of_padding_slots (ucl_vector_t @var{V}, size_t @var{padding})
 Update the number of the padding slots.
 @end deftypefun
 
 
-@subsubsection Special functions
+@deftypefun void ucl_vector_set_compar (ucl_vector_t @var{V}, ucl_comparison_t @var{compar})
+Register the function+context used to compare elements.
+@end deftypefun
 
-@deftypefun void ucl_vector_mark_all_slots_as_used (ucl_vector_t @var{self})
-Set the fields of @var{self} to describe a vector that uses all the
-allocated memory.  This means:
+@c ------------------------------------------------------------
 
-@example
-self->first_used_slot = self->first_allocated_slot;
-self->last_used_slot  = self->last_allocated_slot;
-@end example
+@subsubheading Special functions
 
-This is for special vector usage.
+
+@deftypefun void ucl_vector_mark_all_slots_as_used (ucl_vector_t @var{V})
+Set the fields of @var{V} to describe a vector that uses all the
+allocated memory.  This is for special vector usage.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_mark_allocated_range_as_used (ucl_vector_t @var{self}, ucl_range_t @var{range})
+@deftypefun void ucl_vector_mark_allocated_range_as_used (ucl_vector_t @var{V}, ucl_range_t @var{range})
 Mark a range of slots as used.  This destroys the previous concept of
 used slots.  Notice that @var{range} is relative to the allocated slots,
 not to the previously used slots.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_reset (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_reset (ucl_vector_t @var{V})
 Reset the internal fields so that the vector appears to be empty.  The
 allocated slots memory is not touched.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_clean (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_clean (ucl_vector_t @var{V})
 Set all the allocated memory to null bytes, without touching anything
 else.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_initialise_buffer (ucl_vector_t @var{self})
-Initialise the vector with: slot dimension one; initial size, step up
-and down all to 4096; pad size zero.  This function does not call
-@function{ucl_vector_constructor}.
-
-Example:
-
-@example
-ucl_vector_t    vector;
-
-ucl_vector_initialise_buffer(vector);
-ucl_vector_constructor(vector);
-@end example
-@end deftypefun
-
-
-@deftypefun void ucl_vector_swallow_block (ucl_vector_t @var{self}, ucl_block_t @var{block})
-A replacement for @function{ucl_vector_constructor} that takes an
-already allocated block as data area; it is mandatory for the size of
-the block to be an integer multiple of the slot's dimension registered
-in @var{self}.  The vector is initialised to be full: all the slots are
-marked as used.
+@deftypefun void ucl_vector_swallow_block (ucl_vector_t @var{V}, ucl_vector_config_t @var{C}, ucl_block_t @var{block})
+A replacement for @function{ucl_vector_alloc} that takes an already
+allocated block as data area; it is mandatory for the size of the block
+to be an integer multiple of the slot's dimension.  The vector is
+initialised to be full: all the slots are marked as used.
 
 The responsibility of the block memory is transferred to the vector, so
-the block must be freed only by calling
-@function{ucl_vector_destructor}; this means that the memory will be
-freed by the allocator registered in @var{self}.
-
-Example:
-
-@example
-ucl_vector_t    vector;
-ucl_block_t     block;
-
-
-ucl_block_alloc(block, sizeof(int)*1000);
-...
-
-ucl_vector_initialise(vector, sizeof(int));
-ucl_vector_swallow_block(vector, block);
-@end example
+the block must be freed only by calling @function{ucl_vector_free}; this
+means that the memory will be freed by the allocator registered in
+@var{C}.
 @end deftypefun
-
-
-@deftypefun void ucl_vector_set_compar (ucl_vector_t @var{self}, ucl_comparison_t @var{compar})
-Register the function+context used to compare elements.
-@end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector indexes
 @subsection Converting indexes to pointers
 
 
+@menu
+* vector indexes i2p::          Index to pointer conversion.
+* vector indexes p2i::          Pointer to index conversion.
+* vector indexes validation::   Validating indexes.
+* vector indexes range::        Range functions.
+* vector indexes block::        Range/block conversion.
+@end menu
+
+@c page
+@node vector indexes i2p
 @subsubsection Index to pointer conversion
 
 
-@deftypefun {void *} ucl_vector_index_to_slot (const ucl_vector_t @var{self}, ucl_index_t @var{index})
+@deftypefun {void *} ucl_vector_index_to_slot (const ucl_vector_t @var{V}, ucl_index_t @var{index})
 Convert @var{index} into the corresponding pointer to a slot in the
-vector.
+vector.  Return a pointer to the selected slot, or @cnull{} if the
+selected index is out of range.  The range of valid values for
+@var{index} is @code{[0, @var{size})}, where @var{size} is the return
+value of @cfunc{ucl_vector_size}.
 
-Return a pointer to the selected slot, or @cnull{} if the selected index
-is out of range.  The range of valid values for @var{index} is @code{[0,
-size)}, where @code{size} is the return value of
-@function{ucl_vector_size}.
-
-Applying @function{ucl_vector_enlarge} or @function{ucl_vector_restrict}
-to @var{self} invalidates the return value of this function.
+Applying @cfunc{ucl_vector_enlarge} or @cfunc{ucl_vector_restrict} to
+@var{V} invalidates the return value of this function.
 
 Example:
 
 @example
-ucl_vector_t    V;
-data_type_t *   ptr;
-data_type_t     val;
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+int *                   P;
+int                     D;
 
-ucl_vector_initialise(V, sizeof(data_type_t));
-ucl_vector_constructor(V);
+ucl_vector_initialise_config(C, sizeof(int), 1024);
+ucl_vector_alloc(V, C);
 fill_with_values(V);
 
-ptr = ucl_vector_index_to_slot(V, 13);
-if (ptr)
-  val = *ptr;
+P = ucl_vector_index_to_slot(V, 13);
+if (P)
+  D = *P;
 else
   error();
 @end example
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{self}, ucl_index_t @var{index})
+@deftypefun {void *} ucl_vector_index_to_new_slot (const ucl_vector_t @var{V}, ucl_index_t @var{index})
 Convert @var{index} into the corresponding pointer to a slot in the
-vector.
-
-This is different from @function{ucl_vector_index_to_slot} in that the
-requested position can be one unit greater than the last position in the
-vector: that way the returned value can be used with
-@function{ucl_vector_insert} to append an element to the end of the
-vector.
+vector.  This is different from @cfunc{ucl_vector_index_to_slot} in that
+the requested position can be one unit greater than the last position in
+the vector: that way the returned value can be used with
+@cfunc{ucl_vector_insert} to append an element to the end of the vector.
 
 Return a pointer to the selected slot, or @cnull{} if the selected index
 is out of range.  The range of valid values for @var{index} is @code{[0,
-size]}, where @code{size} is the return value of
-@function{ucl_vector_size}.
+@var{size}]}, where @var{size} is the return value of
+@cfunc{ucl_vector_size}.
 
-Applying @function{ucl_vector_enlarge} or @function{ucl_vector_restrict}
-to @var{self} invalidates the return value of this function.  When
-adding a new slot: we have to make room for the new slot before
-attempting to convert the index to the slot's pointer.
+Applying @cfunc{ucl_vector_enlarge} or @cfunc{ucl_vector_restrict} to
+@var{V} invalidates the return value of this function.  When adding a
+new slot: we have to make room for the new slot before attempting to
+convert the index to the slot's pointer.
 
 Example:
 
 @example
-ucl_vector_t    V;
-data_type_t *   ptr;
-data_type_t     val;
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+int *                   P;
+int                     D;
 
-ucl_vector_initialise(V, sizeof(data_type_t));
-ucl_vector_constructor(V);
+ucl_vector_initialise_config(C, sizeof(int), 1024);
+ucl_vector_alloc(V, C);
 fill_with_values(V);
 
 ucl_vector_enlarge(V);
-ptr = ucl_vector_index_to_new_slot(V, 13);
-if (ptr)
-  val = *ptr;
+P = ucl_vector_index_to_new_slot(V, 13);
+if (P)
+  D = *P;
 else
   error();
 @end example
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_front (const ucl_vector_t @var{self})
-A wrapper for @function{ucl_vector_index_to_slot} that returns a pointer
+@deftypefun {void *} ucl_vector_front (const ucl_vector_t @var{V})
+A wrapper for @cfunc{ucl_vector_index_to_slot} that returns a pointer
 to the first element in the array.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_back (const ucl_vector_t @var{self})
-A wrapper for @function{ucl_vector_index_to_slot} that returns a pointer
-to the last element in the array.
+@deftypefun {void *} ucl_vector_back (const ucl_vector_t @var{V})
+A wrapper for @cfunc{ucl_vector_index_to_slot} that returns a pointer to
+the last element in the array.
 @end deftypefun
 
-
+@c page
+@node vector indexes p2i
 @subsubsection Pointer to index conversion
 
 
-@deftypefun ucl_index_t ucl_vector_last_index (const ucl_vector_t @var{self})
+@deftypefun ucl_index_t ucl_vector_last_index (const ucl_vector_t @var{V})
 Return the index of the last element.
 @end deftypefun
 
 
-@deftypefun ucl_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
+@deftypefun ucl_index_t ucl_vector_slot_to_index (const ucl_vector_t @var{V}, const void * @var{pointer_to_slot_p})
 Return the index corresponding to a pointer to slot.  It is the inverse
-of @function{ucl_vector_index_to_slot}.
+of @cfunc{ucl_vector_index_to_slot}.
 @end deftypefun
 
+@c page
+@node vector indexes validation
+@subsubsection Validating indexes
 
-@subsubsection Validation
 
-
-@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{self}, const void * @var{pointer_to_slot_p})
+@deftypefun ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t @var{V}, const void * @var{pointer_to_slot_p})
 Return true if the pointer is a valid slot pointer, else return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t @var{self}, ucl_index_t @var{index})
+@deftypefun ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t @var{V}, ucl_index_t @var{index})
 Return true if @var{index} is a valid index for the vector.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t @var{self}, ucl_index_t @var{index})
+@deftypefun ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t @var{V}, ucl_index_t @var{index})
 Return true if @var{index} is a valid index for a new slot of the
 vector.
 @end deftypefun
 
-
+@c page
+@node vector indexes range
 @subsubsection Range functions
 
 
-@deftypefun ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t @var{self}, ucl_range_t @var{range})
-Return true if @var{range}, interpreted as inclusive range of indexes,
-is valid for @code{self}.
+@deftypefun ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t @var{V}, ucl_range_t @var{R})
+Return true if @var{R}, interpreted as inclusive range of indexes, is
+valid for @var{V}.
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range (const ucl_vector_t @var{self})
+@deftypefun ucl_range_t ucl_vector_range (const ucl_vector_t @var{V})
 Return the inclusive range of indexes representing the whole vector.
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{self}, ucl_index_t @var{position})
+@deftypefun ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t @var{V}, ucl_index_t @var{position})
 Return the inclusive range of indexes from @var{position} to the end of
-the vector.  @var{position} must be a valid index for @var{self}.
+the vector.  @var{position} must be a valid index for @var{V}.
 @end deftypefun
 
 
@@ -6373,59 +6372,60 @@ ucl_range_set_min_max(range, 0, position);
 @end example
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{self}, ucl_index_t @var{position})
+@deftypefun ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t @var{V}, ucl_index_t @var{position})
 Return the inclusive range of indexes from the end of the vector to
 @var{position}.  @var{position} must be greater or equal to the size of
-@var{self}.
+@var{V}.
 
-The returned range of indexes is invalid for @var{self}, but it can be
-used to append new elements to it; to add slots from the end to index 15
-included:
+The returned range of indexes is invalid for @var{V}, but it can be used
+to append new elements to it; to add slots from the end to index
+@math{15} included:
 
 @example
-ucl_vector_t    V;
-data_type_t *   ptr;
-ucl_range_t     range;
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+int *                   P;
+ucl_range_t             R;
+ucl_index_t             i;
 
-ucl_vector_initialise(V, sizeof(data_type_t));
-ucl_vector_constructor(V);
+ucl_vector_initialise_config(C, sizeof(int), 10);
+ucl_vector_alloc(V, C);
 fill_with_10_values(V);
 
-range = ucl_vector_range_from_end_to_position(V, 15);
-
-for (size_t i=ucl_range_min(range); i<=ucl_range_max(range); ++i)
+R = ucl_vector_range_from_end_to_position(V, 15);
+for (i=ucl_range_min(T); i<=ucl_range_max(R); ++i)
   @{
     ucl_vector_enlarge(V);
-    ptr  = ucl_vector_index_to_new_slot(V, i);
-    *ptr = ...;
+    P = ucl_vector_index_to_new_slot(V, i);
+    ...
   @}
 @end example
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_end_with_span (const ucl_vector_t @var{self}, size_t @var{span})
+@deftypefun ucl_range_t ucl_vector_range_from_end_with_span (const ucl_vector_t @var{V}, size_t @var{span})
 Return the inclusive range of indexes from the end of the vector with
 @var{span}.
 
-The returned range of indexes is invalid for @var{self}, but it can be
-used to append new elements to it; to add 5 slots to the end:
+The returned range of indexes is invalid for @var{V}, but it can be used
+to append new elements to it; to add @math{5} slots to the end:
 
 @example
-ucl_vector_t    V;
-data_type_t *   ptr;
-ucl_range_t     range;
+ucl_vector_config_t     C;
+ucl_vector_t            V;
+int *                   P;
+ucl_range_t             R;
+ucl_index_t             i;
 
-ucl_vector_initialise(V, sizeof(data_type_t));
-ucl_vector_constructor(V);
+ucl_vector_initialise_config(C, sizeof(int), 10);
+ucl_vector_alloc(V, C);
 fill_with_values(V);
 
-range = ucl_vector_range_from_end_with_span(V, 5);
-
-for (size_t i=ucl_range_min(range); i<=ucl_range_max(range); ++i)
+R = ucl_vector_range_from_end_with_span(V, 5);
+for (i=ucl_range_min(R); i<=ucl_range_max(R); ++i)
   @{
     ucl_vector_enlarge(V);
-    ptr  = ucl_vector_index_to_new_slot(V, i);
-    *ptr = ...;
+    P = ucl_vector_index_to_new_slot(V, i);
   @}
 @end example
 
@@ -6434,47 +6434,47 @@ of course this is just an example, because it is much easiear to use
 @function{ucl_vector_push_back}.
 @end deftypefun
 
-
+@c page
+@node vector indexes block
 @subsubsection Range/block conversion
 
 
-@deftypefun ucl_block_t ucl_vector_block_from_range (const ucl_vector_t @var{self}, const ucl_range_t @var{range})
+@deftypefun ucl_block_t ucl_vector_block_from_range (const ucl_vector_t @var{V}, const ucl_range_t @var{R})
 Return a block referencing the slots selected by a range.
 @end deftypefun
 
 
-@deftypefun ucl_range_t ucl_vector_range_from_block (const ucl_vector_t @var{self}, const ucl_block_t @var{block})
+@deftypefun ucl_range_t ucl_vector_range_from_block (const ucl_vector_t @var{V}, const ucl_block_t @var{B})
 Return the range of slots referenced by a block.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector adding
 @subsection Adding elements to a vector
 
 
-@deftypefun {void *} ucl_vector_insert (ucl_vector_t @var{self}, void * @var{target})
+@deftypefun {void *} ucl_vector_insert (ucl_vector_t @var{V}, void * @var{target})
 Insert an empty slot at a selected position.  This function assumes that
 the array has a free slot to hold the new element: to make sure that
 this is true, a call to this function must be preceeded by a call to
-@function{ucl_vector_enlarge}.
+@cfunc{ucl_vector_enlarge}.
 
 The pointer to the slot must be the return value of a previous
-invocation to @function{ucl_vector_index_to_new_slot}.
+invocation to @cfunc{ucl_vector_index_to_new_slot}.
 
-This function tries to move as less elements as possible to create an
-empty slot at the selected position.  The return value is a pointer to
-the empty slot: it can be different from the value of the @var{target}
+This function tries to move less elements as possible to create an empty
+slot at the selected position.  The return value is a pointer to the
+empty slot: it can be different from the value of the @var{target}
 argument.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_insert_sort (ucl_vector_t @var{self}, void * @var{data_p})
+@deftypefun {void *} ucl_vector_insert_sort (ucl_vector_t @var{V}, ucl_value_t @var{data})
 Find the position in the vector in which an element must be inserted to
-keep the array sorted and create a new slot there.  This function assumes
-that:
+keep the array sorted and create a new slot there; the return value is a
+pointer to the empty slot.
+
+This function assumes that:
 
 @enumerate
 @item
@@ -6482,15 +6482,13 @@ there's room in the vector to insert a new element;
 @item
 the array is sorted;
 @item
-a comparison function has been registered in @var{self} to be used to
+a comparison function has been registered in @var{V} to be used to
 compare elements.
 @end enumerate
 
-@var{data_p} is a pointer to a block of memory or variable holding a
-copy of the element to be inserted, it's used as first argument to the
-comparison function.
-
-The return value is a pointer to the empty slot.
+@var{data} must represent the element to be inserted, it's used as first
+argument to the comparison function.  When a sequence of elements equal
+to @var{data} is present: the new slot is appended at its end.
 @end deftypefun
 
 
@@ -6532,20 +6530,18 @@ ptr   = ucl_vector_insert_sort(vector, &data);
 *ptr  = data;
 @end example
 
-
-@c ------------------------------------------------------------
-
 @c page
 @node vector removing
 @subsection Removing elements from a vector
 
 
-@deftypefun void ucl_vector_erase (ucl_vector_t @var{self}, void * @var{slot})
+@deftypefun void ucl_vector_erase (ucl_vector_t @var{V}, void * @var{slot})
 Erase an element at a selected position: the slot is overwritten by
-moving as less elements as possible.  After the invocation: the pointer
-represented by the @var{slot} argument value, it's not guaranteed to be
-a pointer to a valid slot in the vector.
+moving less elements as possible.  After the invocation: the pointer
+represented by @var{slot} is not guaranteed to be a pointer to a valid
+slot in the vector.
 @end deftypefun
+
 
 After the invocation of this function, it's possible to attempt a
 reallocation of the array to free some unused memory with a call to
@@ -6592,45 +6588,48 @@ ucl_vector_restrict(V);
 @subsection Various operations on a vector
 
 
-@subsubsection Dimension inspection
+@subsubheading Dimension inspection
 
 
-@deftypefun size_t ucl_vector_size (const ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_size (const ucl_vector_t @var{V})
 Return a value representing the number of elements in the container.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_slot_dimension (const ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_slot_dimension (const ucl_vector_t @var{V})
 Return a value representing the size of the elements.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_increment_slot (const ucl_vector_t @var{self}, void * @var{slot})
-Interpret @var{slot} as a pointer to a slot of @var{self} and increment
-it so that it references the next element.  This function does no bounds
+@deftypefun {void *} ucl_vector_increment_slot (const ucl_vector_t @var{V}, void * @var{slot})
+Interpret @var{slot} as a pointer to a slot of @var{V} and increment it
+so that it references the next element.  This function does no bounds
 checking.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_dencrement_slot (const ucl_vector_t @var{self}, void * @var{slot})
-Interpret @var{slot} as a pointer to a slot of @var{self} and decrement
-it so that it references the previous element.  This function does no
+@deftypefun {void *} ucl_vector_decrement_slot (const ucl_vector_t @var{V}, void * @var{slot})
+Interpret @var{slot} as a pointer to a slot of @var{V} and decrement it
+so that it references the previous element.  This function does no
 bounds checking.
 @end deftypefun
 
+@c ------------------------------------------------------------
 
-@subsubsection Access to memory blocks
+@subsubheading Access to memory blocks
 
 
-@deftypefun ucl_block_t ucl_vector_get_memory_block (const ucl_vector_t @var{self})
+@deftypefun ucl_block_t ucl_vector_get_memory_block (const ucl_vector_t @var{V})
 Return a block referencing the allocated memory block.
 @end deftypefun
 
-@deftypefun ucl_block_t ucl_vector_get_data_block (const ucl_vector_t @var{self})
+
+@deftypefun ucl_block_t ucl_vector_get_data_block (const ucl_vector_t @var{V})
 Return a block referencing the data block: the used slots.
 @end deftypefun
 
-@deftypefun ucl_block_t ucl_vector_get_free_block_at_end (ucl_vector_t @var{self}, size_t @var{count})
+
+@deftypefun ucl_block_t ucl_vector_get_free_block_at_end (ucl_vector_t @var{V}, size_t @var{count})
 Return a block referencing @var{count} free slots at the end of the
 vector; the slots are still marked as free.
 
@@ -6639,14 +6638,15 @@ slot pointers requested early will become invalid.
 
 This function has to be called only if there are at least @var{count}
 free slots already allocated, see
-@function{ucl_vector_enlarge_for_slots} (@ref{vector memory} for
+@cfunc{ucl_vector_enlarge_for_slots} (@ref{vector memory} for
 details).
 
-At present blocks returned by this function cannot be converted to a
-range with @function{ucl_vector_range_from_block}.
+At present, blocks returned by this function cannot be converted to a
+range with @cfunc{ucl_vector_range_from_block}.
 @end deftypefun
 
-@deftypefun ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t @var{self}, size_t @var{count})
+
+@deftypefun ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t @var{V}, size_t @var{count})
 Return a block referencing @var{count} free slots at the beginning of
 the vector; the slots are still marked as free.
 
@@ -6654,155 +6654,152 @@ This function may haul the used slots inside the allocated memory, so
 slot pointers requested early will become invalid.
 
 This function has to be called only if there are at least @var{count}
-free slots already allocated, see
-@function{ucl_vector_enlarge_for_slots} (@ref{vector memory} for
-details).
+free slots already allocated, see @cfunc{ucl_vector_enlarge_for_slots}
+(@ref{vector memory} for details).
 
-At present blocks returned by this function cannot be converted to a
-range with @function{ucl_vector_range_from_block}.
+At present, blocks returned by this function cannot be converted to a
+range with @cfunc{ucl_vector_range_from_block}.
 @end deftypefun
 
-@deftypefun void ucl_vector_mark_as_used (ucl_vector_t @var{self}, ucl_block_t @var{block})
-Mark the range of free slots referenced by @var{block} as used.  This
+
+@deftypefun void ucl_vector_mark_as_used (ucl_vector_t @var{V}, ucl_block_t @var{B})
+Mark the range of free slots referenced by @var{B} as used.  This
 function is meant to commit usage of blocks requested with
-@function{ucl_vector_get_free_block_at_beginning} and
-@function{ucl_vector_get_free_block_at_end}.
+@cfunc{ucl_vector_get_free_block_at_beginning} and
+@cfunc{ucl_vector_get_free_block_at_end}.
 
-@var{block} must be adjacent to the used slots inside the vector, its
-size must be an integer multiple of the slot dimension, its memory must
-be completely contained in the allocated vector memory.
+@var{B} must be adjacent to the used slots inside the vector, its size
+must be an integer multiple of the slot dimension, its memory must be
+completely contained in the allocated vector memory.
 @end deftypefun
 
+@c ------------------------------------------------------------
 
-@subsubsection Sorting
+@subsubheading Sorting
 
 
-@deftypefun void ucl_vector_quick_sort (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_quick_sort (ucl_vector_t @var{V})
 Quick sort the vector using the C library function
-@function{ucl_quicksort}.
+@cfunc{ucl_quicksort}.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_sorted (ucl_vector_t @var{self})
+@deftypefun ucl_bool_t ucl_vector_sorted (ucl_vector_t @var{V})
 Return true if the vector is sorted.  This function scans the whole
 vector, so it is slow.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector find
 @subsection Finding elements
 
 
-@noindent
 The functions described in this section search for an element in the
-vector, given a copy of the element to be found.  The @var{data_p}
-argument is a pointer to a memory block or variable holding a copy of
-the element to be found, it's used as first argument to the comparison
-function.
+vector, given a copy of the element to be found.  The @var{D} argument
+represents the element to be found, it's used as first argument to the
+comparison function.
 
 The return value is always a pointer to the found element in the array,
 or @cnull{} if the element is not present.
 
 
-@deftypefun {void *} ucl_vector_find (const ucl_vector_t @var{self}, const void * @var{data_p})
+@deftypefun {void *} ucl_vector_find (const ucl_vector_t @var{V}, const ucl_value_t @var{D})
 Find an element in the array with a linear search.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_binary_search (const ucl_vector_t @var{self}, const void * @var{data_p})
+@deftypefun {void *} ucl_vector_binary_search (const ucl_vector_t @var{V}, const ucl_value_t @var{D})
 Find an element in the array with a binary search; this function assumes
 that the array is sorted.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_vector_sort_find (const ucl_vector_t @var{self}, const void * @var{data_p})
+@deftypefun {void *} ucl_vector_sort_find (const ucl_vector_t @var{V}, const ucl_value_t @var{D})
 Find an element in the array; this function assumes that the array is
 sorted.  If there are few elements in the vector: a linear search is
 performed, else a binary search is used.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector iteration
 @subsection Iteration over a vector
 
 
+It's easy to iterate over all the elements of a vector.  Example of
+forward iteration:
+
+@example
+ucl_vector_t    V;
+data_type_t *   P;
+data_type_t *   end = ucl_vector_back(V);
+
+for (P = ucl_vector_front(V); P <= end; ++P)
+  @{
+    ... *P ...
+  @}
+@end example
+
 @noindent
-It's easy to iterate over all the elements of a vector.
-
-Example of forward iteration:
+example of backward iteration:
 
 @example
-ucl_vector_t     this;
-data_type_t *    ptr
+ucl_vector_t    V;
+data_type_t *   P;
+data_type_t *   end = ucl_vector_front(V);
 
-...
-
-for (ptr = ucl_vector_front(vect_p);
-     ptr <= (data_type_t *) ucl_vector_back(vect_p);
-     ++ptr)
+for (P = ucl_vector_back(V); P >= end; --P)
   @{
-    /* do something with "*ptr" */
+    ... *P ...
   @}
 @end example
 
-Example of backward iteration:
-
-@example
-ucl_vector_t     this;
-data_type_t *    ptr
-
-...
-
-for (ptr = ucl_vector_back(vect_p);
-     ptr >= (data_type_t *) ucl_vector_front(vect_p);
-     --ptr)
-  @{
-    /* do something with "*ptr" */
-  @}
-@end example
+@noindent
+nevertheless the following iterators are provided; @ref{iterators} for
+details on iteration.
 
 
-Nevertheless: the following iterators are provided.
-
-
-@deftypefun void ucl_vector_iterator_forward (const ucl_vector_t @var{self}, ucl_iterator_t @var{iterator})
+@deftypefun void ucl_vector_iterator_forward (const ucl_vector_t @var{V}, ucl_iterator_t @var{I})
 Initialise a forward iteration.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_iterator_backward (const ucl_vector_t @var{self}, ucl_iterator_t @var{iterator})
+@deftypefun void ucl_vector_iterator_backward (const ucl_vector_t @var{V}, ucl_iterator_t @var{I})
 Initialise a backward iteration.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_iterator_range_forward (const ucl_vector_t @var{self}, ucl_range_t @var{range}, ucl_iterator_t @var{iterator})
+@deftypefun void ucl_vector_iterator_range_forward (const ucl_vector_t @var{V}, ucl_range_t @var{R}, ucl_iterator_t @var{I})
 Initialise a forward iteration over the inclusive range of elements
-selected by @var{range}.  @var{range} must be a valid range for
-@var{self}, we can test this with @function{ucl_vector_range_is_valid}.
+selected by @var{R}.  @var{R} must be a valid range for @var{V}, we can
+test this with @cfunc{ucl_vector_range_is_valid}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_iterator_range_backward (const ucl_vector_t @var{self}, ucl_range_t @var{range}, ucl_iterator_t @var{iterator})
+@deftypefun void ucl_vector_iterator_range_backward (const ucl_vector_t @var{V}, ucl_range_t @var{R}, ucl_iterator_t @var{I})
 Initialise a backward iteration over the inclusive range of elements
-selected by @var{range}.  @var{range} must be a valid range for
-@var{self}, we can test this with @function{ucl_vector_range_is_valid}.
+selected by @var{R}.  @var{R} must be a valid range for @var{V}, we can
+test this with @cfunc{ucl_vector_range_is_valid}.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector memory
 @subsection Allocating and freeing memory
 
 
-@noindent
+@menu
+* vector memory intro::         Introduction to vector memory handling.
+* vector memory enlarge::       Enlarging allocated memory.
+* vector memory restrict::      Restricting allocated memory.
+* vector memory misc::          Miscellaneous memory functions.
+@end menu
+
+@c page
+@node vector memory intro
+@subsubsection Introduction to vector memory handling
+
+
 The allocation policy for a vector container is ruled by the arguments
-handed to the initialisation functions (@ref{vector creation}).  The
+stored into the configuration structure (@ref{vector creation}).  The
 rules are:
 
 @itemize @bullet
@@ -6811,11 +6808,12 @@ an initial number of slots is selected and an array of such size is
 allocated;
 
 @item
-a number of slots to be kept free at the beginning of the array is
-selected, so elements can be moved there when inserting new slots;
+an optional number of slots to be kept free at the beginning of the
+array is selected, so elements can be moved there when inserting new
+slots;
 
 @item
-the function @function{ucl_vector_enlarge} enlarges the array when one
+the function @cfunc{ucl_vector_enlarge} enlarges the array when one
 of the two conditions are true:
 
 @itemize -
@@ -6838,7 +6836,7 @@ new_size = old_size + (rest)? rest : step_up
 @end example
 
 @item
-a ``step down'' number is selected: when @function{ucl_vector_restrict}
+a ``step down'' number is selected: when @cfunc{ucl_vector_restrict}
 has to determine if the array has to be reallocated for restriction, the
 operation is performed if there are at least that number of free slots;
 the new size is computed with the following formula (in units of slot
@@ -6891,7 +6889,7 @@ new_size =  9 + 3 = 12
 @end example
 
 @noindent
-that is why @function{ucl_vector_alloc} sets @code{step_down} to a value
+that is why @cfunc{ucl_vector_alloc} sets @code{step_down} to a value
 greater than @code{step_up}.
 @end itemize
 
@@ -6899,13 +6897,12 @@ greater than @code{step_up}.
 By default the @ucl{} allocator is used (@ref{memory functions}), but it
 is possible to register a vector--specific allocator.
 
+@c page
+@node vector memory enlarge
+@subsubsection Enlarging allocated memory
 
-@c ------------------------------------------------------------
 
-@subsubsection Enlarging
-
-
-@deftypefun void ucl_vector_enlarge (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_enlarge (ucl_vector_t @var{V})
 To be used to make sure that at least one free slot exists.
 
 Check if there are free slots in the allocated memory: if there are,
@@ -6916,45 +6913,44 @@ An error reallocating memory does not corrupt the vector.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_will_enlarge (ucl_vector_t @var{self})
-Return true if the next call to @function{ucl_vector_enlarge} will
+@deftypefun ucl_bool_t ucl_vector_will_enlarge (ucl_vector_t @var{V})
+Return true if the next call to @cfunc{ucl_vector_enlarge} will
 reallocate the vector.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_enlarged_size (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_enlarged_size (ucl_vector_t @var{V})
 Return the number of allocated slots after a reallocation for
 enlarging.  This function returns a meaningful value only when
-@function{ucl_vector_will_enlarge} returns true.
+@cfunc{ucl_vector_will_enlarge} returns true.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_enlarge_for_slots (ucl_vector_t @var{self}, size_t @var{required_free_slots})
+@deftypefun void ucl_vector_enlarge_for_slots (ucl_vector_t @var{V}, size_t @var{required_free_slots})
 To be used to make sure that there is room for at least the selected
 number of free slots.
 
-Check if there are at least @var{required_free_slots} free slots in the
-allocated memory: if there are, nothing happens; else the array is
-reallocated and enlarged to get enough room.
+Check if there are at least @var{required_free_slots} in the allocated
+memory: if there are, nothing happens; else the array is reallocated and
+enlarged to get enough room.
 
 An error reallocating memory does not corrupt the vector.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_enlarge_for_range (ucl_vector_t @var{self}, ucl_range_t @var{range})
+@deftypefun void ucl_vector_enlarge_for_range (ucl_vector_t @var{V}, ucl_range_t @var{R})
 Make sure that there is enough memory to hold the inclusive range of
-indexes described by @var{range}.  This works despite @var{range} being:
-already a valid range of indexes, completely beyond the upper index
-limits, across the current upper index limit.
+indexes described by @var{R}.  This works despite @var{R} being: already
+a valid range of indexes, completely beyond the upper index limits,
+across the current upper index limit.
 @end deftypefun
 
+@c page
+@node vector memory restrict
+@subsubsection Restricting allocated memory
 
-@c ------------------------------------------------------------
 
-@subsubsection Restricting
-
-
-@deftypefun void ucl_vector_restrict (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_restrict (ucl_vector_t @var{V})
 Check if there are enough free slots in the allocated memory so that
 it's correct to restrict the array: if there aren't, nothing happens;
 else the array is reallocated and restricted according to the
@@ -6964,53 +6960,45 @@ An error reallocating memory does not corrupt the vector.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_vector_will_restrict (ucl_vector_t @var{self})
-Return true if the next call to @function{ucl_vector_restrict} will
+@deftypefun ucl_bool_t ucl_vector_will_restrict (ucl_vector_t @var{V})
+Return true if the next call to @cfunc{ucl_vector_restrict} will
 reallocate the vector.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_restricted_size (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_restricted_size (ucl_vector_t @var{V})
 Return the number of allocated slots after a reallocation for
 restricting.  This function returns a meaningful value only when
-@function{ucl_vector_will_restrict} returns true.
+@cfunc{ucl_vector_will_restrict} returns true.
 @end deftypefun
 
+@c page
+@node vector memory misc
+@subsubsection Miscellaneous memory functions
 
-@subsubsection Miscellaneous functions
 
-
-@deftypefun void ucl_vector_set_memory_to_zero (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_set_memory_to_zero (ucl_vector_t @var{V})
 Set all the slots to zero.  This does not change the vector size: it is
 not like extracting all the elements.
 @end deftypefun
 
 
-@deftypefun size_t ucl_vector_number_of_free_slots (ucl_vector_t @var{self})
+@deftypefun size_t ucl_vector_number_of_free_slots (ucl_vector_t @var{V})
 Returns the number of allocated but currently unused slots.  It is the
 number of elements that can be added without causing a memory
 reallocation.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_register_allocator (ucl_vector_t @var{self}, ucl_memory_allocator_t @var{allocator})
-Register a new allocator.  If this function is not used: the default
-allocator is set.
-
-It is safe to call this function only between a call to
-@function{ucl_vector_initialise} and a call to
-@function{ucl_vector_constructor}.
+@deftypefun void ucl_vector_register_allocator (ucl_vector_t @var{V}, ucl_memory_allocator_t @var{A})
+Register a new allocator.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector as pqueue
 @subsection Using a vector as a priority queue
 
 
-@noindent
 The vector structure provides all the functions required to implement a
 priority queue.  This is a structure in which elements are associated
 with keys: when an element is added and the structure is kept sorted
@@ -7037,18 +7025,13 @@ and comparison algorithm.
 Then @function{ucl_vector_front} or @function{ucl_vector_back} can be
 used to extract the element with lesser or greater key.
 
-
-@c ------------------------------------------------------------
-
 @c page
 @node vector high
 @subsection High level functions
 
 
-@noindent
-The functions described in this section are built upon the base ones;
+The functions described in this section are built upon the basic ones;
 some of them invoke the enlarge/restrict memory functions.
-
 
 @menu
 * vector high stack::           Stack and queue.
@@ -7060,201 +7043,179 @@ some of them invoke the enlarge/restrict memory functions.
 * vector high apply::           Applying functions.
 @end menu
 
-@c ------------------------------------------------------------
-
 @c page
 @node vector high stack
 @subsubsection Stack and queue
 
 
-@deftypefun {void *} ucl_vector_push_front (ucl_vector_t @var{self})
+@deftypefun {void *} ucl_vector_push_front (ucl_vector_t @var{V})
 Add a slot to the front of the vector and return a pointer to it.
 
-@strong{This function invokes @function{ucl_vector_enlarge}.}
+This function invokes @cfunc{ucl_vector_enlarge}.
 @end deftypefun
 
-@deftypefun {void *} ucl_vector_push_back (ucl_vector_t @var{self})
+@deftypefun {void *} ucl_vector_push_back (ucl_vector_t @var{V})
 Add a slot to the tail of the vector and return a pointer to it.
 
-@strong{This function invokes @function{ucl_vector_enlarge}.}
+This function invokes @cfunc{ucl_vector_enlarge}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_pop_front (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_pop_front (ucl_vector_t @var{V})
 If the vector is not empty: erase the first slot, else do nothing.
 
-@strong{This function invokes @function{ucl_vector_restrict}.}
+This function invokes @cfunc{ucl_vector_restrict}.
 @end deftypefun
 
-@deftypefun void ucl_vector_pop_back (ucl_vector_t @var{self})
+@deftypefun void ucl_vector_pop_back (ucl_vector_t @var{V})
 If the vector is not empty: erase the last slot, else do nothing.
 
-@strong{This function invokes @function{ucl_vector_restrict}.}
+This function invokes @cfunc{ucl_vector_restrict}.
 @end deftypefun
 
 Notice that the ``top'' operations of the stack and queue are already
-implemented by @function{ucl_vector_front} and
-@function{ucl_vector_back}.
-
-@c ------------------------------------------------------------
+implemented by @cfunc{ucl_vector_front} and @cfunc{ucl_vector_back}.
 
 @c page
 @node vector high append
 @subsubsection Appending data to a vector
 
 
-@noindent
-In the following functions the @var{target} vector must be an already
-initialised an constructed vector.
+In the following functions the @var{dst} vector must be an already
+allocated vector.
 
 
-@deftypefun void ucl_vector_append_block (ucl_vector_t @var{target}, const ucl_block_t @var{block})
-Append a block to the vector by copying data from @var{block} with
-@function{memcpy}.  The size of the block must be an integer multiple of
-the target vector slot dimension.
+@deftypefun void ucl_vector_append_block (ucl_vector_t @var{dst}, const ucl_block_t @var{B})
+Append a block to the vector by copying data from @var{B} with
+@cfunc{memcpy}.  The size of the block must be an integer multiple of
+the destination vector's slot dimension.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_append (ucl_vector_t @var{target}, const ucl_vector_t @var{source})
-Append all the elements of @var{source} to the end of @var{target} by
-copying data with @function{memcpy}.  If @var{target} is empty: this
-operation is equivalent to duplicating @var{source}.
+@deftypefun void ucl_vector_append (ucl_vector_t @var{dst}, const ucl_vector_t @var{src})
+Append all the elements of @var{src} to the end of @var{dst} by copying
+data with @cfunc{memcpy}.  If @var{dst} is empty: this operation is
+equivalent to duplicating @var{src}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_append_range (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, ucl_range_t @var{range})
-Append the elements of @var{source} referenced by @var{range} to the end
-of @var{target} by copying data with @function{memcpy}.
+@deftypefun void ucl_vector_append_range (ucl_vector_t @var{dst}, const ucl_vector_t @var{src}, ucl_range_t @var{R})
+Append the elements of @var{src} referenced by @var{R} to the end of
+@var{dst} by copying data with @cfunc{memcpy}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_append_more (ucl_vector_t @var{target}, const ucl_vector_t @var{source}, @dots{})
-Append elements from a set of vectors to the end of @var{target}.  The
+@deftypefun void ucl_vector_append_more (ucl_vector_t @var{dst}, const ucl_vector_t @var{src}, @dots{})
+Append elements from a set of vectors to the end of @var{dst}.  The
 @code{...} arguments are a list of @code{ucl_vector_t} values terminated
 by a @cnull{}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 
 Example:
 
 @example
-ucl_vector_t    target, a, b, c, d;
+ucl_vector_t    dst, a, b, c, d;
 
 ...
-ucl_vector_append_more(target, a, b, c, d, NULL);
+ucl_vector_append_more(dst, a, b, c, d, NULL);
 @end example
 @end deftypefun
 
 
-@deftypefun void ucl_vector_append_more_from_array (ucl_vector_t @var{target}, const ucl_vector_array_t * @var{vectors})
-Like @function{ucl_vector_append_more} but takes source vectors from an
+@deftypefun void ucl_vector_append_more_from_array (ucl_vector_t @var{dst}, const ucl_vector_array_t * @var{vectors})
+Like @cfunc{ucl_vector_append_more} but takes source vectors from an
 array rather than from application parameters.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector high insert
 @subsubsection Inserting into a vector
 
 
-@deftypefun void ucl_vector_insert_vector (ucl_vector_t @var{target}, ucl_index_t @var{offset}, ucl_vector_t @var{source})
-Insert all the elements of @var{source} into @var{target} at
-@var{offset}.
+@deftypefun void ucl_vector_insert_vector (ucl_vector_t @var{dst}, ucl_index_t @var{offset}, ucl_vector_t @var{src})
+Insert all the elements of @var{src} into @var{dst} at @var{offset}.
 
 @var{offset} must be a valid value for
-@function{ucl_vector_index_to_new_slot}.
+@cfunc{ucl_vector_index_to_new_slot}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_insert_block (ucl_vector_t @var{target}, ucl_index_t @var{offset}, const ucl_block_t @var{block})
-Insert the data referenced by @var{block} into @var{target} at
-@var{offset}.
+@deftypefun void ucl_vector_insert_block (ucl_vector_t @var{dst}, ucl_index_t @var{offset}, const ucl_block_t @var{B})
+Insert the data referenced by @var{B} into @var{dst} at @var{offset}.
 
-The size of @var{block} must be an integer multiple of the slot's
-dimension of @var{target}.  @var{offset} must be a valid value for
-@function{ucl_vector_index_to_new_slot}.
+The size of @var{B} must be an integer multiple of the slot's dimension
+of @var{dst}.  @var{offset} must be a valid value for
+@cfunc{ucl_vector_index_to_new_slot}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_insert_range (ucl_vector_t @var{target}, ucl_index_t @var{offset}, const ucl_vector_t @var{source}, ucl_range_t @var{range});
-Insert the data referenced by the inclusive @var{range} of indexes from
-@var{source} into @var{target} at @var{offset}.
+@deftypefun void ucl_vector_insert_range (ucl_vector_t @var{dst}, ucl_index_t @var{offset}, const ucl_vector_t @var{src}, ucl_range_t @var{R})
+Insert the data referenced by the inclusive @var{R} of indexes from
+@var{src} into @var{dst} at @var{offset}.
 
-The size of @var{block} must be an integer multiple of the slot's
-dimension of @var{target}.  @var{offset} must be a valid value for
-@function{ucl_vector_index_to_new_slot}.
+The size of @var{B} must be an integer multiple of the slot's dimension
+of @var{dst}.  @var{offset} must be a valid value for
+@cfunc{ucl_vector_index_to_new_slot}.
 
-@strong{This function invokes @function{ucl_vector_enlarge_for_slots}.}
+This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @end deftypefun
-
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector high erase
 @subsubsection Removing from a vector
 
 
-@deftypefun void ucl_vector_erase_range (ucl_vector_t @var{self}, ucl_range_t @var{range})
+@deftypefun void ucl_vector_erase_range (ucl_vector_t @var{V}, ucl_range_t @var{R})
 Erase all the elements in the selected range.
 
-@strong{This function invokes @function{ucl_vector_restrict}.}
+This function invokes @function{ucl_vector_restrict}.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector high access
 @subsubsection Setters and getters
 
 
-@deftypefun void ucl_vector_copy_range (ucl_vector_t @var{target}, ucl_index_t @var{position}, ucl_vector_t @var{source}, ucl_range_t @var{source_range})
-Copy slots referenced by @var{source_range} in @var{source} to
-@var{position} in @var{target}.  Data into @var{target} is overwritten.
+@deftypefun void ucl_vector_copy_range (ucl_vector_t @var{dst}, ucl_index_t @var{position}, ucl_vector_t @var{src}, ucl_range_t @var{src_range})
+Copy slots referenced by @var{src_range} in @var{src} to @var{position}
+in @var{dst}; data in @var{dst} is overwritten.
 
-@var{position} must be a valid index for @var{target}.
-@var{source_range} must be valid for @var{source}.  There must be enough
-slots after @var{position} in @var{target} to hold the whole range from
-@var{source}.
+@var{position} must be a valid index for @var{dst}.  @var{src_range}
+must be valid for @var{src}.  There must be enough slots after
+@var{position} in @var{dst} to hold the whole range from @var{src}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_set_block (ucl_vector_t @var{target}, ucl_index_t @var{position}, ucl_block_t @var{source})
-Copy data from @var{source} into @var{target} at @var{position},
-overwriting data.
+@deftypefun void ucl_vector_set_block (ucl_vector_t @var{dst}, ucl_index_t @var{position}, ucl_block_t @var{src})
+Copy data from @var{src} into @var{dst} at @var{position}; data in
+@var{dst} is overwritten.
 
-@var{position} must be a valid index for @var{target} and enough slots
-must exist after it to accept the whol @var{source} block.  The length of
-@var{source} must be an integer multiple of the slot's dimension in
-@var{target}.
+@var{position} must be a valid index for @var{dst} and enough slots must
+exist after it to accept the whole @var{src} block.  The length of
+@var{src} must be an integer multiple of the slot's dimension in
+@var{dst}.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_get_block (ucl_block_t @var{target}, ucl_index_t @var{position}, ucl_vector_t @var{source})
-Copy data from @var{source} at @var{position} into @var{target},
-overwriting data.
+@deftypefun void ucl_vector_get_block (ucl_block_t @var{dst}, ucl_index_t @var{position}, ucl_vector_t @var{src})
+Copy data from @var{src} at @var{position} into @var{dst}, overwriting
+data.
 
-@var{position} must be a valid index for @var{target} and there must be
-enough slots in @var{target} to fill the block.  The length of
-@var{source} must be an integer multiple of the slot's dimension in
-@var{target}.
+@var{position} must be a valid index for @var{dst} and there must be
+enough slots in @var{dst} to fill the block.  The length of @var{src}
+must be an integer multiple of the slot's dimension in @var{dst}.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector high compare
@@ -7264,11 +7225,11 @@ enough slots in @var{target} to fill the block.  The length of
 @deftypefun int ucl_vector_compare_range (ucl_vector_t @var{a}, ucl_range_t @var{range_a}, ucl_vector_t @var{b}, ucl_range_t @var{range_b})
 Compare two ranges of elements in two vectors, element by element, using
 the comparison function of @var{a}.  If the size of the ranges is not
-equal: only a number of elements equal to the lesser size is
-compared.  The comparison stops at the first pair of elements for which
-the comparison function returns non--zero.
+equal: only a number of elements equal to the lesser size is compared.
+The comparison stops at the first pair of elements for which the
+comparison function returns non--zero.
 
-Works somewhat like @function{strcmp}.  Return:
+Works somewhat like @cfunc{strcmp}.  Return:
 
 @table @code
 @item 0
@@ -7277,8 +7238,8 @@ if all the compared elements are equal;
 if, for the last compared pair, the element from @var{a} is greater than
 the last element from @var{b};
 @item -1
-if, for the last compared pair, the element from @var{a} is
-lesser than the last element from @var{b}.
+if, for the last compared pair, the element from @var{a} is lesser than
+the last element from @var{b}.
 @end table
 
 @var{a} can be equal to @var{b}.
@@ -7286,30 +7247,27 @@ lesser than the last element from @var{b}.
 
 
 @deftypefun ucl_bool_t ucl_vector_equal_range (ucl_vector_t @var{a}, ucl_range_t @var{range_a}, ucl_vector_t @var{b}, ucl_range_t @var{range_b})
-Wrapper for @function{ucl_vector_compare_range} that returns true if the
+Wrapper for @cfunc{ucl_vector_compare_range} that returns true if the
 two ranges are equal.
 @end deftypefun
 
 
 @deftypefun int ucl_vector_compare (ucl_vector_t @var{a}, ucl_vector_t @var{b})
-Wrapper for @function{ucl_vector_compare_range} that compares the whole vectors.
+Wrapper for @cfunc{ucl_vector_compare_range} that compares the whole
+vectors.
 @end deftypefun
 
 
 @deftypefun ucl_bool_t ucl_vector_equal (ucl_vector_t @var{a}, ucl_vector_t @var{b})
-Wrapper for @function{ucl_vector_compare}: return true if the vectors
-are equal.
+Wrapper for @cfunc{ucl_vector_compare}: return true if the vectors are
+equal.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node vector high apply
 @subsubsection Applying functions
 
 
-@noindent
 The functions described in this section allow us to apply a function, in
 the form of a callback (@ref{typedefs callback}), to each element in a
 vector or to each element in a range over a vector.  The ``for each''
@@ -7318,9 +7276,9 @@ while the ``map'' kind produces a vector holding processed elements.
 
 
 @deftypefun void ucl_vector_for_each (ucl_callback_t @var{cb}, ucl_vector_t @var{V})
-Apply the callback @var{cb} to each element in the vector
-@var{V}.  The callback function is invoked with a pointer to the
-element's slot as custom value.
+Apply the callback @var{cb} to each element in the vector @var{V}.  The
+callback function is invoked with a pointer to the element's slot as
+custom value.
 
 Example of callback that sums the values in a vector:
 
@@ -7334,18 +7292,14 @@ callback (ucl_value_t state, ucl_value_t custom)
   *accumulator_p += *slot;
 @}
 
-ucl_vector_t    vector;
 int             accumulator = 0;
 ucl_callback_t  cb = @{
   .func = callback,
   .data = @{ .ptr = &accumulator @}
 @};
 
-ucl_vector_initialise(vector, sizeof(int));
-ucl_vector_constructor(vector);
-fill_with_values(vector);
-
-ucl_vector_for_each(cb, vector);
+ucl_vector_t    V;
+ucl_vector_for_each(cb, V);
 @end example
 
 @noindent
@@ -7353,9 +7307,9 @@ with this setup the operation is like a ``fold''.
 @end deftypefun
 
 
-@deftypefun void ucl_vector_for_each_in_range (ucl_callback_t @var{cb}, ucl_range_t @var{range}, ucl_vector_t @var{V})
-Like @function{ucl_vector_for_each}, but apply the callback only to the
-elements selected by the inclusive @var{range}.
+@deftypefun void ucl_vector_for_each_in_range (ucl_callback_t @var{cb}, ucl_range_t @var{R}, ucl_vector_t @var{V})
+Like @cfunc{ucl_vector_for_each}, but apply the callback only to the
+elements selected by the inclusive @var{R}.
 
 Example of callback that sums the values in a vector's range:
 
@@ -7369,7 +7323,6 @@ callback (ucl_value_t state, ucl_value_t custom)
   *accumulator_p += *slot;
 @}
 
-ucl_vector_t    vector;
 int             accumulator = 0;
 ucl_callback_t  cb = @{
   .func = callback,
@@ -7377,19 +7330,16 @@ ucl_callback_t  cb = @{
 @};
 ucl_range_t     range;
 
-ucl_vector_initialise(vector, sizeof(int));
-ucl_vector_constructor(vector);
-fill_with_values(vector);
-
+ucl_vector_t    V;
 ucl_range_set_min_max(range, 3, 8);
-ucl_vector_for_each_in_range(cb, range, vector);
+ucl_vector_for_each_in_range(cb, range, V);
 @end example
 @end deftypefun
 
 
 @deftypefun void ucl_vector_for_each_multiple (ucl_callback_t @var{cb}, ucl_vector_t @var{V}, @dots{})
-Like @function{ucl_vector_for_each}, but apply the callback to an array
-of pointers to slots from the vectors used as arguments.
+Like @cfunc{ucl_vector_for_each}, but apply the callback to an array of
+pointers to slots from the vectors used as arguments.
 
 This function must be invoked with a list of @code{ucl_vector_t}
 arguments ended by a @cnull{}.
@@ -7399,7 +7349,8 @@ The callback function is invoked with a pointer to a
 
 @table @code
 @item ucl_value_t data
-the @code{unum} field is set to the index of the slot currently visited;
+the @code{t_unsigned_int} field is set to the index of the slot
+currently visited;
 
 @item size_t number_of_slots
 the number of slots which is equal to the number of vectors used as
@@ -7425,31 +7376,20 @@ callback (ucl_value_t state, ucl_value_t custom)
     sums[slots->data.unum] += *values[i];
 @}
 
-ucl_vector_t   A, B, C;
 int            sums[5] = @{ 0, 0, 0, 0, 0 @};
 ucl_callback_t cb = @{
   .func = callback,
   .data = @{ .ptr = &sums @}
 @};
 
-
-ucl_vector_initialise(A, sizeof(int));
-ucl_vector_initialise(B, sizeof(int));
-ucl_vector_initialise(C, sizeof(int));
-ucl_vector_constructor(A);
-ucl_vector_constructor(B);
-ucl_vector_constructor(C);
-fill_with_values(A);
-fill_with_values(B);
-fill_with_values(C);
-
+ucl_vector_t   A, B, C;
 ucl_vector_for_each_multiple(cb, A, B, C, NULL);
 @end example
 @end deftypefun
 
 
 @deftypefun void ucl_vector_for_each_multiple_from_array (ucl_callback_t @var{cb}, ucl_vector_array_t * @var{vectors})
-Like @function{ucl_vector_for_each_multiple} but the vectors are given
+Like @cfunc{ucl_vector_for_each_multiple} but the vectors are given
 in an array rather than a list of arguments.
 @end deftypefun
 
@@ -7457,14 +7397,15 @@ in an array rather than a list of arguments.
 @deftypefun void ucl_vector_map (ucl_vector_t @var{R}, ucl_callback_t @var{cb}, ucl_vector_t @var{V})
 Apply the callback @var{cb} to each element in the vector @var{V} and
 store the result in the vector @var{R}.  New slots are added to @var{R}
-using @function{ucl_vector_push_back}.
+using @cfunc{ucl_vector_push_back}.
 
 The callback function is invoked with a pointer to a
 @code{ucl_array_of_pointers_t} structure as custom value:
 
 @table @code
 @item ucl_value_t data
-the @code{unum} field is set to the index of the slot currently visited;
+the @code{t_unsigned_int} field is set to the index of the slot
+currently visited;
 
 @item size_t number_of_slots
 the number of slots: always @code{2} for this function;
@@ -7488,32 +7429,25 @@ callback (ucl_value_t state UCL_UNUSED, ucl_value_t custom)
   *result = - *operand;
 @}
 
-ucl_vector_t    result, operand;
 ucl_callback_t  cb = @{
   .func = callback,
   .data = @{ .ptr = NULL @}
 @};
 
-ucl_vector_initialise(result,  sizeof(int));
-ucl_vector_initialise(operand, sizeof(int));
-ucl_vector_constructor(result);
-ucl_vector_constructor(operand);
-fill_with_values(result);
-fill_with_values(operand);
-
+ucl_vector_t    result, operand;
 ucl_vector_map(result, cb, operand);
 @end example
 @end deftypefun
 
 
-@deftypefun void ucl_vector_map_range (ucl_vector_t @var{R}, ucl_callback_t @var{cb}, ucl_range_t @var{range}, ucl_vector_t @var{V})
-Like @function{ucl_vector_map}, but apply the callback only to the
-elements selected by the inclusive @var{range}.
+@deftypefun void ucl_vector_map_range (ucl_vector_t @var{dst}, ucl_callback_t @var{cb}, ucl_range_t @var{R}, ucl_vector_t @var{src})
+Like @cfunc{ucl_vector_map}, but apply the callback only to the elements
+selected by the inclusive @var{R}.
 @end deftypefun
 
 
 @deftypefun void ucl_vector_map_multiple (ucl_vector_t @var{R}, ucl_callback_t @var{cb}, ucl_vector_t @var{first}, ...)
-Like @function{ucl_vector_map}, but apply the callback to an array of
+Like @cfunc{ucl_vector_map}, but apply the callback to an array of
 pointers to slots from the vectors used as arguments.
 
 The function must be invoked with a list of @code{ucl_vector_t}
@@ -7524,7 +7458,8 @@ The callback function is invoked with a pointer to a
 
 @table @code
 @item ucl_value_t data
-the @code{unum} field is set to the index of the slot currently visited;
+the @code{t_unsigned_int} field is set to the index of the slot
+currently visited;
 
 @item size_t number_of_slots
 the number of slots which is equal to 1 plus the number of vectors used
@@ -7554,39 +7489,21 @@ callback (ucl_value_t state UCL_UNUSED, ucl_value_t custom)
     *values[0] += *values[i];
 @}
 
-ucl_vector_t    R, A, B, C;
 ucl_callback_t  cb = @{
   .func = callback,
   .data = @{ .ptr = NULL @}
 @};
 
-
-ucl_vector_initialise(A, sizeof(int));
-ucl_vector_initialise(B, sizeof(int));
-ucl_vector_initialise(C, sizeof(int));
-ucl_vector_constructor(A);
-ucl_vector_constructor(B);
-ucl_vector_constructor(C);
-fill_with_values(A);
-fill_with_values(B);
-fill_with_values(C);
-
-ucl_vector_initialise(R, sizeof(int));
-ucl_vector_constructor(R);
-
+ucl_vector_t    R, A, B, C;
 ucl_vector_map_multiple(R, cb, A, B, C, NULL);
 @end example
 @end deftypefun
 
 
 @deftypefun void ucl_vector_map_multiple_from_array (ucl_vector_t @var{R}, ucl_callback_t @var{cb}, ucl_vector_array_t * @var{vectors})
-Like @function{ucl_vector_map_multiple} but the vectors are given in an
+Like @cfunc{ucl_vector_map_multiple} but the vectors are given in an
 array rather than a list of arguments.
 @end deftypefun
-
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node iterators

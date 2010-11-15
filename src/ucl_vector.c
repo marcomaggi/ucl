@@ -226,6 +226,10 @@ PRINT_POINTER_INSPECTION (ucl_vector_t self, const char *title)
 #endif
 
 
+/** --------------------------------------------------------------------
+ ** Configuration.
+ ** ----------------------------------------------------------------- */
+
 void
 ucl_vector_initialise_config (ucl_vector_config_t config, size_t slot_dimension, size_t number_of_slots)
 {
@@ -238,6 +242,8 @@ ucl_vector_initialise_config (ucl_vector_config_t config, size_t slot_dimension,
   config->number_of_slots	= number_of_slots;
   config->allocator.data	= NULL;
   config->allocator.alloc	= ucl_memory_alloc;
+  config->compar.data.pointer	= NULL;
+  config->compar.func		= NULL;
 }
 void
 ucl_vector_initialise_config_buffer (ucl_vector_config_t config)
@@ -250,6 +256,8 @@ ucl_vector_initialise_config_buffer (ucl_vector_config_t config)
   config->number_of_slots	= UCL_VECTOR_BUFFER_PAGE_SIZE;
   config->allocator.data	= NULL;
   config->allocator.alloc	= ucl_memory_alloc;
+  config->compar.data.pointer	= NULL;
+  config->compar.func		= NULL;
 }
 void
 ucl_vector_initialise_config_hash (ucl_vector_config_t config)
@@ -262,6 +270,8 @@ ucl_vector_initialise_config_hash (ucl_vector_config_t config)
   config->number_of_slots	= UCL_HASH_DEFAULT_SIZE;
   config->allocator.data	= NULL;
   config->allocator.alloc	= ucl_memory_alloc;
+  config->compar.data.pointer	= NULL;
+  config->compar.func		= NULL;
 }
 void
 ucl_vector_initialise_config_dfs (ucl_vector_config_t config)
@@ -274,7 +284,14 @@ ucl_vector_initialise_config_dfs (ucl_vector_config_t config)
   config->number_of_slots	= UCL_GRAPH_DFS_INITIAL_VECTOR_SIZE;
   config->allocator.data	= NULL;
   config->allocator.alloc	= ucl_memory_alloc;
+  config->compar.data.pointer	= NULL;
+  config->compar.func		= NULL;
 }
+
+/** --------------------------------------------------------------------
+ ** Allocation.
+ ** ----------------------------------------------------------------- */
+
 void
 ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
 {
@@ -311,19 +328,26 @@ ucl_vector_free (ucl_vector_t self)
   self->last_used_slot		= NULL;
 }
 void
-ucl_vector_swallow_block (ucl_vector_t self, ucl_block_t block)
+ucl_vector_swallow_block (ucl_vector_t self, ucl_vector_config_t config, ucl_block_t block)
 {
-  ASSERT_INITIALISE_CONDITIONS(self);
-  self->step_up			*= self->slot_dimension;
-  self->step_down		*= self->slot_dimension;
+  assert(self);
+  assert(config);
+  ASSERT_INITIALISE_CONDITIONS(config);
+  size_t	dim  = config->slot_dimension;
+  self->slot_dimension		= dim;
+  self->step_up			= dim * config->step_up;
+  self->step_down		= dim * config->step_down;
   if (self->step_up >= self->step_down)
-    self->step_down = self->step_up + self->slot_dimension;
-  self->size_of_padding_area	*= self->slot_dimension;
-  assert(0 == (block.len % self->slot_dimension));
+    self->step_down = self->step_up + dim;
+  self->size_of_padding_area	= dim * config->size_of_padding_area;
+  self->allocator		= config->allocator;
+  self->compar			= config->compar;
+  assert(0 == (block.len % dim));
   self->first_allocated_slot = self->first_used_slot = block.ptr;
   self->last_allocated_slot  = self->last_used_slot  = block.ptr + block.len - self->slot_dimension;
-  ASSERT_INVARIANTS(self);
   PRINT_SLOT_INSPECTION(self, "construction");
+  PRINT_POINTER_INSPECTION(self, "construction");
+  ASSERT_INVARIANTS(self);
 }
 
 
@@ -613,35 +637,31 @@ insert_slot_moving_data_toward_the_end (ucl_vector_t self, uint8_t * pointer_to_
   return pointer_to_slot_p;
 }
 void *
-ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
+ucl_vector_insert_sort (ucl_vector_t self, ucl_value_t data)
 {
-  ucl_value_t		inner = { .bytes = NULL };
-  ucl_index_t	size;
   ASSERT_INVARIANTS(self);
   ASSERT_COMPAR_FUNCTION_IS_SET(self);
-  assert(data_p);
-  size = ucl_vector_size(self);
+  ucl_value_t		inner  = { .bytes = NULL };
+  ucl_index_t		size   = ucl_vector_size(self);
+  ucl_comparison_t	compar = self->compar;
   if (! size)
     inner.bytes = ucl_vector_index_to_new_slot(self, 0);
   else {
-    ucl_value_t	outer = { .bytes = data_p };
     if (size <= SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH) {
-      ucl_comparison_t	compar = self->compar;
       debug("linear search (size %u)", size);
       for (inner.bytes = self->first_used_slot;
 	   inner.bytes <= self->last_used_slot;
 	   inner.bytes += self->slot_dimension) {
 	debug("current %d", *(int *)inner.bytes);
-	if (compar.func(compar.data, outer, inner) <= 0) {
+	if (compar.func(compar.data, data, inner) <= 0) {
 	  debug("it's it!!");
 	  break;
 	}
       }
     } else {
-      size_t			i, lower_index_limit, upper_index_limit;
-      size_t			current_index, new_current_index;
-      int			match;
-      ucl_comparison_t	compar = self->compar;
+      size_t	i, lower_index_limit, upper_index_limit;
+      size_t	current_index, new_current_index;
+      int	match;
       debug("binary search (size %u)", size);
       lower_index_limit	= 0;
       upper_index_limit	= size-1;
@@ -650,7 +670,7 @@ ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
       current_index	= size >> 1;
       for (i=0; i<size; ++i) {
 	inner.bytes = ucl_vector_index_to_slot(self, current_index);
-	match = compar.func(compar.data, outer, inner);
+	match = compar.func(compar.data, data, inner);
 	if (0 == match)
 	  break;
 	else if (match < 0) { /* the new item is less */
@@ -674,6 +694,13 @@ ucl_vector_insert_sort (ucl_vector_t self, void *data_p)
 	}
       }
     }
+  }
+  /* Move  to  the  last  element   equal  to  "data",  we  want  stable
+     sorting. */
+  for (inner.bytes = self->first_used_slot;
+       inner.bytes <= self->last_used_slot;
+       inner.bytes += self->slot_dimension) {
+    if (compar.func(compar.data, data, inner) == 0) break;
   }
   debug("exiting %p (%d)", inner.bytes, *((int *)inner.bytes));
   return ucl_vector_insert(self, inner.bytes);
@@ -1144,13 +1171,11 @@ reallocate_block (ucl_vector_t self, size_t new_number_of_allocated_bytes)
  ** ----------------------------------------------------------*/
 
 void *
-ucl_vector_find (const ucl_vector_t self, const void * data_p)
+ucl_vector_find (const ucl_vector_t self, const ucl_value_t outer)
 {
   ucl_value_t	inner;
-  ucl_value_t	outer = { .bytes = (uint8_t *)data_p };
   ASSERT_INVARIANTS(self);
   ASSERT_COMPAR_FUNCTION_IS_SET(self);
-  assert(data_p);
   if (ucl_vector_size(self)) {
     ucl_comparison_t	compar = self->compar;
     for (inner.bytes = self->first_used_slot;
@@ -1162,22 +1187,22 @@ ucl_vector_find (const ucl_vector_t self, const void * data_p)
   return NULL;
 }
 void *
-ucl_vector_sort_find (const ucl_vector_t self, const void * data_p)
+ucl_vector_sort_find (const ucl_vector_t self, ucl_value_t outer)
 {
+  ASSERT_INVARIANTS(self);
+  ASSERT_COMPAR_FUNCTION_IS_SET(self);
   ucl_index_t	size;
-  ASSERT_INVARIANTS(self); ASSERT_COMPAR_FUNCTION_IS_SET(self); assert(data_p);
   size = ucl_vector_size(self);
-  if (! size) { return NULL; }
+  if (! size) return NULL;
   return (size <= SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH)? \
-    ucl_vector_find(self, data_p) : ucl_vector_binary_search(self, data_p);
+    ucl_vector_find(self, outer) : ucl_vector_binary_search(self, outer);
 }
 void *
-ucl_vector_binary_search (const ucl_vector_t self, const void * data_p)
+ucl_vector_binary_search (const ucl_vector_t self, const ucl_value_t outer)
 {
   size_t	size, i, lower_index_limit, upper_index_limit;
   size_t	current_index, new_current_index;
   ucl_value_t	inner;
-  ucl_value_t	outer = { .ptr = (uint8_t *)data_p };
   int		match;
   ucl_comparison_t	compar = self->compar;
   size = ucl_vector_size(self);
