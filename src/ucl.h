@@ -158,6 +158,7 @@ typedef struct ucl_memory_allocator_t {
 } ucl_memory_allocator_t;
 
 extern ucl_memory_alloc_fun_t ucl_memory_alloc;
+extern const ucl_memory_allocator_t ucl_memory_allocator;
 
 static __inline__ __attribute__((__always_inline__,__pure__))
 void *

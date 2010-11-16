@@ -240,8 +240,7 @@ ucl_vector_initialise_config (ucl_vector_config_t config, size_t slot_dimension,
   config->size_of_padding_area	= UCL_VECTOR_DEFAULT_PAD;
   config->slot_dimension	= slot_dimension;
   config->number_of_slots	= number_of_slots;
-  config->allocator.data	= NULL;
-  config->allocator.alloc	= ucl_memory_alloc;
+  config->allocator		= ucl_memory_allocator;
   config->compar.data.pointer	= NULL;
   config->compar.func		= NULL;
 }
@@ -254,8 +253,7 @@ ucl_vector_initialise_config_buffer (ucl_vector_config_t config)
   config->size_of_padding_area	= 0;
   config->slot_dimension	= sizeof(uint8_t);
   config->number_of_slots	= UCL_VECTOR_BUFFER_PAGE_SIZE;
-  config->allocator.data	= NULL;
-  config->allocator.alloc	= ucl_memory_alloc;
+  config->allocator		= ucl_memory_allocator;
   config->compar.data.pointer	= NULL;
   config->compar.func		= NULL;
 }
@@ -268,8 +266,7 @@ ucl_vector_initialise_config_hash (ucl_vector_config_t config)
   config->size_of_padding_area	= 0;
   config->slot_dimension	= sizeof(void *);
   config->number_of_slots	= UCL_HASH_DEFAULT_SIZE;
-  config->allocator.data	= NULL;
-  config->allocator.alloc	= ucl_memory_alloc;
+  config->allocator		= ucl_memory_allocator;
   config->compar.data.pointer	= NULL;
   config->compar.func		= NULL;
 }
@@ -282,8 +279,7 @@ ucl_vector_initialise_config_dfs (ucl_vector_config_t config)
   config->size_of_padding_area	= 0;
   config->slot_dimension	= sizeof(ucl_graph_dfs_item_t);
   config->number_of_slots	= UCL_GRAPH_DFS_INITIAL_VECTOR_SIZE;
-  config->allocator.data	= NULL;
-  config->allocator.alloc	= ucl_memory_alloc;
+  config->allocator		= ucl_memory_allocator;
   config->compar.data.pointer	= NULL;
   config->compar.func		= NULL;
 }
@@ -299,7 +295,7 @@ ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
   assert(config);
   size_t	dim  = config->slot_dimension;
   size_t	number_of_bytes = dim * config->number_of_slots;
-  uint8_t *	p;
+  uint8_t *	p = NULL;
   ASSERT_INITIALISE_CONDITIONS(config);
   config->allocator.alloc(config->allocator.data, &p, number_of_bytes);
   assert(p);
@@ -697,10 +693,14 @@ ucl_vector_insert_sort (ucl_vector_t self, ucl_value_t data)
   }
   /* Move  to  the  last  element   equal  to  "data",  we  want  stable
      sorting. */
-  for (inner.bytes = self->first_used_slot;
-       inner.bytes <= self->last_used_slot;
-       inner.bytes += self->slot_dimension) {
-    if (compar.func(compar.data, data, inner) == 0) break;
+  {
+    ucl_value_t	D = { .bytes = inner.bytes + self->slot_dimension };
+    for (;
+	 D.bytes <= self->last_used_slot;
+	 D.bytes += self->slot_dimension) {
+      if (0 != compar.func(compar.data, data, D)) break;
+    }
+    inner.bytes = D.bytes - self->slot_dimension;
   }
   debug("exiting %p (%d)", inner.bytes, *((int *)inner.bytes));
   return ucl_vector_insert(self, inner.bytes);
@@ -1339,8 +1339,8 @@ ucl_vector_append_more (ucl_vector_t target, const ucl_vector_t source, ...)
   va_list		ap;
   ucl_vector_append(target, source);
   va_start(ap, source);
-  for (other_source = va_arg(ap, ucl_vector_t); (NULL != other_source);
-       other_source = va_arg(ap, ucl_vector_t))
+  for (other_source = va_arg(ap, ucl_vector_tag_t *); (NULL != other_source);
+       other_source = va_arg(ap, ucl_vector_tag_t *))
     ucl_vector_append(target, other_source);
   va_end(ap);
 }

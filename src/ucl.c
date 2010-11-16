@@ -9,7 +9,7 @@
 	Douglas  C. Schmidt  (schmidt@ics.uci.edu).   Modified by  Marco
 	Maggi (marcomaggi@gna.org).
 
-  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marcomaggi@gna.org>
+  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
   Copyright (c) 1991,1992,1996,1997,1999,2004 Free Software Foundation,
   Inc.
 

@@ -707,6 +707,12 @@ allocator.alloc(allocator.data, &p, 0);
 @section Public interface
 
 
+@defvar const ucl_memory_allocator_t ucl_memory_allocator
+Predefined memory allocator.  Selects @cfunc{ucl_memory_alloc} as
+allocation function.
+@end defvar
+
+
 @deftypefun void ucl_memory_alloc (void * @var{data}, void * @var{q}, size_t @var{dim})
 Allocate, reallocate or free a block of memory using the standard
 @cfunc{calloc}, @cfunc{realloc} and @cfunc{free} functions.  @var{data}

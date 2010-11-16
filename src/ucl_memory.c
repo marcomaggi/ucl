@@ -35,6 +35,8 @@
 #include <string.h>
 #include <stdio.h>
 
+const ucl_memory_allocator_t ucl_memory_allocator = { NULL, ucl_memory_alloc };
+
 
 /** ------------------------------------------------------------
  ** Allocator.
