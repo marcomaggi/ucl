@@ -1,6 +1,6 @@
 
-		 Useless Containers Library
-		 ==========================
+		   Useless Containers Library
+		   ==========================
 
 
 Topics
@@ -18,19 +18,18 @@ Topics
 1. Overview
 -----------
 
-The Useless Containers Library (UCL) is an implementation of
-generic  data  type  containers  for the  C  language.   The
-containers are:
+The  Useless Containers  Library  (UCL) is  an implementation  of
+generic data type containers  for the C language.  The containers
+are:
 
 * list, double-linked list;
 
 * circular, a circular double-linked list;
 
-* vector,  an   array  with  arrangements   that  allow  the
-  minimisation of memory reallocations;
+* vector, an array with  arrangements that allow the minimisation
+  of memory reallocations;
 
-* map,  an  AVL  tree   used  to  implement  an  associative
-  container;
+* map, an AVL tree used to implement an associative container;
 
 * tree, a not-binary tree structure;
 
@@ -38,30 +37,28 @@ containers are:
 
 * graph, one day it will be implemented.
 
-  The library  is developed  and tested under  the Linux+GNU
-system, requires  the GNU C  library and compiles  fine with
-the GNU C compiler ("-std=c99 -pedantic" switches).
+  The library is developed and tested under the Linux+GNU system,
+requires  the GNU  C library  and compiles  fine with  the  GNU C
+compiler ("-std=c99 -pedantic" switches).
 
 
 2 License
 ---------
 
-Copyright (c) 2001-2008, 2010 Marco Maggi.
+Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
-This  program  is free  software:  you  can redistribute  it
-and/or modify it  under the terms of the  GNU General Public
-License as published by the Free Software Foundation, either
-version  3 of  the License,  or (at  your option)  any later
-version.
+This  program is free  software: you  can redistribute  it and/or
+modify it  under the terms of  the GNU General  Public License as
+published by  the Free Software  Foundation, either version  3 of
+the License, or (at your option) any later version.
 
-This  program is  distributed in  the hope  that it  will be
-useful, but  WITHOUT ANY WARRANTY; without  even the implied
-warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
-PURPOSE.   See  the  GNU  General Public  License  for  more
-details.
+This program is  distributed in the hope that  it will be useful,
+but WITHOUT  ANY WARRANTY; without  even the implied  warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
 
-You should  have received a  copy of the GNU  General Public
-License   along   with    this   program.    If   not,   see
+You should have received a copy of the GNU General Public License
+along      with     this      program.       If     not,      see
 <http://www.gnu.org/licenses/>.
 
 
@@ -70,13 +67,11 @@ License   along   with    this   program.    If   not,   see
 
 Read the documentation in Texinfo format.
 
-  The  library can  be  built for  both  static linking  and
-dynamic linking.  There are containers that depends on other
-containers.  It  is enough to  include the main  header file
-"ucl.h".
+  The library  can be built  for both static linking  and dynamic
+linking.  There are containers  that depends on other containers.
+It is enough to include the main header file "ucl.h".
 
-  All the  function names and  data types are  prefixed with
-"ucl_".
+  All the function names and data types are prefixed with "ucl_".
 
 
 3. Make and install
@@ -94,28 +89,45 @@ to test the library:
 
     $ make tests
 
-  Warning:  the  code makes  (sometimes  heavy)  use of  the
-"assert()" macro; to exclude them use the "--disable-assert"
-option of "configure".
+to run tests for a single container:
+
+    $ make test-btree
+    $ make test-circular
+    $ make test-graph
+    $ make test-hash
+    $ make test-heap
+    $ make test-list
+    $ make test-map
+    $ make test-tree
+    $ make test-vector
+
+each test has a name, to run  a single test we can use the "name"
+environment variable:
+
+    $ make test-vector name=vector-1.2
+
+  Warning: the code makes (sometimes heavy) use of the "assert()"
+macro;  to  exclude them  use  the  "--disable-assert" option  of
+"configure".
 
 
 A. Credits
 ----------
 
-The  stuff was  written  by Marco  Maggi.   If this  package
-exists it's because of the  great GNU software tools that he
-uses all the time.
+The stuff  was written  by Marco Maggi.   If this  package exists
+it's because of the great GNU software tools that he uses all the
+time.
 
-  The last  portion of "src/ucl.c" is a  modified version of
-"stdlib/qsort.c" from  the GNU C Library version  2.4; it is
-Copyright  (C)  1991,1992,1996,1997,1999,2004 Free  Software
+  The  last  portion of  "src/ucl.c"  is  a  modified version  of
+"stdlib/qsort.c"  from  the GNU  C  Library  version  2.4; it  is
+Copyright (C)  1991, 1992, 1996,  1997, 1999, 2004  Free Software
 Foundation, Inc.
 
 
 B. Bug reports
 --------------
 
-A bug in UCL is my fault only.  Bug reports are appreciated,
+A  bug in UCL  is my  fault only.   Bug reports  are appreciated,
 register them with the issue tracker at the Github site.
 
 
@@ -138,4 +150,5 @@ the GNU Project software can be found here:
 ### end of file
 # Local Variables:
 # mode: text
+# fill-column: 65
 # End:
