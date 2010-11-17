@@ -1390,10 +1390,14 @@ ucl_tree_set_prev (void * self, void * prev)
 /* ------------------------------------------------------------ */
 
 static __inline__ __attribute__((__always_inline__,__nonnull__))void
-ucl_tree_set_nextprev(void * prev, void * next)
+ucl_tree_set_dadson (void * dad, void * son)
 {
-  ucl_tree_set_next(prev,next);
-  ucl_tree_set_prev(next,prev);
+  ucl_btree_set_dadson(dad,son);
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))void
+ucl_tree_set_prevnext (void * prev, void * next)
+{
+  ucl_btree_set_dadbro(prev,next);
 }
 
 /* ------------------------------------------------------------ */
@@ -1406,14 +1410,26 @@ extern ucl_bool_t ucl_tree_has_dad (void * nod_p)
   __attribute__((__nonnull__,__pure__));
 extern ucl_bool_t ucl_tree_has_prev (void * nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_get_dad (void * _nod_p)
+extern void * ucl_tree_ref_dad (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_get_prev (void * _nod_p)
+extern void * ucl_tree_ref_prev (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_get_first (void * _nod_p)
+extern void * ucl_tree_ref_first (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_get_last (void * _nod_p)
+extern void * ucl_tree_ref_last (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
+
+static __inline__ __attribute__((__always_inline__,__nonnull__)) void *
+ucl_tree_ref_son (void * node)
+{
+  return ucl_btree_ref_son(node);
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__)) void *
+ucl_tree_ref_next (void * node)
+{
+  return ucl_btree_ref_bro(node);
+}
+
 extern void ucl_tree_insert_dad (void * nod_p, void * dad);
 extern void ucl_tree_insert_son (void *  nod_p, void *  son);
 extern void ucl_tree_insert_next (void *  nod_p, void *  nxt_p);
@@ -1444,12 +1460,12 @@ ucl_list_cdr (ucl_node_t node)
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
 ucl_list_first (ucl_node_t node)
 {
-  return ucl_tree_get_first(node);
+  return ucl_tree_ref_first(node);
 }
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
 ucl_list_last (ucl_node_t node)
 {
-  return ucl_tree_get_last(node);
+  return ucl_tree_ref_last(node);
 }
 
 /* ------------------------------------------------------------ */

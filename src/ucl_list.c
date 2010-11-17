@@ -199,7 +199,7 @@ ucl_list_remove (ucl_node_t node)
 ucl_node_t
 ucl_list_popfront (ucl_node_t node)
 {
-  ucl_node_t	first = ucl_tree_get_first(node);
+  ucl_node_t	first = ucl_tree_ref_first(node);
 
   if (first->bro)
     {
@@ -211,7 +211,7 @@ ucl_list_popfront (ucl_node_t node)
 ucl_node_t
 ucl_list_popback (ucl_node_t node)
 {
-  ucl_node_t	last = ucl_tree_get_last(node);
+  ucl_node_t	last = ucl_tree_ref_last(node);
 
   if (last->dad)
     {

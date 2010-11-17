@@ -131,7 +131,7 @@ __attribute__((__nonnull__,__pure__)) ucl_bool_t
 ucl_tree_has_dad (void * _nod_p)
 {
   ucl_node_t nod_p = _nod_p;
-  nod_p = ucl_tree_get_first(nod_p);
+  nod_p = ucl_tree_ref_first(nod_p);
   return (nod_p->dad != NULL);
 }
 /* Remember that if  the "dad" of the node is not  NULL, it doesn't mean
@@ -152,21 +152,21 @@ ucl_tree_has_prev (void * _nod_p)
  ** ----------------------------------------------------------*/
 
 __attribute__((__nonnull__,__pure__)) void *
-ucl_tree_get_dad (void * _nod_p)
+ucl_tree_ref_dad (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
   ucl_node_t 	tmp_p;
-  tmp_p = ucl_tree_get_first(nod_p);
+  tmp_p = ucl_tree_ref_first(nod_p);
   return (tmp_p->dad)? tmp_p->dad : NULL;
 }
 __attribute__((__nonnull__,__pure__)) void *
-ucl_tree_get_prev (void * _nod_p)
+ucl_tree_ref_prev (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
   return (ucl_tree_has_prev(nod_p))? nod_p->dad : NULL;
 }
 __attribute__((__nonnull__,__pure__)) void *
-ucl_tree_get_first (void * _nod_p)
+ucl_tree_ref_first (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
   while (nod_p->dad && (nod_p->dad->son != nod_p))
@@ -174,7 +174,7 @@ ucl_tree_get_first (void * _nod_p)
   return nod_p;
 }
 __attribute__((__nonnull__,__pure__)) void *
-ucl_tree_get_last (void * _nod_p)
+ucl_tree_ref_last (void * _nod_p)
 {
   ucl_node_t	nod_p = _nod_p;
   while (nod_p->bro)
@@ -213,7 +213,7 @@ ucl_tree_insert_dad (void * _nod_p, void * _dad)
   ucl_node_t	nod_p = _nod_p;
   ucl_node_t	dad   = _dad;
   ucl_node_t 	tmp_p;
-  nod_p = ucl_tree_get_first(nod_p);
+  nod_p = ucl_tree_ref_first(nod_p);
   tmp_p = nod_p->dad;
   nod_p->dad = dad;
   dad->son = nod_p;
@@ -339,10 +339,10 @@ ucl_tree_extract_dad (void * _nod_p)
   ucl_node_t 	frst_p;
   ucl_node_t 	last_p;
   assert(nod_p);
-  frst_p = ucl_tree_get_first(nod_p);
+  frst_p = ucl_tree_ref_first(nod_p);
   dad  = frst_p->dad;
   if (dad) {
-    last_p = ucl_tree_get_last(nod_p);
+    last_p = ucl_tree_ref_last(nod_p);
     frst_p->dad = dad->dad;
     if (frst_p->dad) {
       if (frst_p->dad->son == dad)
@@ -394,7 +394,7 @@ ucl_tree_extract_son (void * _nod_p)
     if (nod_p->son) {
       nod_p->son->dad = nod_p;
 
-      last_p = ucl_tree_get_last(nod_p->son);
+      last_p = ucl_tree_ref_last(nod_p->son);
       last_p->bro = son->bro;
       if (last_p->bro)
 	last_p->bro->dad = last_p;
@@ -450,7 +450,7 @@ ucl_tree_extract_prev (void * _nod_p)
       else
 	dad->bro = son;
       son->dad = dad;
-      son = ucl_tree_get_last(son);
+      son = ucl_tree_ref_last(son);
       son->bro = nod_p;
       nod_p->dad = son;
     } else if (dad) { /* son == NULL */
@@ -461,7 +461,7 @@ ucl_tree_extract_prev (void * _nod_p)
       nod_p->dad = dad;
     } else if (son) { /* dad == NULL */
       son->dad = NULL;
-      son = ucl_tree_get_last(son);
+      son = ucl_tree_ref_last(son);
       son->bro = nod_p;
       nod_p->dad = son;
     } else /* dad == NULL && son == NULL */
@@ -505,7 +505,7 @@ ucl_tree_extract_next (void * _nod_p)
     if (son && bro) {
       nod_p->bro = son;
       son->dad = nod_p;
-      son = ucl_tree_get_last(son);
+      son = ucl_tree_ref_last(son);
       son->bro = bro;
       bro->dad = son;
     } else if (son) { /* bro == NULL */

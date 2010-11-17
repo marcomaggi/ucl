@@ -259,6 +259,7 @@ The tree structure
 
 * tree implementation::         How it's done.
 * tree creation::               Creating a tree hierarchy.
+* tree insertion::              Inserting nodes into a tree.
 * tree testing::                Testing relationships between nodes.
 * tree relatives::              Accessing or setting the relatives of
                                 a node.
@@ -2571,6 +2572,7 @@ for (cur = get_the_top_node();
 @menu
 * tree implementation::         How it's done.
 * tree creation::               Creating a tree hierarchy.
+* tree insertion::              Inserting nodes into a tree.
 * tree testing::                Testing relationships between nodes.
 * tree relatives::              Accessing or setting the relatives of
                                 a node.
@@ -2648,14 +2650,14 @@ internally these pointers are cast @code{ucl_node_t}.
 @subsubheading Single link setters
 
 
-@deftypefun void ucl_tree_set_next (ucl_node_t @var{node}, ucl_node_t @var{next})
+@deftypefun void ucl_tree_set_next (void * @var{node}, void * @var{next})
 Mutate @var{node} so that @var{next} becomes the new right brother of
 @var{node}.  The old reference to the right brother of @var{node} is
 lost.
 @end deftypefun
 
 
-@deftypefun void ucl_tree_set_prev (ucl_node_t @var{node}, ucl_node_t @var{prev})
+@deftypefun void ucl_tree_set_prev (void * @var{node}, void * @var{prev})
 Mutate @var{node} so that @var{prev} becomes the new left brother of
 @var{node}.  The old reference to the left brother of @var{node} is
 lost.
@@ -2666,14 +2668,20 @@ lost.
 @subsubheading Double link setters
 
 
-@deftypefun void ucl_tree_set_nextprev (ucl_node_t @var{prev}, ucl_node_t @var{next})
+@deftypefun void ucl_tree_set_dadson (void * @var{dad}, void * @var{son})
 Mutate @var{prev} and @var{next} so that the two become left and right
 brothers.  The old references to the left and right brothers are lost.
 @end deftypefun
 
-@c ------------------------------------------------------------
 
-@subsubheading Insertions
+@deftypefun void ucl_tree_set_prevnext (void * @var{prev}, void * @var{next})
+Mutate @var{prev} and @var{next} so that the two become left and right
+brothers.  The old references to the left and right brothers are lost.
+@end deftypefun
+
+@c page
+@node tree insertion
+@subsection Inserting nodes into a tree
 
 
 The following functions are used to insert subtrees in a tree.  None of
@@ -2681,8 +2689,11 @@ the nodes in the target tree are detached.  The links in the new subtrees
 that are not interested by the relations in these functions, are left
 untouched.
 
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast @code{ucl_node_t}.
 
-@deftypefun void ucl_tree_insert_dad (ucl_node_t  @var{node}, ucl_node_t  @var{dad})
+
+@deftypefun void ucl_tree_insert_dad (void * @var{node}, void * @var{dad})
 Inserts a new dad for a node.  The dad node becomes the father of the
 node and the first son of the old dad (if any).
 
@@ -2721,7 +2732,7 @@ the @code{D} and @code{B} nodes are detached and will be lost if we
 don't keep a reference to them.
 
 
-@deftypefun void ucl_tree_insert_son (ucl_node_t  @var{node}, ucl_node_t  @var{son})
+@deftypefun void ucl_tree_insert_son (void * @var{node}, void * @var{son})
 Insert a new child for a node.  The node referenced by @var{son} becomes
 the last between the children of the node referenced by @var{node}.
 
@@ -2754,7 +2765,7 @@ the node @code{D} is detached and will be lost if we don't keep a
 reference to it.
 
 
-@deftypefun void ucl_tree_insert_prev (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
+@deftypefun void ucl_tree_insert_prev (void * @var{node}, void * @var{bro})
 Insert a new brother for a node.  The node referenced by @var{bro}
 becomes the left brother of the node referenced by @var{node}.
 
@@ -2783,7 +2794,7 @@ the @code{D} and @code{C} nodes are detached and will be lost if we
 don't keep a reference to them.
 
 
-@deftypefun void ucl_tree_insert_next (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
+@deftypefun void ucl_tree_insert_next (void * @var{node}, void * @var{bro})
 Insert a new brother for a node.  The node referenced by @var{bro}
 becomes the right brother of the node referenced by @var{node}.
 
@@ -2864,38 +2875,38 @@ All the following functions accept @code{void *} values as arguments:
 internally these pointers are cast to @code{ucl_node_t}.
 
 
-@deftypefun {void *} ucl_tree_get_dad (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_dad (void * @var{self})
 Return a pointer to the father of the node referenced by @var{self}; if
 the node has no parent: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_tree_get_prev (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_prev (void * @var{self})
 Return a pointer to the left brother of the node referenced by
 @var{self}; if the node has no left brother: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_tree_get_next (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_next (void * @var{self})
 Return a pointer to the right brother of the node referenced by
 @var{self}; if the node has no right brother: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_tree_get_son (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_son (void * @var{self})
 Return a pointer to the son of the node referenced by @var{self}; if the
 node has no child: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_tree_get_first (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_first (void * @var{self})
 Return a pointer to the first between the brothers of the node
 referenced by @var{self}; it can be a pointer to @var{self} itself, if
 @var{self} is the first.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_tree_get_last (void * @var{self})
+@deftypefun {void *} ucl_tree_ref_last (void * @var{self})
 Return a pointer to the last between the brothers of the node
 referenced by @var{self}; it can be a pointer to @var{self} itself, if
 @var{self} is the last.

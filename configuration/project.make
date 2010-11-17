@@ -33,12 +33,15 @@ test-hash:	; $(MAKE) tests PATTERNS=hash.c
 test-heap:	; $(MAKE) tests PATTERNS=heap.c
 test-list:	; $(MAKE) tests PATTERNS=list.c
 test-map:	; $(MAKE) tests PATTERNS=map.c
-test-tree:	; $(MAKE) tests PATTERNS=tree.c
 test-graph:	; $(MAKE) tests PATTERNS=graph.c
 
 test-btree: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-btree.c
 	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-btree
+
+test-tree: ucl_shlib-all
+	$(MAKE) tests PATTERNS=test-tree.c
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-tree
 
 test-vector: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-vector.c
