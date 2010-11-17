@@ -30,16 +30,8 @@
 
 #define MCL_DEBUGGING		0
 #include "mcl-test.h"
-#include <assert.h>
-#include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "debug.h"
 #include "ucl.h"
-
-  /* const size_t DELTA	= 234; */
-
 
 
 /** ------------------------------------------------------------
