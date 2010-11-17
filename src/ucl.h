@@ -1373,18 +1373,13 @@ ucl_btree_first_levelorder_backward (void * root_node)
 
 
 /** ------------------------------------------------------------
- ** Tree functions: setters.
+ ** Tree functions.
  ** ----------------------------------------------------------*/
 
 static __inline__ __attribute__((__always_inline__,__nonnull__(1))) void
 ucl_tree_set_next (void * self, void * next)
 {
   ucl_btree_set_bro(self,next);
-}
-static __inline__ __attribute__((__always_inline__,__nonnull__(1))) void
-ucl_tree_set_son (void * self, void * son)
-{
-  ucl_btree_set_son(self,son);
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__(1))) void
 ucl_tree_set_prev (void * self, void * prev)
@@ -1403,13 +1398,13 @@ ucl_tree_set_nextprev(void * prev, void * next)
 
 /* ------------------------------------------------------------ */
 
-extern ucl_bool_t ucl_tree_is_dad (ucl_node_t nod_p, ucl_node_t cld_p)
+extern ucl_bool_t ucl_tree_is_dad (void * nod_p, void * cld_p)
   __attribute__((__nonnull__));
-extern ucl_bool_t ucl_tree_is_bro (ucl_node_t nod_p, ucl_node_t bro)
+extern ucl_bool_t ucl_tree_is_bro (void * nod_p, void * bro)
   __attribute__((__nonnull__,__pure__));
-extern ucl_bool_t ucl_tree_has_dad (ucl_node_t nod_p)
+extern ucl_bool_t ucl_tree_has_dad (void * nod_p)
   __attribute__((__nonnull__,__pure__));
-extern ucl_bool_t ucl_tree_has_prev (ucl_node_t nod_p)
+extern ucl_bool_t ucl_tree_has_prev (void * nod_p)
   __attribute__((__nonnull__,__pure__));
 extern void * ucl_tree_get_dad (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
@@ -1419,17 +1414,17 @@ extern void * ucl_tree_get_first (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
 extern void * ucl_tree_get_last (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void ucl_tree_insert_dad (ucl_node_t nod_p, ucl_node_t dad);
-extern void ucl_tree_insert_son (ucl_node_t  nod_p, ucl_node_t  son);
-extern void ucl_tree_insert_next (ucl_node_t  nod_p, ucl_node_t  nxt_p);
-extern void ucl_tree_insert_prev (ucl_node_t  nod_p, ucl_node_t  prv_p);
-extern ucl_node_t  ucl_tree_extract_dad (ucl_node_t nod_p);
-extern ucl_node_t  ucl_tree_extract_son (ucl_node_t nod_p);
-extern ucl_node_t  ucl_tree_extract_prev (ucl_node_t nod_p);
-extern ucl_node_t  ucl_tree_extract_next (ucl_node_t nod_p);
-extern void ucl_tree_iterator_inorder (ucl_node_t  nod_p, ucl_iterator_t iterator);
-extern void ucl_tree_iterator_preorder (ucl_node_t nod_p, ucl_iterator_t iterator);
-extern void ucl_tree_iterator_postorder (ucl_node_t nod_p, ucl_iterator_t iterator);
+extern void ucl_tree_insert_dad (void * nod_p, void * dad);
+extern void ucl_tree_insert_son (void *  nod_p, void *  son);
+extern void ucl_tree_insert_next (void *  nod_p, void *  nxt_p);
+extern void ucl_tree_insert_prev (void *  nod_p, void *  prv_p);
+extern void * ucl_tree_extract_dad (void * nod_p);
+extern void * ucl_tree_extract_son (void * nod_p);
+extern void * ucl_tree_extract_prev (void * nod_p);
+extern void * ucl_tree_extract_next (void * nod_p);
+extern void ucl_tree_iterator_inorder (void *  nod_p, ucl_iterator_t iterator);
+extern void ucl_tree_iterator_preorder (void * nod_p, ucl_iterator_t iterator);
+extern void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
 
 
 /** ------------------------------------------------------------

@@ -2583,7 +2583,6 @@ for (cur = get_the_top_node();
 @subsection How it's done
 
 
-@noindent
 The implementation is a binary tree with nodes of type
 @code{ucl_node_t}; the only difference between the btree and the tree is
 the interpretation of the bro nodes.  This means that all the functions
@@ -2631,13 +2630,11 @@ A is the first between the children of node B;
 A and B are brothers, and children of the same parent node.
 @end table
 
-
 @c page
 @node tree creation
 @subsection Creating a tree hierarchy
 
 
-@noindent
 The node structures must be allocated by the client code and all the
 bytes set to zero before usage.  The btree functions can be used
 directly, but @ucl{} provides aliases for them when they must be used
@@ -2646,62 +2643,37 @@ for a tree.
 All the following functions accept @code{void *} values as arguments:
 internally these pointers are cast @code{ucl_node_t}.
 
+@c ------------------------------------------------------------
 
-@subsubsection Single link setters
-
-
-@deftypefn {Inline Function} void ucl_tree_setdad (void * @var{self}, void * @var{dad})
-Select a new parent node for @var{self}.
-@end deftypefn
+@subsubheading Single link setters
 
 
-@deftypefn {Inline Function} void ucl_tree_setbro (void * @var{self}, void * @var{bro})
-Select a new brother node for @var{self}.
-@end deftypefn
-
-
-@deftypefn {Inline Function} void ucl_tree_setson (void * @var{self}, void * @var{son})
-Select a new child node for @var{self}.
-@end deftypefn
-
-
-@subsubsection Double link setters
-
-
-@deftypefn {Inline Function} void ucl_tree_dadson (void * @var{dad}, void * @var{son})
-Link @var{dad} and @var{son} to be the parent and the son respectively.
-@end deftypefn
-
-
-@deftypefn {Inline Function} void ucl_tree_dadbro (void * @var{dad}, void * @var{bro})
-Link @var{dad} and @var{bro} to be the parent and the bro respectively.
-@end deftypefn
-
-
-@subsubsection Triple link setters
-
-
-@deftypefn {Inline Function} void ucl_tree_dadsonbro (void * @var{dad}, void * @var{son}, void * @var{bro})
-Link @var{dad}, @var{son} and @var{bro} to be the parent, the son and
-the bro respectively.
-@end deftypefn
-
-
-
-@deftypefun void ucl_tree_set_son (void * @var{node}, void * @var{son})
-Link together the nodes referenced by @var{node} and @var{son} so
-that one is the son of the other.  The old reference to the son of
-@var{node} is lost; the old reference to the dad of @var{son} is
+@deftypefun void ucl_tree_set_next (ucl_node_t @var{node}, ucl_node_t @var{next})
+Mutate @var{node} so that @var{next} becomes the new right brother of
+@var{node}.  The old reference to the right brother of @var{node} is
 lost.
 @end deftypefun
 
 
-@deftypefun void ucl_tree_set_bro (ucl_node_t  @var{node}, ucl_node_t  @var{bro})
-Link together the nodes referenced by @var{node} and @var{bro} so
-that one is the brother of the other.  The node referenced by @var{bro}
-becomes the right brother of the node referenced by @var{node}.  The old
-references to the brothers of the two nodes are lost.
+@deftypefun void ucl_tree_set_prev (ucl_node_t @var{node}, ucl_node_t @var{prev})
+Mutate @var{node} so that @var{prev} becomes the new left brother of
+@var{node}.  The old reference to the left brother of @var{node} is
+lost.
 @end deftypefun
+
+@c ------------------------------------------------------------
+
+@subsubheading Double link setters
+
+
+@deftypefun void ucl_tree_set_nextprev (ucl_node_t @var{prev}, ucl_node_t @var{next})
+Mutate @var{prev} and @var{next} so that the two become left and right
+brothers.  The old references to the left and right brothers are lost.
+@end deftypefun
+
+@c ------------------------------------------------------------
+
+@subsubheading Insertions
 
 
 The following functions are used to insert subtrees in a tree.  None of
@@ -2839,43 +2811,46 @@ ucl_tree_insert_next( 2, A )
 the @code{D}, @code{B} and @code{C} nodes are detached and will be lost
 if we don't keep a reference to them.
 
-
 @c page
 @node tree testing
 @subsection Testing relationships between nodes
 
 
-@deftypefun ucl_bool_t ucl_tree_is_dad (const ucl_node_t  @var{dad}, const ucl_node_t  @var{cld_p})
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast to @code{ucl_node_t}.
+
+
+@deftypefun ucl_bool_t ucl_tree_is_dad (void * @var{dad}, void * @var{cld_p})
 Return true if the node referenced by @var{dad} is the father of the
 node referenced by @var{cld_p}, otherwise return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_tree_is_bro (const ucl_node_t  @var{node}, const ucl_node_t  @var{bro})
+@deftypefun ucl_bool_t ucl_tree_is_bro (void * @var{node}, void * @var{bro})
 Return true if the node referenced by @var{node} is a brother of the
 node referenced by @var{bro}, otherwise return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_tree_has_dad (const ucl_node_t  @var{self})
+@deftypefun ucl_bool_t ucl_tree_has_dad (void * @var{self})
 Return true if the node referenced by @var{self} has a parent,
 otherwise return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_tree_has_prev (const ucl_node_t  @var{self})
+@deftypefun ucl_bool_t ucl_tree_has_prev (void * @var{self})
 Return true if the node referenced by @var{self} has a brother to the
 left, otherwise return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_tree_has_next (const ucl_node_t  @var{self})
+@deftypefun ucl_bool_t ucl_tree_has_next (void * @var{self})
 Return true if the node referenced by @var{self} has a brother to the
 right, otherwise return false.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_tree_has_son (const ucl_node_t  @var{self})
+@deftypefun ucl_bool_t ucl_tree_has_son (void * @var{self})
 Return true if the node referenced by @var{self} has a son, otherwise
 return false.
 @end deftypefun
@@ -2885,62 +2860,66 @@ return false.
 @subsection Accessing or setting the relatives of a node
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_dad (const ucl_node_t  @var{self})
+All the following functions accept @code{void *} values as arguments:
+internally these pointers are cast to @code{ucl_node_t}.
+
+
+@deftypefun {void *} ucl_tree_get_dad (void * @var{self})
 Return a pointer to the father of the node referenced by @var{self}; if
 the node has no parent: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_prev (const ucl_node_t  @var{self})
+@deftypefun {void *} ucl_tree_get_prev (void * @var{self})
 Return a pointer to the left brother of the node referenced by
 @var{self}; if the node has no left brother: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_next (const ucl_node_t  @var{self})
+@deftypefun {void *} ucl_tree_get_next (void * @var{self})
 Return a pointer to the right brother of the node referenced by
 @var{self}; if the node has no right brother: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_son (const ucl_node_t  @var{self})
+@deftypefun {void *} ucl_tree_get_son (void * @var{self})
 Return a pointer to the son of the node referenced by @var{self}; if the
 node has no child: return @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_first (const ucl_node_t  @var{self})
+@deftypefun {void *} ucl_tree_get_first (void * @var{self})
 Return a pointer to the first between the brothers of the node
 referenced by @var{self}; it can be a pointer to @var{self} itself, if
 @var{self} is the first.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_get_last (const ucl_node_t  @var{self})
+@deftypefun {void *} ucl_tree_get_last (void * @var{self})
 Return a pointer to the last between the brothers of the node
 referenced by @var{self}; it can be a pointer to @var{self} itself, if
 @var{self} is the last.
 @end deftypefun
-
 
 @c page
 @node tree removing
 @subsection Removing elements from a tree
 
 
-@noindent
 These functions will extract a node from a tree, returning a pointer to
-the extracted node.
+the extracted node.  All the following functions accept @code{void *}
+values as arguments and return @code{void *} values: internally these
+pointers are cast to @code{ucl_node_t}.
 
 
-@deftypefun {ucl_node_t } ucl_tree_extract_dad (ucl_node_t  @var{node})
+@deftypefun {void *} ucl_tree_extract_dad (void * @var{node})
 Extract the dad of the node referenced by @var{node} from the tree.
 The referenced node and all its brothers are inserted in place of the
 extracted dad.
 
-Returns a pointer to the extracted node, or @cnull{} if the selected node
-has nod dad.  All the pointers in the extracted node structure are reset
-to @cnull{}.
+Returns a pointer to the extracted node, or @cnull{} if the selected
+node has no dad.  All the pointers in the extracted node structure are
+reset to @cnull{}.
 
 @example
  ---    ---    ---       ---    ---    ---    ---
@@ -2954,7 +2933,7 @@ to @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_extract_son (ucl_node_t  @var{node})
+@deftypefun {void *} ucl_tree_extract_son (void * @var{node})
 Extract the son of the node referenced by @var{node} from the tree.
 The son of the selected node is extracted from the hierarchy.  All of its
 children become children of the selected node.
@@ -2979,7 +2958,7 @@ to @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_extract_prev (ucl_node_t  @var{node})
+@deftypefun {void *} ucl_tree_extract_prev (void * @var{node})
 Extract the left brother of the node referenced by @var{node}.  The
 left brother of the selected node is extracted from the hierarchy.  Its
 children become left brothers of the selected node.
@@ -3004,7 +2983,7 @@ are reset to @cnull{}.
 @end deftypefun
 
 
-@deftypefun {ucl_node_t } ucl_tree_extract_next (ucl_node_t  @var{node})
+@deftypefun {void *} ucl_tree_extract_next (void * @var{node})
 Extract the right brother of the node referenced by @var{node}.   The
 right brother of the selected node is extracted from the hierarchy.  Its
 children become right brothers of the selected node.
@@ -3029,25 +3008,25 @@ are reset to @cnull{}.
 @subsection Traversing a tree
 
 
-@noindent
 For the tree iterators, the return value of @function{ucl_iterator_ptr}
-is a pointer to the current node.
+is a pointer to the current node.  All the following functions accept
+@code{void *} values as arguments: internally these pointers are cast to
+@code{ucl_node_t}.
 
 
-@deftypefun void ucl_tree_iterator_inorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+@deftypefun void ucl_tree_iterator_inorder (void * @var{node}, ucl_iterator_t @var{iter})
 Initialises an in--order iteration.
 @end deftypefun
 
 
-@deftypefun void ucl_tree_iterator_preorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+@deftypefun void ucl_tree_iterator_preorder (void * @var{node}, ucl_iterator_t @var{iter})
 Initialises a pre--order iteration.
 @end deftypefun
 
 
-@deftypefun void ucl_tree_iterator_postorder (ucl_node_t @var{node}, ucl_iterator_t @var{iter})
+@deftypefun void ucl_tree_iterator_postorder (void * @var{node}, ucl_iterator_t @var{iter})
 Initialises a post--order iteration.
 @end deftypefun
-
 
 @c page
 @node heap
@@ -3056,15 +3035,7 @@ Initialises a post--order iteration.
 
 @cindex Heap container
 
-@menu
-* heap creation::             Creating and destroying heaps.
-* heap adding::               Adding elements to a heaps.
-* heap removing::             Removing elements from a heaps.
-* heap ops::                  Various operations on a heaps.
-@end menu
 
-
-@noindent
 The heap container allows us to insert a bunch of values and extract
 them sorted, from the lesser to the greater according to a custom
 comparison function.
@@ -3083,6 +3054,13 @@ function for the nodes; the comparison function for the nodes; the
 current number of elements in the heap.
 @end deftp
 
+
+@menu
+* heap creation::             Creating and destroying heaps.
+* heap adding::               Adding elements to a heaps.
+* heap removing::             Removing elements from a heaps.
+* heap ops::                  Various operations on a heaps.
+@end menu
 
 @c page
 @node heap creation
