@@ -77,7 +77,11 @@ It is enough to include the main header file "ucl.h".
 3. Make and install
 -------------------
 
-Do this:
+If you are using a  checkout from the development repository, the
+"configure"  script  is  not   present;  to  build  it  just  run
+"autoconf" in the top directory of the source tree.
+
+  To build and install do this:
 
     $ cd ucl-xxx
     $ mkdir "=build"
