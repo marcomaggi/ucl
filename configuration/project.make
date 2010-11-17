@@ -6,9 +6,6 @@
 ## Global variables.
 ## ---------------------------------------------------------------------
 
-CONTAINERS	= btree
-#circular hash heap list map tree vector graph
-
 GCC_WARNINGS := $(filter-out -Wcast-qual,$(GCC_WARNINGS))
 
 ucl_PREREQUISITES	= $(wildcard $(addprefix $(ucl_SRCDIR)/, internal.h debug.h ucl.h))

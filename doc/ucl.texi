@@ -1544,6 +1544,7 @@ callback.  The default application function is
 
 @cindex Binary tree container
 
+
 @menu
 * btree typedefs::              Implementation and type definitions.
 * btree examples::              Usage examples.
@@ -1555,13 +1556,11 @@ callback.  The default application function is
 * btree iteration::             Iterations in a btree hierarchy.
 @end menu
 
-
 @c page
 @node btree typedefs
 @subsection Implementation and type definitions
 
 
-@noindent
 This section presents an implementation of binary tree; the container is
 a chain of structures:
 
@@ -1602,15 +1601,13 @@ pointer to the bro of this node; @cnull{} if this node has no bro.
 @end table
 @end deftp
 
-
 @c page
 @node btree examples
 @subsection Usage examples
 
 
-@noindent
-Let's say that we want to organise a set of characters in a binary tree;
-we define the tree node type and allocation functions like these:
+Let's say we want to organise a set of characters in a binary tree; we
+define the tree node type and allocation functions like these:
 
 @example
 typedef struct node_tag_t @{
@@ -1620,7 +1617,7 @@ typedef struct node_tag_t @{
 
 typedef node_tag_t *    node_t;
 
-ucl_memory_allocator_t  allocator = @{
+ucl_memory_allocator_t  A = @{
   .data  = NULL,
   .alloc = ucl_memory_alloc
 @};
@@ -1630,14 +1627,14 @@ node_make (char c)
 @{
   node_t        p = NULL;
 
-  allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
+  A.alloc(A.data, &p, sizeof(node_tag_t));
   p->c = c;
   return p;
 @}
 void
 node_final (node_t p)
 @{
-  allocator.alloc(allocator.data, &p, 0);
+  A.alloc(A.data, &p, 0);
 @}
 __inline__ void
 node_clean (node_t p)
@@ -1647,9 +1644,9 @@ node_clean (node_t p)
 @end example
 
 @noindent
-and we remember that the built in @ucl{} allocation function,
-@function{ucl_memory_alloc}, sets to zero all the bytes of newly
-allocated blocks.
+and we remember that the built in @ucl{} allocation function
+(@cfunc{ucl_memory_alloc}) sets to zero all the bytes of newly allocated
+blocks.
 
 We define the getter/setter functions in ``generic'' form, like these:
 
@@ -1665,7 +1662,6 @@ node_get (node_t p)
   return &(p->c);
 @}
 @end example
-
 
 Now if we want the following hierarchy:
 
@@ -1717,23 +1713,22 @@ d    == ucl_btree_getson(c)
 NULL == ucl_btree_getson(d)
 @end example
 
-
 @c page
 @node btree creation
 @subsection Building btrees hierarchies
 
 
-@noindent
 The correct way of building binary trees is to allocate node structures
 with a function that cleans them up, like @function{calloc}, then use
 the following functions to initialise the fields.  If a structure is
 recycled, we must reset its fields to zero first.
 
 All the following functions accept @code{void *} values as arguments:
-internally these pointers are cast @code{ucl_node_t}.
+internally these pointers are cast to @code{ucl_node_t}.
 
+@c ------------------------------------------------------------
 
-@subsubsection Single link setters
+@subsubheading Single link setters
 
 
 @deftypefn {Inline Function} void ucl_btree_set_dad (void * @var{self}, void * @var{dad})
@@ -1750,8 +1745,9 @@ Select a new brother node for @var{self}.
 Select a new child node for @var{self}.
 @end deftypefn
 
+@c ------------------------------------------------------------
 
-@subsubsection Double link setters
+@subsubheading Double link setters
 
 
 @deftypefn {Inline Function} void ucl_btree_set_dadson (void * @var{dad}, void * @var{son})
@@ -1763,8 +1759,9 @@ Link @var{dad} and @var{son} to be the parent and the son respectively.
 Link @var{dad} and @var{bro} to be the parent and the bro respectively.
 @end deftypefn
 
+@c ------------------------------------------------------------
 
-@subsubsection Triple link setters
+@subsubheading Triple link setters
 
 
 @deftypefn {Inline Function} void ucl_btree_set_dadsonbro (void * @var{dad}, void * @var{son}, void * @var{bro})
@@ -1772,13 +1769,11 @@ Link @var{dad}, @var{son} and @var{bro} to be the parent, the son and
 the bro respectively.
 @end deftypefn
 
-
 @c page
 @node btree inspection
 @subsection Accessing nodes
 
 
-@noindent
 All the following functions accept @code{void *} values as arguments and
 return @code{void *} values; internally these pointers are cast to
 @code{ucl_node_t}.
@@ -1819,13 +1814,11 @@ Return true if the node is a leaf (no brother and no son).
 Return true if the node is the root of a binary tree: it has no dad.
 @end deftypefn
 
-
 @c page
 @node btree removing
 @subsection Removing elements
 
 
-@noindent
 It's a matter of setting pointers to @cnull{}; care must be taken not to
 loose references to subtrees.
 
@@ -1855,7 +1848,6 @@ hold references to each other no more.
 @deftypefun void ucl_btree_clean (void * @var{self})
 Set to zero all the bytes in the node structure.
 @end deftypefun
-
 
 @c page
 @node btree find
@@ -1904,7 +1896,6 @@ if @var{value} is not found, the return value is @cnull{}.
 @subsection Finding nodes
 
 
-@noindent
 All the following functions accept @code{void *} values as arguments and
 return @code{void *} values; internally these pointers are cast to
 @code{ucl_node_t}.
@@ -2007,7 +1998,6 @@ Step up the hierarchy, dad by dad, and return a pointer to a node that
 has @cnull{} as dad.
 @end deftypefun
 
-
 @c page
 @node btree iteration
 @subsection Iterations in a btree hierarchy
@@ -2020,13 +2010,11 @@ has @cnull{} as dad.
 * btree level iteration::       Level order iteration.
 @end menu
 
-
 @c page
 @node btree inorder iteration
 @subsubsection Inorder iteration
 
 
-@noindent
 Forward inorder iteration: visit all the nodes from the leftmost to the
 rightmost.  Backward inorder iteration: visit all the nodes from the
 rightmost to the leftmost.  Example: given the tree:
@@ -2091,13 +2079,11 @@ the maximum field of @var{range} is interpreted as the ending node of
 the iteration.
 @end deftypefun
 
-
 @c ------------------------------------------------------------
 
-@subsubsection Examples of forward iteration
+@subsubheading Examples of forward iteration
 
 
-@noindent
 To perform a complete forward inorder iteration, we have to start from
 the leftmost node (@code{0} in the picture above), already visited, and
 begin from there.  Example:
@@ -2164,13 +2150,10 @@ for (cur = select_first(root, ...);
 in a subtree; this code will work even when @code{root == cur == end} at
 the beginning.
 
-
 @c ------------------------------------------------------------
 
-@subsubsection Examples of backward iteration
+@subsubheading Examples of backward iteration
 
-
-@noindent
 To perform a complete backward iteration, we have to start from the
 rightmost node (@code{12} in the picture above), already visited, and
 begin from there.  Example:
@@ -2239,13 +2222,11 @@ do_something_with(cur);
 in a subtree; this code will work even when @code{root == cur == end} a
 the beginning.
 
-
 @c page
 @node btree preorder iteration
 @subsubsection Preorder iteration
 
 
-@noindent
 Preorder iteration: visit the current node then the son then the
 brother.  Example:
 
@@ -2313,13 +2294,10 @@ the maximum field of @var{range} is interpreted as the ending node of
 the iteration.
 @end deftypefun
 
-
 @c ------------------------------------------------------------
 
-@subsubsection Examples of forward iteration
+@subsubheading Examples of forward iteration
 
-
-@noindent
 To perform a complete iteration, we have to start from the top node of
 the tree (@code{5} in the picture above), already visited, and begin
 from there.  Example:
@@ -2367,7 +2345,6 @@ for (cur = ucl_btree_step_preorder(cur);
 @subsubsection Postorder iteration
 
 
-@noindent
 Postorder iteration: visit the son, then the brother, then the parent
 node.  Example:
 
@@ -2433,13 +2410,10 @@ the maximum field of @var{range} is interpreted as the ending node of
 the iteration.
 @end deftypefun
 
-
 @c ------------------------------------------------------------
 
-@subsubsection Examples of forward iteration
+@subsubheading Examples of forward iteration
 
-
-@noindent
 To perform a complete iteration, we have to select the deepest leftmost
 son in the tree (@code{2} in the example) and begin from there.  Example:
 
@@ -2486,13 +2460,11 @@ do_something_with(cur);
 @noindent
 @code{cur} can't be null in the loop.
 
-
 @c page
 @node btree level iteration
 @subsubsection Level order iteration
 
 
-@noindent
 Level order iteration: visit the tree level by level.  Example:
 
 @example
@@ -2557,10 +2529,8 @@ the iteration.
 
 @c ------------------------------------------------------------
 
-@subsubsection Examples of forward iteration
+@subsubheading Examples of forward iteration
 
-
-@noindent
 To perform a complete iteration, we just call the function until it
 returns @cnull{}.  Example:
 
@@ -2577,10 +2547,8 @@ for (cur = get_the_top_node();
 
 @c ------------------------------------------------------------
 
-@subsubsection Examples of backward iteration
+@subsubheading Examples of backward iteration
 
-
-@noindent
 To perform a complete iteration, we just call the function until it
 returns @cnull{}.  Example:
 
@@ -2609,7 +2577,6 @@ for (cur = get_the_top_node();
 * tree removing::               Removing elements from a tree.
 * tree iterators::              Traversing a tree.
 @end menu
-
 
 @c page
 @node tree implementation

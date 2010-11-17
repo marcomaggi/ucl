@@ -655,9 +655,6 @@ typedef struct ucl_node_tag_t {
 
 typedef ucl_node_tag_t *	ucl_node_t;
 
-/* FIXME: one day this will disappear */
-typedef ucl_node_t		ucl_btree_node_t;
-
 /* BEGIN: RESERVED FOR INTERNAL USAGE */
 typedef struct ucl_embedded_node_tag_t {
   ucl_node_tag_t	node;
@@ -1195,9 +1192,7 @@ extern void ucl_graph_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_g
  ** Binary tree functions: setters.
  ** ----------------------------------------------------------*/
 
-static __inline__
-__attribute__((__always_inline__,__nonnull__(1)))
-void
+static __inline__ __attribute__((__always_inline__,__nonnull__(1))) void
 ucl_btree_set_bro (void * self, void * bro)
 {
   ((ucl_node_t)self)->bro = bro;
@@ -1280,8 +1275,6 @@ ucl_btree_is_root (void * _self)
   return (NULL == self->dad);
 }
 
-/* ------------------------------------------------------------ */
-
 
 /** ------------------------------------------------------------
  ** Binary tree functions: detaching nodes.
@@ -1322,8 +1315,6 @@ ucl_btree_clean (void * self)
 {
   ucl_struct_clean(self,ucl_node_tag_t);
 }
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -1379,8 +1370,6 @@ ucl_btree_first_levelorder_backward (void * root_node)
 {
   return root_node;
 }
-
-/* ------------------------------------------------------------ */
 
 
 /** ------------------------------------------------------------
@@ -1497,8 +1486,6 @@ ucl_heap_size (const ucl_heap_t this)
 {
   return this->size;
 }
-
-/* ------------------------------------------------------------ */
 
 extern void ucl_heap_insert (ucl_heap_t this, void * _node_p);
 extern ucl_node_t  ucl_heap_extract (ucl_heap_t this);
