@@ -289,61 +289,61 @@ ucl_vector_initialise_config_dfs (ucl_vector_config_t config)
  ** ----------------------------------------------------------------- */
 
 void
-ucl_vector_alloc (ucl_vector_t self, ucl_vector_config_t config)
+ucl_vector_alloc (ucl_vector_t V, ucl_vector_config_t C)
 {
-  assert(self);
-  assert(config);
-  size_t	dim  = config->slot_dimension;
-  size_t	number_of_bytes = dim * config->number_of_slots;
+  assert(V);
+  assert(C);
+  size_t	dim  = C->slot_dimension;
+  size_t	number_of_bytes = dim * C->number_of_slots;
   uint8_t *	p = NULL;
-  ASSERT_INITIALISE_CONDITIONS(config);
-  config->allocator.alloc(config->allocator.data, &p, number_of_bytes);
+  ASSERT_INITIALISE_CONDITIONS(C);
+  C->allocator.alloc(C->allocator.data, &p, number_of_bytes);
   assert(p);
-  self->slot_dimension		= dim;
-  self->step_up			= dim * config->step_up;
-  self->step_down		= dim * config->step_down;
-  if (self->step_up >= self->step_down)
-    self->step_down = self->step_up + dim;
-  self->size_of_padding_area	= dim * config->size_of_padding_area;
-  self->allocator		= config->allocator;
-  self->compar			= config->compar;
-  self->first_allocated_slot	= p;
-  self->last_allocated_slot	= self->first_allocated_slot + number_of_bytes - dim;
-  set_pointers_for_empty_vector(self);
-  PRINT_SLOT_INSPECTION(self, "construction");
-  PRINT_POINTER_INSPECTION(self, "construction");
-  ASSERT_INVARIANTS(self);
+  V->slot_dimension		= dim;
+  V->step_up			= dim * C->step_up;
+  V->step_down			= dim * C->step_down;
+  if (V->step_up >= V->step_down)
+    V->step_down = V->step_up + dim;
+  V->size_of_padding_area	= dim * C->size_of_padding_area;
+  V->allocator			= C->allocator;
+  V->compar			= C->compar;
+  V->first_allocated_slot	= p;
+  V->last_allocated_slot	= V->first_allocated_slot + number_of_bytes - dim;
+  set_pointers_for_empty_vector(V);
+  PRINT_SLOT_INSPECTION(V, "construction");
+  PRINT_POINTER_INSPECTION(V, "construction");
+  ASSERT_INVARIANTS(V);
 }
 void
-ucl_vector_free (ucl_vector_t self)
+ucl_vector_free (ucl_vector_t V)
 {
-  ASSERT_INVARIANTS(self);
-  self->allocator.alloc(self->allocator.data, &(self->first_allocated_slot), 0);
-  self->last_allocated_slot	= NULL;
-  self->first_used_slot		= NULL;
-  self->last_used_slot		= NULL;
+  ASSERT_INVARIANTS(V);
+  V->allocator.alloc(V->allocator.data, &(V->first_allocated_slot), 0);
+  V->last_allocated_slot	= NULL;
+  V->first_used_slot		= NULL;
+  V->last_used_slot		= NULL;
 }
 void
-ucl_vector_swallow_block (ucl_vector_t self, ucl_vector_config_t config, ucl_block_t block)
+ucl_vector_swallow_block (ucl_vector_t V, ucl_vector_config_t C, ucl_block_t block)
 {
-  assert(self);
-  assert(config);
-  ASSERT_INITIALISE_CONDITIONS(config);
-  size_t	dim  = config->slot_dimension;
-  self->slot_dimension		= dim;
-  self->step_up			= dim * config->step_up;
-  self->step_down		= dim * config->step_down;
-  if (self->step_up >= self->step_down)
-    self->step_down = self->step_up + dim;
-  self->size_of_padding_area	= dim * config->size_of_padding_area;
-  self->allocator		= config->allocator;
-  self->compar			= config->compar;
+  assert(V);
+  assert(C);
+  ASSERT_INITIALISE_CONDITIONS(C);
+  size_t	dim  = C->slot_dimension;
+  V->slot_dimension		= dim;
+  V->step_up			= dim * C->step_up;
+  V->step_down			= dim * C->step_down;
+  if (V->step_up >= V->step_down)
+    V->step_down = V->step_up + dim;
+  V->size_of_padding_area	= dim * C->size_of_padding_area;
+  V->allocator			= C->allocator;
+  V->compar			= C->compar;
   assert(0 == (block.len % dim));
-  self->first_allocated_slot = self->first_used_slot = block.ptr;
-  self->last_allocated_slot  = self->last_used_slot  = block.ptr + block.len - self->slot_dimension;
-  PRINT_SLOT_INSPECTION(self, "construction");
-  PRINT_POINTER_INSPECTION(self, "construction");
-  ASSERT_INVARIANTS(self);
+  V->first_allocated_slot = V->first_used_slot = block.ptr;
+  V->last_allocated_slot  = V->last_used_slot  = block.ptr + block.len - V->slot_dimension;
+  PRINT_SLOT_INSPECTION(V, "construction");
+  PRINT_POINTER_INSPECTION(V, "construction");
+  ASSERT_INVARIANTS(V);
 }
 
 
@@ -352,44 +352,44 @@ ucl_vector_swallow_block (ucl_vector_t self, ucl_vector_config_t config, ucl_blo
  ** ----------------------------------------------------------*/
 
 size_t
-ucl_vector_number_of_step_up_slots (const ucl_vector_t self)
+ucl_vector_number_of_step_up_slots (const ucl_vector_t V)
 {
-  return (self->step_up)? (self->step_up / self->slot_dimension) : 0;
+  return (V->step_up)? (V->step_up / V->slot_dimension) : 0;
 }
 size_t
-ucl_vector_number_of_step_down_slots (const ucl_vector_t self)
+ucl_vector_number_of_step_down_slots (const ucl_vector_t V)
 {
-  return (self->step_down)? (self->step_down / self->slot_dimension) : 0;
+  return (V->step_down)? (V->step_down / V->slot_dimension) : 0;
 }
 size_t
-ucl_vector_number_of_padding_slots (const ucl_vector_t self)
+ucl_vector_number_of_padding_slots (const ucl_vector_t V)
 {
-  return ((self->size_of_padding_area)?
-	  (self->size_of_padding_area / self->slot_dimension) : 0);
+  return ((V->size_of_padding_area)?
+	  (V->size_of_padding_area / V->slot_dimension) : 0);
 }
 ucl_bool_t
-ucl_vector_running (const ucl_vector_t self)
+ucl_vector_running (const ucl_vector_t V)
 {
-  return (NULL != self->first_allocated_slot);
+  return (NULL != V->first_allocated_slot);
 }
 void
-ucl_vector_update_number_of_step_up_slots (ucl_vector_t self, size_t step_up)
+ucl_vector_update_number_of_step_up_slots (ucl_vector_t V, size_t step_up)
 {
-  self->step_up = step_up * self->slot_dimension;
-  if (self->step_up >= self->step_down)
-    self->step_down = self->step_up + self->slot_dimension;
+  V->step_up = step_up * V->slot_dimension;
+  if (V->step_up >= V->step_down)
+    V->step_down = V->step_up + V->slot_dimension;
 }
 void
-ucl_vector_update_number_of_step_down_slots (ucl_vector_t self, size_t step_down)
+ucl_vector_update_number_of_step_down_slots (ucl_vector_t V, size_t step_down)
 {
-  self->step_down = step_down * self->slot_dimension;
-  if (self->step_up >= self->step_down)
-    self->step_down = self->step_up + self->slot_dimension;
+  V->step_down = step_down * V->slot_dimension;
+  if (V->step_up >= V->step_down)
+    V->step_down = V->step_up + V->slot_dimension;
 }
 void
-ucl_vector_update_number_of_padding_slots (ucl_vector_t self, size_t padding)
+ucl_vector_update_number_of_padding_slots (ucl_vector_t V, size_t padding)
 {
-  self->size_of_padding_area = padding * self->slot_dimension;
+  V->size_of_padding_area = padding * V->slot_dimension;
 }
 
 

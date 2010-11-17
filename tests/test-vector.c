@@ -1124,6 +1124,47 @@ test_block_insertion (void)
 }
 
 static void
+test_range_insertion (void)
+{
+  const size_t ACTUAL_VECTOR	= 10;
+  mcl_test_begin("vector-3.6", "range insertion") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	SRC, DST;
+    ucl_index_t		i, j;
+    ucl_range_t		R;
+    ucl_vector_initialise_config(C, sizeof(size_t), 15);
+    C->size_of_padding_area	= 5;
+    ucl_vector_alloc(SRC, C);
+    ucl_vector_alloc(DST, C);
+    {
+      fill(DST, ACTUAL_VECTOR, 0);
+      fill(SRC, ACTUAL_VECTOR, 0);
+      assert(ucl_vector_size(SRC) == ACTUAL_VECTOR);
+      assert(ucl_vector_size(DST) == ACTUAL_VECTOR);
+      for (i=0; i<ACTUAL_VECTOR; ++i) {
+	assert(i == vector_ref(SRC, i));
+	assert(i == vector_ref(DST, i));
+      }
+      ucl_range_set_min_size(R, 3, 5);
+      ucl_vector_insert_range(DST, 5, SRC, R);
+      assert(ucl_vector_size(DST) == 15);
+      for (i=0; i<5; ++i) {
+	assert(i == vector_ref(DST, i));
+      }
+      for (i=5, j=3; i<10; ++i, ++j) {
+	assert(j == vector_ref(DST, i));
+      }
+      for (i=10, j=5; i<15; ++i, ++j) {
+	assert(j == vector_ref(DST, i));
+      }
+    }
+    ucl_vector_free(DST);
+    ucl_vector_free(SRC);
+  }
+  mcl_test_end();
+}
+
+static void
 test_erasing (void)
 {
   const size_t	NUMBER	= 1000;
@@ -1670,6 +1711,550 @@ test_comparison (void)
   mcl_test_end();
 }
 
+static void
+test_inspection (void)
+{
+  mcl_test_begin("vector-11.1", "buffer configuration") {
+    const size_t	NUMBER	= (10*UCL_VECTOR_BUFFER_PAGE_SIZE);
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_block_t		allocated_memory;
+    ucl_vector_initialise_config_buffer(C);
+    ucl_vector_alloc(V, C);
+    {
+      allocated_memory = ucl_vector_get_memory_block(V);
+      assert(allocated_memory.ptr);
+      assert( ucl_vector_number_of_free_slots(V) == UCL_VECTOR_BUFFER_PAGE_SIZE );
+
+      assert( ucl_vector_number_of_step_up_slots(V) == UCL_VECTOR_BUFFER_PAGE_SIZE );
+      assert( ucl_vector_number_of_step_down_slots(V) == UCL_VECTOR_BUFFER_PAGE_SIZE+1);
+      assert( ucl_vector_number_of_padding_slots(V) == 0);
+
+      assert( ucl_vector_slot_dimension(V) == sizeof(uint8_t) );
+
+      fill(V, NUMBER, 0);
+      assert(ucl_vector_size(V) == NUMBER);
+      clean(V);
+      fill(V, NUMBER, 0); clean(V);
+      fill(V, NUMBER, 0); clean(V);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_accessors_range_block (void)
+{
+  const size_t SIZE		= 8;
+  const size_t STEP_UP		= 6;
+  const size_t STEP_DOWN	= 10;
+  const size_t PAD		= 0;
+  const size_t DIM		= sizeof(size_t);
+  mcl_test_begin("vector-12.1", "range/block conversion") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_block_t		allocated_memory;
+    ucl_block_t		B;
+    ucl_range_t		R;
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    C->step_up			= STEP_UP;
+    C->step_down		= STEP_DOWN;
+    C->size_of_padding_area	= PAD;
+    ucl_vector_alloc(V, C);
+    {
+      allocated_memory = ucl_vector_get_memory_block(V);
+      assert(allocated_memory.ptr);
+      assert(allocated_memory.len == SIZE * DIM);
+      assert( ucl_vector_number_of_free_slots(V)      == SIZE );
+      assert( ucl_vector_number_of_step_up_slots(V)   == STEP_UP );
+      assert( ucl_vector_number_of_step_down_slots(V) == STEP_DOWN );
+      assert( ucl_vector_number_of_padding_slots(V)   == PAD );
+      assert( ucl_vector_slot_dimension(V)            == DIM );
+
+      fill(V, 100, 0);
+
+      ucl_range_set_min_max(R, 0, 99);
+      B = ucl_vector_block_from_range(V, R);
+      for (ucl_index_t i=0; i<100; ++i)
+	assert(i == ((size_t *)B.ptr)[i]);
+
+      ucl_range_set_min_max(R, 10, 20);
+      B = ucl_vector_block_from_range(V, R);
+      for (ucl_index_t i=0; i<=10; ++i) {
+	assert(i+10 == ((size_t *)B.ptr)[i]);
+      }
+
+      ucl_range_set_min_max(R, 10, 10);
+      B = ucl_vector_block_from_range(V, R);
+      for (ucl_index_t i=0; i<=10; ++i)
+	assert(i+10 == ((size_t *)B.ptr)[i]);
+
+      ucl_range_set_min_max(R, 0, 0);
+      B = ucl_vector_block_from_range(V, R);
+      for (ucl_index_t i=0; i<=0; ++i)
+	assert(i == ((size_t *)B.ptr)[i]);
+
+      ucl_range_set_min_max(R, 99, 99);
+      B = ucl_vector_block_from_range(V, R);
+      for (ucl_index_t i=0; i<=0; ++i)
+	assert(i+99 == ((size_t *)B.ptr)[i]);
+
+      /* ------------------------------------------------------------ */
+
+      B.ptr = ucl_vector_index_to_slot(V, 0);
+      B.len = ucl_vector_slot_dimension(V) * ucl_vector_size(V);
+      R = ucl_vector_range_from_block(V, B);
+      /*   fprintf(stderr, "%d %d\n", ucl_range_min(R), ucl_range_max(R)); */
+      assert(0  == ucl_range_min(R));
+      assert(99 == ucl_range_max(R));
+
+      B.ptr = ucl_vector_index_to_slot(V, 10);
+      B.len = ucl_vector_slot_dimension(V) * 10;
+      R = ucl_vector_range_from_block(V, B);
+      /*   fprintf(stderr, "%d %d\n", ucl_range_min(R), ucl_range_max(R)); */
+      /* Ranges  are  inclusive,  and in  the  range  [0,  9] there  are  10
+	 slots. */
+      assert(10  == ucl_range_min(R));
+      assert(19 == ucl_range_max(R));
+
+      B.ptr = ucl_vector_index_to_slot(V, 12);
+      B.len = ucl_vector_slot_dimension(V);
+      R = ucl_vector_range_from_block(V, B);
+      assert(12 == ucl_range_min(R));
+      assert(12 == ucl_range_max(R));
+
+      B.ptr = ucl_vector_index_to_slot(V, 0);
+      B.len = ucl_vector_slot_dimension(V);
+      R = ucl_vector_range_from_block(V, B);
+      assert(0 == ucl_range_min(R));
+      assert(0 == ucl_range_max(R));
+
+      B.ptr = ucl_vector_index_to_slot(V, 99);
+      B.len = ucl_vector_slot_dimension(V);
+      R = ucl_vector_range_from_block(V, B);
+      assert(99 == ucl_range_min(R));
+      assert(99 == ucl_range_max(R));
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_block_access (void)
+{
+  const size_t SIZE		= 16;
+  const size_t DIM		= sizeof(size_t);
+  const size_t BLOCK_SIZE	= 5;
+  mcl_test_begin("vector-12.2", "block access and mutation") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    size_t		numbers[BLOCK_SIZE];
+    ucl_block_t		B = { .len = DIM * BLOCK_SIZE, .ptr = (void *)numbers };
+    ucl_index_t		i, j;
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(V, C);
+    {
+      fill(V, 10, 1);
+      ucl_vector_get_block(B, 3, V);
+      for (i=0, j=4; i<BLOCK_SIZE; ++i, ++j)
+	assert(j == numbers[i]);
+    }
+    ucl_vector_free(V);
+
+    ucl_vector_alloc(V, C);
+    {
+      fill(V, 10, 1);
+      ucl_vector_get_block(B, 0, V);
+      for (i=0, j=1; i<BLOCK_SIZE; ++i, ++j)
+	assert(j == numbers[i]);
+    }
+    ucl_vector_free(V);
+
+    ucl_vector_alloc(V, C);
+    {
+      fill(V, 10, 1);
+      ucl_vector_get_block(B, BLOCK_SIZE, V);
+      for (i=0, j=6; i<BLOCK_SIZE; ++i, ++j)
+	assert(j == numbers[i]);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_block_access_and_mutation (void)
+{
+  const size_t SIZE		= 8;
+  const size_t STEP_UP		= 6;
+  const size_t STEP_DOWN	= 10;
+  const size_t PAD		= 0;
+  const size_t DIM		= sizeof(size_t);
+  mcl_test_begin("vector-12.3", "block access and mutation") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_block_t		allocated_memory;
+    ucl_block_t		B;
+    size_t *		p;
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    C->step_up			= STEP_UP;
+    C->step_down		= STEP_DOWN;
+    C->size_of_padding_area	= PAD;
+    ucl_vector_alloc(V, C);
+    {
+      allocated_memory = ucl_vector_get_memory_block(V);
+      assert(allocated_memory.ptr);
+      assert(ucl_vector_number_of_free_slots(V) == SIZE);
+      assert( ucl_vector_number_of_step_up_slots(V) == STEP_UP );
+      assert( ucl_vector_number_of_step_down_slots(V) == STEP_DOWN );
+      assert( ucl_vector_number_of_padding_slots(V) == PAD );
+      assert( ucl_vector_slot_dimension(V) == sizeof(int) );
+
+      fill(V, 100, 0);
+
+      ucl_vector_enlarge_for_slots(V, 10);
+      B = ucl_vector_get_free_block_at_end(V, 10);
+      assert(100 == ucl_vector_size(V));
+      for (ucl_index_t i=0; i<10; ++i) {
+	((size_t *)B.ptr)[i] = i + 100;
+      }
+      ucl_vector_mark_as_used(V, B);
+      assert(110 == ucl_vector_size(V));
+      for (ucl_index_t i=0; i<110; ++i) {
+	p = ucl_vector_index_to_slot(V, i);
+	assert(i == *p);
+      }
+
+      ucl_vector_enlarge_for_slots(V, 10);
+      B = ucl_vector_get_free_block_at_beginning(V, 10);
+      assert(110 == ucl_vector_size(V));
+      for (ucl_index_t i=0; i<10; ++i) {
+	((size_t *)B.ptr)[i] = i - 10;
+      }
+      ucl_vector_mark_as_used(V, B);
+      assert(120 == ucl_vector_size(V));
+      for (ucl_index_t i=0; i<120; ++i) {
+	p = ucl_vector_index_to_slot(V, i);
+	assert(i-10 == *p);
+      }
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static ucl_value_t
+test_for_each_callback (ucl_value_t state, va_list ap)
+{
+  ucl_value_t	custom		= va_arg(ap, ucl_value_t);
+  size_t *	accumulator	= state.ptr;
+  size_t *	slot		= custom.ptr;
+  *accumulator += *slot;
+  return ucl_value_null;
+}
+static void
+test_for_each (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.1", "simple for each") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    int			accumulator = 0;
+    ucl_callback_t	cb = {
+      .func = test_for_each_callback,
+      .data = { .ptr = &accumulator }
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(V, C);
+    {
+      fill(V, 5, 1);
+      ucl_vector_for_each(cb, V);
+      assert((1+2+3+4+5) == accumulator);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_for_each_in_range (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.2", "for each in range") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    int			accumulator = 0;
+    ucl_range_t		R;
+    ucl_callback_t	cb = {
+      .func = test_for_each_callback,
+      .data = { .ptr = &accumulator }
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(V, C);
+    {
+      fill(V, 10, 1);
+
+      ucl_range_set_min_max(R, 0, 4);
+      ucl_vector_for_each_in_range(cb, R, V);
+      assert((1+2+3+4+5) == accumulator);
+
+      accumulator = 0;
+      ucl_range_set_min_max(R, 6, 9);
+      ucl_vector_for_each_in_range(cb, R, V);
+      assert((7+8+9+10) == accumulator);
+
+      accumulator = 0;
+      ucl_range_set_min_max(R, 6, 6);
+      ucl_vector_for_each_in_range(cb, R, V);
+      assert(7 == accumulator);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static ucl_value_t
+test_for_each_multiple_callback (ucl_value_t state, va_list ap)
+{
+  ucl_value_t			custom  = va_arg(ap,ucl_value_t);
+  int *				sums	= state.ptr;
+  ucl_array_of_pointers_t *	slots	= custom.ptr;
+  int **			values	= (int **)slots->slots;
+
+  for (size_t i=0; i<slots->number_of_slots; ++i)
+    sums[slots->data.t_size] += *values[i];
+  return ucl_value_null;
+}
+static void
+test_for_each_multiple (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.3", "for each multiple") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	X, Y, Z;
+    int			sums[5] = { 0, 0, 0, 0, 0 };
+    ucl_callback_t	cb = {
+      .func = test_for_each_multiple_callback,
+      .data = { .ptr = &sums }
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(X, C);
+    ucl_vector_alloc(Y, C);
+    ucl_vector_alloc(Z, C);
+    {
+      fill(X, 5, 1);
+      fill(Y, 5, 6);
+      fill(Z, 5, 11);
+      ucl_vector_for_each_multiple(cb, X, Y, Z, NULL);
+
+      assert((1+ 6+11) == sums[0]);
+      assert((2+ 7+12) == sums[1]);
+      assert((3+ 8+13) == sums[2]);
+      assert((4+ 9+14) == sums[3]);
+      assert((5+10+15) == sums[4]);
+    }
+    ucl_vector_free(X);
+    ucl_vector_free(Y);
+    ucl_vector_free(Z);
+  }
+  mcl_test_end();
+}
+
+static ucl_value_t
+test_map_callback (ucl_value_t state UCL_UNUSED, va_list ap)
+{
+  ucl_value_t custom = va_arg(ap,ucl_value_t);
+  ucl_array_of_pointers_t * slots   = custom.ptr;
+  int *                     result  = slots->slots[0];
+  int *                     operand = slots->slots[1];
+
+  *result = - *operand;
+  return ucl_value_null;
+}
+static void
+test_map (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.4", "simple map") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	result, operand;
+    ucl_callback_t	cb = {
+      .func = test_map_callback,
+      .data = ucl_value_null
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(result, C);
+    ucl_vector_alloc(operand, C);
+    {
+      fill(operand, 5, 1);
+      ucl_vector_map(result, cb, operand);
+      for (ucl_index_t i=0; i<5; ++i) {
+	size_t *	slot = ucl_vector_index_to_slot(result, i);
+	assert(-(i+1) == *slot);
+      }
+    }
+    ucl_vector_free(result);
+    ucl_vector_free(operand);
+  }
+  mcl_test_end();
+}
+
+static void
+test_map_in_range (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.5", "map in range") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	result, operand;
+    ucl_range_t		R;
+    ucl_callback_t	cb = {
+      .func = test_map_callback,
+      .data = ucl_value_null
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(result, C);
+    ucl_vector_alloc(operand, C);
+    {
+      fill(operand, 10, 1);
+      ucl_range_set_min_max(R, 3, 8);
+      ucl_vector_map_range(result, cb, R, operand);
+      for (ucl_index_t i=0; i<ucl_range_size(R); ++i) {
+	size_t *	slot = ucl_vector_index_to_slot(result, i);
+	assert(-(i+4) == *slot);
+      }
+    }
+    ucl_vector_free(result);
+    ucl_vector_free(operand);
+  }
+  mcl_test_end();
+}
+
+static ucl_value_t
+test_map_multiple_callback (ucl_value_t state UCL_UNUSED, va_list ap)
+{
+  ucl_value_t			custom = va_arg(ap,ucl_value_t);
+  ucl_array_of_pointers_t *	slots	= custom.ptr;
+  size_t **			values	= (size_t **)slots->slots;
+
+  *values[0] = 0;
+  for (size_t i=1; i<slots->number_of_slots; ++i) {
+    *values[0] += *values[i];
+  }
+  return ucl_value_null;
+}
+static void
+test_map_multiple (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-13.6", "for each multiple") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	R, X, Y, Z;
+    ucl_callback_t	cb = {
+      .func = test_map_multiple_callback,
+      .data = ucl_value_null
+    };
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(R, C);
+    ucl_vector_alloc(X, C);
+    ucl_vector_alloc(Y, C);
+    ucl_vector_alloc(Z, C);
+    {
+      fill(X, 5, 1);
+      fill(Y, 5, 6);
+      fill(Z, 5, 11);
+
+      debug("mapping");
+      ucl_vector_map_multiple(R, cb, X, Y, Z, NULL);
+
+      assert((1+ 6+11) == vector_ref(R, 0));
+      assert((2+ 7+12) == vector_ref(R, 1));
+      assert((3+ 8+13) == vector_ref(R, 2));
+      assert((4+ 9+14) == vector_ref(R, 3));
+      assert((5+10+15) == vector_ref(R, 4));
+    }
+    ucl_vector_free(R);
+    ucl_vector_free(X);
+    ucl_vector_free(Y);
+    ucl_vector_free(Z);
+  }
+  mcl_test_end();
+}
+
+static void
+test_copying (void)
+{
+  const size_t SIZE	= 8;
+  const size_t DIM	= sizeof(size_t);
+  mcl_test_begin("vector-14.1", "copying") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	DST, SRC;
+    ucl_range_t		R;
+    ucl_index_t		i;
+    size_t		j;
+    ucl_vector_initialise_config(C, DIM, SIZE);
+    ucl_vector_alloc(DST, C);
+    ucl_vector_alloc(SRC, C);
+    {
+      fill(SRC, 10, 11);
+      fill(DST, 15, 1);
+      ucl_range_set_min_size(R, 4, 5);
+      ucl_vector_copy_range(DST, 3, SRC, R);
+      for (i=0, j=1; i<3; ++i, ++j)
+	assert(j == vector_ref(DST, i));
+      for (i=3, j=(11+4); i<(3+5); ++i, ++j) {
+	assert(j == vector_ref(DST, i));
+      }
+      for (i=(3+5), j=(3+5+1); i<15; ++i, ++j)
+	assert(j == vector_ref(DST, i));
+    }
+    ucl_vector_free(DST);
+    ucl_vector_free(SRC);
+
+    ucl_vector_alloc(DST, C);
+    ucl_vector_alloc(SRC, C);
+    {
+      fill(SRC, 10, 11);
+      fill(DST, 15, 1);
+      ucl_range_set_min_size(R, 0, 5);
+      ucl_vector_copy_range(DST, 3, SRC, R);
+      for (i=0, j=1; i<3; ++i, ++j)
+	assert(j == vector_ref(DST, i));
+      for (i=3, j=11; i<(3+5); ++i, ++j) {
+	assert(j == vector_ref(DST, i));
+      }
+      for (i=(3+5), j=(3+5+1); i<15; ++i, ++j)
+	assert(j == vector_ref(DST, i));
+    }
+    ucl_vector_free(DST);
+    ucl_vector_free(SRC);
+
+    ucl_vector_alloc(DST, C);
+    ucl_vector_alloc(SRC, C);
+    {
+      fill(SRC, 10, 11);
+      fill(DST, 15, 1);
+      ucl_range_set_min_size(R, 5, 5);
+      ucl_vector_copy_range(DST, 10, SRC, R);
+      for (i=0, j=1; i<10; ++i, ++j)
+	assert(j == vector_ref(DST, i));
+      for (i=10, j=(11+5); i<(10+5); ++i, ++j) {
+	assert(j == vector_ref(DST, i));
+      }
+    }
+    ucl_vector_free(DST);
+    ucl_vector_free(SRC);
+  }
+  mcl_test_end();
+}
+
 int
 main (void)
 {
@@ -1696,6 +2281,7 @@ main (void)
   test_more_insert_sort ();
   test_vector_insertion ();
   test_block_insertion ();
+  test_range_insertion ();
 
   mcl_test_subtitle("removal");
   test_erasing ();
@@ -1720,6 +2306,25 @@ main (void)
 
   mcl_test_subtitle("comparison");
   test_comparison ();
+
+  mcl_test_subtitle("custom configuration");
+  test_inspection ();
+
+  mcl_test_subtitle("accessors and mutators");
+  test_accessors_range_block ();
+  test_block_access ();
+  test_block_access_and_mutation ();
+
+  mcl_test_subtitle("map and for each");
+  test_for_each ();
+  test_for_each_in_range ();
+  test_for_each_multiple ();
+  test_map ();
+  test_map_in_range ();
+  test_map_multiple ();
+
+  mcl_test_subtitle("copying");
+  test_copying ();
 
   exit(EXIT_SUCCESS);
 }
