@@ -28,7 +28,6 @@ ucl_tests_programs_CC_PROGRAM_LIBS = -L$(ucl_shlib_BUILDDIR) -l$(ucl_LIBRARY_ID)
 
 $(eval $(call ds-c-test-programs,ucl))
 
-test-hash:	; $(MAKE) tests PATTERNS=hash.c
 test-heap:	; $(MAKE) tests PATTERNS=heap.c
 test-list:	; $(MAKE) tests PATTERNS=list.c
 test-map:	; $(MAKE) tests PATTERNS=map.c
@@ -41,6 +40,10 @@ test-btree: ucl_shlib-all
 test-circular: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-circular.c
 	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-circular
+
+test-hash: ucl_shlib-all
+	$(MAKE) tests PATTERNS=test-hash.c
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-hash
 
 test-tree: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-tree.c

@@ -713,12 +713,12 @@ typedef struct ucl_vector_array_t {
 
 /* ------------------------------------------------------------ */
 
-typedef struct ucl_hash_entry_t {
-  struct ucl_hash_entry_t *	next_entry_in_list_p;
+typedef struct ucl_hash_entry_tag_t {
+  struct ucl_hash_entry_tag_t *	next_entry_in_list;
   ucl_value_t			key;
-  ucl_value_t			val;
   ucl_bool_t			to_be_processed_during_rehashing;
-} ucl_hash_entry_t;
+} ucl_hash_entry_tag_t;
+typedef ucl_hash_entry_tag_t *	ucl_hash_entry_t;
 
 typedef struct ucl_hash_table_tag_t {
   ucl_vector_tag_t *	buckets;
@@ -1674,39 +1674,47 @@ ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t
  ** Hash table functions.
  ** ----------------------------------------------------------------- */
 
-static __inline__
-__attribute__((__always_inline__,__pure__,__nonnull__))
-size_t
-ucl_hash_number_of_buckets (const ucl_hash_table_t self)
-{
-  return ucl_vector_size(self->buckets);
-}
-static __inline__
-__attribute__((__always_inline__,__pure__,__nonnull__))
-size_t
-ucl_hash_size (const ucl_hash_table_t this)
-{
-  return this->size;
-}
-
-/* ------------------------------------------------------------ */
-
-extern void ucl_hash_initialise (ucl_hash_table_t this, ucl_vector_t buckets,
+extern void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
 				 ucl_comparison_t compar, ucl_hash_t hash);
-extern void ucl_hash_insert (ucl_hash_table_t this, ucl_hash_entry_t *entry_p);
-extern void ucl_hash_extract (ucl_hash_table_t this, ucl_hash_entry_t *entry_p);
 
-extern ucl_hash_entry_t * ucl_hash_find (const ucl_hash_table_t this, const ucl_value_t key);
-extern ucl_hash_entry_t * ucl_hash_first (const ucl_hash_table_t this);
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+ucl_value_t
+ucl_hash_entry_ref_key (ucl_hash_entry_t E)
+{
+  return E->key;
+}
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void
+ucl_hash_entry_set_key (ucl_hash_entry_t E, ucl_value_t new_key)
+{
+  E->key = new_key;
+}
 
-extern void ucl_hash_enlarge (ucl_hash_table_t this);
-extern void ucl_hash_restrict (ucl_hash_table_t this);
+extern void ucl_hash_insert  (ucl_hash_table_t H, ucl_hash_entry_t entry);
+extern void ucl_hash_extract (ucl_hash_table_t H, ucl_hash_entry_t entry);
 
-extern void ucl_hash_iterator (const ucl_hash_table_t this, ucl_iterator_t iterator);
+extern ucl_hash_entry_t ucl_hash_find  (const ucl_hash_table_t H, const ucl_value_t key);
+extern ucl_hash_entry_t ucl_hash_first (const ucl_hash_table_t H);
 
-extern size_t ucl_hash_number_of_used_buckets (const ucl_hash_table_t this);
-extern size_t ucl_hash_bucket_chain_length (const ucl_hash_table_t this, ucl_index_t position);
-extern double ucl_hash_average_search_distance (const ucl_hash_table_t this);
+extern void ucl_hash_enlarge  (ucl_hash_table_t H);
+extern void ucl_hash_restrict (ucl_hash_table_t H);
+
+extern void ucl_hash_iterator (const ucl_hash_table_t H, ucl_iterator_t iterator);
+
+extern size_t ucl_hash_number_of_used_buckets  (const ucl_hash_table_t H);
+extern size_t ucl_hash_bucket_chain_length     (const ucl_hash_table_t H, ucl_index_t position);
+extern double ucl_hash_average_search_distance (const ucl_hash_table_t H);
+
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
+ucl_hash_number_of_buckets (const ucl_hash_table_t H)
+{
+  return ucl_vector_size(H->buckets);
+}
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
+ucl_hash_size (const ucl_hash_table_t H)
+{
+  return H->size;
+}
 
 
 /** --------------------------------------------------------------------
@@ -1776,7 +1784,8 @@ extern const ucl_comparison_t	ucl_compare_unsigned_int;
 extern const ucl_comparison_t	ucl_compare_string;
 extern const ucl_comparison_t	ucl_compare_int_pointer;
 
-extern ucl_hash_fun_t		ucl_hash_string;
+extern const ucl_hash_t		ucl_hash_string;
+extern ucl_hash_fun_t		ucl_hash_string_fun;
 
 extern void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp);
 

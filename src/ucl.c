@@ -54,6 +54,10 @@ const ucl_comparison_t ucl_compare_int_pointer = {
   .data = { .t_unsigned_long = 0 }, .func = ucl_compare_int_pointer_fun
 };
 
+const ucl_hash_t ucl_hash_string = {
+  .data = { .t_unsigned_long = 0 }, .func = ucl_hash_string_fun
+};
+
 
 /** --------------------------------------------------------------------
  ** Callback functions.
@@ -120,7 +124,7 @@ ucl_compare_int_pointer_fun (ucl_value_t data, const ucl_value_t a, const ucl_va
  ** ----------------------------------------------------------------- */
 
 size_t
-ucl_hash_string (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
+ucl_hash_string_fun (ucl_value_t data UCL_UNUSED, const ucl_value_t val)
 { /* This comes from the C++ book of Bjarne Srtoustrup. */
   size_t	num=0, len;
   const char *	p = val.chars;

@@ -31,18 +31,10 @@
 #define DEBUGGING		0
 #include "internal.h"
 
-#define stubmodule		hash
-
 /* Values   for    the   "to_be_processed_during_rehashing"   field   of
    "ucl_entry_t". */
 #define YES			0xff
 #define NO			0x00
-
-typedef ucl_hash_table_t	hash_t;
-typedef ucl_hash_entry_t	entry_t;
-typedef ucl_value_t		value_t;
-typedef ucl_iterator_t		iterator_t;
-typedef ucl_hash_fun_t		hashfun_t;
 
 static ucl_iterator_next_t	iterator_next;
 
@@ -52,19 +44,18 @@ static ucl_iterator_next_t	iterator_next;
  ** -----------------------------------------------------------------*/
 
 void
-ucl_hash_initialise (ucl_hash_table_t self, ucl_vector_t buckets,
-		     ucl_comparison_t compar, ucl_hash_t hash)
+ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets, ucl_comparison_t compar, ucl_hash_t hash)
 {
-  /* ucl_vector_config_t	config; */
-  assert(self);
+  assert(H);
   assert(hash.func);
   assert(compar.func);
-  /* ucl_vector_initialise_config_hash(config); */
-  self->buckets			= buckets;
-  self->size			= 0;
-  self->number_of_used_buckets	= 0;
-  self->hash			= hash;
-  self->compar			= compar;
+  H->buckets			= buckets;
+  H->size			= 0;
+  H->number_of_used_buckets	= 0;
+  H->hash			= hash;
+  H->compar			= compar;
+  ucl_vector_mark_all_slots_as_used(buckets);
+  ucl_vector_set_memory_to_zero(buckets);
 }
 
 
@@ -72,39 +63,34 @@ ucl_hash_initialise (ucl_hash_table_t self, ucl_vector_t buckets,
  ** Helper functions.
  ** ----------------------------------------------------------*/
 
-static entry_t **
-compute_bucket_pointer_for_key (const ucl_hash_table_t this,
-				const ucl_value_t key)
+static ucl_hash_entry_t *
+compute_bucket_pointer_for_key (const ucl_hash_table_t H, const ucl_value_t key)
 {
-  size_t	bucket_index;
-  bucket_index = (this->hash.func(this->hash.data, key)) % ucl_vector_size(this->buckets);
-  return ucl_vector_index_to_slot(this->buckets, bucket_index);
+  ucl_index_t	hash_value   = H->hash.func(H->hash.data, key);
+  debug("buckets %u", ucl_vector_size(H->buckets));
+  ucl_index_t	bucket_index = hash_value % ucl_vector_size(H->buckets);
+  debug("hash value %u, bucket index %u", hash_value, bucket_index);
+  return ucl_vector_index_to_slot(H->buckets, bucket_index);
 }
 static void
-append_entry_to_the_end(entry_t ** bucket_p, entry_t *entry_p)
+append_entry_to_the_end(ucl_hash_entry_t * bucket, ucl_hash_entry_t entry)
+/* This function is used only while resizing the vector of buckets. */
 {
-  entry_t *	entry_in_list_p;
-  entry_t *	next_entry_in_list_p;
-
-
-  entry_in_list_p = *bucket_p;
-  if (entry_in_list_p) {
-    next_entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
-    while (next_entry_in_list_p &&
-	   next_entry_in_list_p->to_be_processed_during_rehashing) {
-      entry_in_list_p = next_entry_in_list_p;
-      next_entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
+  ucl_hash_entry_t  entry_in_list  = *bucket;
+  if (entry_in_list) { /* the bucket is used */
+    ucl_hash_entry_t  next_entry_in_list = entry_in_list->next_entry_in_list;
+    while (next_entry_in_list && next_entry_in_list->to_be_processed_during_rehashing) {
+      entry_in_list      = next_entry_in_list;
+      next_entry_in_list = entry_in_list->next_entry_in_list;
     }
-    /*
-      Here "entry_in_list_p" references the last to-be-processed entry
-      in  the   linked  list.  Its   next  field  may  be   the  first
-      already-processed entry or NULL.
-    */
-    entry_p->next_entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
-    entry_in_list_p->next_entry_in_list_p = entry_p;
-  } else {
-    *bucket_p = entry_p;
-    entry_p->next_entry_in_list_p = NULL;
+    /* Here "entry_in_list" references the last to-be-processed entry in
+       the   linked   list.   Its   next   field   may   be  the   first
+       already-processed entry or NULL. */
+    entry->next_entry_in_list = entry_in_list->next_entry_in_list;
+    entry_in_list->next_entry_in_list = entry;
+  } else { /* the bucket is empty */
+    *bucket = entry;
+    entry->next_entry_in_list = NULL;
   }
 }
 
@@ -114,28 +100,28 @@ append_entry_to_the_end(entry_t ** bucket_p, entry_t *entry_p)
  ** -----------------------------------------------------------------*/
 
 void
-ucl_hash_insert (ucl_hash_table_t this, ucl_hash_entry_t *entry_p)
+ucl_hash_insert (ucl_hash_table_t H, ucl_hash_entry_t E)
 {
-  entry_t **	bucket_p;
-  entry_t *	first_entry_in_list_p;
-  entry_t *	second_entry_in_list_p;
-  assert(this);
-  assert(entry_p);
-  bucket_p = compute_bucket_pointer_for_key(this, entry_p->key);
-#if 0
-  debug("bucket index %d, %p", ucl_vector_slot_to_index(this->buckets, bucket_p), bucket_p);
+  ucl_hash_entry_t *	bucket;
+  ucl_hash_entry_t 	first_entry_in_list;
+  ucl_hash_entry_t 	second_entry_in_list;
+  assert(H);
+  assert(E);
+  bucket = compute_bucket_pointer_for_key(H, E->key);
+#if 1
+  debug("bucket index %d, %p", ucl_vector_slot_to_index(H->buckets, bucket), bucket);
 #endif
-  first_entry_in_list_p = *bucket_p;
-  if (first_entry_in_list_p) {
-    second_entry_in_list_p = first_entry_in_list_p;
+  first_entry_in_list = *bucket;
+  if (first_entry_in_list) {
+    second_entry_in_list = first_entry_in_list;
   } else {
-    second_entry_in_list_p = NULL;
-    ++(this->number_of_used_buckets);
+    second_entry_in_list = NULL;
+    ++(H->number_of_used_buckets);
   }
-  *bucket_p = entry_p;
-  entry_p->next_entry_in_list_p = second_entry_in_list_p;
-  entry_p->to_be_processed_during_rehashing = NO;
-  ++(this->size);
+  *bucket = E;
+  E->next_entry_in_list = second_entry_in_list;
+  E->to_be_processed_during_rehashing = NO;
+  ++(H->size);
 }
 
 
@@ -144,26 +130,26 @@ ucl_hash_insert (ucl_hash_table_t this, ucl_hash_entry_t *entry_p)
  ** ----------------------------------------------------------*/
 
 void
-ucl_hash_extract (ucl_hash_table_t this, ucl_hash_entry_t *entry_p)
+ucl_hash_extract (ucl_hash_table_t this, ucl_hash_entry_t entry_p)
 {
-  entry_t **	bucket_p;
-  entry_t *	entry_in_list_p;
+  ucl_hash_entry_t *	bucket_p;
+  ucl_hash_entry_t 	entry_in_list_p;
   assert(this);
   assert(entry_p);
   bucket_p = compute_bucket_pointer_for_key(this, entry_p->key);
   entry_in_list_p = *bucket_p;
   if (entry_in_list_p == entry_p) {
-    if (entry_in_list_p->next_entry_in_list_p) {
-      *bucket_p = entry_in_list_p->next_entry_in_list_p;
+    if (entry_in_list_p->next_entry_in_list) {
+      *bucket_p = entry_in_list_p->next_entry_in_list;
     } else {
       *bucket_p = NULL;
       --(this->number_of_used_buckets);
     }
   } else { /* first entry != entry_p */
-    while (entry_in_list_p->next_entry_in_list_p != entry_p) {
-      entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
+    while (entry_in_list_p->next_entry_in_list != entry_p) {
+      entry_in_list_p = entry_in_list_p->next_entry_in_list;
     }
-    entry_in_list_p->next_entry_in_list_p = entry_p->next_entry_in_list_p;
+    entry_in_list_p->next_entry_in_list = entry_p->next_entry_in_list;
   }
   --(this->size);
 }
@@ -173,12 +159,12 @@ ucl_hash_extract (ucl_hash_table_t this, ucl_hash_entry_t *entry_p)
  ** Search.
  ** ----------------------------------------------------------*/
 
-ucl_hash_entry_t *
+ucl_hash_entry_t
 ucl_hash_find (const ucl_hash_table_t this, const ucl_value_t key)
 {
   ucl_comparison_t	compar;
-  entry_t **		bucket_p;
-  entry_t *		entry_in_list_p;
+  ucl_hash_entry_t *		bucket_p;
+  ucl_hash_entry_t 		entry_in_list_p;
   assert(this);
   if (0 == ucl_hash_size(this)) { return NULL; }
   compar = this->compar;
@@ -186,21 +172,21 @@ ucl_hash_find (const ucl_hash_table_t this, const ucl_value_t key)
   entry_in_list_p = *bucket_p;
   while (entry_in_list_p) {
     if (0 == compar.func(compar.data, key, entry_in_list_p->key)) break;
-    entry_in_list_p = entry_in_list_p->next_entry_in_list_p;
+    entry_in_list_p = entry_in_list_p->next_entry_in_list;
   }
   return entry_in_list_p;
 }
-ucl_hash_entry_t *
+ucl_hash_entry_t
 ucl_hash_first (const ucl_hash_table_t this)
 {
   ucl_iterator_t	I;
-  entry_t *		slot;
+  ucl_hash_entry_t	slot;
   assert(this);
   if (0 == ucl_hash_size(this))
     return NULL;
   for (ucl_vector_iterator_forward(this->buckets, I); ucl_iterator_more(I); ucl_iterator_next(I)) {
     slot = ucl_iterator_ptr(I);
-    if (slot) return *((entry_t **)slot);
+    if (slot) return *((ucl_hash_entry_t *)slot);
   }
   return NULL;
 }
@@ -215,8 +201,8 @@ rehash (ucl_hash_table_t this, size_t rehash_number_of_buckets)
 {
   /* Mark all the entries to be processed while rehashing. */
   {
-    iterator_t	iterator;
-    entry_t *	entry_p;
+    ucl_iterator_t	iterator;
+    ucl_hash_entry_t 	entry_p;
     for (ucl_hash_iterator(this, iterator);
 	 ucl_iterator_more(iterator);
 	 ucl_iterator_next(iterator)) {
@@ -254,11 +240,11 @@ rehash (ucl_hash_table_t this, size_t rehash_number_of_buckets)
      *                                 --------------
      */
   {
-    iterator_t		iterator;
-    size_t		bucket_index;
-    entry_t **		bucket_p;
-    entry_t **		new_bucket_p;
-    entry_t *		entry_p;
+    ucl_iterator_t		iterator;
+    size_t			bucket_index;
+    ucl_hash_entry_t *		bucket_p;
+    ucl_hash_entry_t *		new_bucket_p;
+    ucl_hash_entry_t 		entry_p;
 
 
     for (ucl_vector_iterator_forward(this->buckets, iterator);
@@ -266,7 +252,7 @@ rehash (ucl_hash_table_t this, size_t rehash_number_of_buckets)
 	 ucl_iterator_next(iterator)) {
       bucket_p = ucl_iterator_ptr(iterator);
       while ((entry_p = *bucket_p) && (entry_p->to_be_processed_during_rehashing)) {
-	*bucket_p = entry_p->next_entry_in_list_p;
+	*bucket_p = entry_p->next_entry_in_list;
 
 	entry_p->to_be_processed_during_rehashing = NO;
 
@@ -293,7 +279,7 @@ ucl_hash_enlarge (ucl_hash_table_t this)
      vector module does not move around used slots when reallocating. So
      the new slots are appended at the end. */
   {
-    entry_t **	bucket_p = ucl_vector_back(this->buckets);
+    ucl_hash_entry_t *	bucket_p = ucl_vector_back(this->buckets);
     memset(++bucket_p, '\0', sizeof(void *) * ucl_vector_number_of_free_slots(this->buckets));
     ucl_vector_mark_all_slots_as_used(this->buckets);
   }
@@ -347,7 +333,7 @@ void
 ucl_hash_iterator (const ucl_hash_table_t this, ucl_iterator_t iterator)
 {
   ucl_iterator_t	vector_iterator;
-  entry_t **		bucket_p;	/* Pointer to the slot in the vector memory. */
+  ucl_hash_entry_t *		bucket_p;	/* Pointer to the slot in the vector memory. */
   assert(this);
   assert(iterator);
   if (! ucl_hash_size(this)) {
@@ -375,11 +361,11 @@ static void
 iterator_next (ucl_iterator_t iterator)
 {
   const ucl_hash_table_tag_t *	this;
-  entry_t *		current_entry_p;
-  entry_t **		bucket_p;	/* Pointer to the slot in the vector memory. */
+  ucl_hash_entry_t 		current_entry_p;
+  ucl_hash_entry_t *		bucket_p;	/* Pointer to the slot in the vector memory. */
   assert(iterator);
-  current_entry_p = (entry_t *) iterator->iterator;
-  current_entry_p = current_entry_p->next_entry_in_list_p;
+  current_entry_p = (ucl_hash_entry_t ) iterator->iterator;
+  current_entry_p = current_entry_p->next_entry_in_list;
   if (current_entry_p) {
     iterator->iterator = current_entry_p;
   } else {
@@ -390,7 +376,7 @@ iterator_next (ucl_iterator_t iterator)
     debug("old bucket index %d",  ucl_vector_slot_to_index(this->buckets, bucket_p));
     debug("last bucket index %d", ucl_vector_slot_to_index(this->buckets, ucl_vector_back(this->buckets)));
 #endif
-    for (++bucket_p; bucket_p <= (entry_t **)ucl_vector_back(this->buckets); ++bucket_p) {
+    for (++bucket_p; bucket_p <= (ucl_hash_entry_t *)ucl_vector_back(this->buckets); ++bucket_p) {
 #if 0
       debug("bucket index %d %p", ucl_vector_slot_to_index(this->buckets, bucket_p), bucket_p);
 #endif
@@ -414,7 +400,7 @@ ucl_hash_number_of_used_buckets (const ucl_hash_table_t this)
 {
   ucl_iterator_t	iterator;
   size_t		number_of_used_buckets = 0;
-  entry_t **		bucket_p;
+  ucl_hash_entry_t *		bucket_p;
   for (ucl_vector_iterator_forward(this->buckets, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator)) {
@@ -427,15 +413,15 @@ ucl_hash_number_of_used_buckets (const ucl_hash_table_t this)
 size_t
 ucl_hash_bucket_chain_length (const ucl_hash_table_t this, ucl_index_t position)
 {
-  entry_t **	bucket_p;
+  ucl_hash_entry_t *	bucket_p;
   size_t	number_of_entries_in_chain = 0;
   bucket_p = ucl_vector_index_to_slot(this->buckets, position);
   if (*bucket_p) {
-    entry_t *	entry_p = *bucket_p;
+    ucl_hash_entry_t 	entry_p = *bucket_p;
     ++number_of_entries_in_chain;
-    while (entry_p->next_entry_in_list_p) {
+    while (entry_p->next_entry_in_list) {
       ++number_of_entries_in_chain;
-      entry_p = entry_p->next_entry_in_list_p;
+      entry_p = entry_p->next_entry_in_list;
     }
   }
   return number_of_entries_in_chain;

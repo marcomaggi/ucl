@@ -4334,7 +4334,19 @@ ucl_graph_finalise_dfs_handle(&search_handle);
 
 @cindex Hash table container
 
+A hash table is a structure that maps keys to values in a way that
+allows the search operation to be performed with constant time for all
+the keys.
+
+@quotation
+The hash was inspired by the book on C++ by Bjarne Stroustrup and the
+hash structure in the @tcl{} (Tool Command Language) source code, by
+John Ousterhout and others (@url{http://www.tcl.tk/} for more about
+@tcl{}).  However, no code comes from @tcl{}.
+@end quotation
+
 @menu
+* hash types::                  Hash table types definitions.
 * hash implementation::         How it's done.
 * hash creation::               Creating and destroying hash tables.
 * hash adding::                 Adding elements to a hash table.
@@ -4345,42 +4357,30 @@ ucl_graph_finalise_dfs_handle(&search_handle);
 * hash functions::              Provided hash function.
 @end menu
 
-@noindent
-A hash table is a structure that maps keys to values in a way that
-allows the search operation to be performed with constant time for all
-the keys.
+@c page
+@node hash types
+@subsection Hash table types definitions
 
 
-@deftp {Struct Typedef} ucl_hash_struct_t
+@deftp {Struct Typedef} ucl_hash_table_tag_t
+@deftpx {One Element Array} ucl_hash_table_t
 The base structure.  The vector of buckets is available as the field
 @code{ucl_vector_t buckets}.
 @end deftp
 
 
-@deftp {Single Element Array Typedef} ucl_hash_t
-A one--element array of @code{ucl_hash_struct_t}.
+@deftp {Struct Typedef} ucl_hash_entry_tag_t
+@deftpx {Pointer Typedef} ucl_hash_entry_t
+The type of table entry elements.  This structure stores only the key,
+no room for value is allocated; the keys are of type @code{ucl_value_t}
+(@ref{typedefs}).
 @end deftp
-
-
-@deftp {Struct Typedef} ucl_hash_entry_t
-The type of table elements.  Both the key and the value stored in a hash
-table entry are of type @code{ucl_value_t} (@ref{typedefs}).
-@end deftp
-
-
-The hash was inspired by the book on C++ by Bjarne Stroustrup and the
-hash structure in the @tcl{} (Tool Command Language) source code, by
-John Ousterhout and others (@url{http://www.tcl.tk/} for more about
-@tcl{}).  However, no code comes from @tcl{}.
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash implementation
 @subsection How it's done
 
 
-@noindent
 A @ucl{} vector of pointers is allocated by the constructor; each
 pointer, called ``bucket'' in this document, can be @cnull{} (empty
 bucket) or referencing an entry structure.  Entry structures are chained
@@ -4402,7 +4402,6 @@ buckets  .  |----|        -----
              ----
 @end example
 
-
 The @ucl{} way of managing a vector is to allocate a block of memory,
 with hysteresis, and consider a sub--block of it as ``in use'', that is:
 as holding the collected data.  When the hash table is constructed all
@@ -4410,12 +4409,10 @@ the slots are marked as used, even when the bucket is set to
 @cnull{}.  Reallocations can cause some of the slots to be unused, but if
 we never reallocate the vector all the memory is used to hold buckets.
 
-
 @c ------------------------------------------------------------
 
-@subsubsection Elements insertion and removal
+@subsubheading Elements insertion and removal
 
-@noindent
 When inserting a new entry in the table, the hash function converts the
 keys to integers in the range @code{[0, number_of_buckets)}, selecting a
 bucket; then the bucket is examined:
@@ -4462,11 +4459,9 @@ or less) constant.
 
 @subsubsection Resizing
 
-
-@noindent
 Enlarging or restricting the hash table means enlarging or restricting
-te vector of buckets.  This happens with rules similar, but not equal, to
-the ones for the @code{ucl_vector_t} structure; the differences are:
+the vector of buckets.  This happens with rules similar, but not equal,
+to the ones for the @code{ucl_vector_t} structure; the differences are:
 
 @itemize
 @item
@@ -4481,245 +4476,165 @@ vector;
 @item
 when restricting the number of used slots cannot become smaller than the
 amount selected by the preprocessor symbol @code{UCL_HASH_MINIMUM_SIZE},
-which defaults to @code{16}.
+which defaults to @code{13}.
 @end itemize
 
 Enlarging and restricting changes the number of buckets, so it requires
 a rehashing of all the entries in the table: this is expensive.
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash creation
 @subsection Creating and destroying hash tables
 
 
-@noindent
 The construction of a hash table is split in two steps, to allow custom
-configuration of the vector of buckets.  A simple construction, using the
-default values, for a table using strings as keys goes like this:
+configuration of the vector of buckets.  A simple construction, using
+the default values, for a table using strings as keys goes like this:
 
 @example
-ucl_hash_t      table;
-ucl_comparison_t    key_comparison_function = @{
-  .data = @{ .ptr = NULL @},
-  .func = ucl_strcmp
-@};
-ucl_comparison_t    key_hash_function       = @{
-  .data = @{ .ptr = NULL @},
-  .func = ucl_hash_string
-@};
-
-ucl_hash_initialise(table, key_comparison_function, key_hash_function);
-ucl_hash_constructor(table);
+ucl_vector_config_t C;
+ucl_vector_t        V;
+ucl_hash_table_t    H;
+ucl_vector_initialise_config_hash(C);
+ucl_vector_alloc(V, C);
+ucl_hash_initialise(H, V, ucl_compare_int, ucl_hash_string);
 @end example
 
 @noindent
-to configure a custom initial size and step up parameter for the vector
-of buckets:
+when finalising a hash table we have to release the @ucl{} vector
+explicitly, but only after having extracted and released all the table
+entries; when using a @ucl{} memory allocator, it goes like this:
 
 @example
-ucl_hash_t      table;
-ucl_comparison_t    key_comparison_function = @{
-  .data = @{ .ptr = NULL @},
-  .func = ucl_strcmp
-@};
-ucl_comparison_t    key_hash_function       = @{
-  .data = @{ .ptr = NULL @},
-  .func = ucl_hash_string
-@};
+ucl_memory_allocator_t  A;
+ucl_hash_entry_t  entry;
+ucl_value_t       key, val;
 
-ucl_hash_initialise(table, key_comparison_function, key_hash_function);
-ucl_vector_initialise_size(table->buckets, 256);
-ucl_vector_initialise_step_up(table->buckets, 256);
-ucl_hash_constructor(table);
+while ((entry = ucl_hash_first(H)))
+  @{
+    ucl_hash_extract(table, entry);
+    key = ucl_hash_entry_key_ref(entry);
+    /* free "key" if needed */
+    A.alloc(A.data, &entry, 0);
+  @}
+ucl_vector_free(V);
 @end example
 
 @noindent
-the custimisations must go between @function{ucl_hash_initialise} and
-@function{ucl_hash_constructor}.
+the hash table structure does not need finalisation.
 
 
-@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_comparison_t @var{keycmp}, ucl_hashcmp_t @var{hash})
+@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_vector_t @var{buckets}, ucl_comparison_t @var{compar}, ucl_hash_t @var{hash})
 Initialise the hash table referenced by @var{self}.  The @ucl{} vector
-of buckets is initialised to use the default @ucl{} memory allocator and
-with the following preprocessor symbols:
+of buckets, already initialised, becomes part of the hash table state.
 
-@table @code
-@item UCL_HASH_DEFAULT_SIZE
-the initial number of buckets, it defaults to @code{16};
-
-@item UCL_HASH_DEFAULT_STEP_UP
-the step up parameter, it defaults to @code{16};
-
-@item UCL_HASH_DEFAULT_STEP_DOWN
-the step down parameter, it defaults to
-@code{((UCL_HASH_DEFAULT_STEP_UP) + 1)};
-@end table
-
-@var{keycmp} is the function+context used to compare keys.
+@var{compar} is the function+context used to compare keys.
 
 @var{hash} is the function+context used to compute the hash value of
-keys, @ref{typedefs hash}.
+keys; @ref{typedefs hash} for details.
 @end deftypefun
-
-
-@deftypefun void ucl_hash_constructor (ucl_hash_t @var{self})
-Build the hash table referenced by @var{self}.
-
-Notice that this function configures the padding area of the vector of
-buckets to be of size zero.
-@end deftypefun
-
-
-@deftypefun void ucl_hash_destructor (ucl_hash_t @var{self})
-Destroys a hash table.
-
-@strong{Note}: before invoking this function all the entries must be
-extracted from the table.
-@end deftypefun
-
-
-Example of destruction, using the standard @function{free} function to
-release the memory allocated for the entries:
-
-@example
-ucl_hash_t              table;
-ucl_hash_entry_t *      entry_p;
-ucl_value_t             key, val;
-
-while ((entry_p = ucl_hash_first(table)))
-  @{
-    ucl_hash_extract(table, entry_p);
-    key = ucl_hash_getval(entry_p);
-    /* free 'key' if needed */
-    val = ucl_hash_getval(entry_p);
-    /* free 'val' if needed */
-    free(entry_p);
-  @}
-ucl_hash_destructor(table);
-@end example
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash adding
 @subsection Adding elements to a hash table
 
 
-@deftypefun void ucl_hash_insert (ucl_hash_t @var{self}, ucl_hash_entry_t * @var{ent_p})
+@deftypefun void ucl_hash_insert (ucl_hash_table_t @var{H}, ucl_hash_entry_t @var{E})
 Insert a new entry in the table.  The entry structure must be allocated
 and filled with key and value by the user's code.
 
 Inserting an entry with a key that already exists in the table will
-work, but future invocations of @function{ucl_hash_find} will return one
-or the other: nobody knows which.
+work, but future invocations of @cfunc{ucl_hash_find} will return one or
+the other: nobody knows which one.
 @end deftypefun
 
+
 To avoid collision of keys, we have to check the existence of a key with
-@function{ucl_hash_find} before attempting to insert a new entry.
+@cfunc{ucl_hash_find} before attempting to insert a new entry.
 
 Example:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_hash_t              hash;
-ucl_hash_entry_t *      entry_p;
-ucl_value_t             key, value;
+ucl_memory_allocator_t  A;
+ucl_hash_t              H;
+ucl_hash_entry_t *      E;
+ucl_value_t             K;
 
 
-key = ...
-entry_p = ucl_hash_find(hash, key);
-if (NULL == entry_p)
+K = ...
+E = ucl_hash_find(H, K);
+if (NULL == E)
   @{
-    allocator.alloc(allocator.data, &entry_p, sizeof(ucl_hash_entry_t));
-    ucl_hash_setkey(entry_p, key);
-    value = ...;
-    ucl_hash_setval(entry_p, value);
-    ucl_hash_insert(hash, entry_p);
+    A.alloc(A.data, &E, sizeof(ucl_hash_entry_tag_t));
+    ucl_hash_entry_set_key(E, key);
+    ucl_hash_insert(H, E);
   @}
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash removing
 @subsection Removing elements from a hash table
 
 
-
-@deftypefun void ucl_hash_extract (ucl_hash_t @var{self}, ucl_hash_entry_t *@var{ent_p})
-Extract an entry from the table.  @var{ent_p}, a pointer to the entry to
-be removed, must be the return value of a previous invocation to
-@function{ucl_hash_find}.  The entry structure is not destroyed nor
-freed, just extracted.
+@deftypefun void ucl_hash_extract (ucl_hash_table_t @var{H}, ucl_hash_entry_t @var{E})
+Extract an entry from the table.  @var{E}, a pointer to the entry to be
+removed, must be the return value of a previous invocation to
+@cfunc{ucl_hash_find}.  The entry structure is not destroyed nor freed,
+just extracted.
 @end deftypefun
 
 
 Example:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_hash_t              hash;
-ucl_hash_entry_t *      entry_p;
-ucl_value_t             value, key, key1;
+ucl_memory_allocator_t  A;
+ucl_hash_t              H;
+ucl_hash_entry_t        E;
+ucl_value_t             K, K1;
 
-
-hash    = ...;
-key     = ...;
-entry_p = ucl_hash_find(hash, key);
-if (NULL != entry_p)
+E = ucl_hash_find(H, K);
+if (NULL != E)
   @{
     ucl_hash_extract(hash, entry_p);
-
-    key1  = ucl_hash_getkey(entry_p);
-    /* destroy key1 if needed */
-
-    value = ucl_hash_getval(entry_p);
-    /* destroy value if needed */
-
-    allocator.alloc(allocator.data, &entry_p, 0);
+    K1 = ucl_hash_entry_ref_key(E);
+    A.alloc(A.data, &E, 0);
   @}
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash ops
 @subsection Various operations on a hash table
 
 
-@deftypefun {ucl_hash_entry_t *} ucl_hash_find (const ucl_hash_t @var{self}, const ucl_value_t @var{key})
+@deftypefun ucl_hash_entry_t ucl_hash_find (const ucl_hash_table_t @var{H}, const ucl_value_t @var{K})
 Search in the table an entry associated with the selected key.  Return a
 pointer to the entry or @cnull{} if the key was not found.
 @end deftypefun
 
 
-@deftypefun {ucl_hash_entry_t *} ucl_hash_first (const ucl_hash_t @var{self})
+@deftypefun ucl_hash_entry_t ucl_hash_first (const ucl_hash_table_t @var{H})
 Return a pointer to the first entry in the table: the first link in the
-list of the first non--@cnull{} bucket.  If the has table is empty: return
+list of the first non--@cnull{} bucket.  If the table is empty: return
 @cnull{}.
 @end deftypefun
 
 
-@deftypefun size_t ucl_hash_size (const ucl_hash_t @var{self})
+@deftypefun size_t ucl_hash_size (const ucl_hash_table_t @var{H})
 Return a value representing the number of entries in the table.
 @end deftypefun
 
 
-@deftypefun size_t ucl_hash_number_of_buckets (const ucl_hash_t @var{self})
+@deftypefun size_t ucl_hash_number_of_buckets (const ucl_hash_table_t @var{H})
 Return the number of buckets.
 @end deftypefun
 
 
-@deftypefun size_t ucl_hash_number_of_used_buckets (const ucl_hash_t @var{self})
+@deftypefun size_t ucl_hash_number_of_used_buckets (const ucl_hash_table_t @var{H})
 Return the number of used buckets.
 @end deftypefun
 
 
-@deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_t @var{this}, ucl_index_t @var{position})
+@deftypefun size_t ucl_hash_bucket_chain_length (const ucl_hash_table_t @var{this}, ucl_index_t @var{position})
 Return the number of entries in the chain refereces by bucket at
 @var{position}.  @var{position} must be a valid bucket index: a
 non--negative integer in the range @code{[0,
@@ -4727,74 +4642,53 @@ ucl_hash_number_of_buckets(@var{this}))}.
 @end deftypefun
 
 
-@deftypefun double ucl_hash_average_search_distance (const ucl_hash_t @var{this})
+@deftypefun double ucl_hash_average_search_distance (const ucl_hash_table_t @var{this})
 Return the average number of entries per bucket.
 @end deftypefun
 
+@c ------------------------------------------------------------
 
-@subsubsection Key functions
+@subsubheading Key functions
 
 
-@deftypefun void ucl_hash_setkey (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newkey})
+@deftypefun void ucl_hash_entry_set_key (ucl_hash_entry_t @var{E}, const ucl_value_t @var{newkey})
 Store a new key in an entry structure.  The old key, if present, is
 overwritten.
 @end deftypefun
 
 
-@deftypefun ucl_value_t ucl_hash_getkey (const ucl_hash_entry_t *@var{ent_p})
+@deftypefun ucl_value_t ucl_hash_entry_ref_key (const ucl_hash_entry_t @var{E})
 Return the key stored in an entry structure.
 @end deftypefun
-
-
-@subsubsection Value functions
-
-
-@deftypefun void ucl_hash_setval (ucl_hash_entry_t * @var{ent_p}, const ucl_value_t @var{newval})
-Store a new value in an entry structure.  The old value, if present, is
-overwritten.
-@end deftypefun
-
-
-@deftypefun ucl_value_t ucl_hash_getval (const ucl_hash_entry_t * @var{ent_p})
-Return the value stored in an entry structure.
-@end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash resizing
 @subsection Resizing a hash table
 
 
-@noindent
-At present the hash table is not enlarged automatically.  The decision is
-delegated to the user's code.
+At present the hash table is not enlarged automatically.  The decision
+is delegated to the user's code.
 
 
-@deftypefun void ucl_hash_enlarge (ucl_hash_t @var{self})
+@deftypefun void ucl_hash_enlarge (ucl_hash_table_t @var{H})
 Enlarge the table using the underlying @ucl{} vector module.  This is an
-expensive operation because it requires rehashing all the entries.
-
-If an error occurs reallocating the vector: the table is not corrupted.
+expensive operation because it requires rehashing all the entries.  If
+an error occurs reallocating the vector: the table is not corrupted.
 @end deftypefun
 
 
-@deftypefun void ucl_hash_restrict (ucl_hash_t @var{self})
+@deftypefun void ucl_hash_restrict (ucl_hash_table_t @var{H})
 Restrict the table using the underlying @ucl{} vector module.  This is
 an expensive operation because it requires rehashing all the entries.
-
 If an error occurs reallocating the vector: the table is not corrupted.
 @end deftypefun
-
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash iterator
 @subsection Visiting elements in the table
 
 
-@deftypefun void ucl_hash_iterator (const ucl_hash_t @var{self}, ucl_iterator_t @var{iterator})
+@deftypefun void ucl_hash_iterator (const ucl_hash_table_t @var{H}, ucl_iterator_t @var{I})
 Initialise the table iterator.  The iterator pointer references the
 entries in the table.  The order in which the entries are visited is
 unknown.
@@ -4804,35 +4698,30 @@ unknown.
 Example:
 
 @example
-ucl_hash_t          hash;
-ucl_hash_entry_t *  entry_p;
-ucl_value_t         key, val;
-ucl_iterator_t      iterator;
+ucl_hash_table_t  H;
+ucl_hash_entry_t  E;
+ucl_value_t       K;
+ucl_iterator_t    I;
 
-hash  = ...;
-
-for (ucl_hash_iterator(hash, iterator);
-     ucl_iterator_more(iterator);
-     ucl_iterator_next(iterator))
+for (ucl_hash_iterator(H, I);
+     ucl_iterator_more(I);
+     ucl_iterator_next(I))
   @{
-    entry_p = ucl_iterator_ptr(iterator);
-    key     = ucl_hash_getkey(entry_p);
-    val     = ucl_hash_getval(entry_p);
-    ...
+    E = ucl_iterator_ptr(I);
+    K = ucl_hash_entry_ref_key(E);
   @}
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash functions
 @subsection Provided hash function
 
 
-@deftypefun size_t ucl_hash_string (ucl_value_t @var{unused}, const ucl_value_t @var{val})
-Return an unsigned integer representing the hash value for the string
-in @var{val}.  The @code{str} member of @var{val} must be a pointer to a
-@cnull{}--terminated string of characters.
+@deftypefun size_t ucl_hash_string_fun (ucl_value_t @var{unused}, const ucl_value_t @var{K})
+Return an unsigned integer representing the hash value for the string in
+@var{K}; the @code{chars} member of @var{K} must be a pointer to a
+@cnull{}--terminated string of characters, @ref{typedefs value} for
+details.
 
 The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 (@ref{references}).
