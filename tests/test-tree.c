@@ -52,6 +52,7 @@ alloc_link(void)
   }
   return linkPtr;
 }
+#if 0
 static int
 find_node(ucl_node_t *n, ucl_node_t node)
 {
@@ -62,6 +63,7 @@ find_node(ucl_node_t *n, ucl_node_t node)
   }
   return -1;
 }
+#endif
 static void
 assert_node (ucl_node_t dad, ucl_node_t nod,
 	     ucl_node_t son, ucl_node_t nxt,

@@ -281,7 +281,6 @@ The circular list
 * circular moving::             Moving the cursor.
 * circular search::             Searching elements.
 * circular ops::                Various operations on a circular.
-* circular data::               Another usage for links.
 
 The graph structure
 
@@ -3179,6 +3178,28 @@ Merge two heaps: nodes from @var{other} are extracted and inserted into
 @section The circular list
 
 
+@cindex Circular list
+
+
+The circular container provides a circular doubly linked list; it is
+implemented as a chain of @code{ucl_node_t} structures; a pointer to the
+@emph{current} position is stored in a base structure.  The current
+position marker can be moved forward and backward as a cursor.
+
+@quotation
+The handling of list links is derived from the handling of elements in
+the @acronym{TCL} (Tool Command Language) hash table by John Ousterhout
+and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
+@end quotation
+
+
+@deftp {Struct Typedef} ucl_circular_tag_t
+@deftpx {One Element Array} ucl_circular_t
+Base structure of the container.  It must be allocated by the user's
+code.
+@end deftp
+
+
 @menu
 * circular creation::           Creating and destroying circulars.
 * circular adding::             Adding elements to a circular.
@@ -3186,38 +3207,7 @@ Merge two heaps: nodes from @var{other} are extracted and inserted into
 * circular moving::             Moving the cursor.
 * circular search::             Searching elements.
 * circular ops::                Various operations on a circular.
-* circular data::               Another usage for links.
 @end menu
-
-@noindent
-The circular container provides a circular double linked list.  It's
-implemented as a chain of little node structures; a pointer to the
-@emph{current} position is stored in a base structure.  The current
-position marker can be moved forward and backward as a cursor.
-
-
-@deftp {Struct Typedef} ucl_circular_struct_t
-Base structure of the container.  It must be allocated by the user's
-code.
-@end deftp
-
-
-@deftp {Single Element Array Typedef} ucl_circular_t
-A one--element array of @code{ucl_circular_struct_t}.
-@end deftp
-
-
-@deftp Struct ucl_circular_link_t
-The data type of the nodes.  Nodes must be allocated and freed by the
-user's code.
-@end deftp
-
-
-The handling of list links is derived from the handling of elements in
-the @acronym{TCL} (Tool Command Language) hash table by John Ousterhout
-and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
-
-@c ------------------------------------------------------------
 
 @c page
 @node circular creation
@@ -3225,7 +3215,7 @@ and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
 
 
 @deftypefun void ucl_circular_constructor (ucl_circular_t @var{self})
-Initialises an already allocated structure.  Set all the fields of
+Initialise an already allocated structure.  Set all the fields of
 @var{self} so that the structure represents an empty circular list.
 @end deftypefun
 
@@ -3241,17 +3231,13 @@ extracted from the list.
 To extract all the links from a circular list, we can do:
 
 @example
-ucl_circular_t        circ;
-ucl_circular_link_t * link_p;
-ucl_value_t           val;
-
-...
+ucl_circular_t  circ;
+ucl_node_t      link;
+ucl_value_t     val;
 
 while (ucl_circular_size(circ))
   @{
-    link_p = ucl_circular_extract(circ);
-    val    = ucl_circular_getval(link_p);
-
+    link = ucl_circular_extract(circ);
     /* insert here the code to destroy the value */
     /* insert here the code to free the link memory */
   @}
@@ -3262,27 +3248,23 @@ if the value needs no destructor and we are using a memory allocator as
 implemented by @ucl{}, we can do:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_circular_t          circ;
-ucl_circular_link_t *   link_p;
-
-...
+ucl_memory_allocator_t  A;
+ucl_circular_t  circ;
+ucl_node_t      link;
 
 while (ucl_circular_size(circ))
   @{
-    link_p = ucl_circular_extract(circ);
-    allocator.alloc(allocator.data, &link_p, 0);
+    link = ucl_circular_extract(circ);
+    A.alloc(A.data, &link, 0);
   @}
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node circular adding
 @subsection Adding elements to a circular
 
 
-@deftypefun void ucl_circular_insert (ucl_circular_t @var{self}, ucl_circular_link_t *@var{link_p})
+@deftypefun void ucl_circular_insert (ucl_circular_t @var{self}, ucl_node_t @var{link_p})
 Insert an element at the current position.  To do this the user's code
 has to allocate a new circular link structure, store the value into it
 and hand a pointer to the node to this function.
@@ -3291,55 +3273,40 @@ The old current link becomes the next link.
 @end deftypefun
 
 
-Example of element insertion:
+Example of link insertion (the link has no value):
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_circular_t          circ;
-ucl_circular_link_t *   link_p = NULL;
-ucl_value_t             val;
+ucl_memory_allocator_t  A;
+ucl_circular_t  circ;
+ucl_node_t      link = NULL;
 
-...
-
-allocator.alloc(allocator.data, &link_p, sizeof(ucl_circular_link_t));
-val = ...;
-ucl_circular_setval(link_p, val);
-ucl_circular_insert(circ, link_p);
+A.alloc(A.data, &link, sizeof(ucl_node_tag_t));
+ucl_circular_insert(circ, link);
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node circular removing
 @subsection Removing elements from a circular
 
 
-@deftypefun {ucl_circular_link_t *} ucl_circular_extract (ucl_circular_t @var{self})
+@deftypefun ucl_node_t ucl_circular_extract (ucl_circular_t @var{self})
 Extract the current link and return a pointer to it, or @cnull{} if the
 list is empty.  The new current element is the next in the forward
 direction.
 @end deftypefun
 
 
-Example of element removal:
+Example of link removal and memory release:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_circular_t          circ;
-ucl_circular_link_t *   link_p;
-ucl_value_t             val;
+ucl_memory_allocator_t  A;
+ucl_circular_t  circ;
+ucl_node_t      link;
 
-...
-
-link_p = ucl_circular_extract(circ);
-if (NULL != link_p)
-  @{
-    val = ucl_circular_getval(link_p);
-    /* do something with 'val' */
-    allocator.alloc(allocator.data, &link_p, 0);
-  @}
+link = ucl_circular_extract(circ);
+if (NULL != link)
+  A.alloc(A.data, &link, 0);
 @end example
-
 
 @c page
 @node circular moving
@@ -3348,18 +3315,16 @@ if (NULL != link_p)
 
 @deftypefun void ucl_circular_forward (ucl_circular_t @var{self}, int @var{times})
 Move forwards the current position, @var{times} is the forward offset:
-it can be a positive or negative integer.  If the container is empty or
-the offset is zero nothing happens.
+it can be a positive or negative integer.  If the container is empty, or
+the offset is zero, nothing happens.
 @end deftypefun
 
 
 @deftypefun void ucl_circular_backward (ucl_circular_t @var{self}, int @var{times})
 A wrapper for @function{ucl_circular_forward}: move backwards the
 current position, @var{times} is the backward offset.  If the container
-is empty or the offset is zero nothing happens.
+is empty, or the offset is zero, nothing happens.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node circular search
@@ -3371,13 +3336,23 @@ Register the function to be used to compare elements.
 @end deftypefun
 
 
-@deftypefun {ucl_circular_link_t *} ucl_circular_find (ucl_circular_t @var{self}, ucl_value_t @var{val})
+@deftypefun ucl_node_t ucl_circular_find (ucl_circular_t @var{self}, ucl_value_t @var{val})
 Move the current position to the first forward element whose value is
 equal to @var{val}; return a pointer to the link, or @cnull{} if the
 value was not found.
-@end deftypefun
 
-@c ------------------------------------------------------------
+While performing the search, the selected comparison function is invoked
+with @var{val} as second argument and a pointer to the current link as
+third argument:
+
+@example
+ucl_comparison_t compar = @var{self}.compar;
+ucl_node_t   link  = ...;
+ucl_value_t  inner = @{ .pointer = link @};
+
+compar.func(compar.data, @var{val}, inner);
+@end example
+@end deftypefun
 
 @c page
 @node circular ops
@@ -3389,51 +3364,10 @@ Return the number of elements in the container.
 @end deftypefun
 
 
-@deftypefun {ucl_circular_link_t *} ucl_circular_current (ucl_circular_t @var{self})
+@deftypefun ucl_node_t ucl_circular_current (ucl_circular_t @var{self})
 Return a pointer to the current link, or @cnull{} if the container is
 empty.
 @end deftypefun
-
-
-@deftypefun ucl_value_t ucl_circular_getval (ucl_circular_link_t * @var{link_p})
-@deftypefunx ucl_value_t ucl_circular_data (ucl_circular_link_t * @var{link_p})
-Return a the data value in the link.
-@end deftypefun
-
-
-@deftypefun void ucl_circular_setval (ucl_circular_link_t * @var{link_p}, ucl_value_t @var{val})
-Store a value in a link.
-@end deftypefun
-
-@c ------------------------------------------------------------
-
-@c page
-@node circular data
-@subsection Another usage for links
-
-
-@noindent
-It's possible to allocate memory for a value together with the link
-structure.
-
-@example
-typedef struct my_link_t @{
-  ucl_circular_link_t   link;
-  my_data_t             bigdata;
-@} my_link_t;
-
-ucl_memory_allocator_t  allocator;
-ucl_circular_link_t *   link_p = NULL;
-ucl_value_t             val;
-
-...
-
-allocator.alloc(allocator.data, &p, sizeof(my_link_t));
-val.ptr = &(((my_link_t *)link_p)->bigdata);
-ucl_circular_setval(link_p, val);
-@end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node graph

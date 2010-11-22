@@ -29,45 +29,48 @@
 
 #include "internal.h"
 
+#define next		son
+#define prev		dad
+
 
 void
-ucl_circular_insert (ucl_circular_t self, ucl_circular_link_t *new)
+ucl_circular_insert (ucl_circular_t self, ucl_node_t new)
 {
   assert(self);
-  if (! self->current_link) {
-    self->current_link		= new;
-    new->next			= new;
-    new->prev			= new;
+  if (! self->current) {
+    self->current	= new;
+    new->next		= new;
+    new->prev		= new;
   } else if (1 == self->size) {
-    new->next			= self->current_link;
-    new->prev			= self->current_link;
-    self->current_link->next	= new;
-    self->current_link->prev	= new;
-    self->current_link		= new;
+    new->next		= self->current;
+    new->prev		= self->current;
+    self->current->next	= new;
+    self->current->prev	= new;
+    self->current	= new;
   } else {
-    new->next			= self->current_link->next;
-    self->current_link->next->prev = new;
-    new->prev			= self->current_link;
-    self->current_link->next	= new;
-    self->current_link		= new;
+    new->next			= self->current->next;
+    self->current->next->prev	= new;
+    new->prev			= self->current;
+    self->current->next		= new;
+    self->current		= new;
   }
   ++(self->size);
 }
 
-ucl_circular_link_t *
+ucl_node_t
 ucl_circular_extract (ucl_circular_t self)
 {
-  ucl_circular_link_t *	cur;
+  ucl_node_t 	cur;
   assert(self);
   if (self->size) {
     if (1 == self->size) {
-      cur = self->current_link;
-      self->current_link = NULL;
+      cur = self->current;
+      self->current = NULL;
     } else {
-      cur		= self->current_link;
+      cur		= self->current;
       cur->next->prev	= cur->prev;
       cur->prev->next	= cur->next;
-      self->current_link= cur->next;
+      self->current	= cur->next;
     }
     --(self->size);
     return cur;
@@ -78,41 +81,42 @@ void
 ucl_circular_forward (ucl_circular_t self, int times)
 {
   assert(self);
-  if (self->current_link && times) {
+  if (self->current && times) {
     int		i;
     if (times > 0) {
       for (i=0; i<times; ++i) {
-	assert(self->current_link->next);
-	self->current_link = self->current_link->next;
+	assert(self->current->next);
+	self->current = self->current->next;
       }
     } else {
       for (i=0; i<-times; ++i) {
-	assert(self->current_link->prev);
-	self->current_link = self->current_link->prev;
+	assert(self->current->prev);
+	self->current = self->current->prev;
       }
     }
   }
 }
 
-ucl_circular_link_t *
+ucl_node_t
 ucl_circular_find (ucl_circular_t self, ucl_value_t val)
 {
-  ucl_circular_link_t *	cur_p;
+  ucl_node_t		cur;
   ucl_comparison_t	compar;
+  ucl_value_t		inner;
   assert(self);
   compar = self->compar;
   assert(compar.func);
   if (self->size == 0)
     return NULL;
-  cur_p = self->current_link;
+  cur = self->current;
   do {
-    if (0 == compar.func(compar.data, val, cur_p->val)) {
-      self->current_link = cur_p;
-      return cur_p;
+    inner.pointer = cur;
+    if (0 == compar.func(compar.data, val, inner)) {
+      self->current = cur;
+      return cur;
     }
-    cur_p = cur_p->next;
-  }
-  while (cur_p != self->current_link);
+    cur = cur->next;
+  } while (cur != self->current);
   return NULL;
 }
 

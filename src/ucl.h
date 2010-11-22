@@ -1713,71 +1713,48 @@ extern double ucl_hash_average_search_distance (const ucl_hash_table_t this);
  ** Circular list.
  ** ----------------------------------------------------------------- */
 
-typedef struct ucl_circular_link_t {
-  struct ucl_circular_link_t *	next;
-  struct ucl_circular_link_t *	prev;
-  ucl_value_t			val;
-} ucl_circular_link_t;
-
 typedef struct ucl_circular_tag_t {
-  ucl_circular_link_t *	current_link;
+  ucl_node_t		current;
   size_t		size;
   ucl_comparison_t	compar;
 } ucl_circular_tag_t;
 
 typedef ucl_circular_tag_t ucl_circular_t[1];
 
-/* ------------------------------------------------------------ */
-
-extern void ucl_circular_insert (ucl_circular_t this, ucl_circular_link_t *new);
-extern ucl_circular_link_t * ucl_circular_extract (ucl_circular_t this);
-extern void ucl_circular_forward (ucl_circular_t this, int times);
-extern ucl_circular_link_t * ucl_circular_find (ucl_circular_t this, ucl_value_t val);
-
-/* ------------------------------------------------------------ */
+extern void ucl_circular_insert (ucl_circular_t self, ucl_node_t new);
+extern ucl_node_t  ucl_circular_extract (ucl_circular_t self);
+extern void ucl_circular_forward (ucl_circular_t self, int times);
+extern ucl_node_t  ucl_circular_find (ucl_circular_t self, ucl_value_t val);
 
 static __inline__ void
-ucl_circular_constructor (ucl_circular_t this)
+ucl_circular_constructor (ucl_circular_t self)
 {
-  ucl_struct_clean(this, ucl_circular_t);
+  ucl_struct_clean(self, ucl_circular_t);
 }
 static __inline__ void
-ucl_circular_destructor (ucl_circular_t this)
+ucl_circular_destructor (ucl_circular_t self)
 {
-  ucl_struct_clean(this, ucl_circular_t);
+  ucl_struct_clean(self, ucl_circular_t);
 }
 static __inline__ size_t
-ucl_circular_size (ucl_circular_t this)
+ucl_circular_size (ucl_circular_t self)
 {
-  return this->size;
+  return self->size;
 }
-static __inline__ ucl_circular_link_t *
-ucl_circular_current (ucl_circular_t this)
+static __inline__ ucl_node_t
+ucl_circular_current (ucl_circular_t self)
 {
-  return this->current_link;
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ ucl_value_t
-ucl_circular_data (ucl_circular_link_t * link_p)
-{
-  return link_p->val;
-}
-static __inline__ ucl_value_t
-ucl_circular_getval (ucl_circular_link_t * link_p)
-{
-  return link_p->val;
+  return self->current;
 }
 static __inline__ void
-ucl_circular_setval (ucl_circular_link_t * link_p, ucl_value_t newval)
+ucl_circular_set_compar (ucl_circular_t self, ucl_comparison_t compar)
 {
-  link_p->val = newval;
+  self->compar = compar;
 }
 static __inline__ void
-ucl_circular_set_compar (ucl_circular_t this, ucl_comparison_t compar)
+ucl_circular_backward (ucl_circular_t self, int times)
 {
-  this->compar = compar;
+  ucl_circular_forward(self, -times);
 }
 
 
