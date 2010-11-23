@@ -1679,22 +1679,24 @@ extern void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
 
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 ucl_value_t
-ucl_hash_entry_ref_key (ucl_hash_entry_t E)
+ucl_hash_entry_ref_key (void * _E)
 {
+  ucl_hash_entry_t E = _E;
   return E->key;
 }
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 void
-ucl_hash_entry_set_key (ucl_hash_entry_t E, ucl_value_t new_key)
+ucl_hash_entry_set_key (void * _E, ucl_value_t new_key)
 {
+  ucl_hash_entry_t E = _E;
   E->key = new_key;
 }
 
-extern void ucl_hash_insert  (ucl_hash_table_t H, ucl_hash_entry_t entry);
-extern void ucl_hash_extract (ucl_hash_table_t H, ucl_hash_entry_t entry);
+extern void ucl_hash_insert  (ucl_hash_table_t H, void * entry);
+extern void ucl_hash_extract (ucl_hash_table_t H, void * entry);
 
-extern ucl_hash_entry_t ucl_hash_find  (const ucl_hash_table_t H, const ucl_value_t key);
-extern ucl_hash_entry_t ucl_hash_first (const ucl_hash_table_t H);
+extern void * ucl_hash_find  (const ucl_hash_table_t H, const ucl_value_t key);
+extern void * ucl_hash_first (const ucl_hash_table_t H);
 
 extern void ucl_hash_enlarge  (ucl_hash_table_t H);
 extern void ucl_hash_restrict (ucl_hash_table_t H);

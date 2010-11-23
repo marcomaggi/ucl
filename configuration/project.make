@@ -28,30 +28,65 @@ ucl_tests_programs_CC_PROGRAM_LIBS = -L$(ucl_shlib_BUILDDIR) -l$(ucl_LIBRARY_ID)
 
 $(eval $(call ds-c-test-programs,ucl))
 
-test-heap:	; $(MAKE) tests PATTERNS=heap.c
-test-list:	; $(MAKE) tests PATTERNS=list.c
-test-map:	; $(MAKE) tests PATTERNS=map.c
-test-graph:	; $(MAKE) tests PATTERNS=graph.c
+## --------------------------------------------------------------------
+
+ucl_container_run_tests	=	\
+	run-test-btree		run-test-circular	\
+	run-test-hash		run-test-tree		\
+	run-test-vector
+
+.PHONY: $(ucl_container_run_tests)
+
+run-test-btree:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-btree
+
+run-test-circular:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-circular
+
+run-test-hash:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-hash
+
+run-test-tree:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-tree
+
+run-test-vector:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-vector
+
+test tests check: $(ucl_container_run_tests)
+
+## --------------------------------------------------------------------
+
+ucl_container_tests	=	\
+	test-btree		test-circular		\
+	test-hash		test-tree		\
+	test-vector
+
+.PHONY: $(ucl_container_tests)
+
+# test-heap:	; $(MAKE) tests PATTERNS=heap.c
+# test-list:	; $(MAKE) tests PATTERNS=list.c
+# test-map:	; $(MAKE) tests PATTERNS=map.c
+# test-graph:	; $(MAKE) tests PATTERNS=graph.c
 
 test-btree: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-btree.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-btree
+	$(MAKE) run-test-btree
 
 test-circular: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-circular.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-circular
+	$(MAKE) run-test-circular
 
 test-hash: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-hash.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-hash
+	$(MAKE) run-test-hash
 
 test-tree: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-tree.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-tree
+	$(MAKE) run-test-tree
 
 test-vector: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-vector.c
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-vector
+	$(MAKE) run-test-vector
 
 #page
 ## ---------------------------------------------------------------------

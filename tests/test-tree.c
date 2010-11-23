@@ -1308,6 +1308,7 @@ main (void)
   mcl_test_subtitle("iteration");
   test_inorder_iteration ();
   test_preorder_iteration ();
+  test_postorder_iteration ();
 
   exit(EXIT_SUCCESS);
 }

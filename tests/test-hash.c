@@ -29,15 +29,33 @@
  ** ----------------------------------------------------------------- */
 
 #define MCL_DEBUGGING		0
+#define DEBUGGING		0
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
 
-#define BUCKETS	100
-#define NUMBER 1000
-#define DELTA	234
+#define BUCKETS			100
+#define NUMBER			1000
+#define THE_NUMBER		100
+#define DELTA			234
+
+#define DISPLAY_AVERAGE_SEARCH_DISTANCE		0
 
 #define A	ucl_memory_allocator
+
+
+/** --------------------------------------------------------------------
+ ** Hash function.
+ ** ----------------------------------------------------------------- */
+
+static size_t
+hash_integer_fun (ucl_value_t data UCL_UNUSED, ucl_value_t val)
+{
+  return val.t_size;
+}
+static const ucl_hash_t hash_integer = {
+  .data = { .t_unsigned_long = 0 }, .func = hash_integer_fun
+};
 
 
 /** ------------------------------------------------------------
@@ -65,14 +83,51 @@ clean (ucl_hash_table_t H)
     A.alloc(A.data, &E, 0);
   }
 }
-static size_t
-hash_integer_fun (ucl_value_t data UCL_UNUSED, ucl_value_t val)
+static void
+insert_elements_in_range (ucl_hash_table_t H, size_t begin, size_t end)
 {
-  return val.t_size;
+  ucl_hash_entry_t	E;
+  ucl_value_t		K;
+  for (size_t i=begin; i<end; ++i) {
+    E = alloc_entry();
+    assert(E);
+    K.t_size = i;
+    ucl_hash_entry_set_key(E, K);
+    ucl_hash_insert(H, E);
+  }
 }
-static const ucl_hash_t hash_integer = {
-  .data = { .t_unsigned_long = 0 }, .func = hash_integer_fun
-};
+static void
+extract_elements_in_range (ucl_hash_table_t H, size_t begin, size_t end)
+{
+  ucl_hash_entry_t	E;
+  ucl_value_t		K;
+  for (size_t i=begin; i<end; ++i) {
+    K.t_size = i;
+    E = ucl_hash_find(H, K);
+    assert(E);
+    ucl_hash_extract(H, E);
+    free_entry(E);
+  }
+}
+static void
+find_elements (ucl_hash_table_t H, size_t upper_limit)
+{
+  ucl_hash_entry_t	E;
+  ucl_value_t		K;
+  debug("finding elements from 0 to %d", upper_limit);
+  for (size_t i=0; i<upper_limit; ++i) {
+    K.t_size = i;
+    E = ucl_hash_find(H, K);
+#if (DEBUGGING == 1)
+    if (! E)
+      debug("not found %u", i);
+#endif
+    assert(E);
+    K = ucl_hash_entry_ref_key(E);
+    assert(K.t_size == i);
+  }
+}
+
 
 static void
 test_construction_and_destruction (void)
@@ -166,6 +221,390 @@ test_usage (void)
   mcl_test_end();
 }
 
+static void
+test_hashing_strings (void)
+{
+#define NUMBER_OF_STRINGS	10
+  static const char *strs[NUMBER_OF_STRINGS] = {
+    "one", "two", "three", "four", "five",
+    "six", "seven", "eight", "nine", "ten"
+  };
+  mcl_test_begin("hash-2.2", "hashing strings") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_hash_table_t	H;
+    ucl_hash_entry_t	E;
+    ucl_value_t		K, K1;
+    size_t		j;
+    ucl_vector_initialise_config_hash(C);
+    ucl_vector_alloc(V, C);
+    {
+      ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string);
+      assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
+      assert(0 == ucl_hash_size(H));
+      {
+	/* insert */
+	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
+	  E = alloc_entry();
+	  assert(E);
+	  K.chars = (char *)strs[j];
+	  ucl_hash_entry_set_key(E, K);
+	  ucl_hash_insert(H, E);
+	  assert(1+j == ucl_hash_size(H));
+	}
+	assert(NUMBER_OF_STRINGS == ucl_hash_size(H));
+
+	/* extract */
+	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
+	  K.chars = (char *)strs[j];
+	  E = ucl_hash_find(H, K);
+	  assert(E);
+	  K1 = ucl_hash_entry_ref_key(E);
+	  assert(K1.chars == strs[j]);
+	  ucl_hash_extract(H, E);
+	  free_entry(E);
+	  assert(10-j-1 == ucl_hash_size(H));
+	}
+	assert(0 == ucl_hash_size(H));
+
+	/* insert */
+	for (j=0; j<10; ++j) {
+	  E = alloc_entry();
+	  assert(E);
+	  K.chars = (char *)strs[j];
+	  ucl_hash_entry_set_key(E, K);
+	  ucl_hash_insert(H, E);
+	  assert(1+j == ucl_hash_size(H));
+	}
+	assert(NUMBER_OF_STRINGS == ucl_hash_size(H));
+
+	/* extract */
+	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
+	  K.chars = (char *)strs[j];
+	  E = ucl_hash_find(H, K);
+	  assert(E);
+	  K1 = ucl_hash_entry_ref_key(E);
+	  assert(K1.chars == strs[j]);
+	  ucl_hash_extract(H, E);
+	  free_entry(E);
+	  assert(10-j-1 == ucl_hash_size(H));
+	}
+	assert(0 == ucl_hash_size(H));
+
+	/* insert */
+	for (j=0; j<10; ++j) {
+	  E = alloc_entry();
+	  assert(E);
+	  K.chars = (char *)strs[j];
+	  ucl_hash_entry_set_key(E, K);
+	  ucl_hash_insert(H, E);
+	  assert(1+j == ucl_hash_size(H));
+	}
+	assert(NUMBER_OF_STRINGS == ucl_hash_size(H));
+      }
+      clean(H);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_resizing (void)
+{
+  mcl_test_begin("hash-3.1", "enlarging and restricting") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_hash_table_t	H;
+    size_t		j, beg, end;
+    ucl_vector_initialise_config_hash(C);
+    ucl_vector_alloc(V, C);
+    {
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
+      {
+	assert(0 == ucl_hash_size(H));
+	debug("testing enlarging");
+	for (j=1; j<THE_NUMBER; ++j) {
+	  beg = (j-1) * THE_NUMBER;
+	  end = j     * THE_NUMBER;
+	  debug("inserting elements in [%d, %d)", beg, end);
+	  insert_elements_in_range(H, beg, end);
+	  assert(ucl_hash_size(H) == (size_t)end);
+	  find_elements(H, end); /* find the elements BEFORE rehashing */
+	  ucl_hash_enlarge(H);
+	  find_elements(H, end); /* find the elements AFTER rehashing */
+	}
+
+	debug("\n\n\ntesting restriction");
+	for (j=(THE_NUMBER-1); j>1; --j) {
+	  beg = (j-1) * THE_NUMBER;
+	  end = j     * THE_NUMBER;
+	  debug("extracting elements in [%d, %d)", beg, end);
+	  extract_elements_in_range(H, beg, end);
+
+	  assert(ucl_hash_size(H) == (size_t)beg);
+
+	  find_elements(H, beg-1); /* find the elements BEFORE rehashing */
+	  ucl_hash_restrict(H);
+	  find_elements(H, beg-1); /* find the elements AFTER rehashing */
+	}
+	extract_elements_in_range(H, 0, THE_NUMBER);
+	assert(ucl_hash_size(H) == 0);
+	ucl_hash_restrict(H);
+	assert(ucl_hash_size(H) == 0);
+#if 0
+	debug("length of chain %u: %u", 10, ucl_hash_bucket_chain_length(H, 10));
+#endif
+
+	debug("testing enlarging/restricting");
+	ucl_vector_update_number_of_step_up_slots(H->buckets, 1000);
+	ucl_vector_update_number_of_step_down_slots(H->buckets, 1000);
+	ucl_hash_restrict(H);
+
+	debug("before the insertion: size %u, number of buckets %u, used buckets %u",
+	      ucl_hash_size(H),
+	      ucl_hash_number_of_buckets(H),
+	      ucl_hash_number_of_used_buckets(H));
+	insert_elements_in_range(H, 0, 1000);
+	assert(ucl_hash_size(H) == 1000);
+
+#if (DISPLAY_AVERAGE_SEARCH_DISTANCE == 1)
+	fprintf(stderr, "average search distance %f\n", ucl_hash_average_search_distance (H));
+#endif
+
+	debug("after the insertion: size %u, number of buckets %u, used buckets %u",
+	      ucl_hash_size(H),
+	      ucl_hash_number_of_buckets(H),
+	      ucl_hash_number_of_used_buckets(H));
+
+	ucl_vector_update_number_of_step_up_slots(H->buckets, 100);
+	ucl_vector_update_number_of_step_down_slots(H->buckets, 100);
+
+	find_elements(H, 1000); /* find the elements BEFORE rehashing */
+	ucl_hash_enlarge(H);
+	find_elements(H, 1000); /* find the elements AFTER rehashing */
+
+	debug("after the enlarging: size %u, number of buckets %u, used buckets %u",
+	      ucl_hash_size(H),
+	      ucl_hash_number_of_buckets(H),
+	      ucl_hash_number_of_used_buckets(H));
+
+#if (DISPLAY_AVERAGE_SEARCH_DISTANCE == 1)
+	fprintf(stderr, "average search distance %f\n", ucl_hash_average_search_distance (H));
+#endif
+#if 0
+	debug("length of chain %u: %u",
+	      10, ucl_hash_bucket_chain_length(H, 10));
+#endif
+
+	extract_elements_in_range(H, 800, 1000);
+	assert(ucl_hash_size(H) == 800);
+
+	find_elements(H, 800); /* find the elements BEFORE rehashing */
+	ucl_hash_restrict(H);
+	find_elements(H, 800); /* find the elements AFTER rehashing */
+
+	debug("after the restriction: size %u, number of buckets %u, used buckets %u",
+	      ucl_hash_size(H),
+	      ucl_hash_number_of_buckets(H),
+	      ucl_hash_number_of_used_buckets(H));
+
+	assert(ucl_hash_size(H) == 800);
+
+	insert_elements_in_range(H, 800, 900);
+	assert(ucl_hash_size(H) == 900);
+
+	find_elements(H, 900); /* find the elements BEFORE rehashing */
+	ucl_hash_enlarge(H);
+	find_elements(H, 900); /* find the elements AFTER rehashing */
+
+	extract_elements_in_range(H, 400, 900);
+	assert(ucl_hash_size(H) == 400);
+
+	find_elements(H, 400); /* find the elements BEFORE rehashing */
+	ucl_hash_restrict(H);
+	find_elements(H, 400); /* find the elements AFTER rehashing */
+
+	assert(ucl_hash_size(H) == 400);
+      }
+      clean(H);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_empty_iteration (void)
+{
+  mcl_test_begin("hash-4.1", "iterating over empty table") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_hash_table_t	H;
+    ucl_hash_entry_t	E;
+    ucl_value_t		K;
+    ucl_iterator_t	I;
+    size_t		j;
+    ucl_vector_initialise_config_hash(C);
+    ucl_vector_alloc(V, C);
+    {
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      assert(0 == ucl_hash_size(H));
+      {
+	for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	  E = ucl_iterator_ptr(I);
+	  K = ucl_hash_entry_ref_key(E);
+	}
+	assert(0 == j);
+	assert(0 == ucl_hash_size(H));
+      }
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_full_iteration (void)
+{
+  mcl_test_begin("hash-4.2", "iterating over all the elements") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_hash_table_t	H;
+    ucl_hash_entry_t	E;
+    ucl_value_t		K, K1;
+    ucl_iterator_t	I;
+    size_t		j;
+    size_t		results[NUMBER];
+    ucl_vector_initialise_config_hash(C);
+    ucl_vector_alloc(V, C);
+    {
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
+      {
+	assert(0 == ucl_hash_size(H));
+	/* fill the hash table with NUMBER elements */
+	for (j=0; j<NUMBER; ++j) {
+	  E = alloc_entry();
+	  assert(E);
+	  K.t_size = j;
+	  ucl_hash_entry_set_key(E, K);
+	  ucl_hash_insert(H, E);
+	  assert(ucl_hash_size(H) == (j+1));
+	}
+	assert(ucl_hash_size(H) == NUMBER);
+	assert(j == NUMBER);
+
+	/* iterate over all the NUMBER elements */
+	for (j=0; j<NUMBER; ++j) {
+	  results[j] = 0;
+	}
+	for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	  E = ucl_iterator_ptr(I);
+	  K1 = ucl_hash_entry_ref_key(E);
+	  results[K1.t_size] = 1;
+	}
+	assert(j == NUMBER);
+	for (j=0; j<NUMBER; ++j) {
+	  assert(1 == results[j]);
+	}
+
+	for (j=0; j<NUMBER; ++j) {
+	  K.t_size = j;
+	  E = ucl_hash_find(H, K);
+	  assert(E);
+	  K1 = ucl_hash_entry_ref_key(E);
+	  assert(K1.t_size == j);
+	  ucl_hash_extract(H, E);
+	  free_entry(E);
+	  assert(ucl_hash_size(H) == (NUMBER-j-1));
+	}
+	assert(ucl_hash_size(H) == 0);
+      }
+      clean(H);
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
+static void
+test_other_iteration (void)
+{ /* it is unknown why I originally wrote this test */
+  mcl_test_begin("hash-4.3", "an iteration") {
+    ucl_vector_config_t	C;
+    ucl_vector_t	V;
+    ucl_hash_table_t	H;
+    ucl_hash_entry_t	E;
+    ucl_value_t		K, K1;
+    ucl_iterator_t	I;
+    size_t		j;
+    size_t		results[NUMBER];
+    ucl_vector_initialise_config_hash(C);
+    ucl_vector_alloc(V, C);
+    {
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
+      assert(0 == ucl_hash_size(H));
+
+      E = alloc_entry();
+      assert(E);
+      K.t_size = 3;
+      ucl_hash_entry_set_key(E, K);
+      ucl_hash_insert(H, E);
+
+      E = alloc_entry();
+      assert(E);
+      K.t_size = 10;
+      ucl_hash_entry_set_key(E, K);
+      ucl_hash_insert(H, E);
+
+      E = alloc_entry();
+      assert(E);
+      K.t_size = 50;
+      ucl_hash_entry_set_key(E, K);
+      ucl_hash_insert(H, E);
+
+      for (j=0; j<NUMBER; ++j) {
+	results[j] = 0;
+      }
+      for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	E = ucl_iterator_ptr(I);
+	K1 = ucl_hash_entry_ref_key(E);
+	assert(K1.t_size < NUMBER);
+	results[K1.t_size] = 1;
+      }
+      assert(j == 3);
+      assert(1 == results[3]);
+      assert(1 == results[10]);
+      assert(1 == results[50]);
+
+      K.t_size = 3;
+      E = ucl_hash_find(H, K);
+      assert(E);
+      ucl_hash_extract(H, E);
+      free_entry(E);
+
+      K.t_size = 10;
+      E = ucl_hash_find(H, K);
+      assert(E);
+      ucl_hash_extract(H, E);
+      free_entry(E);
+
+      K.t_size = 50;
+      E = ucl_hash_find(H, K);
+      assert(E);
+      ucl_hash_extract(H, E);
+      free_entry(E);
+
+      assert(0 == ucl_hash_size(H));
+    }
+    ucl_vector_free(V);
+  }
+  mcl_test_end();
+}
+
 int
 main (void)
 {
@@ -176,6 +615,15 @@ main (void)
 
   mcl_test_subtitle("usage");
   test_usage ();
+  test_hashing_strings ();
+
+  mcl_test_subtitle("resizing");
+  test_resizing ();
+
+  mcl_test_subtitle("iteration");
+  test_empty_iteration ();
+  test_full_iteration ();
+  test_other_iteration ();
 
   exit(EXIT_SUCCESS);
 }

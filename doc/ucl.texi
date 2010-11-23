@@ -4495,9 +4495,10 @@ the default values, for a table using strings as keys goes like this:
 ucl_vector_config_t C;
 ucl_vector_t        V;
 ucl_hash_table_t    H;
+
 ucl_vector_initialise_config_hash(C);
 ucl_vector_alloc(V, C);
-ucl_hash_initialise(H, V, ucl_compare_int, ucl_hash_string);
+ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string);
 @end example
 
 @noindent
@@ -4507,15 +4508,17 @@ entries; when using a @ucl{} memory allocator, it goes like this:
 
 @example
 ucl_memory_allocator_t  A;
-ucl_hash_entry_t  entry;
-ucl_value_t       key, val;
+ucl_vector_t            V;
+ucl_hash_table_t        H;
+ucl_hash_entry_t        E;
+ucl_value_t             K;
 
 while ((entry = ucl_hash_first(H)))
   @{
-    ucl_hash_extract(table, entry);
-    key = ucl_hash_entry_key_ref(entry);
+    ucl_hash_extract(H, E);
+    key = ucl_hash_entry_key_ref(E);
     /* free "key" if needed */
-    A.alloc(A.data, &entry, 0);
+    A.alloc(A.data, &E, 0);
   @}
 ucl_vector_free(V);
 @end example
@@ -4539,9 +4542,10 @@ keys; @ref{typedefs hash} for details.
 @subsection Adding elements to a hash table
 
 
-@deftypefun void ucl_hash_insert (ucl_hash_table_t @var{H}, ucl_hash_entry_t @var{E})
+@deftypefun void ucl_hash_insert (ucl_hash_table_t @var{H}, void * @var{E})
 Insert a new entry in the table.  The entry structure must be allocated
-and filled with key and value by the user's code.
+and filled with key and value by the user's code; the pointer @var{E} is
+internally cast to @code{ucl_hash_entry_t}.
 
 Inserting an entry with a key that already exists in the table will
 work, but future invocations of @cfunc{ucl_hash_find} will return one or
@@ -4576,11 +4580,12 @@ if (NULL == E)
 @subsection Removing elements from a hash table
 
 
-@deftypefun void ucl_hash_extract (ucl_hash_table_t @var{H}, ucl_hash_entry_t @var{E})
+@deftypefun void ucl_hash_extract (ucl_hash_table_t @var{H}, void * @var{E})
 Extract an entry from the table.  @var{E}, a pointer to the entry to be
 removed, must be the return value of a previous invocation to
-@cfunc{ucl_hash_find}.  The entry structure is not destroyed nor freed,
-just extracted.
+@cfunc{ucl_hash_find}; the pointer @var{E} is internally cast to
+@code{ucl_hash_entry_t}.  The entry structure is not destroyed nor
+freed, just extracted.
 @end deftypefun
 
 
@@ -4606,16 +4611,18 @@ if (NULL != E)
 @subsection Various operations on a hash table
 
 
-@deftypefun ucl_hash_entry_t ucl_hash_find (const ucl_hash_table_t @var{H}, const ucl_value_t @var{K})
+@deftypefun {void *} ucl_hash_find (const ucl_hash_table_t @var{H}, const ucl_value_t @var{K})
 Search in the table an entry associated with the selected key.  Return a
-pointer to the entry or @cnull{} if the key was not found.
+pointer to the entry or @cnull{} if the key was not found; the returned
+pointer can be safely cast to @code{ucl_hash_entry_t}.
 @end deftypefun
 
 
-@deftypefun ucl_hash_entry_t ucl_hash_first (const ucl_hash_table_t @var{H})
+@deftypefun {void *} ucl_hash_first (const ucl_hash_table_t @var{H})
 Return a pointer to the first entry in the table: the first link in the
 list of the first non--@cnull{} bucket.  If the table is empty: return
-@cnull{}.
+@cnull{}; the returned pointer can be safely cast to
+@code{ucl_hash_entry_t}.
 @end deftypefun
 
 
@@ -4651,14 +4658,16 @@ Return the average number of entries per bucket.
 @subsubheading Key functions
 
 
-@deftypefun void ucl_hash_entry_set_key (ucl_hash_entry_t @var{E}, const ucl_value_t @var{newkey})
+@deftypefun void ucl_hash_entry_set_key (void * @var{E}, const ucl_value_t @var{newkey})
 Store a new key in an entry structure.  The old key, if present, is
-overwritten.
+overwritten.  The pointer @var{E} is internally cast to
+@code{ucl_hash_entry_t}
 @end deftypefun
 
 
-@deftypefun ucl_value_t ucl_hash_entry_ref_key (const ucl_hash_entry_t @var{E})
-Return the key stored in an entry structure.
+@deftypefun ucl_value_t ucl_hash_entry_ref_key (const void * @var{E})
+Return the key stored in an entry structure.  The pointer @var{E} is
+internally cast to @code{ucl_hash_entry_t}
 @end deftypefun
 
 @c page
@@ -4715,6 +4724,12 @@ for (ucl_hash_iterator(H, I);
 @c page
 @node hash functions
 @subsection Provided hash function
+
+
+@deftypevar ucl_hash_t ucl_hash_string
+Function and context required to hash strings.  The function is
+@cfunc{ucl_hash_string_fun}.
+@end deftypevar
 
 
 @deftypefun size_t ucl_hash_string_fun (ucl_value_t @var{unused}, const ucl_value_t @var{K})
