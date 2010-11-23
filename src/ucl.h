@@ -655,6 +655,8 @@ typedef struct ucl_node_tag_t {
 
 typedef ucl_node_tag_t *	ucl_node_t;
 
+#define UCL_NODE_SIZE		sizeof(ucl_node_tag_t)
+
 /* BEGIN: RESERVED FOR INTERNAL USAGE */
 typedef struct ucl_embedded_node_tag_t {
   ucl_node_tag_t	node;
@@ -1447,45 +1449,87 @@ extern void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
  ** List container types definitions.
  ** ----------------------------------------------------------*/
 
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
-ucl_list_car (ucl_node_t node)
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+void
+ucl_list_set_car (void * _N, void * _M)
 {
-  return node->son;
+  ucl_node_t	N = _N, M = _M;
+  if (N) N->son = M;
+  if (M) M->dad = N;
 }
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
-ucl_list_cdr (ucl_node_t node)
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+void
+ucl_list_set_cdr (void * _N, void * _M)
 {
-  return node->bro;
-}
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
-ucl_list_first (ucl_node_t node)
-{
-  return ucl_tree_ref_first(node);
-}
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_node_t
-ucl_list_last (ucl_node_t node)
-{
-  return ucl_tree_ref_last(node);
+  ucl_node_t	N = _N, M = _M;
+  if (N) N->bro = M;
+  if (M) M->dad = N;
 }
 
-/* ------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
 
-extern size_t ucl_list_length (ucl_node_t node);
-extern ucl_node_t ucl_list_caar (ucl_node_t node);
-extern ucl_node_t ucl_list_cadr (ucl_node_t node);
-extern ucl_node_t ucl_list_cdar (ucl_node_t node);
-extern ucl_node_t ucl_list_cddr (ucl_node_t node);
-extern ucl_node_t ucl_list_caaar (ucl_node_t node);
-extern ucl_node_t ucl_list_caadr (ucl_node_t node);
-extern ucl_node_t ucl_list_cadar (ucl_node_t node);
-extern ucl_node_t ucl_list_caddr (ucl_node_t node);
-extern ucl_node_t ucl_list_cdaar (ucl_node_t node);
-extern ucl_node_t ucl_list_cdadr (ucl_node_t node);
-extern ucl_node_t ucl_list_cddar (ucl_node_t node);
-extern ucl_node_t ucl_list_cdddr (ucl_node_t node);
-extern ucl_node_t ucl_list_remove (ucl_node_t node);
-extern ucl_node_t ucl_list_popfront (ucl_node_t node);
-extern ucl_node_t ucl_list_popback (ucl_node_t node);
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void *
+ucl_list_car (void * _N)
+{
+  ucl_node_t	N = _N;
+  return N->son;
+}
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void *
+ucl_list_cdr (void * _N)
+{
+  ucl_node_t	N = _N;
+  return N->bro;
+}
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void *
+ucl_list_prev (void * _N)
+{
+  ucl_node_t	N = _N;
+  return N->dad;
+}
+
+/* ------------------------------------------------------------------ */
+
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void *
+ucl_list_first (void * N)
+{
+  return ucl_tree_ref_first(N);
+}
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
+void *
+ucl_list_last (void * N)
+{
+  return ucl_tree_ref_last(N);
+}
+
+/* ------------------------------------------------------------------ */
+
+extern void * ucl_list_caar (void * node);
+extern void * ucl_list_cadr (void * node);
+extern void * ucl_list_cdar (void * node);
+extern void * ucl_list_cddr (void * node);
+extern void * ucl_list_caaar (void * node);
+extern void * ucl_list_caadr (void * node);
+extern void * ucl_list_cadar (void * node);
+extern void * ucl_list_caddr (void * node);
+extern void * ucl_list_cdaar (void * node);
+extern void * ucl_list_cdadr (void * node);
+extern void * ucl_list_cddar (void * node);
+extern void * ucl_list_cdddr (void * node);
+
+extern void * ucl_list_remove (void * node);
+extern void * ucl_list_popfront (void * node);
+extern void * ucl_list_popback (void * node);
+
+extern void ucl_list_for_each (ucl_callback_t cb, void * _N);
+extern void ucl_list_map (void * _P, ucl_callback_t cb, void * _Q);
+extern void * ucl_list_reverse (void * _N);
+
+extern size_t ucl_list_length (void * node);
+extern void * ucl_list_ref (void * _N, ucl_index_t position);
 
 
 /** ------------------------------------------------------------
@@ -1502,7 +1546,6 @@ ucl_heap_size (const ucl_heap_t H)
 {
   return H->size;
 }
-
 
 
 /** ------------------------------------------------------------

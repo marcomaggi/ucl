@@ -308,9 +308,9 @@ The hash table structure
 
 The linked list structure
 
-* list creation::               Creating and destroying lists.
-* list adding::                 Adding elements to a list.
-* list removing::               Removing elements from a list.
+* list cons::                   Constructing lists.
+* list visit::                  Visiting a list.
+* list removal::                Removing elements from a list.
 * list ops::                    Various operations on a list.
 * list iteration::              Iteration over a list.
 
@@ -1601,6 +1601,11 @@ pointer to the son of this node; @cnull{} if this node has no son;
 pointer to the bro of this node; @cnull{} if this node has no bro.
 @end table
 @end deftp
+
+
+@defmac UCL_NODE_SIZE
+The size in bytes of the structure @code{ucl_node_tag_t}.
+@end defmac
 
 @c page
 @node btree examples
@@ -4778,284 +4783,277 @@ The hashing algorithm comes from a C++ book by Bjarne Stroustrup
 @section The linked list structure
 
 
+The @ucl{} list is a way of chaining @code{ucl_node_tag_t} structures in
+a doubly linked list; all the functions from the @code{btree} and
+@code{tree} modules can be used upon lists.
+
 @menu
-* list creation::               Creating and destroying lists.
-* list adding::                 Adding elements to a list.
-* list removing::               Removing elements from a list.
+* list cons::                   Constructing lists.
+* list visit::                  Visiting a list.
+* list removal::                Removing elements from a list.
 * list ops::                    Various operations on a list.
 * list iteration::              Iteration over a list.
 @end menu
 
-@noindent
-The @ucl{} list container is an implementation of the classic double
-linked list: elements are stored in little structures chained together
-with pointers that allow the user's code to iterate forward and backward.
-
-@deftp {Struct Typedef} ucl_list_struct_t
-The data type of the base structure.  It must be allocated by the user's
-code.
-@end deftp
-
-@deftp {Single Element Array Typedef} ucl_list_t
-One--element array of @code{ucl_list_struct_t}.
-@end deftp
-
-@deftp {Struct Typedef} ucl_list_link_t
-The data type of the nodes.  Nodes must be allocated and freed by the
-user's code.
-@end deftp
-
-The handling of  list links is derived from the  handling of elements in
-the @acronym{TCL} (Tool Command  Language) hash table by John Ousterhout
-and others (@url{http://www.tcl.tk} for more about @acronym{TCL}).
-
-
 @c page
-@node list creation
-@subsection Creating and destroying lists
+@node list cons
+@subsection Constructing lists
 
 
-@deftypefun void ucl_list_constructor (ucl_list_t @var{self})
-Initialise an already allocated structure to represent an empty list.
+Structures of type @code{ucl_node_tag_t} must be allocated and released
+by the user code.  The fields of a node structure must be set to
+@cnull{} when they are not used as reference for another node.
+
+All the following functions return and accept as arguments @code{void *}
+values; they are internally cast to @code{ucl_node_t}.
+
+
+@deftypefun void ucl_list_set_car (void * @var{N}, void * @var{M})
+If @var{N} is non--@cnull{}: set @var{M} as @code{son} of @var{N}; if
+@var{M} is non--@cnull{}: set @var{N} as @code{dad} of @var{M}.
+@ref{btree typedefs} for the meaning of this.
 @end deftypefun
 
 
-@deftypefun void ucl_list_destructor (ucl_list_t @var{self})
-Reset the structure to represent an empty list.  The structure itself is
-not deallocated.  Before calling this the user's code has to make sure
-that all the links are extracted from the list.
-
-All the structure fields are reset to zero.  This concept of
-``destruction'' is still in development in the head of the author, so it
-may change in future releases; it's better, though, to have the code
-invoke a destructor, so if things will change we have it in place.  It
-may even be replaced by a do--nothing @code{#define}.
+@deftypefun void ucl_list_set_cdr (void * @var{N}, void * @var{P})
+If @var{N} is non--@cnull{}: set @var{M} as @code{bro} of @var{N}; if
+@var{M} is non--@cnull{}: set @var{N} as @code{dad} of @var{M}.
+@ref{btree typedefs} for the meaning of this.
 @end deftypefun
 
 
-To extract all the links from a list, we can do:
+For example, to build the hierarchy:
 
 @example
-ucl_list_t              list;
-ucl_list_link_t *       link_p;
-ucl_value_t             val;
-
-...
-
-link_p = ucl_list_front(list);
-while (NULL != link_p)
-  @{
-    ucl_list_popfront(list);
-    val = ucl_list_getval(link_p);
-
-    /* insert here the code to destroy the object */
-    /* insert here the code to free the link memory */
-  @}
+ -----    -----    -------
+| one |--| two |--| three |-- NULL
+ -----    -----    -------
 @end example
 
 @noindent
-popping elements from the front or from the back makes no difference.
+using the @ucl{} memory allocator:
 
-@c ------------------------------------------------------------
+@example
+ucl_memory_allocator_t  A;
+ucl_node_t              one, two, three;
 
-@c page
-@node list adding
-@subsection Adding elements to a list
+one   = ucl_malloc(ucl_memory_allocator, UCL_NODE_SIZE);
+two   = ucl_malloc(ucl_memory_allocator, UCL_NODE_SIZE);
+three = ucl_malloc(ucl_memory_allocator, UCL_NODE_SIZE);
 
+ucl_list_set_cdr(one, two);
+ucl_list_set_cdr(two, three);
+@end example
 
-@deftypefun void ucl_list_insertafter (@var{self}, @var{link_p}, @var{new_p})
-Insert the ink referenced by @var{new_p} after the one referenced by
-@var{link_p}.  If @var{link_p} is the last in the chain, then @var{new_p}
-becomes the last in the chain.
-
-This function can't be used to insert an element in an empty list.
-
-Arguments:
-
-@table @code
-@item ucl_list_t @var{self}
-pointer to the base structure;
-
-@item ucl_list_link_t *@var{link_p}
-pointer to a link in the list, it must be the return value of a previous
-invocation of @function{ucl_list_index};
-
-@item ucl_list_link_t *@var{new_p}
-pointer to a new list link.
-@end table
-@end deftypefun
-
-
-@deftypefun void ucl_list_insertbefore (@var{self}, @var{link_p}, @var{new_p})
-Insert the link referenced by @var{new_p} before the one referenced by
-@var{link_p}.  If @var{link_p} is the first in the chain, then
-@var{new_p} becomes the first in the chain.
-
-This function can't be used to insert an element in an empty list.
-
-Arguments:
-
-@table @code
-@item ucl_list_t @var{self}
-pointer to the base structure;
-
-@item ucl_list_link_t *@var{link_p}
-pointer to a link in the list, it must be the return value of a previous
-invocation of @function{ucl_list_index};
-
-@item ucl_list_link_t *@var{new_p}
-pointer to a new list link.
-@end table
-@end deftypefun
-
-
-@deftypefun void ucl_list_pushfront (ucl_list_t @var{self}, ucl_list_link_t *@var{link_p})
-Insert a link at the beginning of the list.  This function can be used to
-insert an element in an empty list.
-@end deftypefun
-
-
-@deftypefun void ucl_list_pushback (ucl_list_t @var{self}, ucl_list_link_t *@var{link_p})
-Insert a link at the end of the list.  This function can be used to
-insert an element in an empty list.
-@end deftypefun
-
-@c ------------------------------------------------------------
+@noindent
+remember that the @ucl{} default allocator sets to zero every newly
+allocated block, so the fields in the allocated nodes are automatically
+set to @cnull{}.
 
 @c page
-@node list removing
+@node list visit
+@subsection Visiting a list
+
+
+All the following functions return and accept as arguments @code{void *}
+values; they are internally cast to @code{ucl_node_t}.  @ref{btree
+typedefs} for the meaning of the fields of @code{ucl_node_tag_t}.
+
+
+@deftypefun {void *} ucl_list_car (void * @var{N})
+Return the @code{son} of @var{N}.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cdr (void * @var{N})
+Return the @code{bro} of @var{N}.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_prev (void * @var{N})
+Return the @code{dad} of @var{N}.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_first (void * @var{N})
+Return the first element of the list.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_last (void * @var{N})
+Return the last element of the list.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_ref (void * @var{N}, ucl_index_t @var{position})
+Assuming @var{N} references the first node in a list: return a pointer
+to the link at @var{position} (zero based), or @cnull{} if the index is
+out of range.
+@end deftypefun
+
+
+When using the following operations, it is impossible to distinguish
+between a @cnull{} representing a legitimate return value and a @cnull{}
+representing a return from an invalid operation; we have to take care of
+applying these operations only when they are legitimate.
+
+
+@deftypefun {void *} ucl_list_caar (void * @var{N})
+Apply twice the car operator.  Return @cnull{} if the operation is
+invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cadr (void * @var{N})
+Apply the cdr operator, then the car operator.  Return @cnull{} if the
+operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cdar (void * @var{N})
+Apply the car operator, then the cdr operator.  Return @cnull{} if the
+operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cddr (void * @var{N})
+Apply twice the cdr operator.  Return @cnull{} if the operation is
+invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_caaar (void * @var{N})
+Apply the car operator three times.  Return @cnull{} if the operation is
+invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_caadr (void * @var{N})
+Apply the cdr operator, then the car operator twice.  Return @cnull{} if
+the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cadar (void * @var{N})
+Apply the car operator, then the cdr operator, then the car operator.
+Return @cnull{} if the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_caddr (void * @var{N})
+Apply the cdr operator twice, then the car operator.  Return @cnull{} if
+the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cdaar (void * @var{N})
+Apply the car operator twice, then the cdr operator.  Return @cnull{} if
+the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cdadr (void * @var{N})
+Apply the cdr operator, then the car operator, then the cdr operator.
+Return @cnull{} if the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cddar (void * @var{N})
+Apply the car operator, then the cdr operator twice.  Return @cnull{} if
+the operation is invalid.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_list_cdddr (void * @var{N})
+Apply the cdr operator three times.  Return @cnull{} if the operation is
+invalid.
+@end deftypefun
+
+@c page
+@node list removal
 @subsection Removing elements from a list
 
 
-@deftypefun void ucl_list_extract (ucl_list_t @var{self}, ucl_list_link_t * @var{link_p})
-Extract the link referenced by @var{link_p}.  @var{link_p} must be the
-return value of a previous invocation of @function{ucl_list_index}.
+All the following functions return and accept as arguments @code{void *}
+values; they are internally cast to @code{ucl_node_t}.  @ref{btree
+typedefs} for the meaning of the fields of @code{ucl_node_tag_t}.
+
+
+@deftypefun {void *} ucl_list_remove (void * @var{N})
+Remove @var{N} from its chain; return @var{N} itself.
 @end deftypefun
 
 
-Example of element removal:
-
-@example
-ucl_list_t        list;
-ucl_list_link_t * link_p;
-size_t            position;
-
-position = ...
-
-link_p = ucl_list_index(this, position);
-if (! link_p)
-  @{
-    /* handle the error */
-  @}
-ucl_list_extract(this, link_p);
-@end example
-
-
-@deftypefun void ucl_list_popfront (ucl_list_t @var{self})
-Remove an element at the beginning of the list.  This is a wrapper for
-@function{ucl_list_extract}.
+@deftypefun void ucl_list_popfront (void * @var{N})
+Remove an element at the beginning of the list of which @var{N} is an
+element.
 @end deftypefun
 
 
-@deftypefun void ucl_list_popback (ucl_list_t @var{self})
-Remove an element at the end of the list.  This is a wrapper for
-@function{ucl_list_extract}.
+@deftypefun void ucl_list_popback (void * @var{N})
+Remove an element at the end of the list of which @var{N} is an element.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node list ops
 @subsection Various operations on a list
 
 
+All the following functions return and accept as arguments @code{void *}
+values; they are internally cast to @code{ucl_node_t}.  @ref{btree
+typedefs} for the meaning of the fields of @code{ucl_node_tag_t}.
 
-@deftypefun size_t ucl_list_size (ucl_list_t @var{self})
-Return the number of elements in the container.
+
+@deftypefun size_t ucl_list_length (void * @var{N})
+Return the count of elements in the list from @var{N} towards the end.
 @end deftypefun
 
 
-@deftypefun {ucl_list_link_t *} ucl_list_index (ucl_list_t @var{self}, size_t @var{index})
-Convers a position in a pointer to the corresponding list link.   Return
-a pointer to the selected link, or @cnull{} if the index is out of range.
+@deftypefun void ucl_list_for_each (ucl_callback_t @var{cb}, void * @var{N})
+Apply the callback to @var{N} and all its brothers up to the end of the
+list.
 @end deftypefun
 
 
-@deftypefun ucl_value_t ucl_list_getval (ucl_list_link_t * @var{link_p})
-Return a value representing the data of a link.
+@deftypefun void ucl_list_map (void * @var{P}, ucl_callback_t @var{cb}, void * @var{Q})
+Apply the callback to @var{P} and @var{Q}, and all their brothers up to
+the end of the @var{P} list.  @var{Q} is meant to be the source value
+and @var{P} the destination value.
 @end deftypefun
 
 
-@deftypefun void ucl_list_setval (ucl_list_link_t * @var{link_p}, ucl_value_t @var{val})
-Store a new value in a link.
+@deftypefun {void *} ucl_list_reverse (void * @var{N})
+Assuming @var{N} is the first element of a list: reverse the list and
+return it new first element.
 @end deftypefun
-
-
-@deftypefun {ucl_list_link_t *} ucl_list_front (const ucl_list_t @var{self})
-Return a pointer to the first link in the list or @cnull{} if the list is
-empty.
-@end deftypefun
-
-
-@deftypefun {ucl_list_link_t *} ucl_list_back (const ucl_list_t @var{self})
-Return a pointer to the last link in the list or @cnull{} if the list is
-empty.
-@end deftypefun
-
-
-@deftypefun {ucl_list_link_t *} ucl_list_next (ucl_list_link_t * @var{link_p})
-Return a pointer to the link next to @var{link_p} or @cnull{} if
-@var{link_p} is the last in the chain.
-@end deftypefun
-
-
-@deftypefun {ucl_list_link_t *} ucl_list_prev (ucl_list_link_t * @var{link_p})
-Return a pointer to the previous link of @var{link_p} or @cnull{} if
-@var{link_p} is the first in the chain.
-@end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node list iteration
 @subsection Iteration over a list
 
 
-@noindent
 Example of forward iteration:
 
 @example
-ucl_list_t        this;
-ucl_list_link_t * link_p;
-ucl_value_t       val;
+ucl_node_t        N;
 
-...
-
-for (link_p = ucl_list_front(list); link_p; link_p = ucl_list_next(link_p))
-  @{
-    val = ucl_list_getval(link_p);
-    ...
-  @}
+while (N) @{
+  /* do something with N */
+  N = ucl_list_cdr(N);
+@}
 @end example
 
-
-Example of backward iteration:
+@noindent
+example of backward iteration:
 
 @example
-ucl_list_t        this;
-ucl_list_link_t *  link_p;
-ucl_value_t        val;
+ucl_node_t        N;
 
-...
-
-for (link_p = ucl_list_back(list); link_p; link_p = ucl_list_prev(link_p))
-  @{
-    val = ucl_list_data(link_p);
-    ...
-  @}
+while (N) @{
+  /* do something with N */
+  N = ucl_list_prev(N);
+@}
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node map

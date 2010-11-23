@@ -1,26 +1,25 @@
 /*
-   Part of: Useless Containers Library
-   Contents: linked list
+  Part of: Useless Containers Library
+  Contents: linked list
 
-   Abstract:
+  Abstract:
 
-	Lisp-like lists using the "ucl_node_t" structure.
+	Lisp-like lists using the "ucl_node_tag_t" structure.
 
-   Copyright (c) 2001-2005, 2008-2010 Marco Maggi <marcomaggi@gna.org>
+  Copyright (c) 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
-   This program is free software:  you can redistribute it and/or modify
-   it under the terms of the  GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or (at
-   your option) any later version.
+  This program is  free software: you can redistribute  it and/or modify
+  it under the  terms of the GNU General Public  License as published by
+  the Free Software Foundation, either  version 3 of the License, or (at
+  your option) any later version.
 
-   This program is  distributed in the hope that it  will be useful, but
-   WITHOUT  ANY   WARRANTY;  without   even  the  implied   warranty  of
-   MERCHANTABILITY  or FITNESS FOR  A PARTICULAR  PURPOSE.  See  the GNU
-   General Public License for more details.
+  This program  is distributed in the  hope that it will  be useful, but
+  WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+  MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+  General Public License for more details.
 
-   You should  have received  a copy of  the GNU General  Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+  You  should have received  a copy  of the  GNU General  Public License
+  along with this  program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -28,8 +27,8 @@
  ** Header files.
  ** ----------------------------------------------------------*/
 
+#define DEBUGGING	0
 #include "internal.h"
-
 
 
 /** ------------------------------------------------------------
@@ -37,13 +36,22 @@
  ** ----------------------------------------------------------*/
 
 size_t
-ucl_list_length (ucl_node_t node)
+ucl_list_length (void * _N)
 {
-  size_t	length = 0;
-
-  while ((node = node->bro))
+  ucl_node_t	N = _N;
+  size_t	length = 1;
+  while ((N = N->bro))
     ++length;
   return length;
+}
+void *
+ucl_list_ref (void * _N, ucl_index_t position)
+{
+  ucl_node_t	N = _N;
+  for (ucl_index_t j=0; j < position; ++j) {
+    if (N) N = N->bro;
+  }
+  return N;
 }
 
 
@@ -51,119 +59,104 @@ ucl_list_length (ucl_node_t node)
  ** Getters.
  ** ----------------------------------------------------------*/
 
-ucl_node_t
-ucl_list_caar (ucl_node_t node)
+void *
+ucl_list_caar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son)
-    N = node->son->son;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->son)
+    P = N->son->son;
+  return P;
 }
-ucl_node_t
-ucl_list_cadr (ucl_node_t node)
+void *
+ucl_list_cadr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son)
-    N = node->son->bro;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->son)
+    P = N->son->bro;
+  return P;
 }
-
-/* ------------------------------------------------------------ */
-
-ucl_node_t
-ucl_list_cdar (ucl_node_t node)
+void *
+ucl_list_cdar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro)
-    N = node->bro->son;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->bro)
+    P = N->bro->son;
+  return P;
 }
-ucl_node_t
-ucl_list_cddr (ucl_node_t node)
+void *
+ucl_list_cddr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro)
-    N = node->bro->bro;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->bro)
+    P = N->bro->bro;
+  return P;
 }
 
 /* ------------------------------------------------------------ */
 
-ucl_node_t
-ucl_list_caaar (ucl_node_t node)
+void *
+ucl_list_caaar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son && node->son->son)
-    N = node->son->son->son;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->son && N->son->son)
+    P = N->son->son->son;
+  return P;
 }
-ucl_node_t
-ucl_list_caadr (ucl_node_t node)
+void *
+ucl_list_caadr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son && node->son->son)
-    N = node->son->son->bro;
-  return N;
+  ucl_node_t	N = _N, P = NULL;
+  if (N->son && N->son->son)
+    P = N->son->son->bro;
+  return P;
 }
-ucl_node_t
-ucl_list_cadar (ucl_node_t node)
+void *
+ucl_list_cadar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son && node->son->bro)
-    N = node->son->bro->son;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->son && N->son->bro)
+    P = N->son->bro->son;
+  return P;
 }
-ucl_node_t
-ucl_list_caddr (ucl_node_t node)
+void *
+ucl_list_caddr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->son && node->son->bro)
-    N = node->son->bro->bro;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->son && N->son->bro)
+    P = N->son->bro->bro;
+  return P;
 }
-ucl_node_t
-ucl_list_cdaar (ucl_node_t node)
+void *
+ucl_list_cdaar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro && node->bro->son)
-    N = node->bro->son->son;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->bro && N->bro->son)
+    P = N->bro->son->son;
+  return P;
 }
-ucl_node_t
-ucl_list_cdadr (ucl_node_t node)
+void *
+ucl_list_cdadr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro && node->bro->son)
-    N = node->bro->son->bro;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->bro && N->bro->son)
+    P = N->bro->son->bro;
+  return P;
 }
-ucl_node_t
-ucl_list_cddar (ucl_node_t node)
+void *
+ucl_list_cddar (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro && node->bro->bro)
-    N = node->bro->bro->son;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->bro && N->bro->bro)
+    P = N->bro->bro->son;
+  return P;
 }
-ucl_node_t
-ucl_list_cdddr (ucl_node_t node)
+void *
+ucl_list_cdddr (void * _N)
 {
-  ucl_node_t	N = NULL;
-
-  if (node->bro && node->bro->bro)
-    N = node->bro->bro->bro;
-  return N;
+  ucl_node_t	N = _N , P = NULL;
+  if (N->bro && N->bro->bro)
+    P = N->bro->bro->bro;
+  return P;
 }
 
 
@@ -171,55 +164,72 @@ ucl_list_cdddr (ucl_node_t node)
  ** Removal.
  ** ----------------------------------------------------------*/
 
-ucl_node_t
-ucl_list_remove (ucl_node_t node)
+void *
+ucl_list_remove (void * _N)
 {
-  ucl_node_t	dad = node->dad;
-  ucl_node_t	bro = node->bro;
-
-  if (dad && bro)
-    {
-      dad->bro = bro;
-      bro->dad = dad;
-    }
-  else if (dad)
-    {
-      assert(NULL == node->bro);
-      dad->bro  = NULL;
-      node->dad = NULL;
-    }
-  else if (bro)
-    {
-      assert(NULL == node->dad);
-      bro->dad  = NULL;
-      node->bro = NULL;
-    }
-  return node;
+  ucl_node_t	N = _N;
+  ucl_list_set_cdr(N->dad, N->bro);
+  return N;
 }
-ucl_node_t
-ucl_list_popfront (ucl_node_t node)
+void *
+ucl_list_popfront (void * _N)
 {
-  ucl_node_t	first = ucl_tree_ref_first(node);
-
-  if (first->bro)
-    {
-      first->bro->dad = NULL;
-      first->bro      = NULL;
-    }
+  ucl_node_t	N = _N, first = ucl_tree_ref_first(N);
+  if (first->bro) {
+    first->bro->dad = NULL;
+    first->bro      = NULL;
+  }
   return first;
 }
-ucl_node_t
-ucl_list_popback (ucl_node_t node)
+void *
+ucl_list_popback (void * _N)
 {
-  ucl_node_t	last = ucl_tree_ref_last(node);
-
-  if (last->dad)
-    {
-      last->dad->bro = NULL;
-      last->dad      = NULL;
-    }
+  ucl_node_t	N = _N, last = ucl_tree_ref_last(N);
+  if (last->dad) {
+    last->dad->bro = NULL;
+    last->dad      = NULL;
+  }
   return last;
 }
 
+
+/** --------------------------------------------------------------------
+ ** Mapping and for each.
+ ** ----------------------------------------------------------------- */
+
+void
+ucl_list_for_each (ucl_callback_t cb, void * _N)
+{
+  for (ucl_node_t N = _N; N; N = N->bro) {
+    ucl_callback_apply(cb, N);
+  }
+}
+void
+ucl_list_map (void * _P, ucl_callback_t cb, void * _Q)
+{
+  for (ucl_node_t P = _P, Q = _Q; P; P = P->bro, Q = Q->bro) {
+    ucl_callback_apply(cb, P, Q);
+  }
+}
+
+
+/** --------------------------------------------------------------------
+ ** Other operations.
+ ** ----------------------------------------------------------------- */
+
+void *
+ucl_list_reverse (void * _N)
+{
+  ucl_node_t	N = _N, P;
+  while (N) {
+    P = N->bro;
+    if (P) {
+      ucl_list_set_cdr(P, N);
+    } else {
+      return N;
+    }
+  }
+  return N;
+}
 
 /* end of file */

@@ -33,7 +33,8 @@ $(eval $(call ds-c-test-programs,ucl))
 ucl_container_run_tests	=	\
 	run-test-btree		run-test-circular	\
 	run-test-hash		run-test-tree		\
-	run-test-vector		run-test-heap
+	run-test-vector		run-test-heap		\
+	run-test-list
 
 .PHONY: $(ucl_container_run_tests)
 
@@ -55,16 +56,19 @@ run-test-vector:
 run-test-heap:
 	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-heap
 
+run-test-list:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-list
+
 ## --------------------------------------------------------------------
 
 ucl_container_tests	=	\
 	test-btree		test-circular		\
 	test-hash		test-tree		\
-	test-vector		test-heap
+	test-vector		test-heap		\
+	test-list
 
 .PHONY: $(ucl_container_tests)
 
-# test-list:	; $(MAKE) tests PATTERNS=list.c
 # test-map:	; $(MAKE) tests PATTERNS=map.c
 # test-graph:	; $(MAKE) tests PATTERNS=graph.c
 
@@ -91,6 +95,10 @@ test-vector: ucl_shlib-all
 test-heap: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-heap.c
 	$(MAKE) run-test-heap
+
+test-list: ucl_shlib-all
+	$(MAKE) tests PATTERNS=test-list.c
+	$(MAKE) run-test-list
 
 #page
 ## ---------------------------------------------------------------------
