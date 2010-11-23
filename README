@@ -89,7 +89,7 @@ If you are using a  checkout from the development repository, the
     $ make
     $ make install
 
-to test the library:
+to build the tests:
 
     $ make tests
 

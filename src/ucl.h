@@ -673,7 +673,7 @@ typedef struct ucl_heap_tag_t {
   ucl_comparison_t	compar;
 } ucl_heap_tag_t;
 
-typedef ucl_heap_tag_t *	ucl_heap_t;
+typedef ucl_heap_tag_t	ucl_heap_t[1];
 
 /* ------------------------------------------------------------ */
 
@@ -1492,15 +1492,17 @@ extern ucl_node_t ucl_list_popback (ucl_node_t node);
  ** Heap functions.
  ** ----------------------------------------------------------*/
 
+extern void	ucl_heap_initialise	(ucl_heap_t H, ucl_comparison_t compar);
+extern void	ucl_heap_insert		(ucl_heap_t H, void * node);
+extern void *	ucl_heap_extract	(ucl_heap_t H);
+extern void	ucl_heap_merge		(ucl_heap_t H1, ucl_heap_t H2);
+
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
-ucl_heap_size (const ucl_heap_t this)
+ucl_heap_size (const ucl_heap_t H)
 {
-  return this->size;
+  return H->size;
 }
 
-extern void ucl_heap_insert (ucl_heap_t this, void * _node_p);
-extern ucl_node_t  ucl_heap_extract (ucl_heap_t this);
-extern void ucl_heap_merge (ucl_heap_t this, ucl_heap_t other);
 
 
 /** ------------------------------------------------------------
