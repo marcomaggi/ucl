@@ -4197,7 +4197,7 @@ ucl_hash_table_t        H;
 ucl_hash_entry_t        E;
 ucl_value_t             K;
 
-while ((entry = ucl_hash_first(H)))
+while ((E = ucl_hash_first(H)))
   @{
     ucl_hash_extract(H, E);
     key = ucl_hash_entry_key_ref(E);

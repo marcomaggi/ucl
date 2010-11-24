@@ -439,4 +439,76 @@ ucl_hash_average_search_distance (const ucl_hash_table_t this)
   return average_search_distance/((double)number_of_buckets);
 }
 
+
+/** --------------------------------------------------------------------
+ ** High-level interface.
+ ** ----------------------------------------------------------------- */
+
+typedef void ucl_high_hash_table_setter_fun_t (ucl_hash_entry_t E, ucl_value_t K, ucl_value_t V);
+
+typedef struct ucl_high_hash_table_tag_t {
+  ucl_hash_table_t			table;
+  ucl_vector_t				buckets;
+  ucl_memory_allocator_t		buckets_allocator;
+  ucl_memory_allocator_t		entries_allocator;
+  ucl_high_hash_table_setter_fun_t *	setter;
+} ucl_high_hash_table_tag_t;
+
+typedef ucl_high_hash_table_tag_t ucl_high_hash_table_t[1];
+
+void
+ucl_high_hash_constructor (ucl_high_hash_table_t H, size_t initial_size,
+			   ucl_memory_allocator_t buckets_allocator,
+			   ucl_memory_allocator_t entries_allocator,
+			   ucl_comparison_t compar, ucl_hash_t hash,
+			   ucl_high_hash_table_setter_fun_t * setter)
+{
+  ucl_vector_config_t C;
+  ucl_vector_initialise_config_hash(C);
+  C->number_of_slots	= initial_size;
+  C->allocator		= buckets_allocator;
+  ucl_vector_alloc(H->buckets, C);
+  H->entries_allocator	= entries_allocator;
+  H->setter		= setter;
+  ucl_hash_initialise(H->table, H->buckets, compar, hash);
+}
+void
+ucl_high_hash_destructor (ucl_high_hash_table_t H)
+{
+  ucl_hash_entry_t	E;
+  while ((E = ucl_hash_first(H->table))) {
+    ucl_hash_extract(H->table, E);
+  }
+  ucl_vector_free(H->buckets);
+}
+size_t
+ucl_high_hash_size (ucl_high_hash_table_t H)
+{
+  return ucl_hash_size(H->table);
+}
+void
+ucl_high_hash_insert (ucl_high_hash_table_t H, ucl_value_t K, ucl_value_t V)
+{
+  ucl_hash_entry_t	E;
+  H->entries_allocator.alloc(H->entries_allocator.data, &E, sizeof(ucl_hash_entry_tag_t));
+  H->setter(E, K, V);
+  ucl_hash_insert(H->table, E);
+}
+void
+ucl_high_hash_extract (ucl_high_hash_table_t H, ucl_hash_entry_t E)
+{
+  ucl_hash_extract(H->table, E);
+  H->entries_allocator.alloc(H->entries_allocator.data, &E, 0);
+}
+ucl_hash_entry_t
+ucl_high_hash_find (ucl_high_hash_table_t H, ucl_value_t K)
+{
+  return ucl_hash_find(H->table, K);
+}
+void
+ucl_high_hash_iterator (ucl_high_hash_table_t H, ucl_iterator_t I)
+{
+  ucl_hash_iterator(H->table, I);
+}
+
 /* end of file */
