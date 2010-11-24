@@ -1449,7 +1449,7 @@ extern void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
  ** List container types definitions.
  ** ----------------------------------------------------------*/
 
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+static __inline__ __attribute__((__always_inline__,__pure__))
 void
 ucl_list_set_car (void * _N, void * _M)
 {
@@ -1457,7 +1457,7 @@ ucl_list_set_car (void * _N, void * _M)
   if (N) N->son = M;
   if (M) M->dad = N;
 }
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__(1)))
+static __inline__ __attribute__((__always_inline__,__pure__))
 void
 ucl_list_set_cdr (void * _N, void * _M)
 {
@@ -1521,7 +1521,7 @@ extern void * ucl_list_cddar (void * node);
 extern void * ucl_list_cdddr (void * node);
 
 extern void * ucl_list_remove (void * node);
-extern void * ucl_list_popfront (void * node);
+extern void * ucl_list_popfront (void * node, void ** new_first_p);
 extern void * ucl_list_popback (void * node);
 
 extern void ucl_list_for_each (ucl_callback_t cb, void * _N);

@@ -30,6 +30,13 @@
 #define DEBUGGING	0
 #include "internal.h"
 
+#define SWAP(APTR, BPTR)	\
+  do {				\
+    void * tmp=(APTR);		\
+    (APTR)=(BPTR);		\
+    (BPTR)=tmp;			\
+  } while (0);
+
 
 /** ------------------------------------------------------------
  ** Inspection.
@@ -172,24 +179,29 @@ ucl_list_remove (void * _N)
   return N;
 }
 void *
-ucl_list_popfront (void * _N)
+ucl_list_popfront (void * _N, void ** new_first_p)
 {
-  ucl_node_t	N = _N, first = ucl_tree_ref_first(N);
-  if (first->bro) {
-    first->bro->dad = NULL;
-    first->bro      = NULL;
+  ucl_node_t	N = ucl_tree_ref_first(_N), new_first = NULL;
+  if (N->bro) {
+    new_first  = N->bro;
+    N->bro = NULL;
+    if (new_first)
+      new_first->dad = NULL;
   }
-  return first;
+  *new_first_p = new_first;
+  return N;
 }
 void *
 ucl_list_popback (void * _N)
 {
-  ucl_node_t	N = _N, last = ucl_tree_ref_last(N);
-  if (last->dad) {
-    last->dad->bro = NULL;
-    last->dad      = NULL;
+  ucl_node_t	N = ucl_tree_ref_last(_N), new_last = NULL;
+  if (N->dad) {
+    new_last = N->dad;
+    N->dad = NULL;
+    if (new_last)
+      new_last->bro = NULL;
   }
-  return last;
+  return N;
 }
 
 
@@ -220,16 +232,11 @@ ucl_list_map (void * _P, ucl_callback_t cb, void * _Q)
 void *
 ucl_list_reverse (void * _N)
 {
-  ucl_node_t	N = _N, P;
-  while (N) {
-    P = N->bro;
-    if (P) {
-      ucl_list_set_cdr(P, N);
-    } else {
-      return N;
-    }
+  ucl_node_t	N, P;
+  for (N = _N, P = _N; N; P = N, N = N->dad) {
+    SWAP(N->dad, N->bro);
   }
-  return N;
+  return P;
 }
 
 /* end of file */

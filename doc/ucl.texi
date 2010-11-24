@@ -308,6 +308,7 @@ The hash table structure
 
 The linked list structure
 
+* list overview::               How it is done.
 * list cons::                   Constructing lists.
 * list visit::                  Visiting a list.
 * list removal::                Removing elements from a list.
@@ -4788,12 +4789,45 @@ a doubly linked list; all the functions from the @code{btree} and
 @code{tree} modules can be used upon lists.
 
 @menu
+* list overview::               How it is done.
 * list cons::                   Constructing lists.
 * list visit::                  Visiting a list.
 * list removal::                Removing elements from a list.
 * list ops::                    Various operations on a list.
 * list iteration::              Iteration over a list.
 @end menu
+
+@c page
+@node list overview
+@subsection How it is done
+
+
+A @ucl{} list is a chain of @code{ucl_node_tag_t} structures in which
+the @code{bro} and @code{dad} fields are involved:
+
+@example
+           ----  bro   ----  bro   ----  bro
+NULL <----| N1 |----->| N2 |----->| N3 |----> NULL
+      dad  ---- <----  ---- <----  ----
+                 dad         dad
+@end example
+
+@noindent
+it is equivalent to a level of brothers in the @ucl{} tree module; the
+@code{son} field can be set to @cnull{}, or used to reference a nested
+list, or used to reference some other value.  The brother of a node is
+called @dfn{cdr}, the son of a node is called @dfn{car}.
+
+@quotation
+@strong{NOTE} We use the terms @emph{car} and @emph{cdr} to refer to the
+son and bro of a node, but notice that their meaning in the context of
+the @ucl{} is different from their meaning in the context of Lisp
+languages.
+@end quotation
+
+Going @emph{forwards} in a list chain means to follow the @code{bro}
+pointers; going @emph{backwards} in a list chain means to follow the
+@code{dad} pointers.
 
 @c page
 @node list cons
@@ -4984,13 +5018,14 @@ Remove @var{N} from its chain; return @var{N} itself.
 @end deftypefun
 
 
-@deftypefun void ucl_list_popfront (void * @var{N})
+@deftypefun {void *} ucl_list_popfront (void * @var{N}, void ** @var{new_first})
 Remove an element at the beginning of the list of which @var{N} is an
-element.
+element.  Return a pointer to the removed element; store in
+@var{new_first} a pointer to the new first element of the list.
 @end deftypefun
 
 
-@deftypefun void ucl_list_popback (void * @var{N})
+@deftypefun {void *} ucl_list_popback (void * @var{N})
 Remove an element at the end of the list of which @var{N} is an element.
 @end deftypefun
 
