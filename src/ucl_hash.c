@@ -444,6 +444,7 @@ ucl_hash_average_search_distance (const ucl_hash_table_t this)
  ** High-level interface.
  ** ----------------------------------------------------------------- */
 
+#if 0
 typedef void ucl_high_hash_table_setter_fun_t (ucl_hash_entry_t E, ucl_value_t K, ucl_value_t V);
 
 typedef struct ucl_high_hash_table_tag_t {
@@ -510,5 +511,6 @@ ucl_high_hash_iterator (ucl_high_hash_table_t H, ucl_iterator_t I)
 {
   ucl_hash_iterator(H->table, I);
 }
+#endif
 
 /* end of file */
