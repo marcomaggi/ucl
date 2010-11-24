@@ -284,15 +284,21 @@ The circular list
 
 The graph structure
 
-* graph implementation::        How it's done.
+* graph overview::              How it's done.
+* graph types::                 Graph type definitions.
 * graph insert::                Inserting links and nodes.
 * graph extract::               Extracting links and nodes.
 * graph merge::                 Merging links.
-* graph node list::             Chaining nodes.
 * graph value::                 Accessing values.
 * graph link iter::             Link iterators.
 * graph ops::                   Various operations on a graph.
 * graph dfs::                   Depth first search.
+
+Depth first search
+
+* graph dfs example::           @dfs{} example.
+* graph dfs types::             @dfs{} related type defintions.
+* graph dfs api::               @dfs{} programming interface.
 
 The hash table structure
 
@@ -3411,49 +3417,31 @@ empty.
 @section The graph structure
 
 
+A @ucl{} graph is a network of (not so) little data structures; the
+elements of the graph are nodes and links.
+
 @menu
-* graph implementation::        How it's done.
+* graph overview::              How it's done.
+* graph types::                 Graph type definitions.
 * graph insert::                Inserting links and nodes.
 * graph extract::               Extracting links and nodes.
 * graph merge::                 Merging links.
-* graph node list::             Chaining nodes.
 * graph value::                 Accessing values.
 * graph link iter::             Link iterators.
 * graph ops::                   Various operations on a graph.
 * graph dfs::                   Depth first search.
 @end menu
 
-
-@noindent
-A graph is a network of (not so) little structures.  The elements of the
-graph are nodes and links.  Both node and link structures should be
-allocated using an equivalent of @function{calloc}, or reset to zero
-before being inserted in a graph.
-
-
-@deftp {Struct Typedef} ucl_graph_node_t
-The type of the node structure.  It should be treated as opaque even if
-it is not.
-@end deftp
-
-
-@deftp {Struct Typedef} ucl_graph_link_t
-The type of the link structure.  It should be treated as opaque even if
-it is not.
-@end deftp
-
-@c ------------------------------------------------------------
-
 @c page
-@node graph implementation
+@node graph overview
 @subsection How it's done
 
 
-@noindent
-@ucl{} does not enforce a collection of node structures: it is
-responsibility of the user to put nodes somewhere.  For convenience: the
-node structure has a ``next node'' field that allows us to put nodes
-into a simply linked list, but it is not mandatory to use it.
+@ucl{} does not enforce the use of a container to collect graph node
+structures: it is responsibility of the user to put nodes somewhere.
+For convenience: the node structure has a ``next node'' field that
+allows us to put nodes into a simply linked list, but it is not
+mandatory to use it.
 
 Each node references two doubly linked lists of links: one for outgoing
 links and one for incoming links.
@@ -3509,287 +3497,181 @@ node, one of incoming links of the destination node.
     ------------------          -----------------
 @end example
 
-@c ------------------------------------------------------------
+@c page
+@node graph types
+@subsection Graph type definitions
+
+
+Both node and link structures should be allocated using an equivalent of
+@function{calloc}, or reset to zero before being inserted in a graph.
+
+
+@deftp {Struct Typedef} ucl_graph_node_tag_t
+@deftpx {Pointer Typedef} ucl_graph_node_t
+Structure type and pointer to structure type for nodes.  They should be
+treated as opaque even if it is not.
+@end deftp
+
+
+@deftp {Struct Typedef} ucl_graph_link_tag_t
+@deftpx {Pointer Typedef} ucl_graph_link_t
+Structure type and pointer to structure type for links.  They should be
+treated as opaque even if it is not.
+@end deftp
 
 @c page
 @node graph insert
 @subsection Inserting links and nodes
 
 
-@deftypefun void ucl_graph_link (@var{source_node}, @var{link}, @var{dest_node})
+@deftypefun void ucl_graph_link (@var{src_node}, @var{link}, @var{dst_node})
 Insert a link between two nodes.  The source and destination node
 structures cannot be exchanged: the link is directed.  Arguments:
 
 @table @code
-@item ucl_graph_node_t * @var{source_node}
+@item ucl_graph_node_t @var{src_node}
 pointer to the source node structure;
-@item ucl_graph_link_t * @var{link}
+
+@item ucl_graph_link_t @var{link}
 pointer to the link structure;
-@item ucl_graph_node_t * @var{dest_node}
+
+@item ucl_graph_node_t @var{dst_node}
 pointer to the destination node structure.
 @end table
-@end deftypefun
 
-
-Example:
+Usage example:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t        *src, *dst;
-ucl_graph_link_t *      lnk;
+ucl_memory_allocator_t  A;
+ucl_graph_node_t        src = NULL, dst = NULL;
+ucl_graph_link_t        lnk = NULL;
 
-src = dst = lnk = NULL;
-allocator.alloc(allocator.data, &src, sizeof(ucl_graph_node_t));
-allocator.alloc(allocator.data, &dst, sizeof(ucl_graph_node_t));
-allocator.alloc(allocator.data, &lnk, sizeof(ucl_graph_link_t));
+A.alloc(A.data, &src, sizeof(ucl_graph_node_tag_t));
+A.alloc(A.data, &dst, sizeof(ucl_graph_node_tag_t));
+A.alloc(A.data, &lnk, sizeof(ucl_graph_link_tag_t));
 
 ucl_graph_link(src, lnk, dst);
 @end example
+@end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_graph_nodes_are_linked (ucl_graph_node_t * @var{src}, ucl_graph_node_t * @var{dst})
+@deftypefun ucl_bool_t ucl_graph_nodes_are_linked (ucl_graph_node_t @var{src}, ucl_graph_node_t @var{dst})
 Return true if there is a link between @var{src} and @var{dst}, with
 source @var{src} and destination @var{dst}.
 @end deftypefun
 
 
-@deftypefun ucl_bool_t ucl_graph_nodes_are_connected (ucl_graph_node_t * @var{src}, ucl_graph_node_t * @var{dst})
-Return true if there is a link between @var{src} and @var{dst}, no
-matter what is the direction.
+@deftypefun ucl_bool_t ucl_graph_nodes_doubly_linked (ucl_graph_node_t @var{A}, ucl_graph_node_t @var{B})
+Return true if there are two links between @var{A} and @var{B}, one from
+@var{A} to @var{B} and one from @var{B} to @var{A}.
 @end deftypefun
 
-@c ------------------------------------------------------------
+
+@deftypefun ucl_bool_t ucl_graph_nodes_are_connected (ucl_graph_node_t @var{A}, ucl_graph_node_t @var{B})
+Return true if there is a link between @var{A} and @var{B}, no matter
+the direction.
+@end deftypefun
 
 @c page
 @node graph extract
 @subsection Extracting links and nodes
 
 
-@subsubsection Unlinking links
-
-
-@deftypefun void ucl_graph_unlink (ucl_graph_link_t * @var{link_p})
-Remove a link from the graph.  After this function has been called, it is
-safe to free the memory of the link.
+@deftypefun void ucl_graph_unlink (ucl_graph_link_t @var{L})
+Remove a link from the graph.  After this function has been called, it
+is safe to free the memory of the link.
 @end deftypefun
 
-Unlinking example:
-
-@example
-ucl_memory_allocator_t  allocator;
-ucl_graph_link_t *      link_p;
-ucl_value_t             value;
-
-...
-
-link_p = ...;
-value  = ucl_graph_get_value(link_p);
-/* release 'value' if needed */
-allocator.alloc(allocator.data, &link_p, 0);
-@end example
-
-
-@c ------------------------------------------------------------
-
-@subsubsection Erasing a node with loops
-
-
-@noindent
 To erase a node from a graph we have to remove all the links between it
-and the other nodes.  To do it:
+and the other nodes.  To do it in the case of structures allocated with
+a @ucl{} memory allocator:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t *      node_p = ...;
-ucl_graph_link_t *      link_p;
-ucl_value_t             value;
+ucl_memory_allocator_t  A;
+ucl_graph_node_t        N;
+ucl_graph_link_t        L;
 
-
-for (link_p = ucl_graph_output_link(node_p);
-     NULL != link_p;
-     link_p = ucl_graph_output_link(node_p))
+for (L = ucl_graph_output_link(N); L;
+     L = ucl_graph_output_link(N))
   @{
-    ucl_graph_unlink(link_p);
-    value = ucl_graph_link_get_value(link_p);
-    /* release 'value' if needed */
-    allocator.alloc(allocator.data, &link_p, 0);
+    ucl_graph_unlink(L);
+    A.alloc(A.data, &L, 0);
   @}
 
-for (link_p = ucl_graph_input_link(node_p);
-     NULL != link_p;
-     link_p = ucl_graph_input_link(node_p))
+for (L = ucl_graph_input_link(N); L;
+     L = ucl_graph_input_link(N))
   @{
-    ucl_graph_unlink(link_p);
-    value = ucl_graph_link_get_value(link_p);
-    /* release 'value' if needed */
-    allocator.alloc(allocator.data, &link_p, 0);
+    ucl_graph_unlink(L);
+    A.alloc(A.data, &L, 0);
   @}
 
-value = ucl_graph_node_get_value(node_p)
-/* release 'value' if needed */
-allocator.alloc(allocator.data, &node_p, 0);
+A.alloc(A.data, &N, 0);
 @end example
-
-
-@c ------------------------------------------------------------
-
-@subsubsection Erasing a node with loop macros
-
-
-@noindent
-The following two macros do the same loops described above.
 
 
 @defmac UCL_GRAPH_FIRST_INPUT_LINK_LOOP (@var{node}, @var{link})
-Loop over the first input link until it is @cnull{}.
-@end defmac
-
-@defmac UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP (@var{node}, @var{link})
-Loop over the first output link until it is @cnull{}.
-@end defmac
-
-With them the extraction code looks like this:
+@defmacx UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP (@var{node}, @var{link})
+Loop over the first input or output link until it is @cnull{}.  These
+macros do the same loops described above; with them the extraction code
+looks like this:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t *      node_p = ...;
-ucl_graph_link_t *      link_p;
-ucl_value_t             value;
+ucl_memory_allocator_t  A;
+ucl_graph_node_t        N;
+ucl_graph_link_t        L;
 
-UCL_GRAPH_FIRST_INPUT_LINK_LOOP(node_p, link_p)
-  @{
-    ucl_graph_unlink(link_p);
-    value = ucl_graph_link_get_value(link_p);
-    /* release 'value' if needed */
-    allocator.alloc(allocator.data, &link_p, 0);
-  @}
+UCL_GRAPH_FIRST_INPUT_LINK_LOOP(N, L) @{
+  ucl_graph_unlink(L);
+  A.alloc(A.data, &L, 0);
+@}
 
-UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP(node_p, link_p)
-  @{
-    ucl_graph_unlink(link_p);
-    value = ucl_graph_link_get_value(link_p);
-    /* release 'value' if needed */
-    allocator.alloc(allocator.data, &link_p, 0);
-  @}
+UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP(N, L) @{
+  ucl_graph_unlink(L);
+  A.alloc(A.data, &L, 0);
+@}
 
-value = ucl_graph_node_get_value(node_p)
-/* release 'value' if needed */
-allocator.alloc(allocator.data, &node_p, 0);
+A.alloc(A.data, &N, 0);
 @end example
+@end defmac
 
 
-@c ------------------------------------------------------------
-
-@subsubsection Erasing a node with a link destructor
-
-
-@noindent
-If it is fine to release the link structure by invoking a destructor,
-the following function does it.
-
-@deftypefun void ucl_graph_erase_node_free_links (@var{node}, @var{destructor})
-Erase a node from a graph finalising all the links.
-
-The node structure itself is not finalised: its link fields are set to
-@cnull{}, the value field is left untouched, the structure memory is
-not freed.  @var{node} can still be used as argument to
-@function{ucl_graph_get_next_node}.
-
-@table @code
-@item ucl_graph_node_t * @var{node}
-The node to erase.
-@item void (* @var{destructor}) (void *)
-The destructor function to invoke upon all the links.
-@end table
-@end deftypefun
-
-With it the erasure code looks like this:
+@deftypefun void ucl_graph_erase_node_destroy_links (ucl_graph_node_t @var{node}, ucl_callback_t @var{destructor})
+Erase a node from a graph finalising all the links; the erasure code
+looks like this:
 
 @example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t *      node_p = ...;
-ucl_value_t             value;
+ucl_graph_node_t        N;
+ucl_callback_t          destructor;
 
-
-ucl_graph_erase_node_free_links(node_p, link_destructor);
-value = ucl_graph_node_get_value(node_p)
-/* release 'value' if needed */
-allocator.alloc(allocator.data, &node_p, 0);
+ucl_graph_erase_node_destroy_links(N, destructor);
+A.alloc(A.data, &N, 0);
 @end example
 
 @noindent
 and we can implement:
 
 @example
-ucl_memory_allocator_t  allocator;
-
-void
-link_destructor (void * p)
+ucl_value_t
+destructor_fun (ucl_value_t dummy, ucl_graph_link_t L)
 @{
-  ucl_graph_link_t *    link_p = p;
-  ucl_value_t           value;
-
-  value = ucl_graph_link_get_value(link_p);
-  /* release 'value' if needed */
-  allocator.alloc(allocator.data, &link_p, 0);
+  A.alloc(A.data, &L, 0);
 @}
+ucl_callback_t destructor = @{
+  .data = ucl_value_null,
+  .func = destructor_fun
+@};
 @end example
-
-
-@c ------------------------------------------------------------
-
-@subsubsection Erasing a node by collecting links
-
-
-@noindent
-Another function collects the links in a simply linked list and returns
-its first node.
-
-
-@deftypefun {ucl_graph_link_t *} ucl_graph_erase_node_return_links (ucl_graph_node_t * @var{node})
-Erase a node from a graph.
 
 The node structure itself is not finalised: its link fields are set to
 @cnull{}, the value field is left untouched, the structure memory is
-not freed.  @var{node} can still be used as argument to
-@function{ucl_graph_get_next_node}.
-
-All the unlinked links are chained together in a simply linked list that
-can be handled later.  A pointer to the first link is returned.
+not freed.
 @end deftypefun
-
-
-With it the erasure code looks like this:
-
-@example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t *      node_p = ...;
-ucl_link_t *            link_p;
-ucl_link_t *            next_p;
-ucl_value_t             value;
-
-
-link_p = ucl_graph_erase_node_return_links(node_p);
-for ((link_p && (next_p = link_p->next_p));
-     NULL != link_p;
-     (link_p = next_p && next_p = next_p->next_p))
-  @{
-    allocator.alloc(allocator.data, &link_p, 0);
-  @}
-
-value = ucl_graph_node_get_value(node_p)
-/* release 'value' if needed */
-allocator.alloc(allocator.data, &node_p, 0);
-@end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node graph merge
 @subsection Merging links
 
 
-@noindent
 Merging means to replace two links with one that represents the whole
 path; before merging the scenario is:
 
@@ -3822,16 +3704,10 @@ after merging upon the output link:
 @end example
 
 
-@deftypefun void ucl_graph_merge_upon_input_link (@var{in}, @var{out})
-@deftypefunx void ucl_graph_merge_upon_output_link (@var{in}, @var{out})
-Merge two links using @var{in} or @var{out} to replace them.
-
-@table @code
-@item ucl_graph_link_t * @var{in}
-Pointer to the link incoming to the middle node.
-@item ucl_graph_link_t * @var{out}
-Pointer to the link outgoing from the middle node.
-@end table
+@deftypefun void ucl_graph_merge_upon_input_link (ucl_graph_link_t @var{in}, ucl_graph_link_t @var{out})
+@deftypefunx void ucl_graph_merge_upon_output_link (ucl_graph_link_t @var{in}, ucl_graph_link_t @var{out})
+Merge two links; @var{in} references the link incoming to the middle
+node; @var{out} references the link outgoing from the middle node.
 
 Merging is meaningful if @var{in} and @var{out} are connected to the
 same node, but these functions do not check for this.
@@ -3839,223 +3715,8 @@ same node, but these functions do not check for this.
 The middle node is excluded from the path: if other links connect the
 node to the graph nothing needs to be done, but if merging the links
 removes the last links between the node and the graph: the node must be
-finalised (free memory, do what is needed with the node's vlaue).
+finalised.
 @end deftypefun
-
-
-Example of merging upon the input link:
-
-@example
-ucl_graph_link_t * in  = ...;
-ucl_graph_link_t * out = ...;
-ucl_value_t        iv, ov, nv;
-
-iv = ucl_graph_link_get_value(in);
-ov = ucl_graph_link_get_value(out);
-nv.integer = iv.integer + ov.integer;
-
-ucl_graph_merge_upon_input_link (in, out);
-ucl_graph_link_set_value(in, nv);
-
-free_memory_of(out);
-@end example
-
-@noindent
-example of merging upon the output link:
-
-@example
-ucl_graph_link_t * in  = ...;
-ucl_graph_link_t * out = ...;
-ucl_value_t        iv, ov, nv;
-
-iv = ucl_graph_link_get_value(in);
-ov = ucl_graph_link_get_value(out);
-nv.integer = iv.integer + ov.integer;
-
-ucl_graph_merge_upon_output_link (in, out);
-ucl_graph_link_set_value(on, nv);
-
-free_memory_of(in);
-@end example
-
-
-@c page
-@node graph node list
-@subsection Chaining nodes
-
-
-@noindent
-Nodes can be chained in a simply linked list.  The @code{next_node_p}
-field of @code{ucl_graph_node_t} is a pointer that can be used to
-reference the ``next node''; if it is @cnull{} no next node exists.
-
-
-@subsubsection Setting/getting the next node
-
-
-@deftypefun void ucl_graph_set_next_node (ucl_graph_node_t * @var{node}, const ucl_graph_node_t * @var{next})
-Store @var{next} into the ``next node'' field of @var{node}.  @var{next}
-can be @cnull{} to represent the end of the linked list.
-@end deftypefun
-
-
-@deftypefun {ucl_graph_node_t *} ucl_graph_get_next_node (const ucl_graph_node_t * @var{node})
-Return the pointer stored in the ``next node'' field of @var{node}.  The
-return value can be @cnull{} if no next node exists.
-@end deftypefun
-
-Example of building the chain:
-
-@example
-ucl_memory_allocator_t  allocator;
-ucl_graph_node_t        *A, *B, *C;
-
-A = B = C = NULL;
-allocator.alloc(allocator.data, &A, sizeof(ucl_graph_node_t));
-allocator.alloc(allocator.data, &B, sizeof(ucl_graph_node_t));
-allocator.alloc(allocator.data, &C, sizeof(ucl_graph_node_t));
-
-ucl_graph_set_next_node(A, B);
-ucl_graph_set_next_node(B, C);
-ucl_graph_set_next_node(C, NULL);
-@end example
-
-@example
- ---      ---      ---
-| A |--->| B |--->| C |---> NULL
- ---      ---      ---
-@end example
-
-
-
-@subsubsection Insertion and removal
-
-
-@deftypefun {ucl_graph_node_t *} ucl_graph_remove_next_node (ucl_graph_node_t * @var{node})
-Extract the node next to @var{node} and return its pointer.  If, before
-the invocation of this function, the scenario is:
-
-@example
- ------          ------          -------
-| node |------->| next |------->| other |---> NULL
- ------          ------          -------
-@end example
-
-@noindent
-after the invocation of this function the scenario is:
-
-@example
- ------          -------
-| node |------->| other |---> NULL
- ------          -------
-
-         ------
-        | next |
-         ------
-@end example
-@end deftypefun
-
-
-@deftypefun void ucl_graph_insert_next_node (ucl_graph_node_t * @var{node}, ucl_graph_node_t * @var{next})
-Insert @var{next} in the list as next node of @var{node}.  The old next
-node becomes the next node of @var{next}.  This function works even when
-@var{node} is the last of the list and when @var{next} is @cnull{}.
-
-If, before the invocation of this function, the scenario is:
-
-@example
- ------      -------
-| node |--->| other |---> NULL
- ------      -------
-
-    ------
-   | next |
-    ------
-@end example
-
-@noindent
-after the invocation of this function the scenario is:
-
-@example
- ------      ------      -------
-| node |--->| next |--->| other |---> NULL
- ------      ------      -------
-@end example
-@end deftypefun
-
-
-@subsubsection Iteration
-
-
-@noindent
-Example of iterating over the nodes:
-
-@example
-ucl_graph_node_t * first_p = ...;
-ucl_graph_node_t * next_p;
-
-for (next_p = first_p;
-     NULL != next_p;
-     next_p = ucl_graph_get_next_node(next_p))
-  @{
-    do_something_with(next_p);
-  @}
-@end example
-
-The following macro implements the @code{for()}.
-
-@defmac UCL_GRAPH_NODE_LIST_LOOP (@var{first}, @var{iter})
-Expands into a @code{for()} loop that iterates the list starting at
-@var{first} and using @var{iter} as iterator.
-@end defmac
-
-With it the iteration becomes:
-
-@example
-ucl_graph_node_t * first_p = ...;
-ucl_graph_node_t * next_p;
-
-UCL_GRAPH_NODE_LIST_LOOP(first_p, next_p)
-  @{
-    do_something_with(next_p);
-  @}
-@end example
-
-
-@defmac UCL_GRAPH_NODE_LIST_DELETE_LOOP (@var{first}, @var{iter_node}, @var{tmp_node})
-Iterates over the list of nodes in a way that allows to delete the
-current node from the list.  @var{first} is a pointer to the first node
-of the list, @var{iter_node} is the iterator variable, @var{tmp_node} is
-a variable used to store a temporary value.
-@end defmac
-
-Example of iteration that deletes nodes:
-
-@example
-ucl_graph_node_t * first_p = ...;
-ucl_graph_node_t * current_p;
-ucl_graph_node_t * tmp_p;
-ucl_graph_link_t * link_p;
-
-UCL_GRAPH_NODE_LIST_DELETE_LOOP(first_p, current_p, tmp_p)
-  @{
-    UCL_GRAPH_FIRST_INPUT_LINK_LOOP(current_p, link_p)
-      @{
-        ucl_graph_unlink(link_p);
-        free_memory_of(link_p);
-      @}
-
-    UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP(current_p, link_p)
-      @{
-        ucl_graph_unlink(link_p);
-        free_memory_of(link_p);
-      @}
-
-      free_memory_of(current_p);
-  @}
-@end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node graph value
@@ -4079,112 +3740,97 @@ Return the current value in the structure.
 Set/get the mark value, a field of @code{ucl_value_t} type.
 @end deftypefun
 
-@c ------------------------------------------------------------
-
 @c page
 @node graph link iter
 @subsection Link iterators
 
 
-@noindent
-It is possible to iterate over the lists of incoming and outgoing links
-with @code{for()} loops.
-
 @defmac UCL_GRAPH_OUTPUT_LINKS_LOOP (@var{node}, @var{link})
-Iterate over the outgoing links of @var{node} using @var{link} as
-iterator.
-@end defmac
-
-@defmac UCL_GRAPH_INPUT_LINKS_LOOP (@var{node}, @var{link})
-Iterate over the incoming links of @var{node} using @var{link} as
-iterator.
-@end defmac
+@defmacx UCL_GRAPH_INPUT_LINKS_LOOP (@var{node}, @var{link})
+Iterate over the outgoing or ingoing links of @var{node} using
+@var{link} as iterator in a @code{for ()} loop.
 
 Example of iteration over outgoing links:
 
 @example
-ucl_graph_node_t * node_p = ...;
-ucl_graph_link_t * link_p;
+ucl_graph_node_t        N;
+ucl_graph_link_t        L;
 
-UCL_GRAPH_OUTPUT_LINKS_LOOP(node_p, link_p)
-  @{
-    do_something_with(link_p);
-  @}
+UCL_GRAPH_OUTPUT_LINKS_LOOP(N, L) @{
+  do_something_with(L);
+@}
 @end example
 
 @noindent
 example of iteration over incoming links:
 
 @example
-ucl_graph_node_t * node_p = ...;
-ucl_graph_link_t * link_p;
+ucl_graph_node_t        N;
+ucl_graph_link_t        L;
 
-UCL_GRAPH_INPUT_LINKS_LOOP(node_p, link_p)
-  @{
-    do_something_with(link_p);
-  @}
+UCL_GRAPH_INPUT_LINKS_LOOP(N, L) @{
+  do_something_with(L);
+@}
 @end example
+@end defmac
+
+@c ------------------------------------------------------------
+
+@subsubheading Finding first and last links
 
 
-@subsubsection Finding first and last links
-
-
-@deftypefun {ucl_graph_link_t *} ucl_graph_input_link (ucl_graph_node_t * @var{node})
-@deftypefunx {ucl_graph_link_t *} ucl_graph_output_link (ucl_graph_node_t * @var{node})
-Return a pointer to the first incoming or outgoing link of @var{node}.
+@deftypefun ucl_graph_link_t ucl_graph_input_link (ucl_graph_node_t @var{N})
+@deftypefunx ucl_graph_link_t ucl_graph_output_link (ucl_graph_node_t @var{N})
+Return a pointer to the first incoming or outgoing link of @var{N}.
 @end deftypefun
 
 
-@deftypefun {ucl_graph_link_t *} ucl_graph_last_output_link (ucl_graph_link_t * @var{link})
-@deftypefunx {ucl_graph_link_t *} ucl_graph_last_input_link (ucl_graph_link_t * @var{link})
+@deftypefun ucl_graph_link_t ucl_graph_last_output_link (ucl_graph_link_t @var{L})
+@deftypefunx ucl_graph_link_t ucl_graph_last_input_link (ucl_graph_link_t @var{L})
 Traverse toward the end the list of incoming or outgoing links, starting
-at @var{link}.  Return the last link.
+at @var{L}.  Return the last link.
 @end deftypefun
 
 
-@deftypefun {ucl_graph_link_t *} ucl_graph_first_output_link (ucl_graph_link_t * @var{link})
-@deftypefunx {ucl_graph_link_t *} ucl_graph_first_input_link (ucl_graph_link_t * @var{link})
+@deftypefun ucl_graph_link_t ucl_graph_first_output_link (ucl_graph_link_t @var{L})
+@deftypefunx ucl_graph_link_t ucl_graph_first_input_link (ucl_graph_link_t @var{L})
 Traverse toward the beginning the list of incoming or outgoing links,
-starting at @var{link}.  Return the first link.
-@end deftypefun
-
-
-
-@subsubsection Finding previous and next links
-
-
-@deftypefun {ucl_graph_link_t *} ucl_graph_prev_input_link (ucl_graph_link_t * @var{link})
-@deftypefunx {ucl_graph_link_t *} ucl_graph_prev_output_link (ucl_graph_link_t * @var{link})
-Return a pointer to the previous link in the chain.  The return value is
-@cnull{} if @var{link} is the first link.
-@end deftypefun
-
-@deftypefun {ucl_graph_link_t *} ucl_graph_next_input_link (ucl_graph_link_t * @var{link})
-@deftypefunx {ucl_graph_link_t *} ucl_graph_next_output_link (ucl_graph_link_t * @var{link})
-Return a pointer to the next link in the chain.  The return value is
-@cnull{} if @var{link} is the last link.
+starting at @var{L}.  Return the first link.
 @end deftypefun
 
 @c ------------------------------------------------------------
+
+@subsubheading Finding previous and next links
+
+
+@deftypefun ucl_graph_link_t ucl_graph_prev_input_link (ucl_graph_link_t @var{L})
+@deftypefunx ucl_graph_link_t ucl_graph_prev_output_link (ucl_graph_link_t @var{L})
+Return a pointer to the previous link in the chain.  The return value is
+@cnull{} if @var{L} is the first link.
+@end deftypefun
+
+
+@deftypefun ucl_graph_link_t ucl_graph_next_input_link (ucl_graph_link_t @var{L})
+@deftypefunx ucl_graph_link_t ucl_graph_next_output_link (ucl_graph_link_t @var{L})
+Return a pointer to the next link in the chain.  The return value is
+@cnull{} if @var{L} is the last link.
+@end deftypefun
 
 @c page
 @node graph ops
 @subsection Various operations on a graph
 
 
-@deftypefun size_t ucl_graph_number_of_input_links (ucl_graph_node_t * @var{node})
-@deftypefunx size_t ucl_graph_number_of_output_links (ucl_graph_node_t * @var{node})
+@deftypefun size_t ucl_graph_number_of_input_links (ucl_graph_node_t @var{N})
+@deftypefunx size_t ucl_graph_number_of_output_links (ucl_graph_node_t @var{N})
 Return the number of incoming or outgoing links.
 @end deftypefun
-
-@c ------------------------------------------------------------
 
 @c page
 @node graph dfs
 @subsection Depth first search
 
 
-@noindent
 Depth first search (@dfs{}) is an iteration over the nodes of a graph
 that starts from a selected node and visits a node only once; the result
 of the iteration is a string of nodes.  The iteration is analogous to the
@@ -4205,13 +3851,17 @@ with outgoing links only: the @dfs{} does not touch all the nodes.
 @ucl{} implements two types of @dfs{}: one that honors the direction of
 the links; one that does not.
 
+@menu
+* graph dfs example::           @dfs{} example.
+* graph dfs types::             @dfs{} related type defintions.
+* graph dfs api::               @dfs{} programming interface.
+@end menu
 
-@c ------------------------------------------------------------
-
+@c page
+@node graph dfs example
 @subsubsection @dfs{} example
 
 
-@noindent
 Given the following connected graph:
 
 @example
@@ -4269,13 +3919,11 @@ the values of counter when entering a node and leaving a node, we can
 infer properties of the graph.
 @end enumerate
 
-@c ------------------------------------------------------------
+@c page
+@node graph dfs types
+@subsubsection @dfs{} related type defintions
 
 
-@subsubsection Programming interface
-
-
-@noindent
 The @dfs{} is implemented as a recursive process that puts touched nodes
 on a stack.  The stack is the result of the iteration.  A @dfs{} is not
 reentrant because nodes are marked by setting a field in
@@ -4286,83 +3934,82 @@ Also, do not modify a graph while a @dfs{} is running: the result is
 undefined.
 
 
-@deftp {Struct Typedef} ucl_graph_dfs_t
-Type of structure that holds the result of a @dfs{}, both directed and
-not.  Public fields:
-
-@table @code
-@item ucl_vector_t visited_nodes
-handles memory allocation for the nodes touched by the iteration: its
-elements are instances of @code{ucl_graph_dfs_item_t}.
-@end table
+@deftp {Struct Typedef} ucl_graph_dfs_tag_t
+@deftpx {One Element Array} ucl_graph_dfs_t
+Hold the result of a @dfs{}, both directed and not.  This structure must
+be handled as opaque.
 @end deftp
 
 
 @deftp {Struct Typedef} ucl_graph_dfs_item_t
-Represents a node touched by the iteration.  Public fields:
+Represent a node touched by the iteration.  Public fields:
 
 @table @code
-@item ucl_graph_node_t * node_p
+@item ucl_graph_node_t node
 pointer to the node;
+
 @item size_t in_counter
 the value of the counter when the node was entered;
+
 @item size_t out_counter
 the value of the counter when the node was left.
 @end table
 
-The initial value of the counter is zero; the root node of the @dfs{} is
-marked with @code{in_counter = 0}.
+The initial value of the counters is zero; the root node of the @dfs{}
+is recognisable because it has @code{in_counter = 0}.
 @end deftp
 
+@c page
+@node graph dfs api
+@subsubsection @dfs{} programming interface
 
-@deftypefun void ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * @var{search_handle})
+
+@deftypefun void ucl_graph_dfs_initialise_handle (ucl_graph_dfs_t @var{S})
 Initialise an already allocated search handle.
 @end deftypefun
 
 
-@deftypefun void ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * @var{search_handle})
+@deftypefun void ucl_graph_dfs_finalise_handle (ucl_graph_dfs_t @var{S})
 Finalise a search handle.  All the memory is released.  A @dfs{} must
 @strong{always} be finalised with a call to this function.
 @end deftypefun
 
 
-@deftypefun void ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * @var{search_handle}, ucl_graph_node_t * @var{root_p})
-Perform a directed @dfs{} over a graph starting from @code{root_p};
-store the result into @var{search_handle}.
+@deftypefun void ucl_graph_dfs_directed (ucl_graph_dfs_t @var{S}, ucl_graph_node_t @var{root})
+Perform a directed @dfs{} over a graph starting from @code{root}; store
+the result into @var{S}.
 @end deftypefun
 
 
-@deftypefun void ucl_graph_depth_first_search (ucl_graph_dfs_t * @var{search_handle}, ucl_graph_node_t * @var{root_p})
-Perform a non--directed @dfs{} over a graph starting from @code{root_p};
-store the result into @var{search_handle}.
+@deftypefun void ucl_graph_dfs (ucl_graph_dfs_t @var{S}, ucl_graph_node_t @var{root})
+Perform a non--directed @dfs{} over a graph starting from @code{root};
+store the result into @var{S}.
 @end deftypefun
 
 
 Example:
 
 @example
-ucl_graph_dfs_t         search_handle;
-ucl_iterator_t          iterator;
-ucl_graph_dfs_item_t *  item;
-ucl_graph_node_t *      root_p = ...;
+ucl_graph_dfs_t         S;
+ucl_vector_t            visited_nodes;
 
-
-ucl_graph_initialise_dfs_handle(&search_handle);
+ucl_graph_initialise_dfs_handle(S, visited_nodes);
 @{
-  ucl_graph_directed_depth_first_search(&search_handle, root_p);
+  ucl_iterator_t          I;
+  ucl_graph_node_t *      root;
 
-  for (ucl_vector_iterator_forward(search_handle.visited_nodes, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  ucl_graph_dfs_directed(S, root);
+  for (ucl_vector_iterator_forward(visited_nodes, I);
+       ucl_iterator_more(I); ucl_iterator_next(I))
     @{
-      item = ucl_iterator_ptr(iterator);
+      ucl_graph_dfs_item_t *  item;
+
+      item = ucl_iterator_ptr(I);
       do_something_with(item);
     @}
 @}
-ucl_graph_finalise_dfs_handle(&search_handle);
+ucl_graph_dfs_finalise_handle(S);
 @end example
-
-@c ------------------------------------------------------------
 
 @c page
 @node hash

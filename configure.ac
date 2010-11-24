@@ -41,7 +41,7 @@ DS_EXCLUDE_SECTION([DEV_RULES])
 DS_EXCLUDE_SECTION([CONFIG_INSPECTION_SCRIPT])
 DS_EXCLUDE_SECTION([AUTOCONF])
 DS_EXCLUDE_SECTION([PKGCONFIG])
-DS_C_LANGUAGE_LIBRARY([ucl],2,0,[ucl])
+DS_C_LANGUAGE_LIBRARY([ucl],3,0,[ucl])
 
 dnl page
 dnl --------------------------------------------------------------------

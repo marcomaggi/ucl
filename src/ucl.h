@@ -955,33 +955,35 @@ ucl_map_setval (ucl_map_link_t * link_p, ucl_value_t newval)
  ** Graph container type definitions.
  ** ----------------------------------------------------------*/
 
-struct ucl_graph_node_t;
-struct ucl_graph_link_t;
+typedef struct ucl_graph_node_tag_t	ucl_graph_node_tag_t;
+typedef struct ucl_graph_link_tag_t	ucl_graph_link_tag_t;
 
-typedef struct ucl_graph_node_t		ucl_graph_node_t;
-typedef struct ucl_graph_link_t		ucl_graph_link_t;
+typedef ucl_graph_node_tag_t *		ucl_graph_node_t;
+typedef ucl_graph_link_tag_t *		ucl_graph_link_t;
 
-typedef struct ucl_graph_link_list_base_t {
-  size_t			number_of_links;
-  ucl_graph_link_t *		first_link_p;
-} ucl_graph_link_list_base_t;
+typedef struct ucl_graph_link_list_base_t ucl_graph_link_list_base_t;
+typedef struct ucl_graph_link_list_node_t ucl_graph_link_list_node_t;
 
-typedef struct ucl_graph_link_list_node_t {
-  ucl_graph_link_t *		prev_link_p;
-  ucl_graph_link_t *		next_link_p;
-} ucl_graph_link_list_node_t;
+struct ucl_graph_link_list_base_t {
+  size_t		number_of_links;
+  ucl_graph_link_t	first_link;
+};
 
-struct ucl_graph_node_t {
+struct ucl_graph_link_list_node_t {
+  ucl_graph_link_t	prev_link;
+  ucl_graph_link_t	next_link;
+};
+
+struct ucl_graph_node_tag_t {
   ucl_graph_link_list_base_t	input;
   ucl_graph_link_list_base_t	output;
-  ucl_graph_node_t *		next_node_p;
   ucl_value_t			mark;
   ucl_value_t			val;
 };
 
-struct ucl_graph_link_t {
-  ucl_graph_node_t *		src_node_p;
-  ucl_graph_node_t *		dst_node_p;
+struct ucl_graph_link_tag_t {
+  ucl_graph_node_t		src_node;
+  ucl_graph_node_t		dst_node;
   ucl_graph_link_list_node_t	input;
   ucl_graph_link_list_node_t	output;
   ucl_value_t			val;
@@ -989,166 +991,144 @@ struct ucl_graph_link_t {
 
 /* ------------------------------------------------------------ */
 
-static __inline__ size_t
-ucl_graph_number_of_output_links (ucl_graph_node_t * node_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+size_t
+ucl_graph_number_of_output_links (ucl_graph_node_t N)
 {
-  return node_p->output.number_of_links;
+  return N->output.number_of_links;
 }
-static __inline__ size_t
-ucl_graph_number_of_input_links (ucl_graph_node_t * node_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+size_t
+ucl_graph_number_of_input_links (ucl_graph_node_t N)
 {
-  return node_p->input.number_of_links;
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ ucl_graph_link_t *
-ucl_graph_input_link (const ucl_graph_node_t * node_p)
-{
-  return node_p->input.first_link_p;
-}
-static __inline__ ucl_graph_link_t *
-ucl_graph_output_link (const ucl_graph_node_t * node_p)
-{
-  return node_p->output.first_link_p;
+  return N->input.number_of_links;
 }
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_graph_link_t *
-ucl_graph_prev_input_link (const ucl_graph_link_t * link_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_input_link (const ucl_graph_node_t N)
 {
-  return link_p->input.prev_link_p;
+  return N->input.first_link;
 }
-static __inline__ ucl_graph_link_t *
-ucl_graph_next_input_link (const ucl_graph_link_t * link_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_output_link (const ucl_graph_node_t N)
 {
-  return link_p->input.next_link_p;
-}
-static __inline__ ucl_graph_link_t *
-ucl_graph_prev_output_link (const ucl_graph_link_t * link_p)
-{
-  return link_p->output.prev_link_p;
-}
-static __inline__ ucl_graph_link_t *
-ucl_graph_next_output_link (const ucl_graph_link_t * link_p)
-{
-  return link_p->output.next_link_p;
+  return N->output.first_link;
 }
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_value_t
-ucl_graph_node_get_value (const ucl_graph_node_t * node_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_prev_input_link (const ucl_graph_link_t L)
 {
-  return node_p->val;
+  return L->input.prev_link;
 }
-static __inline__ void
-ucl_graph_node_set_value (ucl_graph_node_t * node_p, const ucl_value_t value)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_next_input_link (const ucl_graph_link_t L)
 {
-  node_p->val = value;
+  return L->input.next_link;
 }
-static __inline__ ucl_value_t
-ucl_graph_link_get_value (const ucl_graph_link_t * link_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_prev_output_link (const ucl_graph_link_t L)
 {
-  return link_p->val;
+  return L->output.prev_link;
 }
-static __inline__ void
-ucl_graph_link_set_value (ucl_graph_link_t * link_p, const ucl_value_t value)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_graph_link_t
+ucl_graph_next_output_link (const ucl_graph_link_t L)
 {
-  link_p->val = value;
-}
-
-/* ------------------------------------------------------------ */
-
-static __inline__ ucl_value_t
-ucl_graph_node_get_mark (const ucl_graph_node_t * node_p)
-{
-  return node_p->mark;
-}
-static __inline__ void
-ucl_graph_node_set_mark (ucl_graph_node_t * node_p, const ucl_value_t mark)
-{
-  node_p->mark = mark;
+  return L->output.next_link;
 }
 
 /* ------------------------------------------------------------ */
 
-static __inline__ ucl_graph_node_t *
-ucl_graph_get_next_node (const ucl_graph_node_t * node_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_value_t
+ucl_graph_node_get_value (const ucl_graph_node_t N)
 {
-  return node_p->next_node_p;
+  return N->val;
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+void
+ucl_graph_node_set_value (ucl_graph_node_t N, const ucl_value_t value)
+{
+  N->val = value;
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_value_t
+ucl_graph_link_get_value (const ucl_graph_link_t L)
+{
+  return L->val;
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+void
+ucl_graph_link_set_value (ucl_graph_link_t L, const ucl_value_t value)
+{
+  L->val = value;
 }
 
 /* ------------------------------------------------------------ */
 
-#define UCL_GRAPH_NODE_LIST_LOOP(FIRST,NEXT)	\
-						\
-  for ((NEXT) = (FIRST);			\
-       NULL  != (NEXT);				\
-       (NEXT) = ucl_graph_get_next_node(NEXT))
-
-/* The condition  expression in the  'for' statement is composed  of two
-   parts:
-
-   1 - if ITER_NODE is non-NULL, then assign the next node to TMP_NODE;
-
-   2 - ITER_NODE is used as conditional expression for the 'for'.
-
-   This usage of  the conditional expression is "special"  and it causes
-   GCC to raise a 'computed value not used' warning because, indeed, the
-   value computed at point 1 is not used. */
-#define UCL_GRAPH_NODE_LIST_DELETE_LOOP(FIRST,ITER_NODE,TMP_NODE)	\
-									\
-  for ((ITER_NODE) = (FIRST);						\
-       (((ITER_NODE) && ((TMP_NODE) = (ITER_NODE)->next_node_p)), (ITER_NODE)); \
-       (ITER_NODE) = (TMP_NODE))
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+ucl_value_t
+ucl_graph_node_get_mark (const ucl_graph_node_t N)
+{
+  return N->mark;
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__(1)))
+void
+ucl_graph_node_set_mark (ucl_graph_node_t N, const ucl_value_t mark)
+{
+  N->mark = mark;
+}
 
 /* ------------------------------------------------------------ */
 
-#define UCL_GRAPH_INPUT_LINKS_LOOP(NODE,ITER)		\
+#define UCL_GRAPH_INPUT_LINKS_LOOP(NODE,LINK)		\
 							\
-  for ((ITER) = ucl_graph_input_link(NODE);		\
-       NULL  != (ITER);					\
-       (ITER) = ucl_graph_next_input_link(ITER))
+  for ((LINK) = ucl_graph_input_link(NODE); (LINK);	\
+       (LINK) = ucl_graph_next_input_link(LINK))
 
-#define UCL_GRAPH_OUTPUT_LINKS_LOOP(NODE,ITER)		\
+#define UCL_GRAPH_OUTPUT_LINKS_LOOP(NODE,LINK)		\
 							\
-  for ((ITER) = ucl_graph_output_link(NODE);		\
-       NULL  != (ITER);					\
-       (ITER) = ucl_graph_next_output_link(ITER))
+  for ((LINK) = ucl_graph_output_link(NODE); (LINK);	\
+       (LINK) = ucl_graph_next_output_link(LINK))
 
 /* ------------------------------------------------------------ */
 
 #define UCL_GRAPH_FIRST_INPUT_LINK_LOOP(NODE,LINK)	\
 							\
-  for ((LINK) = ucl_graph_input_link((NODE));		\
-       NULL != (LINK);					\
+  for ((LINK) = ucl_graph_input_link((NODE)); (LINK);	\
        (LINK) = ucl_graph_input_link((NODE)))
 
 #define UCL_GRAPH_FIRST_OUTPUT_LINK_LOOP(NODE,LINK)	\
 							\
-  for ((LINK) = ucl_graph_output_link((NODE));		\
-       NULL != (LINK);					\
+  for ((LINK) = ucl_graph_output_link((NODE)); (LINK);	\
        (LINK) = ucl_graph_output_link((NODE)))
 
 /* ------------------------------------------------------------ */
 
-extern ucl_graph_link_t * ucl_graph_last_output_link (ucl_graph_link_t * link_p);
-extern ucl_graph_link_t * ucl_graph_last_input_link (ucl_graph_link_t * link_p);
-extern ucl_graph_link_t * ucl_graph_first_output_link (ucl_graph_link_t * link_p);
-extern ucl_graph_link_t * ucl_graph_first_input_link (ucl_graph_link_t * link_p);
-extern void ucl_graph_link (ucl_graph_node_t * s, ucl_graph_link_t * l, ucl_graph_node_t * d);
-extern ucl_bool_t ucl_graph_nodes_are_linked (ucl_graph_node_t * src_p, ucl_graph_node_t * dst_p);
-extern ucl_bool_t ucl_graph_nodes_are_connected (ucl_graph_node_t * a, ucl_graph_node_t * b);
-extern void ucl_graph_set_next_node (ucl_graph_node_t * node_p, const ucl_graph_node_t * next_p);
-extern void ucl_graph_unlink (ucl_graph_link_t *link_p);
-extern void ucl_graph_erase_node_free_links (ucl_graph_node_t * node_p, void (* destructor)(void *));
-extern ucl_link_t * ucl_graph_erase_node_return_links (ucl_graph_node_t * node_p);
-extern ucl_graph_node_t * ucl_graph_remove_next_node (ucl_graph_node_t * node_p);
-extern void ucl_graph_insert_next_node (ucl_graph_node_t * node_p, ucl_graph_node_t * next_p);
-extern void ucl_graph_merge_upon_input_link (ucl_graph_link_t * in, ucl_graph_link_t * out);
-extern void ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_link_t * out);
+extern ucl_graph_link_t ucl_graph_last_output_link  (ucl_graph_link_t  link_p);
+extern ucl_graph_link_t ucl_graph_last_input_link   (ucl_graph_link_t  link_p);
+extern ucl_graph_link_t ucl_graph_first_output_link (ucl_graph_link_t  link_p);
+extern ucl_graph_link_t ucl_graph_first_input_link  (ucl_graph_link_t  link_p);
+
+extern void ucl_graph_link (ucl_graph_node_t s, ucl_graph_link_t l, ucl_graph_node_t d);
+extern void ucl_graph_unlink (ucl_graph_link_t link_p);
+extern void ucl_graph_erase_node_destroy_links (ucl_graph_node_t N, ucl_callback_t destructor);
+
+extern ucl_bool_t ucl_graph_nodes_are_linked        (ucl_graph_node_t src, ucl_graph_node_t dst);
+extern ucl_bool_t ucl_graph_nodes_are_doubly_linked (ucl_graph_node_t src, ucl_graph_node_t dst);
+extern ucl_bool_t ucl_graph_nodes_are_connected     (ucl_graph_node_t a,   ucl_graph_node_t b);
+
+extern void ucl_graph_merge_upon_input_link  (ucl_graph_link_t in, ucl_graph_link_t out);
+extern void ucl_graph_merge_upon_output_link (ucl_graph_link_t in, ucl_graph_link_t out);
 
 
 /** ------------------------------------------------------------
@@ -1169,25 +1149,24 @@ extern void ucl_graph_merge_upon_output_link (ucl_graph_link_t * in, ucl_graph_l
 
 /* ------------------------------------------------------------ */
 
-typedef struct ucl_graph_dfs_t {
+typedef struct ucl_graph_dfs_tag_t {
   ucl_vector_tag_t *	visited_nodes;
   size_t		counter;
-  ucl_graph_node_t *	max_node;
-  ucl_graph_node_t *	min_node;
-} ucl_graph_dfs_t;
+  ucl_graph_node_t	max_node;
+  ucl_graph_node_t	min_node;
+} ucl_graph_dfs_tag_t;
+
+typedef ucl_graph_dfs_tag_t ucl_graph_dfs_t[1];
 
 typedef struct ucl_graph_dfs_item_t {
-  ucl_graph_node_t *	node_p;
+  ucl_graph_node_t	node;
   size_t		in_counter;
   size_t		out_counter;
 } ucl_graph_dfs_item_t;
 
-#define ucl_graph_dfs_items(SEARCH_HANDLE_P)	(&((SEARCH_HANDLE_P)->visited_nodes[0]))
-
-extern void ucl_graph_initialise_dfs_handle (ucl_graph_dfs_t * search_handle, ucl_vector_t visited_nodes);
-extern void ucl_graph_finalise_dfs_handle (ucl_graph_dfs_t * search_handle);
-extern void ucl_graph_directed_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * root_p);
-extern void ucl_graph_depth_first_search (ucl_graph_dfs_t * search_handle, ucl_graph_node_t * root_p);
+extern void ucl_graph_dfs_initialise_handle (ucl_graph_dfs_t S, ucl_vector_t visited_nodes);
+extern void ucl_graph_dfs_directed	    (ucl_graph_dfs_t S, ucl_graph_node_t root);
+extern void ucl_graph_dfs		    (ucl_graph_dfs_t S, ucl_graph_node_t root);
 
 
 /** ------------------------------------------------------------
@@ -1451,17 +1430,17 @@ extern void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
 
 static __inline__ __attribute__((__always_inline__,__pure__))
 void
-ucl_list_set_car (void * _N, void * _M)
+ucl_list_set_car (void * N_, void * M_)
 {
-  ucl_node_t	N = _N, M = _M;
+  ucl_node_t	N = N_, M = M_;
   if (N) N->son = M;
   if (M) M->dad = N;
 }
 static __inline__ __attribute__((__always_inline__,__pure__))
 void
-ucl_list_set_cdr (void * _N, void * _M)
+ucl_list_set_cdr (void * N_, void * M_)
 {
-  ucl_node_t	N = _N, M = _M;
+  ucl_node_t	N = N_, M = M_;
   if (N) N->bro = M;
   if (M) M->dad = N;
 }
@@ -1470,23 +1449,23 @@ ucl_list_set_cdr (void * _N, void * _M)
 
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 void *
-ucl_list_car (void * _N)
+ucl_list_car (void * N_)
 {
-  ucl_node_t	N = _N;
+  ucl_node_t	N = N_;
   return N->son;
 }
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 void *
-ucl_list_cdr (void * _N)
+ucl_list_cdr (void * N_)
 {
-  ucl_node_t	N = _N;
+  ucl_node_t	N = N_;
   return N->bro;
 }
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
 void *
-ucl_list_prev (void * _N)
+ucl_list_prev (void * N_)
 {
-  ucl_node_t	N = _N;
+  ucl_node_t	N = N_;
   return N->dad;
 }
 
@@ -1524,12 +1503,12 @@ extern void * ucl_list_remove (void * node);
 extern void * ucl_list_popfront (void * node, void ** new_first_p);
 extern void * ucl_list_popback (void * node);
 
-extern void ucl_list_for_each (ucl_callback_t cb, void * _N);
-extern void ucl_list_map (void * _P, ucl_callback_t cb, void * _Q);
-extern void * ucl_list_reverse (void * _N);
+extern void ucl_list_for_each (ucl_callback_t cb, void * N);
+extern void ucl_list_map (void * P, ucl_callback_t cb, void * Q);
+extern void * ucl_list_reverse (void * N);
 
 extern size_t ucl_list_length (void * node);
-extern void * ucl_list_ref (void * _N, ucl_index_t position);
+extern void * ucl_list_ref (void * N_, ucl_index_t position);
 
 
 /** ------------------------------------------------------------
