@@ -1,0 +1,46 @@
+* Tree
+
+** Do the subtree binary tree levelorder iterator, adding a root
+   argument to the iterator function that stops the path when going
+   upward.
+
+** Write the levelorder iterator for the tree container? Also known as
+   breadth first.
+
+** Write the "string" iterator for the tree. An iterator whose value is
+   the string of nodes from the root to the currently selected one.
+
+* Btree
+
+** Write the btree range iterators.
+
+* Graph
+
+** Path-between-nodes existence predicate after DFS.
+** Add algorithms
+
+   - connected graph  predicate (DFS-not-honor on a node,  then check if
+     all the nodes have been touched);
+
+   - acyclic graph predicate;
+
+   - linearisation of nodes for  DAGs (directed acyclic graphs): build a
+     string of  nodes in which  the order left-to-right honors  the link
+     horders (based upon DFS-honor);
+
+   ... see the book on graph algorithms
+
+* Heap
+
+** Tests for merge.
+
+* Hash table
+
+  Change the entry data structure to "ucl_node_t"?  It would really mess
+  up the interface...
+
+* Candidate containers
+
+** Look for soft heaps.
+** Look for Splay trees.
+
