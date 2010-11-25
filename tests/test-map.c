@@ -47,7 +47,7 @@ alloc_link (int value)
 {
   ucl_map_link_t 	L = NULL;
   ucl_value_t		K = { .t_int = value };
-  A.alloc(A.data, &L, sizeof(ucl_map_link_t));
+  A.alloc(A.data, &L, sizeof(ucl_map_link_tag_t));
   ucl_map_setkey(L, K);
   ucl_map_setval(L, K);
   return L;
@@ -127,18 +127,18 @@ test_insertion_and_removal (void)
     int			i;
     ucl_map_constructor(M, 0, ucl_compare_int);
     {
-      for (i=0; i<LITTLENUMBER; ++i) {
+      for (i=0; i< LITTLENUMBER; ++i) {
 	L = alloc_link(i);
 	ucl_map_insert(M, L);
       }
       assert(LITTLENUMBER == ucl_map_size(M));
       for (i=0; i<LITTLENUMBER; ++i) {
-	K.t_int = i;
-	L = ucl_map_find(M, K);
-	L = ucl_map_remove(M, L);
-	K = ucl_map_getkey(L);
-	assert(K.t_int == i);
-	free_link(L);
+      	K.t_int = i;
+      	L = ucl_map_find(M, K);
+      	L = ucl_map_remove(M, L);
+      	K = ucl_map_getkey(L);
+      	assert(K.t_int == i);
+      	free_link(L);
       }
     }
   }

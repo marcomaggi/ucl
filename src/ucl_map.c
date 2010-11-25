@@ -49,6 +49,12 @@
 #endif
 #include "internal.h"
 
+#define LEFT_HIGHER	UCL_LEFT_HIGHER
+#define BALANCED	UCL_BALANCED
+#define RIGHT_HIGHER	UCL_RIGHT_HIGHER
+
+#define AVL_STATUS(L)	(L)->avl_status
+
 typedef ucl_map_t		map_t;
 typedef ucl_map_tag_t		map_struct_t;
 typedef ucl_map_link_t		link_t;
@@ -110,10 +116,11 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
   ucl_map_link_t tmp, cur;
   ucl_value_t	 key;
   int		 v, root_flag;
+  ucl_bool_t	 allow_multiple_objects;
   assert(M);
   assert(L);
   /* The new link will have AVL status equal to "balanced".  Always. */
-  L->avl_status = BALANCED;
+  AVL_STATUS(L) = BALANCED;
   L->node.dad   = L->node.bro = L->node.son = NULL;
   /* Handle the case of empty map.
    *
@@ -136,16 +143,17 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
   /* If the map is not empty, we  have to look for the node that will be
      the parent of the new one.  If  "M" is not a multimap and we find a
      node with key equal to the key of "L": we silently do nothing. */
-  tmp  = M->root;
-  key    = ucl_map_getkey(L);
+  tmp = M->root;
+  key = ucl_map_getkey(L);
+  allow_multiple_objects = M->flags & UCL_ALLOW_MULTIPLE_OBJECTS;
   while (tmp) {
     cur = tmp;
     v = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(tmp));
-    if ((v > 0) || ((v == 0) && (M->flags & UCL_ALLOW_MULTIPLE_OBJECTS))) {
-      tmp = (link_t ) cur->node.bro;
+    if ((v > 0) || (v==0 && allow_multiple_objects)) {
+      tmp = (ucl_map_link_t) cur->node.bro;
     } else if (v < 0) {
-      tmp = (link_t ) cur->node.son;
-    } else { /* v == 0 && !(M->flag & UCL_ALLOW_MULTIPLE_OBJECTS) */
+      tmp = (ucl_map_link_t) cur->node.son;
+    } else { /* v == 0 && !allow_multiple_objects */
       return;
     }
   }
@@ -196,24 +204,31 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
    *"cur".
    */
   if (v<0) {
+    /* ucl_btree_set_dadson(cur, L); */
     cur->node.son = (ucl_node_t) L;
     L->node.dad   = (ucl_node_t) cur;
     ++(M->size);
     if (cur->node.bro) {
-      cur->avl_status = BALANCED;
+      assert(RIGHT_HIGHER == AVL_STATUS(cur));
+      AVL_STATUS(cur) = BALANCED;
       return;
     } else {
-      cur->avl_status = LEFT_HIGHER;
+      assert(BALANCED == AVL_STATUS(cur));
+      AVL_STATUS(cur) = LEFT_HIGHER;
     }
   } else {
+    assert(v>0);
+    /* ucl_btree_set_dadbro(cur, L); */
     cur->node.bro = (ucl_node_t) L;
     L->node.dad   = (ucl_node_t) cur;
     ++(M->size);
     if (cur->node.son) {
-      cur->avl_status = BALANCED;
+      assert(LEFT_HIGHER == AVL_STATUS(cur));
+      AVL_STATUS(cur) = BALANCED;
       return;
     } else {
-      cur->avl_status = RIGHT_HIGHER;
+      assert(BALANCED == AVL_STATUS(cur));
+      AVL_STATUS(cur) = RIGHT_HIGHER;
     }
   }
   /* Now we have to step up  the tree and update the "avl_status" of the
@@ -232,40 +247,40 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
        otherwise set it to "false". */
     v = cur->node.son == (ucl_node_t) tmp;
     if (v) { /* stepping up from a left subtree */
-      if (RIGHT_HIGHER == cur->avl_status) {
-	cur->avl_status = BALANCED;
+      if (RIGHT_HIGHER == AVL_STATUS(cur)) {
+	AVL_STATUS(cur) = BALANCED;
 	return;
-      } else if (BALANCED == cur->avl_status) {
-	cur->avl_status = LEFT_HIGHER;
+      } else if (BALANCED == AVL_STATUS(cur)) {
+	AVL_STATUS(cur) = LEFT_HIGHER;
 	continue;
-      } else { /* cur->avl_status == LEFT_HIGHER */
+      } else { /* AVL_STATUS(cur) == LEFT_HIGHER */
 	root_flag = (cur == M->root)? 1 : 0;
-	if (LEFT_HIGHER == tmp->avl_status) {
+	if (LEFT_HIGHER == AVL_STATUS(tmp)) {
 	  rot_left(&cur);
 	} else {
 	  rot_left_right(&cur);
 	}
-	cur->avl_status = BALANCED;
+	AVL_STATUS(cur) = BALANCED;
 	if (root_flag) {
 	  M->root = cur;
 	}
 	return;
       }
     } else { /* v == 0 -> stepping up from a right subtree */
-      if (LEFT_HIGHER == cur->avl_status) {
-	cur->avl_status = BALANCED;
+      if (LEFT_HIGHER == AVL_STATUS(cur)) {
+	AVL_STATUS(cur) = BALANCED;
 	return;
-      } else if (BALANCED == cur->avl_status) {
-	cur->avl_status = RIGHT_HIGHER;
+      } else if (BALANCED == AVL_STATUS(cur)) {
+	AVL_STATUS(cur) = RIGHT_HIGHER;
 	continue;
-      } else { /* cur->avl_status == RIGHT_HIGHER */
+      } else { /* AVL_STATUS(cur) == RIGHT_HIGHER */
 	root_flag = cur == M->root;
-	if (RIGHT_HIGHER == tmp->avl_status) {
+	if (RIGHT_HIGHER == AVL_STATUS(tmp)) {
 	  rot_right(&cur);
 	} else {
 	  rot_right_left(&cur);
 	}
-	cur->avl_status = BALANCED;
+	AVL_STATUS(cur) = BALANCED;
 	if (root_flag) {
 	  M->root = cur;
 	}
@@ -302,7 +317,8 @@ rot_left (link_t * cur_p)
   son->node.bro = (ucl_node_t) cur;
   son->node.dad = cur->node.dad;
   cur->node.dad = (ucl_node_t) son;
-  cur->avl_status = 0;
+  /* AVL_STATUS(cur) = 0; */
+  AVL_STATUS(cur) = LEFT_HIGHER;
   *cur_p = son;
   tmp = (ucl_map_link_t) son->node.dad;
   if (tmp) {
@@ -345,8 +361,8 @@ rot_left_right (ucl_map_link_t * cur_p)
   bro->node.bro = (ucl_node_t) cur;
   bro->node.dad = cur->node.dad;
   cur->node.dad = (ucl_node_t) bro;
-  cur->avl_status = (bro->avl_status == LEFT_HIGHER)?  RIGHT_HIGHER : BALANCED;
-  son->avl_status = (bro->avl_status == RIGHT_HIGHER)? LEFT_HIGHER  : BALANCED;
+  AVL_STATUS(cur) = (AVL_STATUS(bro) == LEFT_HIGHER)?  RIGHT_HIGHER : BALANCED;
+  AVL_STATUS(son) = (AVL_STATUS(bro) == RIGHT_HIGHER)? LEFT_HIGHER  : BALANCED;
   *cur_p = bro;
   tmp = (ucl_map_link_t ) bro->node.dad;
   if (tmp) {
@@ -426,8 +442,8 @@ rot_right_left (ucl_map_link_t * cur_p)
   cur->node.dad = (ucl_node_t) son;
   /* We have to  update the parent of  cur to point to son,  we'll do it
      later. */
-  cur->avl_status = (son->avl_status == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
-  bro->avl_status = (son->avl_status == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
+  AVL_STATUS(cur) = (AVL_STATUS(son) == RIGHT_HIGHER)? LEFT_HIGHER : BALANCED;
+  AVL_STATUS(bro) = (AVL_STATUS(son) == LEFT_HIGHER)? RIGHT_HIGHER : BALANCED;
   *cur_p = son;
   tmp = (ucl_map_link_t ) son->node.dad;
   if (tmp) {
@@ -511,13 +527,13 @@ ucl_map_remove (ucl_map_t M, ucl_map_link_t cur)
       /* Before this link was BALANCED,  now the right subtree is higher
 	 because  we've removed  the left  subtree.  The  subtree hasn't
 	 gotten shorter. */
-      link->avl_status = RIGHT_HIGHER;
+      AVL_STATUS(link) = RIGHT_HIGHER;
       goto end;
     } else {
       /* Before  this link  was LEFT_HIGHER,  now it's  BALANCED because
 	 we've  removed  the  left  subtree.   The  subtree  has  gotten
 	 shorter. */
-      link->avl_status = BALANCED;
+      AVL_STATUS(link) = BALANCED;
     }
   } else { /* cur == link->node.bro */
     link->node.bro = NULL;
@@ -525,13 +541,13 @@ ucl_map_remove (ucl_map_t M, ucl_map_link_t cur)
       /* Before this link  was BALANCED, now the left  subtree is higher
 	 because we've  removed the  right subtree.  The  subtree hasn't
 	 gotten shorter. */
-      link->avl_status = LEFT_HIGHER;
+      AVL_STATUS(link) = LEFT_HIGHER;
       goto end;
     } else {
       /* Before this  link was  RIGHT_HIGHER, now it's  BALANCED because
 	 we've  removed  the  right  subtree.  The  subtree  has  gotten
 	 shorter. */
-      link->avl_status = BALANCED;
+      AVL_STATUS(link) = BALANCED;
     }
   }
   for (;;) {
@@ -541,34 +557,34 @@ ucl_map_remove (ucl_map_t M, ucl_map_link_t cur)
     if (M->root == link)
       root_flag = 1;
     if (tmp == (ucl_map_link_t) link->node.son) {
-      if (link->avl_status == LEFT_HIGHER) {
-	link->avl_status = BALANCED;
+      if (AVL_STATUS(link) == LEFT_HIGHER) {
+	AVL_STATUS(link) = BALANCED;
 	break;
-      } else if (link->avl_status == BALANCED) {
-	link->avl_status = RIGHT_HIGHER;
+      } else if (AVL_STATUS(link) == BALANCED) {
+	AVL_STATUS(link) = RIGHT_HIGHER;
 	break;
-      } else { /* link->avl_status == RIGHT_HIGHER */
+      } else { /* AVL_STATUS(link) == RIGHT_HIGHER */
 	tmp = (ucl_map_link_t) link->node.bro;
-	if (tmp->avl_status == RIGHT_HIGHER)
+	if (AVL_STATUS(tmp) == RIGHT_HIGHER)
 	  rot_right(&link);
 	else
 	  rot_right_left(&link);
-	link->avl_status = BALANCED;
+	AVL_STATUS(link) = BALANCED;
       }
     } else { /* tmp == link->node.bro */
-      if (link->avl_status == RIGHT_HIGHER) {
-	link->avl_status = BALANCED;
+      if (AVL_STATUS(link) == RIGHT_HIGHER) {
+	AVL_STATUS(link) = BALANCED;
 	break;
-      } else if (link->avl_status == BALANCED) {
-	link->avl_status = LEFT_HIGHER;
+      } else if (AVL_STATUS(link) == BALANCED) {
+	AVL_STATUS(link) = LEFT_HIGHER;
 	break;
-      } else { /* link->avl_status == LEFT_HIGHER */
+      } else { /* AVL_STATUS(link) == LEFT_HIGHER */
 	tmp = (ucl_map_link_t ) link->node.son;
-	if (tmp->avl_status == LEFT_HIGHER)
+	if (AVL_STATUS(tmp) == LEFT_HIGHER)
 	  rot_left(&link);
 	else
 	  rot_left_right(&link);
-	link->avl_status = BALANCED;
+	AVL_STATUS(link) = BALANCED;
       }
     }
     if (root_flag)

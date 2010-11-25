@@ -901,7 +901,7 @@ extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t itera
  ** ----------------------------------------------------------*/
 
 typedef enum {
-  LEFT_HIGHER, BALANCED, RIGHT_HIGHER
+  UCL_LEFT_HIGHER, UCL_BALANCED, UCL_RIGHT_HIGHER
 } ucl_avl_status_t;
 
 typedef struct ucl_map_link_tag_t {
