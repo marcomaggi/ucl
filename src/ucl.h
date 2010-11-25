@@ -904,48 +904,55 @@ typedef enum {
   LEFT_HIGHER, BALANCED, RIGHT_HIGHER
 } ucl_avl_status_t;
 
-typedef struct ucl_map_link_t {
+typedef struct ucl_map_link_tag_t {
   ucl_node_tag_t	node;
   ucl_avl_status_t	avl_status;
   ucl_value_t		key;
   ucl_value_t		val;
-} ucl_map_link_t;
+} ucl_map_link_tag_t;
 
-typedef struct ucl_map_struct_t {
+typedef ucl_map_link_tag_t *	ucl_map_link_t;
+
+typedef struct ucl_map_tag_t {
   size_t		size;
   unsigned int		flags;
   ucl_comparison_t	keycmp;
-  ucl_map_link_t *	root;
-} ucl_map_struct_t;
+  ucl_map_link_t	root;
+} ucl_map_tag_t;
 
-typedef ucl_map_struct_t ucl_map_t[1];
+typedef ucl_map_tag_t ucl_map_t[1];
 
 #define UCL_ALLOW_MULTIPLE_OBJECTS	0x10
 
 /* ------------------------------------------------------------------ */
 
-static __inline__ size_t
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+size_t
 ucl_map_size (const ucl_map_t this)
 {
   return this->size;
 }
-static __inline__ ucl_value_t
-ucl_map_getkey (const ucl_map_link_t * link_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+ucl_value_t
+ucl_map_getkey (const ucl_map_link_t link_p)
 {
   return link_p->key;
 }
-static __inline__ ucl_value_t
-ucl_map_getval (const ucl_map_link_t * link_p)
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+ucl_value_t
+ucl_map_getval (const ucl_map_link_t link_p)
 {
   return link_p->val;
 }
-static __inline__ void
-ucl_map_setkey (ucl_map_link_t * link_p, ucl_value_t newkey)
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+void
+ucl_map_setkey (ucl_map_link_t link_p, ucl_value_t newkey)
 {
   link_p->key = newkey;
 }
-static __inline__ void
-ucl_map_setval (ucl_map_link_t * link_p, ucl_value_t newval)
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+void
+ucl_map_setval (ucl_map_link_t link_p, ucl_value_t newval)
 {
   link_p->val = newval;
 }
@@ -1532,17 +1539,15 @@ ucl_heap_size (const ucl_heap_t H)
  ** ----------------------------------------------------------*/
 
 extern void ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp);
-extern void ucl_map_destructor (ucl_map_t this);
-extern void ucl_map_insert (ucl_map_t this, ucl_map_link_t *link_p)
-  __attribute__((__nonnull__,__pure__));
-extern ucl_map_link_t * ucl_map_remove (ucl_map_t this, ucl_map_link_t *cur_p);
-extern ucl_map_link_t * ucl_map_find (const ucl_map_t this, const ucl_value_t key);
-extern ucl_map_link_t * ucl_map_first (const ucl_map_t this);
-extern ucl_map_link_t * ucl_map_last (const ucl_map_t this);
-extern ucl_map_link_t * ucl_map_next (ucl_map_link_t *link_p);
-extern ucl_map_link_t * ucl_map_prev (ucl_map_link_t *link_p);
-extern ucl_map_link_t * ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key);
-extern ucl_map_link_t * ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key);
+extern void ucl_map_insert (ucl_map_t this, ucl_map_link_t link_p);
+extern ucl_map_link_t ucl_map_remove (ucl_map_t this, ucl_map_link_t cur_p);
+extern ucl_map_link_t ucl_map_find (const ucl_map_t this, const ucl_value_t key);
+extern ucl_map_link_t ucl_map_first (const ucl_map_t this);
+extern ucl_map_link_t ucl_map_last (const ucl_map_t this);
+extern ucl_map_link_t ucl_map_next (ucl_map_link_t link_p);
+extern ucl_map_link_t ucl_map_prev (ucl_map_link_t link_p);
+extern ucl_map_link_t ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key);
+extern ucl_map_link_t ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key);
 extern size_t ucl_map_count (const ucl_map_t this, const ucl_value_t key);
 extern void ucl_map_iterator_inorder (const ucl_map_t this, ucl_iterator_t iterator);
 extern void ucl_map_iterator_inorder_backward (const ucl_map_t this, ucl_iterator_t iterator);
@@ -1557,7 +1562,7 @@ extern void ucl_map_iterator_complintersect (ucl_iterator_t iter1, ucl_iterator_
 extern void ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator);
 
 static __inline__ __attribute__((__always_inline__,__nonnull__)) void
-ucl_map_extract (ucl_map_t this, ucl_map_link_t * _link)
+ucl_map_extract (ucl_map_t this, ucl_map_link_t _link)
 {
   ucl_map_remove(this, _link);
 }

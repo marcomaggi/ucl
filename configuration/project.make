@@ -34,7 +34,8 @@ ucl_container_run_tests	=	\
 	run-test-btree		run-test-circular	\
 	run-test-hash		run-test-tree		\
 	run-test-vector		run-test-heap		\
-	run-test-list		run-test-graph
+	run-test-list		run-test-graph		\
+	run-test-map
 
 .PHONY: $(ucl_container_run_tests)
 
@@ -62,17 +63,19 @@ run-test-list:
 run-test-graph:
 	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-graph
 
+run-test-map:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-map
+
 ## --------------------------------------------------------------------
 
 ucl_container_tests	=	\
 	test-btree		test-circular		\
 	test-hash		test-tree		\
 	test-vector		test-heap		\
-	test-list		test-graph
+	test-list		test-graph		\
+	test-map
 
 .PHONY: $(ucl_container_tests)
-
-# test-map:	; $(MAKE) tests PATTERNS=map.c
 
 test-btree: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-btree.c
@@ -105,6 +108,10 @@ test-list: ucl_shlib-all
 test-graph: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-graph.c
 	$(MAKE) run-test-graph
+
+test-map: ucl_shlib-all
+	$(MAKE) tests PATTERNS=test-map.c
+	$(MAKE) run-test-map
 
 #page
 ## ---------------------------------------------------------------------
