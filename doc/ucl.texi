@@ -245,6 +245,7 @@ The binary tree container
 * btree inspection::            Accessing nodes.
 * btree removing::              Removing elements.
 * btree find::                  Finding values.
+* btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
 
@@ -1562,6 +1563,7 @@ callback.  The default application function is
 * btree inspection::            Accessing nodes.
 * btree removing::              Removing elements.
 * btree find::                  Finding values.
+* btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
 @end menu
@@ -1904,6 +1906,30 @@ the search goes on in the bro subtree;
 
 @noindent
 if @var{value} is not found, the return value is @cnull{}.
+@end deftypefun
+
+@c page
+@node btree swap
+@subsection Swapping nodes
+
+
+The following function accepts @code{void *} values as arguments and
+return a @code{void *} value; internally these pointers are cast to
+@code{ucl_node_t}.
+
+
+@deftypefun void ucl_btree_swap_out (void * @var{A}, void * @var{B})
+Given two pointers to nodes, interpret @var{A} as pointer to a node in a
+tree and @var{B} as pointer to a node @strong{out of any tree}; store
+the links and meta value of @var{A} into @var{B}, then resets the links
+and meta value of @var{A}.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_swap (void * @var{A}, void * @var{B})
+Given two pointers to nodes, swap the links and the meta value in the
+node structures.  Take care of the fact that @var{A} and @var{B} may
+reference each other.
 @end deftypefun
 
 @c page
@@ -4827,7 +4853,7 @@ user's code.
 @subsection Creating and destroying maps
 
 
-@deftypefun void ucl_map_constructor (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp})
+@deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp})
 Initialise an already allocated map structure.  @var{M} must be a
 pointer to an already allocated map structure; pointer to the already
 allocated map structure; @var{flags} configures the map behaviour;
@@ -4850,32 +4876,16 @@ block the user code has to extract all the nodes from the map.
 @subsection Adding elements to a map
 
 
-@deftypefun void ucl_map_insert (ucl_map_t @var{M}, ucl_map_link_t @var{L})
+@deftypefun ucl_bool_t ucl_map_insert (ucl_map_t @var{M}, ucl_map_link_t @var{L})
 Given an already allocated and constructed map link, insert it in the
 map.
 
-An invocation to this function always succeeds if @var{M} references a
-multimap, but it can lead to an error if @var{M} is a simple map and an
-element with the same key already exists.  If such a condition occurs,
-this function @strong{silently does nothing}; it's our responsibility to
-use @cfunc{ucl_map_find} to check for the element existence.
+An invocation to this function always inserts @var{L} into @var{M} if
+@var{M} is a multimap.  If @var{M} is a simple map: @var{L} is inserted
+only if there is no link in @var{M} having key equal to @var{L}.
 
-Example of link insertion in a simple map:
-
-@example
-ucl_memory_allocator_t  A;
-ucl_map_t               M;
-ucl_map_link_t          L;
-ucl_value_t             K;
-
-link = ucl_map_find(M, K);
-if (! L)
-  @{
-    M.alloc(M.data, &L, sizeof(ucl_map_link_t));
-    ucl_map_setkey(L, K);
-    ucl_map_insert(M, L);
-  @}
-@end example
+The return value is true if the link has been inserted, or false if the
+link was not inserted.
 @end deftypefun
 
 @c page
@@ -4884,7 +4894,6 @@ if (! L)
 
 
 @deftypefun ucl_map_link_t ucl_map_remove (ucl_map_t @var{M}, ucl_map_link_t @var{L})
-@deftypefunx ucl_map_link_t ucl_map_extract (ucl_map_t @var{M}, ucl_map_link_t @var{L})
 Remove from the map the key/value pair in the element referenced by
 @var{L}.  This must be the return value of a previous invocation of
 @cfunc{ucl_map_find}.  This function only removes the link from the map:

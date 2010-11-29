@@ -109,7 +109,68 @@ ucl_btree_find_root (void * node)
     N = N->dad;
   return N;
 }
+
+void
+ucl_btree_swap_out (void * A_, void * B_)
+/* Given two  pointers to links, interpret A  as pointer to a  node in a
+   tree and B as pointer to a  node out of any tree; store the links and
+   meta value of A into B, then resets the links and meta value of A. */
+{
+  ucl_node_t		A = A_, B = B_;
+  B->dad	= A->dad;
+  B->son	= A->son;
+  B->bro	= A->bro;
+  B->meta	= A->meta;
+  A->dad	= NULL;
+  A->son	= NULL;
+  A->bro	= NULL;
+  A->meta	= ucl_value_null;
+}
+void
+ucl_btree_swap (void * A_, void * B_)
+/* Given two pointers to links, swap the links and the meta value in the
+   node structures. */
+{
+  ucl_node_t		A = A_, B = B_;
+  ucl_node_t		A_dad, A_son, A_bro;
+  ucl_node_t		B_dad, B_son, B_bro;
+  ucl_value_t		A_meta;
 
+  A_dad		= A->dad;
+  A_son		= A->son;
+  A_bro		= A->bro;
+  A_meta	= A->meta;
+
+  B_dad		= B->dad;
+  B_son		= B->son;
+  B_bro		= B->bro;
+
+  A->dad	= (B_dad == A)? B : B_dad;
+  A->son	= (B_son == A)? B : B_son;
+  A->bro	= (B_bro == A)? B : B_bro;
+  A->meta = B->meta;
+  if (A_dad && A_dad != B) {
+    if (A_dad->son == A)
+      A_dad->son = B;
+    else
+      A_dad->bro = B;
+  }
+  if (A_son && A_son != B) A_son->dad = B;
+  if (A_bro && A_bro != B) A_bro->dad = B;
+
+  B->dad	= (A_dad == B)? A : A_dad;
+  B->son	= (A_son == B)? A : A_son;
+  B->bro	= (A_bro == B)? A : A_bro;
+  B->meta	= A_meta;
+  if (B_dad && B_dad != A) {
+    if (B_dad->son == B)
+      B_dad->son = A;
+    else
+      B_dad->bro = A;
+  }
+  if (B_son && B_son != A) B_son->dad = A;
+  if (B_bro && B_bro != A) B_bro->dad = A;
+}
 
 void *
 ucl_btree_step_inorder (void * node)

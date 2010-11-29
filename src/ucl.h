@@ -757,6 +757,9 @@ extern void * ucl_btree_find_deepest_bro (void * node)
 extern void * ucl_btree_find_root (void * node)
   __attribute__((__nonnull__,__pure__));
 
+extern void ucl_btree_swap	(void * A, void * B);
+extern void ucl_btree_swap_out	(void * A, void * B);
+
 /* ------------------------------------------------------------ */
 
 extern void * ucl_btree_step_inorder (void * node)
@@ -834,74 +837,13 @@ extern void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void
 extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-/* extern void * ucl_btree_find_value (void * node, void * value, ucl_comparison_t compar) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_find_leftmost (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_find_rightmost (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_find_deepest_son (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_find_deepest_bro (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_find_root (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_inorder (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_inorder_backward (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_preorder (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_preorder_backward (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_postorder (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_postorder_backward (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_levelorder (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void * ucl_btree_step_levelorder_backward (void * node) */
-/*   __attribute__((__nonnull__,__pure__)); */
-/* extern void ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_inorder_backward (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_preorder (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_preorder_backward (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_postorder (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_postorder_backward (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_levelorder (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_inorder (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_preorder (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_postorder (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-/* extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node) */
-/*   __attribute__((__nonnull__)); */
-
 
 /** ------------------------------------------------------------
  ** Map container type definitions.
  ** ----------------------------------------------------------*/
 
 typedef enum {
-  UCL_LEFT_HIGHER, UCL_BALANCED, UCL_RIGHT_HIGHER
+  UCL_SON_DEEPER=-1, UCL_EQUAL_DEPTH=0, UCL_BRO_DEEPER=+1
 } ucl_avl_status_t;
 
 typedef struct ucl_map_link_tag_t {
@@ -1538,34 +1480,28 @@ ucl_heap_size (const ucl_heap_t H)
  ** Map functions.
  ** ----------------------------------------------------------*/
 
-extern void ucl_map_constructor (ucl_map_t this, unsigned int flags, ucl_comparison_t keycmp);
-extern void ucl_map_insert (ucl_map_t this, ucl_map_link_t link_p);
-extern ucl_map_link_t ucl_map_remove (ucl_map_t this, ucl_map_link_t cur_p);
-extern ucl_map_link_t ucl_map_find (const ucl_map_t this, const ucl_value_t key);
-extern ucl_map_link_t ucl_map_first (const ucl_map_t this);
-extern ucl_map_link_t ucl_map_last (const ucl_map_t this);
-extern ucl_map_link_t ucl_map_next (ucl_map_link_t link_p);
-extern ucl_map_link_t ucl_map_prev (ucl_map_link_t link_p);
-extern ucl_map_link_t ucl_map_find_or_next (const ucl_map_t this, const ucl_value_t key);
-extern ucl_map_link_t ucl_map_find_or_prev (const ucl_map_t this, const ucl_value_t key);
-extern size_t ucl_map_count (const ucl_map_t this, const ucl_value_t key);
-extern void ucl_map_iterator_inorder (const ucl_map_t this, ucl_iterator_t iterator);
-extern void ucl_map_iterator_inorder_backward (const ucl_map_t this, ucl_iterator_t iterator);
-extern void ucl_map_iterator_preorder (const ucl_map_t this, ucl_iterator_t iterator);
-extern void ucl_map_iterator_postorder (const ucl_map_t this, ucl_iterator_t iterator);
-extern void ucl_map_iterator_levelorder (const ucl_map_t this, ucl_iterator_t iterator);
-extern void ucl_map_lower_bound (const ucl_map_t this, ucl_iterator_t iterator, const ucl_value_t key);
-extern void ucl_map_upper_bound (const ucl_map_t this, ucl_iterator_t iterator, const ucl_value_t key);
-extern void ucl_map_iterator_union (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator);
-extern void ucl_map_iterator_intersection (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator);
-extern void ucl_map_iterator_complintersect (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t 	iterator);
-extern void ucl_map_iterator_subtraction (ucl_iterator_t iter1, ucl_iterator_t iter2, ucl_iterator_t iterator);
-
-static __inline__ __attribute__((__always_inline__,__nonnull__)) void
-ucl_map_extract (ucl_map_t this, ucl_map_link_t _link)
-{
-  ucl_map_remove(this, _link);
-}
+extern void ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp);
+extern ucl_bool_t ucl_map_insert (ucl_map_t M, ucl_map_link_t L);
+extern ucl_map_link_t ucl_map_remove (ucl_map_t M, ucl_map_link_t L);
+extern ucl_map_link_t ucl_map_find (const ucl_map_t M, const ucl_value_t key);
+extern ucl_map_link_t ucl_map_first (const ucl_map_t M);
+extern ucl_map_link_t ucl_map_last (const ucl_map_t M);
+extern ucl_map_link_t ucl_map_next (ucl_map_link_t L);
+extern ucl_map_link_t ucl_map_prev (ucl_map_link_t L);
+extern ucl_map_link_t ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key);
+extern ucl_map_link_t ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key);
+extern size_t ucl_map_count (const ucl_map_t M, const ucl_value_t key);
+extern void ucl_map_iterator_inorder (const ucl_map_t M, ucl_iterator_t I);
+extern void ucl_map_iterator_inorder_backward (const ucl_map_t M, ucl_iterator_t I);
+extern void ucl_map_iterator_preorder (const ucl_map_t M, ucl_iterator_t I);
+extern void ucl_map_iterator_postorder (const ucl_map_t M, ucl_iterator_t I);
+extern void ucl_map_iterator_levelorder (const ucl_map_t M, ucl_iterator_t I);
+extern void ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
+extern void ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
+extern void ucl_map_iterator_union (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+extern void ucl_map_iterator_intersection (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+extern void ucl_map_iterator_complintersect (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+extern void ucl_map_iterator_subtraction (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
 
 
 /** ------------------------------------------------------------
