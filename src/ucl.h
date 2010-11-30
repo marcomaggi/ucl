@@ -86,6 +86,10 @@ typedef size_t		ucl_index_t;
 typedef void *		ucl_pointer_t;
 typedef void *		ucl_pointer_map_fun_t (void *);
 
+typedef enum {
+  UCL_SON_DEEPER=-1, UCL_EQUAL_DEPTH=0, UCL_BRO_DEEPER=+1
+} ucl_avl_status_t;
+
 typedef union ucl_value_t {
   char		t_char;
   unsigned char	t_unsigned_char;
@@ -113,8 +117,8 @@ typedef union ucl_value_t {
 
   /* The following are used by the UCL. */
   ucl_pointer_map_fun_t *	pointer_map_function;
+  ucl_avl_status_t		avl_status;
   struct ucl_value_flags_t {
-    unsigned int avl_status: 1;
     unsigned int marked:     1;
   } flags;
 } ucl_value_t;
@@ -757,8 +761,17 @@ extern void * ucl_btree_find_deepest_bro (void * node)
 extern void * ucl_btree_find_root (void * node)
   __attribute__((__nonnull__,__pure__));
 
+/* ------------------------------------------------------------ */
+
 extern void ucl_btree_swap	(void * A, void * B);
 extern void ucl_btree_swap_out	(void * A, void * B);
+
+/* ------------------------------------------------------------ */
+
+extern void * ucl_btree_avl_rot_left		(void * old_dad);
+extern void * ucl_btree_avl_rot_left_right	(void * old_dad);
+extern void * ucl_btree_avl_rot_right		(void * old_dad);
+extern void * ucl_btree_avl_rot_right_left	(void * old_dad);
 
 /* ------------------------------------------------------------ */
 
@@ -842,13 +855,8 @@ extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t itera
  ** Map container type definitions.
  ** ----------------------------------------------------------*/
 
-typedef enum {
-  UCL_SON_DEEPER=-1, UCL_EQUAL_DEPTH=0, UCL_BRO_DEEPER=+1
-} ucl_avl_status_t;
-
 typedef struct ucl_map_link_tag_t {
   ucl_node_tag_t	node;
-  ucl_avl_status_t	avl_status;
   ucl_value_t		key;
   ucl_value_t		val;
 } ucl_map_link_tag_t;

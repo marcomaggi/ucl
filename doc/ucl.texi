@@ -47,6 +47,10 @@
 @acronym{API}
 @end macro
 
+@macro avl{}
+@acronym{AVL}
+@end macro
+
 @c Remember that @url is already used by Texinfo.
 @macro urla{}
 @acronym{URL}
@@ -248,6 +252,7 @@ The binary tree container
 * btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
+* btree avl::                   Routines for @avl{} trees.
 
 Iterations in a btree hierarchy
 
@@ -1566,6 +1571,7 @@ callback.  The default application function is
 * btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
+* btree avl::                   Routines for @avl{} trees.
 @end menu
 
 @c page
@@ -2603,6 +2609,94 @@ for (cur = get_the_top_node();
     do_something_with(cur);
   @}
 @end example
+
+@c page
+@node btree avl
+@subsection Routines for @avl{} trees
+
+
+The following routines are used in the implementation of the @avl{}
+binary search tree; they are not meant to be used directly.
+
+
+@deftypefun {void *} ucl_btree_avl_rot_left (void * @var{old_cur})
+Perform a @dfn{left rotation} (or @dfn{son rotation}) which balances a
+left--left--higher subtree.  Example:
+
+@example
+          (top)                      (top)
+            |                          |
+           11 (old_cur)                9 (new_cur)
+           / \                    -----+-----
+(new_cur) 9   12                 7           11 (old_cur)
+         / \             =>     / \         /  \
+        7   10 (bro)           6   8      10   12
+       / \                              (bro)
+      6   8
+@end example
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_avl_rot_left_right (void * @var{old_cur})
+Perform a @dfn{left/right rotation} (or @dfn{son/bro rotation}) which
+balances a left--right--higher subtree.  Example:
+
+@example
+         (top)                            (top)
+           |                                |
+          10 (old_cur)                      8 (new_cur)
+         /  \                     ----------+----------
+  (son) 5    13            (son) 5          (old_cur) 10
+       / \              =>      / \                  /  \
+      3   8 (new_cur)          3   7                9    13
+         / \                     (deep_son)  (deep_bro)
+        7   9
+(deep_son) (deep_bro)
+@end example
+
+We perform this rotation to balance a tree in which @var{old_cur} is son
+deeper and its son is bro deeper.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_avl_rot_right (void * @var{old_dad})
+Perform a @dfn{right rotation} (or @dfn{bro rotation}) which balances a
+right--right--higher subtree.  Example:
+
+@example
+    (top)                              (top)
+      |                                  |
+      7 (old_cur)                        9 (new_cur)
+     / \                            -----+-----
+    6   9 (new_cur)   => (old_cur) 7           11
+       / \                        / \         /  \
+(son) 8   11                     6   8      10    12
+         /  \                      (son)
+       10    12
+@end example
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_avl_rot_right_left (void * @var{old_dad})
+Perform a @dfn{right/left rotation} (or @dfn{bro/son rotation}) which
+balances a right--left--higher subtree.  Example:
+
+@example
+          (top)                           (top)
+            |                               |
+  (old_cur) 9                              11 (new_cur)
+           / \                    ----------+---------
+          8   13 (bro)           9 (old_cur)    (bro) 13
+             /  \         =>    / \                  /  \
+ (new_cur) 11    14            8   10              12    14
+          /  \                   (deep_son)  (deep_bro)
+        10    12
+(deep_son)    (deep_bro)
+@end example
+
+We perform this rotation to balance a tree in which @var{old_cur} is bro
+deeper and its bro is son deeper.
+@end deftypefun
 
 @c page
 @node tree

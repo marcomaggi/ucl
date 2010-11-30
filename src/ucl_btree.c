@@ -173,6 +173,238 @@ ucl_btree_swap (void * A_, void * B_)
 }
 
 void *
+ucl_btree_avl_rot_left (void * old_cur_)
+/* Perform a  left rotation  which balances a  left-left-higher subtree.
+ * Example:
+ *
+ *               (top)                      (top)
+ *                 |                          |
+ *                11 (old_cur)                9 (new_cur)
+ *                / \                    -----+-----
+ *     (new_cur) 9   12                 7           11 (old_cur)
+ *              / \             =>     / \         /  \
+ *             7   10 (bro)           6   8      10   12
+ *            / \                              (bro)
+ *           6   8
+ *
+ */
+{
+  ucl_node_t	old_cur = old_cur_, new_cur, bro;
+  new_cur	= old_cur->son;
+  bro		= new_cur->bro;
+  assert(UCL_SON_DEEPER == old_cur->meta.avl_status);
+  assert(UCL_SON_DEEPER == new_cur->meta.avl_status);
+  { /* relink "old_cur" and "new_cur" */
+    new_cur->bro	= old_cur;
+    new_cur->dad	= old_cur->dad;
+    old_cur->dad	= new_cur;
+  }
+  { /* relink "old_cur" and "bro" */
+    old_cur->son	= bro;
+    if (bro) bro->dad	= old_cur;
+  }
+  { /* relink "top" */
+    ucl_node_t	top = new_cur->dad;
+    if (top) {
+      if (old_cur == top->bro)
+	top->bro = new_cur;
+      else {
+	assert(old_cur == top->son);
+	top->son = new_cur;
+      }
+    }
+  }
+  old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  return new_cur;
+}
+
+void *
+ucl_btree_avl_rot_right (void * old_cur_)
+/* Perform a right rotation which balances a right-right-higher subtree.
+ * Example:
+ *
+ *         (top)                              (top)
+ *           |                                  |
+ *           7 (old_cur)                        9 (new_cur)
+ *          / \                            -----+-----
+ *         6   9 (new_cur)   => (old_cur) 7           11
+ *            / \                        / \         /  \
+ *     (son) 8   11                     6   8      10    12
+ *              /  \                      (son)
+ *            10    12
+ */
+{
+  ucl_node_t	old_cur = old_cur_, new_cur, son;
+  new_cur	= old_cur->bro;
+  son		= new_cur->son;
+  assert(UCL_BRO_DEEPER == old_cur->meta.avl_status);
+  assert(UCL_BRO_DEEPER == new_cur->meta.avl_status);
+  { /* relink "old_cur" and "new_cur" */
+    new_cur->son	= old_cur;
+    new_cur->dad	= old_cur->dad;
+    old_cur->dad	= new_cur;
+  }
+  { /* relink "old_cur" and "son" */
+    old_cur->bro	= son;
+    if (son) son->dad	= old_cur;
+  }
+  { /* relink "top" */
+    ucl_node_t	top = new_cur->dad;
+    if (top) {
+      if (old_cur == top->bro)
+	top->bro = new_cur;
+      else {
+	assert(old_cur == top->son);
+	top->son = new_cur;
+      }
+    }
+  }
+  old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  return new_cur;
+}
+
+void *
+ucl_btree_avl_rot_left_right (void * old_cur_)
+/* Perform  a  left/right rotation  which  balances a  left-right-higher
+ * subtree.  Example:
+ *
+ *             (top)                             (top)
+ *               |                                 |
+ *              10 (old_cur)                       8 (new_cur)
+ *             /  \                      ----------+----------
+ *      (son) 5    13             (son) 5                    10 (old_cur)
+ *           / \               =>      / \                  /  \
+ *          3   8 (new_cur)           3   7                9    13
+ *             / \                      (deep_son)  (deep_bro)
+ * (deep_son) 7   9 (deep_bro)
+ *
+ *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
+ *son-deeper and "son" is bro-deeper.
+ */
+{
+  ucl_node_t	old_cur = old_cur_, new_cur, son, deep_bro, deep_son;
+  son		= old_cur->son;
+  new_cur	= son->bro;
+  assert(UCL_SON_DEEPER == old_cur->meta.avl_status);
+  assert(UCL_BRO_DEEPER == son->meta.avl_status || UCL_EQUAL_DEPTH == son->meta.avl_status);
+  { /* relink "son" and "deep_son" */
+    deep_son = new_cur->son;
+    son->bro	= deep_son;
+    if (deep_son) deep_son->dad = son;
+  }
+  { /* relink "new_cur" and "son" */
+    new_cur->son= son;
+    son->dad	= new_cur;
+  }
+  { /* relink "old_cur" and "deep_bro" */
+    deep_bro = new_cur->bro;
+    old_cur->son = deep_bro;
+    if (deep_bro) deep_bro->dad = old_cur;
+  }
+  { /* finish relinking "old_cur" and "new_cur" */
+    new_cur->bro	= old_cur;
+    new_cur->dad	= old_cur->dad;
+    old_cur->dad	= new_cur;
+  }
+  { /* relink "top" */
+    ucl_node_t	top = new_cur->dad;
+    if (top) {
+      if (old_cur == top->bro)
+	top->bro = new_cur;
+      else {
+	assert(old_cur == top->son);
+	top->son = new_cur;
+      }
+    }
+  }
+  /* Adjust the statuses. */
+  if (deep_son) {
+    son->meta.avl_status = son->son? UCL_EQUAL_DEPTH : UCL_BRO_DEEPER;
+  } else {
+    son->meta.avl_status = son->son? UCL_SON_DEEPER  : UCL_EQUAL_DEPTH;
+  }
+  if (deep_bro) {
+    old_cur->meta.avl_status = old_cur->bro? UCL_EQUAL_DEPTH : UCL_SON_DEEPER;
+  } else {
+    old_cur->meta.avl_status = old_cur->bro? UCL_BRO_DEEPER  : UCL_EQUAL_DEPTH;
+  }
+  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  return new_cur;
+}
+
+void *
+ucl_btree_avl_rot_right_left (void * old_cur_)
+/* Perform a  bro/son rotation which balances  a bro-son-higher subtree.
+ * Example:
+ *
+ *             (top)                                (top)
+ *               |                                    |
+ *     (old_cur) 9                                   11 (new_cur)
+ *              / \                         ----------+---------
+ *             8   13 (bro)      (old_cur) 9                    13 (bro)
+ *                /  \         =>         / \                  /  \
+ *    (new_cur) 11    14                 8   10              12    14
+ *             /  \                        (deep_son)  (deep_bro)
+ *           10    12
+ *   (deep_son)    (deep_bro)
+ *
+ *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
+ *bro-deeper and  "bro" is son-deeper.
+ */
+{
+  ucl_node_t	old_cur = old_cur_, new_cur, bro, deep_bro, deep_son;
+  bro		= old_cur->bro;
+  new_cur	= bro->son;
+  assert(UCL_BRO_DEEPER == old_cur->meta.avl_status);
+  assert(UCL_SON_DEEPER == bro->meta.avl_status);
+  { /* relink "bro" and "deep_bro" */
+    deep_bro = new_cur->bro;
+    bro->son	= deep_bro;
+    if (deep_bro) deep_bro->dad = bro;
+  }
+  { /* relink "new_cur" and "bro" */
+    new_cur->bro= bro;
+    bro->dad	= new_cur;
+  }
+  { /* relink "old_cur" and "deep_son" */
+    deep_son = new_cur->son;
+    old_cur->bro = deep_son;
+    if (deep_son) deep_son->dad = old_cur;
+  }
+  { /* finish relinking "old_cur" and "new_cur" */
+    new_cur->son	= old_cur;
+    new_cur->dad	= old_cur->dad;
+    old_cur->dad	= new_cur;
+  }
+  { /* relink "top" */
+    ucl_node_t	top = new_cur->dad;
+    if (top) {
+      if (old_cur == top->bro)
+	top->bro = new_cur;
+      else {
+	assert(old_cur == top->son);
+	top->son = new_cur;
+      }
+    }
+  }
+  /* Adjust the statuses. */
+  if (deep_son) {
+    old_cur->meta.avl_status = old_cur->son? UCL_EQUAL_DEPTH : UCL_BRO_DEEPER;
+  } else {
+    old_cur->meta.avl_status = old_cur->son? UCL_SON_DEEPER  : UCL_EQUAL_DEPTH;
+  }
+  if (deep_bro) {
+    bro->meta.avl_status	= bro->bro? UCL_EQUAL_DEPTH : UCL_SON_DEEPER;
+  } else {
+    bro->meta.avl_status	= bro->bro? UCL_BRO_DEEPER  : UCL_EQUAL_DEPTH;
+  }
+  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  return new_cur;
+}
+
+void *
 ucl_btree_step_inorder (void * node)
 {
   ucl_node_t	N = node;

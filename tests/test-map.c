@@ -103,7 +103,7 @@
 #define SON(L)			((L)->node.son)
 #define BRO(L)			((L)->node.bro)
 
-#define STATUS(L)		(((ucl_map_link_t)L)->avl_status)
+#define STATUS(L)		(((ucl_node_t)L)->meta.avl_status)
 #define STATUS_STRING(S)	((UCL_EQUAL_DEPTH==S)? "equal-depth": \
 				 ((UCL_SON_DEEPER==S)? "son-deeper":\
 				  ((UCL_BRO_DEEPER==S)? "bro-deeper": "corrupted")))
