@@ -143,8 +143,10 @@ fill (ucl_map_t M, int begin, int end)
 static void
 clean (ucl_map_t M)
 {
-  for (ucl_map_link_t  L = ucl_map_first(M); L; L = ucl_map_first(M))
-    free_link(ucl_map_remove(M, L));
+  for (ucl_map_link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
+    ucl_map_remove(M, L);
+    free_link(L);
+  }
   assert(0 == ucl_map_size(M));
 }
 
@@ -895,7 +897,7 @@ test_insertion_and_removal (void)
 	print_preorder_links (M, "before removing link %d", i);
       	K.t_int = i;
       	L = ucl_map_find(M, K);
-      	L = ucl_map_remove(M, L);
+      	ucl_map_remove(M, L);
       	K = ucl_map_getkey(L);
       	assert(K.t_int == i);
       	free_link(L);

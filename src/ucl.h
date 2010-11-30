@@ -1490,7 +1490,7 @@ ucl_heap_size (const ucl_heap_t H)
 
 extern void ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp);
 extern ucl_bool_t ucl_map_insert (ucl_map_t M, ucl_map_link_t L);
-extern ucl_map_link_t ucl_map_remove (ucl_map_t M, ucl_map_link_t L);
+extern void ucl_map_remove (ucl_map_t M, ucl_map_link_t L);
 extern ucl_map_link_t ucl_map_find (const ucl_map_t M, const ucl_value_t key);
 extern ucl_map_link_t ucl_map_first (const ucl_map_t M);
 extern ucl_map_link_t ucl_map_last (const ucl_map_t M);

@@ -2616,12 +2616,23 @@ for (cur = get_the_top_node();
 
 
 The following routines are used in the implementation of the @avl{}
-binary search tree; they are not meant to be used directly.
+binary search tree; they are not meant to be used directly.  @ref{map}
+for the @ucl{} implementation of @avl{} search tree.
+
+When using the @code{ucl_node_tag_t} structures in an @avl{} search
+tree, the @code{meta} field is used to store an @dfn{@avl{} status}
+integer which is: @math{-1} when the son subtree is higher than the bro
+subtree; @math{+1} when the bro subtree is higher than the son subtree;
+@math{0} when the son subtree and the bro subtree have equal depth.  In
+a balanced @avl{} tree the difference in depth between a son subtree and
+a bro subtree is always at most @math{1}; so we can say that the @avl{}
+status is the bro's subtree depth minus the son's subtree depth.
 
 
 @deftypefun {void *} ucl_btree_avl_rot_left (void * @var{old_cur})
 Perform a @dfn{left rotation} (or @dfn{son rotation}) which balances a
-left--left--higher subtree.  Example:
+left--left--higher subtree; return a pointer to the node that has
+replaced @var{old_cur} in the tree.  Example:
 
 @example
           (top)                      (top)
@@ -2639,7 +2650,8 @@ left--left--higher subtree.  Example:
 
 @deftypefun {void *} ucl_btree_avl_rot_left_right (void * @var{old_cur})
 Perform a @dfn{left/right rotation} (or @dfn{son/bro rotation}) which
-balances a left--right--higher subtree.  Example:
+balances a left--right--higher subtree; return a pointer to the node
+that has replaced @var{old_cur} in the tree.  Example:
 
 @example
          (top)                            (top)
@@ -2659,9 +2671,10 @@ deeper and its son is bro deeper.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_avl_rot_right (void * @var{old_dad})
+@deftypefun {void *} ucl_btree_avl_rot_right (void * @var{old_cur})
 Perform a @dfn{right rotation} (or @dfn{bro rotation}) which balances a
-right--right--higher subtree.  Example:
+right--right--higher subtree; return a pointer to the node that has
+replaced @var{old_cur} in the tree.  Example:
 
 @example
     (top)                              (top)
@@ -2677,9 +2690,10 @@ right--right--higher subtree.  Example:
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_avl_rot_right_left (void * @var{old_dad})
+@deftypefun {void *} ucl_btree_avl_rot_right_left (void * @var{old_cur})
 Perform a @dfn{right/left rotation} (or @dfn{bro/son rotation}) which
-balances a right--left--higher subtree.  Example:
+balances a right--left--higher subtree; return a pointer to the node
+that has replaced @var{old_cur} in the tree.  Example:
 
 @example
           (top)                           (top)
@@ -4987,29 +5001,187 @@ link was not inserted.
 @subsection Removing elements from a map
 
 
-@deftypefun ucl_map_link_t ucl_map_remove (ucl_map_t @var{M}, ucl_map_link_t @var{L})
-Remove from the map the key/value pair in the element referenced by
-@var{L}.  This must be the return value of a previous invocation of
-@cfunc{ucl_map_find}.  This function only removes the link from the map:
-it's our responsibility to free the key, the value and the link
-structure itself.  Return a pointer to the extracted link.
+@deftypefun void ucl_map_remove (ucl_map_t @var{M}, ucl_map_link_t @var{L})
+Remove the node @var{L} from the referenced map.  @var{L} must be the
+return value of a previous invocation to @cfunc{ucl_map_find}.  This
+function only removes the link from the map, it's our responsibility to
+free the memory and resources associated to it.
+@end deftypefun
 
-Example of link removal:
+@c ------------------------------------------------------------
+
+@subsubheading Introduction to the removal algorithm
+
+This is a brief introduction to make it easier to understand the @ucl{}
+source code.
+
+To remove a node from an @avl{} search tree: first we push it down the
+tree so that it becomes a leaf, then we detach it, finally we step up in
+the tree updating the status of the parent nodes.
+
+It is always possible to swap the node @math{N} of a binary search tree
+with the rightmost element in its son's subtree, or the leftmost element
+in its bro's subtree, and keeping correct both the tree ordering of all
+the nodes but @math{N} root itself; this is a desirable operation
+because detaching a leaf is really easy.
+
+For example pushing down the node @math{20} in the following tree, and
+then detaching it, leaves the tree in correct ordering; the status of
+the nodes is indicated with @samp{=} for equal depth, @samp{s} for son
+deeper, @samp{b} for bro deeper:
 
 @example
-ucl_memory_allocator_t  A;
-ucl_map_t               M;
-ucl_map_link_t          L;
-ucl_value_t             K;
-
-L = ucl_map_find(M, K);
-if (! L)
-  @{
-    ucl_map_remove(M, L);
-    A.alloc(A.data, &L, 0);
-  @}
+20s--30=        15s--30=        15s--30=
+ |               |               |
+10=--15=   =>   10=--20    =>   10=  20
+ |               |               |
+ 5=              5=              5=
 @end example
-@end deftypefun
+
+The tree is no more balanced and the statuses are not correct; we can
+fix them by stepping up the tree.  Node @math{10} lost the bro so now it
+is son deeper:
+
+@example
+ 15s--30=
+  |
+*10s
+  |
+  5=
+@end example
+
+@noindent
+removing @math{20} has not changed the depth of the subtree of
+@math{10}, so node @math{15} must not change its state.
+
+@example
+*15s--30=
+  |
+ 10s
+  |
+  5=
+@end example
+
+A more complex example, removing @math{3} in the tree below by pushing
+it down its bro subtree.  First we swap it with @math{4}, which is the
+leftmost in the bro subtree:
+
+@example
+3b------7=--8b--9=      4b------7=--8b--9=
+|       |               |       |
+1=--2=  5=--6=      =>  1=--2=  5=--6=
+|       |               |       |
+0=      4=              0=      3
+@end example
+
+@noindent
+then we detach it adjusting the status of its dad, notice that the
+subtree of @math{5} has @strong{not} got shorter:
+
+@example
+4b------7=--8b--9=      4b------7=--8b--9=
+|       |               |       |
+1=--2=  5=--6=      =>  1=--2= *5b--6=
+|                       |
+0=      3               0=
+@end example
+
+@noindent
+then we step up to node @math{7}, we do not need to adjust its status
+because the subtree we come from has not got shorter:
+
+@example
+                                *
+4b------7=--8b--9=      4b------7=--8b--9=
+|       |               |       |
+1=--2= *5b--6=      =>  1=--2=  5b--6=
+|                       |
+0=                      0=
+@end example
+
+@noindent
+finally we step up to node @math{4}, we do not need to adjust its status
+because the subtree we come from has not got shorter:
+
+@example
+*
+4b------7=--8b--9=
+|       |
+1=--2=  5b--6=
+|
+0=
+@end example
+
+Now what if we remove @math{6}?  We adjust the status of @math{5} and
+notice that its subtree has got shorter:
+
+@example
+4b------7=--8b--9=
+|       |
+1=--2= *5=
+|
+0=
+@end example
+
+@noindent
+then we step up to node @math{7}; it was equal depth before and its
+son's subtree has got shorter: its new status is bro deeper; the subtree
+of @math{7} has @strong{not} got shorter because its previous status was
+equal depth:
+
+@example
+        *
+4b------7b--8b--9=
+|       |
+1=--2=  5=
+|
+0=
+@end example
+
+@noindent
+finally we step up to node @math{4}, we do not need to adjust its status
+because the subtree we come from has not got shorter.
+
+Now let's remove node @math{9} and adjust the status of its dad; the
+subtree of @math{8} has got shorter:
+
+@example
+            *
+4b------7b--8=
+|       |
+1=--2=  5=
+|
+0=
+@end example
+
+@noindent
+the we step up to node @math{7}: we come from its bro subtree, which has
+got shorter, and its status is bro deeper; the new status of @math{7} is
+equal depth; the subtree of @math{7} has got shorter, because it was bro
+deeper before:
+
+@example
+        *
+4b------7=--8=
+|       |
+1=--2=  5=
+|
+0=
+@end example
+
+@noindent
+finally we step up to node @math{4}: its status is bro deeper and we
+come from a bro subtree which has got shorter; the new status of
+@math{4} is equal depth:
+
+@example
+*
+4=------7=--8=
+|       |
+1=--2=  5=
+|
+0=
+@end example
 
 @c page
 @node map accessors

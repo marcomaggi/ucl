@@ -89,7 +89,21 @@ If you are using a  checkout from the development repository, the
     $ make
     $ make install
 
-to build the tests:
+  Warning: the  code makes sometimes heavy use  of the "assert()"
+macro; to exclude its  usage put the "--disable-assert" option on
+the command line of "configure"  or use the following setting for
+CPPFLAGS:
+
+    $ configure CPPFLAGS="-DNDEBUG"
+
+or compile with:
+
+    $ make CPPFLAGS="-DNDEBUG"
+
+it is  strongly suggested to  disable assertions in  a production
+environment.
+
+  To build the tests:
 
     $ make tests
 
@@ -109,10 +123,6 @@ each test has a name, to run  a single test we can use the "name"
 environment variable:
 
     $ make test-vector name=vector-1.2
-
-  Warning: the code makes (sometimes heavy) use of the "assert()"
-macro;  to  exclude them  use  the  "--disable-assert" option  of
-"configure".
 
 
 A. Credits
