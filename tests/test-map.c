@@ -109,6 +109,7 @@
 				  ((UCL_BRO_DEEPER==S)? "bro-deeper": "corrupted")))
 
 #define KEY(L)			(ucl_map_getkey(L).t_int)
+#define MAYBE_KEY(L)		((L)? KEY(L) : -1)
 
 
 /** ------------------------------------------------------------
@@ -177,11 +178,14 @@ validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_
   ucl_value_t		K = { .t_int = j };
   ucl_map_link_t	L = ucl_map_find(M, K);
   mcl_test_error_if_false(dad == DAD_OF(L),
-			  "invalid dad of node %d, expected %p got %p", j, dad, DAD_OF(L));
+			  "invalid dad of node %d, expected %p (key=%d) got %p (key=%d)",
+			  j, dad, MAYBE_KEY(dad), DAD_OF(L), MAYBE_KEY(DAD_OF(L)));
   mcl_test_error_if_false(son == SON_OF(L),
-			  "invalid son of node %d, expected %p got %p", j, dad, SON_OF(L));
+			  "invalid son of node %d, expected %p (key=%d) got %p (key=%d)",
+			  j, son, MAYBE_KEY(son), SON_OF(L), MAYBE_KEY(SON_OF(L)));
   mcl_test_error_if_false(bro == BRO_OF(L),
-			  "invalid bro of node %d, expected %p got %p", j, dad, BRO_OF(L));
+			  "invalid bro of node %d, expected %p (key=%d) got %p (key=%d)",
+			  j, bro, MAYBE_KEY(bro), BRO_OF(L), MAYBE_KEY(BRO_OF(L)));
   mcl_test_error_if_false(expected_status == STATUS(L),
 			  "invalid status of node %d, expected %s got %s",
 			  j, STATUS_STRING(expected_status), STATUS_STRING(STATUS(L)));
@@ -792,7 +796,8 @@ test_checked_insertion_random (void)
        *         |             |
        *        15             0=
        */
-      j=15,
+      j=15;
+      mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
       validate_links(M, 20,  NULL, L[10], L[30], UCL_EQUAL_DEPTH);
       validate_links(M, 10, L[20], L[0],  L[15], UCL_EQUAL_DEPTH);
@@ -801,6 +806,68 @@ test_checked_insertion_random (void)
       validate_links(M, 15, L[10],  NULL,  NULL, UCL_EQUAL_DEPTH);
       validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
 
+      /* add 12:
+       *
+       *   20s-------30b--40=
+       *    |
+       *   10b--15s
+       *    |    |
+       *    0=  12=
+       */
+      j=12;
+      mcl_debug("inserting %d", j);
+      checked_insertion(M, j, &L[j]);
+      validate_links(M, 20,  NULL, L[10], L[30], UCL_SON_DEEPER);
+      validate_links(M, 10, L[20],  L[0], L[15], UCL_BRO_DEEPER);
+      validate_links(M, 30, L[20],  NULL, L[40], UCL_BRO_DEEPER);
+      validate_links(M,  0, L[10],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 15, L[10], L[12],  NULL, UCL_SON_DEEPER);
+      validate_links(M, 12, L[15],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
+
+      /* add 13 (son-bro rotation raising 13):
+       *
+       *   20s-------30b--40=      20s-------30b--40=
+       *    |                       |
+       *   10b--15s            =>  10b--13=--15=
+       *    |    |                  |    |
+       *    0=  12=--13             0=  12=
+       *
+       */
+      j=13;
+      mcl_debug("inserting %d", j);
+      checked_insertion(M, j, &L[j]);
+      validate_links(M, 20,  NULL, L[10], L[30], UCL_SON_DEEPER);
+      validate_links(M, 10, L[20],  L[0], L[13], UCL_BRO_DEEPER);
+      validate_links(M, 30, L[20],  NULL, L[40], UCL_BRO_DEEPER);
+      validate_links(M,  0, L[10],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 13, L[10], L[12], L[15], UCL_EQUAL_DEPTH);
+      validate_links(M, 12, L[13],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 15, L[13],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
+
+      /* add 11 (son-bro rotation raising 12):
+       *
+       *   20s-------30b--40=      20s-------30b--40=
+       *    |                       |
+       *   10b--13=--15=           12=-------13b--15=
+       *    |    |             =>   |
+       *    0=  12=                10=--11=
+       *         |                  |
+       *        11                  0=
+       */
+      j=11;
+      mcl_debug("inserting %d", j);
+      checked_insertion(M, j, &L[j]);
+      validate_links(M, 20,  NULL, L[12], L[30], UCL_SON_DEEPER);
+      validate_links(M, 12, L[20], L[10], L[13], UCL_EQUAL_DEPTH);
+      validate_links(M, 30, L[20],  NULL, L[40], UCL_BRO_DEEPER);
+      validate_links(M, 10, L[12],  L[0], L[11], UCL_EQUAL_DEPTH);
+      validate_links(M, 13, L[12],  NULL, L[15], UCL_BRO_DEEPER);
+      validate_links(M,  0, L[10],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 11, L[10],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 15, L[13],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
 
       for (j=0; j<SIZE; ++j)
 	if (L[j]) free_link(L[j]);
