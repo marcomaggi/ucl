@@ -4926,8 +4926,9 @@ key/value pairs.  The operations we want to do on a map are:
 
 @itemize
 @item
-add a key/value pair, if the element already exists replace the old
-value with the new one or add a new key/value pair;
+add a key/value pair (or just a key) to a collection, if the element
+already exists replace the old value with the new one or add a new
+key/value pair;
 
 @item
 find a key/value pair with a specified key;

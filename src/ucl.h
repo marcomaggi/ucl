@@ -717,25 +717,6 @@ typedef struct ucl_vector_array_t {
   ucl_vector_tag_t **	vectors;
 } ucl_vector_array_t;
 
-/* ------------------------------------------------------------ */
-
-typedef struct ucl_hash_entry_tag_t {
-  struct ucl_hash_entry_tag_t *	next_entry_in_list;
-  ucl_value_t			key;
-  ucl_bool_t			to_be_processed_during_rehashing;
-} ucl_hash_entry_tag_t;
-typedef ucl_hash_entry_tag_t *	ucl_hash_entry_t;
-
-typedef struct ucl_hash_table_tag_t {
-  ucl_vector_tag_t *	buckets;
-  ucl_hash_t		hash;
-  ucl_comparison_t	compar;
-  size_t		size;
-  size_t		number_of_used_buckets;
-} ucl_hash_table_tag_t;
-
-typedef ucl_hash_table_tag_t ucl_hash_table_t[1];
-
 
 /** ------------------------------------------------------------
  ** Binary tree prototypes.
@@ -1625,6 +1606,23 @@ ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t
 /** --------------------------------------------------------------------
  ** Hash table functions.
  ** ----------------------------------------------------------------- */
+
+typedef struct ucl_hash_entry_tag_t {
+  struct ucl_hash_entry_tag_t *	next_entry_in_list;
+  ucl_value_t			key;
+  ucl_bool_t			to_be_processed_during_rehashing;
+} ucl_hash_entry_tag_t;
+typedef ucl_hash_entry_tag_t *	ucl_hash_entry_t;
+
+typedef struct ucl_hash_table_tag_t {
+  ucl_vector_tag_t *	buckets;
+  ucl_hash_t		hash;
+  ucl_comparison_t	compar;
+  size_t		size;
+  size_t		number_of_used_buckets;
+} ucl_hash_table_tag_t;
+
+typedef ucl_hash_table_tag_t ucl_hash_table_t[1];
 
 extern void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
 				 ucl_comparison_t compar, ucl_hash_t hash);

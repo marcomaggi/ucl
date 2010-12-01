@@ -553,12 +553,14 @@ ucl_map_remove (ucl_map_t M, void * cur_)
 	  /* "dad" is bro  deeper and its bro is equal  depth: we need a
 	     bro/son rotation and maybe also  a bro rotation for the bro
 	     of the new "dad". */
-#if 1
+#if 0
 	  AVL_STATUS(dad) = UCL_BRO_DEEPER;
 #else
 	  dad_is_root = (M->root == dad);
-	  dad = ucl_btree_avl_rot_right_left(dad);
+	  /* dad = ucl_btree_avl_rot_right_left(dad); */
+	  dad = ucl_btree_avl_rot_right(dad);
 	  if (dad_is_root) M->root = dad;
+	  return;
 #endif
 	  /*After the bro/son rotation, the bro is always bro deeper; it
 	   *may happen  that the  new bro is  also unbalanced, so  to be
@@ -661,17 +663,19 @@ ucl_map_remove (ucl_map_t M, void * cur_)
 	  break; /* from the nested switch() */
 	case UCL_BRO_DEEPER:
 	  dad_is_root = (M->root == dad);
-	  dad = ucl_btree_avl_rot_right_left(dad);
+	  dad = ucl_btree_avl_rot_left_right(dad);
 	  if (dad_is_root) M->root = dad;
 	  return;
 	case UCL_EQUAL_DEPTH:
 	  /* dad = ucl_btree_avl_rot_right_left(dad); */
-#if 1
+#if 0
 	  AVL_STATUS(dad) = UCL_SON_DEEPER;
 #else
 	  dad_is_root = (M->root == dad);
-	  ucl_btree_avl_rot_right(SON_OF(dad));
+	  /* ucl_btree_avl_rot_right(SON_OF(dad)); */
+	  ucl_btree_avl_rot_left(SON_OF(dad));
 	  if (dad_is_root) M->root = dad;
+	  return;
 #endif
 	  break; /* from the nested switch() */
 	}
