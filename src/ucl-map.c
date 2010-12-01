@@ -58,14 +58,14 @@
 				   "corrupted")))
 
 /* to be used as right-side in assignments */
-#define DAD_OF(L)		((void *)((L)->node.dad))
-#define SON_OF(L)		((void *)((L)->node.son))
-#define BRO_OF(L)		((void *)((L)->node.bro))
+#define DAD_OF(L)		((void *)((L)->dad))
+#define SON_OF(L)		((void *)((L)->son))
+#define BRO_OF(L)		((void *)((L)->bro))
 
 /* to be used as left-side in assignments */
-#define DAD(L)		((L)->node.dad)
-#define SON(L)		((L)->node.son)
-#define BRO(L)		((L)->node.bro)
+#define DAD(L)		((L)->dad)
+#define SON(L)		((L)->son)
+#define BRO(L)		((L)->bro)
 
 static void	map_inorder_iterator_next	(ucl_iterator_t iterator);
 static void	map_inorder_backward_iterator_next (ucl_iterator_t iterator);
@@ -101,23 +101,42 @@ ucl_map_size_decr (ucl_map_t M)
 {
   --(M->size);
 }
+static __inline__ __attribute__((__always_inline__,__nonnull__))
+int
+comparison_key_node (const ucl_map_t M, ucl_value_t K, ucl_node_t N)
+{
+  return M->keycmp.func(M->keycmp.data, K, M->getkey(N));
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))
+int
+comparison_key_key (const ucl_map_t M, ucl_value_t K1, ucl_value_t K2)
+{
+  return M->keycmp.func(M->keycmp.data, K1, K2);
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))
+int
+comparison_node_node (const ucl_map_t M, ucl_node_t N1, ucl_node_t N2)
+{
+  return M->keycmp.func(M->keycmp.data, M->getkey(N1), M->getkey(N2));
+}
 
 void
-ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp)
+ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp, ucl_node_key_fun_t *getkey)
 {
   assert(M);
   assert(keycmp.func);
   M->root		= NULL;
   M->size		= 0;
   M->keycmp		= keycmp;
+  M->getkey		= getkey;
   M->flags		= flags;
 }
 
 ucl_bool_t
-ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
+ucl_map_insert (ucl_map_t M, void * L_)
 {
-  ucl_map_link_t current;
-  int		 comparison_result;
+  ucl_node_t	L = L_, current=NULL;
+  int		comparison_result=0;
   assert(M);
   assert(L);
   /* The  new link  always  has  AVL status  set  to equal-depth  before
@@ -136,10 +155,10 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
      find a node with key equal to the key of "L": we return false. */
   {
     ucl_bool_t	 allow_multiple_objects	= M->flags & UCL_ALLOW_MULTIPLE_OBJECTS;
-    ucl_value_t	 K			= ucl_map_getkey(L);
-    for (ucl_map_link_t cursor = M->root; cursor;) {
+    ucl_value_t	 K			= M->getkey(L);
+    for (ucl_node_t cursor = M->root; cursor;) {
       current = cursor;
-      comparison_result = M->keycmp.func(M->keycmp.data, K, ucl_map_getkey(cursor));
+      comparison_result = comparison_key_node(M, K, cursor);
       if ((comparison_result > 0) || (comparison_result==0 && allow_multiple_objects)) {
 	cursor = BRO(current);
       } else if (comparison_result < 0) {
@@ -239,7 +258,7 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
      readjusting after a removal.  We CANNOT take the following loop and
      factor  it   out  joining   it  with  the   loop  at  the   end  of
      "ucl_map_remove()". */
-  for (ucl_map_link_t dad = DAD_OF(current);; current = dad, dad = DAD_OF(current)) {
+  for (ucl_node_t dad = DAD_OF(current);; current = dad, dad = DAD_OF(current)) {
     if (! dad)
       return true; /* "current" is the root */
     else if (SON_OF(dad) == current) { /* stepping up from the son subtree */
@@ -277,7 +296,7 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
 	   its depth will be equal to the one of the old "dad".  See the
 	   source code of the rotation functions for examples.  */
 	{
-	  int	dad_is_root = (dad == M->root);
+	  ucl_bool_t	dad_is_root = (dad == M->root);
 	  if (UCL_SON_DEEPER == AVL_STATUS(current))
 	    dad = ucl_btree_avl_rot_left(dad);
 	  else
@@ -321,7 +340,7 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
 	   its depth will be equal to the one of the old "dad".  See the
 	   source code of the rotation functions for examples.  */
 	{
-	  int	dad_is_root = (dad == M->root);
+	  ucl_bool_t	dad_is_root = (dad == M->root);
 	  if (UCL_BRO_DEEPER == AVL_STATUS(current))
 	    dad = ucl_btree_avl_rot_right(dad);
 	  else
@@ -335,10 +354,10 @@ ucl_map_insert (ucl_map_t M, ucl_map_link_t L)
 }
 
 void
-ucl_map_remove (ucl_map_t M, ucl_map_link_t cur)
+ucl_map_remove (ucl_map_t M, void * cur_)
 {
-  ucl_map_link_t	dad, son, bro, L;
-  ucl_bool_t		dad_is_root;
+  ucl_node_t	cur = cur_, dad, son, bro, L;
+  ucl_bool_t	dad_is_root;
   /* assert(ucl_map_find_node(M, cur)); */
   debug("enter, removing link %p from map with %u nodes", (void *)cur, ucl_map_size(M));
   /* Handle the case of map with single node.  Notice that this function
@@ -656,13 +675,13 @@ ucl_map_remove (ucl_map_t M, ucl_map_link_t cur)
   } /* end of for() loop */
 }
 
-ucl_map_link_t
-ucl_map_find (const ucl_map_t M, const ucl_value_t key)
+void *
+ucl_map_find (const ucl_map_t M, const ucl_value_t K)
 {
-  ucl_map_link_t 	cur = M->root, last;
-  int			comparison_result;
+  ucl_node_t 	cur = M->root, last;
+  int		comparison_result;
   while (cur) {
-    comparison_result = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur));
+    comparison_result = comparison_key_node(M, K, cur);
     if (comparison_result > 0)
       cur = BRO(cur);
     else if (comparison_result < 0)
@@ -672,7 +691,7 @@ ucl_map_find (const ucl_map_t M, const ucl_value_t key)
 	do {
 	  last = cur;
 	  cur  = ucl_btree_step_inorder_backward(last);
-	} while (!cur && (0 == M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur))));
+	} while (!cur && (0 == comparison_key_node(M, K, cur)));
 	return last;
       } else
 	return cur;
@@ -690,33 +709,32 @@ ucl_map_depth (const ucl_map_t M)
  ** Traversing.
  ** ----------------------------------------------------------*/
 
-ucl_map_link_t
+void *
 ucl_map_first (const ucl_map_t M)
 {
   return (M->size)? ucl_btree_find_leftmost(M->root) : NULL;
 }
-
-ucl_map_link_t
+void *
 ucl_map_last (const ucl_map_t M)
 {
   return (M->size)? ucl_btree_find_rightmost(M->root) : NULL;
 }
-ucl_map_link_t
-ucl_map_next (ucl_map_link_t L)
+void *
+ucl_map_next (void * L)
 {
   return ucl_btree_step_inorder(L);
 }
-ucl_map_link_t
-ucl_map_prev (ucl_map_link_t L)
+void *
+ucl_map_prev (void * L)
 {
   return ucl_btree_step_inorder_backward(L);
 }
 
-ucl_map_link_t
-ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key)
+void *
+ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t K)
 {
-  ucl_map_link_t 	cur, last;
-  int			v;
+  ucl_node_t 	cur, last;
+  int		v;
   assert(M);
   /* Handle the case of empty map. */
   cur = M->root;
@@ -725,18 +743,18 @@ ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key)
   /* Dive in the tree to find the key. */
   while (cur) {
     last = cur;
-    v = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur));
+    v = comparison_key_node(M, K, cur);
     if (v > 0)
-      cur = (ucl_map_link_t) last->node.bro;
+      cur = BRO_OF(last);
     else if (v < 0)
-      cur = (ucl_map_link_t) last->node.son;
+      cur = SON_OF(last);
     else { /* v == 0 */
       if (M->flags & UCL_ALLOW_MULTIPLE_OBJECTS) {
 	do {
 	  last = cur;
 	  cur  = ucl_btree_step_inorder(last);
 	  if (NULL == cur) break;
-	  v = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur));
+	  v = comparison_key_node(M, K, cur);
 	} while (0 == v);
       }
       return last;
@@ -750,11 +768,11 @@ ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key)
 }
 
 
-ucl_map_link_t
-ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key)
+void *
+ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t K)
 {
-  int			v;
-  ucl_map_link_t 	cur, last;
+  int		v;
+  ucl_node_t 	cur, last;
   assert(M != 0);
   /* Handle the case of empty map. */
   cur = M->root;
@@ -763,7 +781,7 @@ ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key)
   /* Dive in the tree to find the key. */
   while (cur) {
     last = cur;
-    v = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur));
+    v = comparison_key_node(M, K, cur);
     if (v > 0)
       cur = BRO_OF(last);
     else if (v < 0)
@@ -774,7 +792,7 @@ ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key)
 	  last = cur;
 	  cur  = ucl_btree_step_inorder_backward(last);
 	  if (NULL == cur) break;
-	  v = M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(cur));
+	  v = comparison_key_node(M, K, cur);
 	} while (0 == v);
       }
       return last;
@@ -788,18 +806,18 @@ ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key)
 }
 
 size_t
-ucl_map_count (const ucl_map_t M, const ucl_value_t key)
+ucl_map_count (const ucl_map_t M, const ucl_value_t K)
 {
-  size_t		count;
-  ucl_map_link_t 	L;
+  size_t	count;
+  ucl_node_t 	L;
   assert(M);
   count = 0;
-  L  = ucl_map_find(M, key);
+  L  = ucl_map_find(M, K);
   if (L) {
     do {
       ++count;
       L = ucl_map_next(L);
-    } while (L && (0 == M->keycmp.func(M->keycmp.data, key, ucl_map_getkey(L))));
+    } while (L && (0 == comparison_key_node(M, K, L)));
   }
   return count;
 }
@@ -874,7 +892,7 @@ ucl_map_iterator_levelorder (const ucl_map_t M, ucl_iterator_t I)
   }
 }
 void
-ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key)
+ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t K)
 {
   assert(M);
   assert(I);
@@ -882,28 +900,26 @@ ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key)
   if (! M->size)
     I->iterator = 0;
   else {
-    I->iterator	= ucl_map_find(M, key);
+    I->iterator	= ucl_map_find(M, K);
     I->next	= map_lowerbound_iterator_next;
   }
 }
 void
-ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key)
+ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t K)
 {
-  ucl_map_link_t 	L;
-  ucl_value_t		key1;
+  ucl_node_t 	L;
   assert(M);
   assert(I);
   I->container = M;
   if (0 == M->size)
     I->iterator = NULL;
   else {
-    L = ucl_map_find_or_next(M, key);
+    L = ucl_map_find_or_next(M, K);
     if (NULL == L) {
       I->iterator = L;
       return;
     } else {
-      key1 = ucl_map_getkey(L);
-      if (M->keycmp.func(M->keycmp.data, key, key1) == 0) {
+      if (0 == comparison_key_node(M, K, L)) {
 	I->iterator	= L;
 	I->next		= map_upperbound_iterator_next;
       } else
@@ -943,34 +959,32 @@ static void
 map_upperbound_iterator_next (ucl_iterator_t I)
 {
   const ucl_map_tag_t *	M;
-  ucl_value_t		key, key1;
-  ucl_map_link_t 	L;
+  ucl_value_t		K;
+  ucl_node_t		L;
   assert(I->iterator);
-  M   = I->container;
-  L   = I->iterator;
-  key = ucl_map_getkey(L);
-  L   = ucl_btree_step_inorder_backward(L);
-  if (L) {
-    key1 = ucl_map_getkey(L);
-    I->iterator = (0 == M->keycmp.func(M->keycmp.data, key, key1))? L : NULL;
-  } else
+  M = I->container;
+  L = I->iterator;
+  K = M->getkey(L);
+  L = ucl_btree_step_inorder_backward(L);
+  if (L)
+    I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;
+  else
     I->iterator = L;
 }
 static void
 map_lowerbound_iterator_next (ucl_iterator_t I)
 {
   const ucl_map_tag_t *	M;
-  ucl_value_t		key, key1;
-  ucl_map_link_t 	L;
+  ucl_value_t		K;
+  ucl_node_t		L;
   assert(I->iterator);
-  M   = I->container;
-  L   = I->iterator;
-  key = ucl_map_getkey(L);
-  L   = ucl_btree_step_inorder(L);
-  if (L) {
-    key1 = ucl_map_getkey(L);
-    I->iterator = (M->keycmp.func(M->keycmp.data, key, key1) == 0)? L : NULL;
-  } else
+  M = I->container;
+  L = I->iterator;
+  K = M->getkey(L);
+  L = ucl_btree_step_inorder(L);
+  if (L)
+    I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;
+  else
     I->iterator = L;
 }
 
@@ -1005,18 +1019,8 @@ union_iterator_next (ucl_iterator_t I)
 static void
 union_find_next (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {
-  ucl_value_t		key1, key2;
-  ucl_map_link_t 	node1;
-  ucl_map_link_t 	node2;
-  ucl_comparison_t	compar;
-  int			v;
   if (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
-    compar	= ((const ucl_map_tag_t *) (I1->container))->keycmp;
-    node1	= ucl_iterator_ptr(I1);
-    node2	= ucl_iterator_ptr(I2);
-    key1	= ucl_map_getkey(node1);
-    key2	= ucl_map_getkey(node2);
-    v = compar.func(compar.data, key1, key2);
+    int	v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
     if (v <= 0) {
       I->container = I1;
       I->iterator  = I1->iterator;
@@ -1063,16 +1067,8 @@ intersection_iterator_next (ucl_iterator_t I)
 static void
 intersection_find_common (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {
-  ucl_value_t		key1, key2;
-  ucl_map_link_t 	node1, node2;
-  ucl_comparison_t	compar = ((const ucl_map_tag_t *) (I1->container))->keycmp;
-  int			v;
   while (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
-    node1	= ucl_iterator_ptr(I1);
-    node2	= ucl_iterator_ptr(I2);
-    key1	= ucl_map_getkey(node1);
-    key2	= ucl_map_getkey(node2);
-    v = compar.func(compar.data, key1, key2);
+    int v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
     if (0 == v) {
       I->iterator = I1->iterator;
       return;
@@ -1106,30 +1102,19 @@ complintersect_iterator_next (ucl_iterator_t I)
 {
   ucl_iterator_tag_t * 	I1 = I->internal1.pointer;
   ucl_iterator_tag_t *	I2 = I->internal2.pointer;
-  ucl_comparison_t	compar = ((const ucl_map_tag_t *) (I1->container))->keycmp;
-  ucl_value_t		key1, key2;
-  ucl_map_link_t 	node1, node2;
   int			v;
   if (I->container == I1)
     ucl_iterator_next(I1);
   else if (I->container == I2)
     ucl_iterator_next(I2);
   if (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
-    node1 = ucl_iterator_ptr(I1);
-    node2 = ucl_iterator_ptr(I2);
-    key1  = ucl_map_getkey(node1);
-    key2  = ucl_map_getkey(node2);
-    v = compar.func(compar.data, key1, key2);
+    v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
     while (0 == v) {
       ucl_iterator_next(I1);
       ucl_iterator_next(I2);
       if ((! ucl_iterator_more(I1)) || (! ucl_iterator_more(I2)))
 	break;
-      node1 = ucl_iterator_ptr(I1);
-      node2 = ucl_iterator_ptr(I2);
-      key1  = ucl_map_getkey(node1);
-      key2  = ucl_map_getkey(node2);
-      v = compar.func(compar.data, key1, key2);
+      v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
     }
     if (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
       if (v < 0) {
@@ -1196,9 +1181,6 @@ subtraction_iterator_next (ucl_iterator_t I)
 {
   ucl_iterator_tag_t * 	I1;
   ucl_iterator_tag_t *	I2;
-  ucl_comparison_t	compar;
-  ucl_value_t		key1, key2;
-  ucl_map_link_t 	node1, node2;
   int			v;
   /* If no  more values in sequence  1, end.  This cannot  happen at the
      first invocation of this  function: this condition is recognised in
@@ -1216,12 +1198,7 @@ subtraction_iterator_next (ucl_iterator_t I)
     goto Advance;
   /* If  the element from  sequence 1  is lesser  than the  element from
      sequence 2, we select it and return. */
-  compar = ((const ucl_map_tag_t *) (I1->container))->keycmp;
-  node1 = ucl_iterator_ptr(I1);
-  node2 = ucl_iterator_ptr(I2);
-  key1  = ucl_map_getkey(node1);
-  key2  = ucl_map_getkey(node2);
-  v = compar.func(compar.data, key1, key2);
+  v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
   if (v < 0)
     goto Advance;
   /* Here we have  to advance the iterator over sequence  2 until we end
@@ -1237,11 +1214,7 @@ subtraction_iterator_next (ucl_iterator_t I)
 	return;
       }
     }
-    node1 = ucl_iterator_ptr(I1);
-    node2 = ucl_iterator_ptr(I2);
-    key1  = ucl_map_getkey(node1);
-    key2  = ucl_map_getkey(node2);
-    v = compar.func(compar.data, key1, key2);
+    v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
   } while (v >= 0);
   if ((! ucl_iterator_more(I2)) && 0 == v) {
     ucl_iterator_next(I1);

@@ -335,7 +335,6 @@ The map structure
 * map creation::                Creating and destroying maps.
 * map insertion::               Adding elements to a map.
 * map deletion::                Removing elements from a map.
-* map accessors::               Accessing values and keys.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
 * set iterators::               Composing map iterators.
@@ -4912,7 +4911,6 @@ others (@url{http://www.tcl.tk/} for more about @acronym{TCL}).
 * map creation::                Creating and destroying maps.
 * map insertion::               Adding elements to a map.
 * map deletion::                Removing elements from a map.
-* map accessors::               Accessing values and keys.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
 * set iterators::               Composing map iterators.
@@ -4964,21 +4962,22 @@ code.
 @end deftp
 
 
-@deftp {Struct Typedef} ucl_map_link_t
-The data type of the nodes.  Nodes must be allocated and freed by the
-user's code.
-@end deftp
+@deftypefn {Function Prototype} ucl_value_t ucl_node_key_fun_t (void * @var{node})
+Type of function which, applied to a pointer to node, returns the key
+(or a reference to) of the node.
+@end deftypefn
 
 @c page
 @node map creation
 @subsection Creating and destroying maps
 
 
-@deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp})
+@deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp}, ucl_node_key_fun_t * @var{getkey})
 Initialise an already allocated map structure.  @var{M} must be a
 pointer to an already allocated map structure; pointer to the already
 allocated map structure; @var{flags} configures the map behaviour;
-@var{keycmp} is the function+context used to compare keys.
+@var{keycmp} is the function+context used to compare keys; @var{getkey}
+is a function used to extract the key from nodes.
 
 Map configuration @var{flags} can be zero of an ORed combination of:
 
@@ -4997,13 +4996,18 @@ block the user code has to extract all the nodes from the map.
 @subsection Adding elements to a map
 
 
-@deftypefun ucl_bool_t ucl_map_insert (ucl_map_t @var{M}, ucl_map_link_t @var{L})
+The following functions accept @code{void *} as arguments and return
+values; internally these pointers are cast to @code{ucl_node_t}.
+
+
+@deftypefun ucl_bool_t ucl_map_insert (ucl_map_t @var{M}, void * @var{L})
 Given an already allocated and constructed map link, insert it in the
 map.
 
 An invocation to this function always inserts @var{L} into @var{M} if
 @var{M} is a multimap.  If @var{M} is a simple map: @var{L} is inserted
-only if there is no link in @var{M} having key equal to @var{L}.
+only if there is no link in @var{M} having key equal to the key of
+@var{L}.
 
 The return value is true if the link has been inserted, or false if the
 link was not inserted.
@@ -5014,7 +5018,11 @@ link was not inserted.
 @subsection Removing elements from a map
 
 
-@deftypefun void ucl_map_remove (ucl_map_t @var{M}, ucl_map_link_t @var{L})
+The following functions accept @code{void *} as arguments and return
+values; internally these pointers are cast to @code{ucl_node_t}.
+
+
+@deftypefun void ucl_map_remove (ucl_map_t @var{M}, void * @var{L})
 Remove the node @var{L} from the referenced map.  @var{L} must be the
 return value of a previous invocation to @cfunc{ucl_map_find}.  This
 function only removes the link from the map, it's our responsibility to
@@ -5200,32 +5208,12 @@ come from a bro subtree which has got shorter; the new status of
 @end example
 
 @c page
-@node map accessors
-@subsection Accessing values and keys
-
-
-@deftypefun void ucl_map_setkey (ucl_map_link_t @var{L}, ucl_value_t @var{newKey})
-Store a key in a link.
-@end deftypefun
-
-
-@deftypefun void ucl_map_setval (ucl_map_link_t @var{L}, ucl_value_t @var{newObj})
-Store an value in a link.
-@end deftypefun
-
-
-@deftypefun ucl_value_t ucl_map_getkey (ucl_map_link_t @var{L})
-Return the key in a map link.
-@end deftypefun
-
-
-@deftypefun ucl_value_t ucl_map_getval (ucl_map_link_t @var{L})
-Return the value in a map link.
-@end deftypefun
-
-@c page
 @node map ops
 @subsection Various operations on a map
+
+
+The following functions accept @code{void *} as arguments and return
+values; internally these pointers are cast to @code{ucl_node_t}.
 
 
 @deftypefun size_t ucl_map_count (const ucl_map_t @var{M}, const ucl_value_t @var{key})
@@ -5234,7 +5222,7 @@ simple maps.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_find (const ucl_map_t @var{M}, const ucl_value_t @var{key});
+@deftypefun {void *} ucl_map_find (const ucl_map_t @var{M}, const ucl_value_t @var{key});
 Return a pointer to the (first found) element associated with @var{key}.
 The return value is @cnull{} if such an element doesn't exist.
 
@@ -5244,33 +5232,33 @@ invocations of @cfunc{ucl_map_next}.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_first (const ucl_map_t @var{M})
+@deftypefun {void *} ucl_map_first (const ucl_map_t @var{M})
 Return a pointer to the element with lesser key in the map, or @cnull{}
 if the map is empty.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_last (const ucl_map_t @var{M})
+@deftypefun {void *} ucl_map_last (const ucl_map_t @var{M})
 Return a pointer to the element with greater key in the map, or @cnull{}
 if the map is empty.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_next (const ucl_map_link_t @var{L})
+@deftypefun {void *} ucl_map_next (const void * @var{L})
 Return a pointer to the element adjacent to the one referenced by
 @var{L} with greater key, or @cnull{} if @var{L} has the greater key in
 the map.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_prev (const ucl_map_link_t @var{L})
+@deftypefun {void *} ucl_map_prev (const void * @var{L})
 Return a pointer to the element adjacent to the one referenced by
 @var{L} with lesser key, or @cnull{} if @var{L} has the lesser key in
 the map.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_find_or_next (const ucl_map_t @var{M}, const ucl_value_t @var{key})
+@deftypefun {void *} ucl_map_find_or_next (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the lesser key greater than the selected one.  Return a
 pointer to the requested link or @cnull{} if all the keys in the map are
@@ -5278,7 +5266,7 @@ lesser than the selected one.
 @end deftypefun
 
 
-@deftypefun ucl_map_link_t ucl_map_find_or_prev (const ucl_map_t @var{M}, const ucl_value_t @var{key})
+@deftypefun {void *} ucl_map_find_or_prev (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the greater key lesser than the selected one.  Return a
 pointer to the requested link or @cnull{} if all the keys in the map are
@@ -5288,6 +5276,11 @@ greater than the selected one.
 
 @deftypefun size_t ucl_map_size (const ucl_map_t @var{M})
 Return the number of elements in the map.
+@end deftypefun
+
+
+@deftypefun void * ucl_map_root (const ucl_map_t @var{M})
+Return a pointer to the current root node.
 @end deftypefun
 
 

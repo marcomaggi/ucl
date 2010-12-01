@@ -854,63 +854,6 @@ extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t itera
 
 
 /** ------------------------------------------------------------
- ** Map container type definitions.
- ** ----------------------------------------------------------*/
-
-typedef struct ucl_map_link_tag_t {
-  ucl_node_tag_t	node;
-  ucl_value_t		key;
-  ucl_value_t		val;
-} ucl_map_link_tag_t;
-
-typedef ucl_map_link_tag_t *	ucl_map_link_t;
-
-typedef struct ucl_map_tag_t {
-  size_t		size;
-  unsigned int		flags;
-  ucl_comparison_t	keycmp;
-  ucl_map_link_t	root;
-} ucl_map_tag_t;
-
-typedef ucl_map_tag_t ucl_map_t[1];
-
-#define UCL_ALLOW_MULTIPLE_OBJECTS	0x10
-
-/* ------------------------------------------------------------------ */
-
-static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
-size_t
-ucl_map_size (const ucl_map_t this)
-{
-  return this->size;
-}
-static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
-ucl_value_t
-ucl_map_getkey (const ucl_map_link_t link_p)
-{
-  return link_p->key;
-}
-static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
-ucl_value_t
-ucl_map_getval (const ucl_map_link_t link_p)
-{
-  return link_p->val;
-}
-static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
-void
-ucl_map_setkey (ucl_map_link_t link_p, ucl_value_t newkey)
-{
-  link_p->key = newkey;
-}
-static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
-void
-ucl_map_setval (ucl_map_link_t link_p, ucl_value_t newval)
-{
-  link_p->val = newval;
-}
-
-
-/** ------------------------------------------------------------
  ** Graph container type definitions.
  ** ----------------------------------------------------------*/
 
@@ -1487,20 +1430,48 @@ ucl_heap_size (const ucl_heap_t H)
 
 
 /** ------------------------------------------------------------
- ** Map functions.
+ ** Map container.
  ** ----------------------------------------------------------*/
 
-extern void ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp);
-extern ucl_bool_t ucl_map_insert (ucl_map_t M, ucl_map_link_t L);
-extern void ucl_map_remove (ucl_map_t M, ucl_map_link_t L);
-extern ucl_map_link_t ucl_map_find (const ucl_map_t M, const ucl_value_t key);
+typedef ucl_value_t ucl_node_key_fun_t (void * node);
+
+typedef struct ucl_map_tag_t {
+  size_t		size;
+  unsigned int		flags;
+  ucl_comparison_t	keycmp;
+  ucl_node_key_fun_t *	getkey;
+  ucl_node_t		root;
+} ucl_map_tag_t;
+
+typedef ucl_map_tag_t ucl_map_t[1];
+
+#define UCL_ALLOW_MULTIPLE_OBJECTS	0x10
+
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+size_t
+ucl_map_size (const ucl_map_t M)
+{
+  return M->size;
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__,__pure__))
+void *
+ucl_map_root (const ucl_map_t M)
+{
+  return M->root;
+}
+
+extern void ucl_map_initialise (ucl_map_t M, unsigned int flags,
+				ucl_comparison_t keycmp, ucl_node_key_fun_t * getkey);
+extern ucl_bool_t ucl_map_insert (ucl_map_t M, void * L);
+extern void ucl_map_remove (ucl_map_t M, void * L);
+extern void * ucl_map_find (const ucl_map_t M, const ucl_value_t key);
 extern size_t ucl_map_depth (const ucl_map_t M);
-extern ucl_map_link_t ucl_map_first (const ucl_map_t M);
-extern ucl_map_link_t ucl_map_last (const ucl_map_t M);
-extern ucl_map_link_t ucl_map_next (ucl_map_link_t L);
-extern ucl_map_link_t ucl_map_prev (ucl_map_link_t L);
-extern ucl_map_link_t ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key);
-extern ucl_map_link_t ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key);
+extern void * ucl_map_first (const ucl_map_t M);
+extern void * ucl_map_last (const ucl_map_t M);
+extern void * ucl_map_next (void * L);
+extern void * ucl_map_prev (void * L);
+extern void * ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key);
+extern void * ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key);
 extern size_t ucl_map_count (const ucl_map_t M, const ucl_value_t key);
 extern void ucl_map_iterator_inorder (const ucl_map_t M, ucl_iterator_t I);
 extern void ucl_map_iterator_inorder_backward (const ucl_map_t M, ucl_iterator_t I);
