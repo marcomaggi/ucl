@@ -772,6 +772,8 @@ extern void * ucl_btree_avl_rot_left		(void * old_dad);
 extern void * ucl_btree_avl_rot_left_right	(void * old_dad);
 extern void * ucl_btree_avl_rot_right		(void * old_dad);
 extern void * ucl_btree_avl_rot_right_left	(void * old_dad);
+extern size_t ucl_btree_avl_depth		(void * N_);
+extern ucl_bool_t ucl_btree_avl_is_balanced	(void * N_);
 
 /* ------------------------------------------------------------ */
 
@@ -1492,6 +1494,7 @@ extern void ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_
 extern ucl_bool_t ucl_map_insert (ucl_map_t M, ucl_map_link_t L);
 extern void ucl_map_remove (ucl_map_t M, ucl_map_link_t L);
 extern ucl_map_link_t ucl_map_find (const ucl_map_t M, const ucl_value_t key);
+extern size_t ucl_map_depth (const ucl_map_t M);
 extern ucl_map_link_t ucl_map_first (const ucl_map_t M);
 extern ucl_map_link_t ucl_map_last (const ucl_map_t M);
 extern ucl_map_link_t ucl_map_next (ucl_map_link_t L);

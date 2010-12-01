@@ -280,6 +280,15 @@ ucl_btree_avl_rot_left_right (void * old_cur_)
  *             / \                      (deep_son)  (deep_bro)
  * (deep_son) 7   9 (deep_bro)
  *
+ *the core of it is:
+ *
+ *              10             8
+ *             /              / \
+ *            5        =>    5   10
+ *             \
+ *              8
+ *
+ *
  *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
  *son-deeper and "son" is bro-deeper.
  */
@@ -288,7 +297,7 @@ ucl_btree_avl_rot_left_right (void * old_cur_)
   son		= old_cur->son;
   new_cur	= son->bro;
   assert(UCL_SON_DEEPER == old_cur->meta.avl_status);
-  assert(UCL_BRO_DEEPER == son->meta.avl_status || UCL_EQUAL_DEPTH == son->meta.avl_status);
+  assert(UCL_BRO_DEEPER == son->meta.avl_status);
   { /* relink "son" and "deep_son" */
     deep_son = new_cur->son;
     son->bro	= deep_son;
@@ -336,8 +345,8 @@ ucl_btree_avl_rot_left_right (void * old_cur_)
 
 void *
 ucl_btree_avl_rot_right_left (void * old_cur_)
-/* Perform a  bro/son rotation which balances  a bro-son-higher subtree.
- * Example:
+/*Perform a  bro/son rotation  which balances a  bro-son-higher subtree.
+ *Example:
  *
  *             (top)                                (top)
  *               |                                    |
@@ -349,6 +358,14 @@ ucl_btree_avl_rot_right_left (void * old_cur_)
  *             /  \                        (deep_son)  (deep_bro)
  *           10    12
  *   (deep_son)    (deep_bro)
+ *
+ *the core of it is:
+ *
+ *               9                   11
+ *                \                 /  \
+ *                 13      =>      9    13
+ *                /
+ *              11
  *
  *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
  *bro-deeper and  "bro" is son-deeper.
@@ -402,6 +419,56 @@ ucl_btree_avl_rot_right_left (void * old_cur_)
   }
   new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
   return new_cur;
+}
+
+size_t
+ucl_btree_avl_depth (void * N_)
+{
+  ucl_node_t	N = N_;
+  if (!N) return 0;
+  size_t	depth = 1;
+  for (;;) {
+    switch (N->meta.avl_status) {
+    case UCL_SON_DEEPER:
+      assert(N->son);
+      ++depth;
+      N = N->son;
+      break; /* from the switch() */
+    case UCL_BRO_DEEPER:
+      assert(N->bro);
+      ++depth;
+      N = N->bro;
+      break; /* from the switch() */
+    case UCL_EQUAL_DEPTH:
+      if (N->son) {
+	++depth;
+	N = N->son;
+      } else if (N->bro) {
+	++depth;
+	N = N->bro;
+      } else {
+	return depth;
+      }
+      break; /* from the switch() */
+    }
+  }
+}
+
+ucl_bool_t
+ucl_btree_avl_is_balanced (void * N_)
+{
+  ucl_node_t	N = N_;
+  if (!N) return true;
+  int		son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
+  int		bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
+  int		factor    = bro_depth - son_depth;
+  debug("factor=%d\n", factor);
+  if ((-1 <= factor) && (factor <= +1))
+    return
+      ((N->son)? ucl_btree_avl_is_balanced(N->son) : true) &&
+      ((N->bro)? ucl_btree_avl_is_balanced(N->bro) : true);
+  else
+    return false;
 }
 
 void *

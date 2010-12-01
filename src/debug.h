@@ -50,12 +50,6 @@
 #  define debug(...)			debug_print(__FILE__,__func__,__LINE__,__VA_ARGS__)
 #  define debug_question(EXPR)		((EXPR)?"yes":"no")
 
-#  define debug_avl_status(N)		((UCL_EQUAL_DEPTH==(N))? "equal-depth": \
-					 ((UCL_SON_DEEPER==(N))? "son-deeper":\
-					  ((UCL_BRO_DEEPER==(N))? "bro-deeper":\
-					   "corrupted")))
-
-
 static void __attribute__((unused))
 debug_print (const char * file, const char * function, int line, const char * template, ...)
 {
@@ -87,9 +81,7 @@ debug_print (const char * file, const char * function, int line, const char * te
 #else
 #  define debug(...)			/* empty */
 #  define debug_question(...)		/* empty */
-#  define avl_status_string(...)	/* empty */
 #endif
-
 
 #endif /* DEBUG_H */
 

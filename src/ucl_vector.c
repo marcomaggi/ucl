@@ -83,10 +83,9 @@
    without going out of the allocated block. */
 #define ASSERT_VALID_POINTER_AS_FIRST_USED(V,Q)					\
   do {										\
-    size_t	used_bytes = compute_used_bytes((V));				\
     assert(Q);									\
     assert((V)->first_allocated_slot <= (Q));					\
-    assert((Q) <= (V)->last_allocated_slot + (V)->slot_dimension - used_bytes); \
+    assert((Q) <= (V)->last_allocated_slot + (V)->slot_dimension - compute_used_bytes(V)); \
   } while (0);
 
 #define ASSERT_COMPAR_FUNCTION_IS_SET(V)		assert((V)->compar.func)

@@ -276,7 +276,7 @@ The heap structure
 
 * heap creation::             Creating and destroying heaps.
 * heap insertion::            Adding elements to a heaps.
-* heap removal::              Removing elements from a heaps.
+* heap deletion::             Removing elements from a heaps.
 * heap ops::                  Various operations on a heaps.
 
 The circular list
@@ -323,7 +323,7 @@ The linked list structure
 * list overview::               How it is done.
 * list cons::                   Constructing lists.
 * list visit::                  Visiting a list.
-* list removal::                Removing elements from a list.
+* list deletion::               Removing elements from a list.
 * list ops::                    Various operations on a list.
 * list iteration::              Iteration over a list.
 
@@ -334,7 +334,7 @@ The map structure
 * map types::                   Type definitions for map.
 * map creation::                Creating and destroying maps.
 * map insertion::               Adding elements to a map.
-* map removal::                 Removing elements from a map.
+* map deletion::                Removing elements from a map.
 * map accessors::               Accessing values and keys.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
@@ -2712,6 +2712,19 @@ We perform this rotation to balance a tree in which @var{old_cur} is bro
 deeper and its bro is son deeper.
 @end deftypefun
 
+
+@deftypefun size_t ucl_btree_avl_depth (void * @var{N})
+Return the depth of the tree of which @var{N} is the root; if @var{N} is
+@cnull{} the return value is zero.  For this function to return the
+correct result: the tree must have nodes with correct status.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_btree_avl_is_balanced (void * @var{N})
+Return true if the tree of which @var{N} is the root is balanced; if
+@var{N} is @cnull{} the return value is true.
+@end deftypefun
+
 @c page
 @node tree
 @section The tree structure
@@ -3216,7 +3229,7 @@ nodes.
 @menu
 * heap creation::             Creating and destroying heaps.
 * heap insertion::            Adding elements to a heaps.
-* heap removal::              Removing elements from a heaps.
+* heap deletion::             Removing elements from a heaps.
 * heap ops::                  Various operations on a heaps.
 @end menu
 
@@ -3306,7 +3319,7 @@ ucl_heap_insert(H, N);
 @end example
 
 @c page
-@node heap removal
+@node heap deletion
 @subsection Removing elements from a heap
 
 
@@ -3475,7 +3488,7 @@ direction.
 @end deftypefun
 
 
-Example of link removal and memory release:
+Example of link deletion and memory release:
 
 @example
 ucl_memory_allocator_t  A;
@@ -4231,7 +4244,7 @@ we never reallocate the vector all the memory is used to hold buckets.
 
 @c ------------------------------------------------------------
 
-@subsubheading Elements insertion and removal
+@subsubheading Elements insertion and deletion
 
 When inserting a new entry in the table, the hash function converts the
 keys to integers in the range @code{[0, number_of_buckets)}, selecting a
@@ -4575,7 +4588,7 @@ a doubly linked list; all the functions from the @code{btree} and
 * list overview::               How it is done.
 * list cons::                   Constructing lists.
 * list visit::                  Visiting a list.
-* list removal::                Removing elements from a list.
+* list deletion::               Removing elements from a list.
 * list ops::                    Various operations on a list.
 * list iteration::              Iteration over a list.
 @end menu
@@ -4787,7 +4800,7 @@ invalid.
 @end deftypefun
 
 @c page
-@node list removal
+@node list deletion
 @subsection Removing elements from a list
 
 
@@ -4898,7 +4911,7 @@ others (@url{http://www.tcl.tk/} for more about @acronym{TCL}).
 * map types::                   Type definitions for map.
 * map creation::                Creating and destroying maps.
 * map insertion::               Adding elements to a map.
-* map removal::                 Removing elements from a map.
+* map deletion::                Removing elements from a map.
 * map accessors::               Accessing values and keys.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
@@ -4997,7 +5010,7 @@ link was not inserted.
 @end deftypefun
 
 @c page
-@node map removal
+@node map deletion
 @subsection Removing elements from a map
 
 
@@ -5010,7 +5023,7 @@ free the memory and resources associated to it.
 
 @c ------------------------------------------------------------
 
-@subsubheading Introduction to the removal algorithm
+@subsubheading Introduction to the deletion algorithm
 
 This is a brief introduction to make it easier to understand the @ucl{}
 source code.
@@ -5021,26 +5034,29 @@ the tree updating the status of the parent nodes.
 
 It is always possible to swap the node @math{N} of a binary search tree
 with the rightmost element in its son's subtree, or the leftmost element
-in its bro's subtree, and keeping correct both the tree ordering of all
-the nodes but @math{N} root itself; this is a desirable operation
-because detaching a leaf is really easy.
+in its bro's subtree, keeping correct both the tree ordering and the
+statuses of all the nodes but @math{N} itself; this is a desirable
+operation because detaching a leaf is really easy.
 
-For example pushing down the node @math{20} in the following tree, and
-then detaching it, leaves the tree in correct ordering; the status of
-the nodes is indicated with @samp{=} for equal depth, @samp{s} for son
-deeper, @samp{b} for bro deeper:
+We mark the status of a node with @samp{=} for equal depth, @samp{s} for
+son deeper, @samp{b} for bro deeper.  For example, pushing down the node
+@math{20} in the following tree:
 
 @example
-20s--30=        15s--30=        15s--30=
- |               |               |
-10=--15=   =>   10=--20    =>   10=  20
- |               |               |
- 5=              5=              5=
+20s--30=        15s--30=
+ |               |
+10=--15=   =>   10=--20
+ |               |
+ 5=              5=
 @end example
 
-The tree is no more balanced and the statuses are not correct; we can
-fix them by stepping up the tree.  Node @math{10} lost the bro so now it
-is son deeper:
+@noindent
+keeps correct ordering and statuses, with the exception of @math{20}; we
+see that @math{15} gets the status that @math{20} had.
+
+We can then detach @math{20}: the resulting tree is no more balanced and
+the statuses are no more correct; we can fix them by stepping up the
+tree.  Node @math{10} lost the bro so now it is son deeper:
 
 @example
  15s--30=
@@ -5272,6 +5288,11 @@ greater than the selected one.
 
 @deftypefun size_t ucl_map_size (const ucl_map_t @var{M})
 Return the number of elements in the map.
+@end deftypefun
+
+
+@deftypefun size_t ucl_map_depth (const ucl_map_t @var{M})
+Return the depth of the tree.
 @end deftypefun
 
 @c page
@@ -5690,7 +5711,7 @@ for restriction, it must be a non--zero positive integer.
 
 @item ucl_index_t size_of_padding_area
 The numer of slots to keep free, if possible, at the beginning of the
-array when moving elements (during insertion, removal and reallocation),
+array when moving elements (during insertion, deletion and reallocation),
 it must be non--negative integer.
 
 @item ucl_comparison_t compar
