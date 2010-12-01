@@ -1433,13 +1433,18 @@ ucl_heap_size (const ucl_heap_t H)
  ** Map container.
  ** ----------------------------------------------------------*/
 
-typedef ucl_value_t ucl_node_key_fun_t (void * node);
+typedef ucl_value_t ucl_node_getkey_fun_t (ucl_value_t context, void * node);
+
+typedef struct ucl_node_getkey_t {
+  ucl_value_t			data;
+  ucl_node_getkey_fun_t *	func;
+} ucl_node_getkey_t;
 
 typedef struct ucl_map_tag_t {
   size_t		size;
   unsigned int		flags;
   ucl_comparison_t	keycmp;
-  ucl_node_key_fun_t *	getkey;
+  ucl_node_getkey_t	getkey;
   ucl_node_t		root;
 } ucl_map_tag_t;
 
@@ -1461,7 +1466,7 @@ ucl_map_root (const ucl_map_t M)
 }
 
 extern void ucl_map_initialise (ucl_map_t M, unsigned int flags,
-				ucl_comparison_t keycmp, ucl_node_key_fun_t * getkey);
+				ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
 extern ucl_bool_t ucl_map_insert (ucl_map_t M, void * L);
 extern void ucl_map_remove (ucl_map_t M, void * L);
 extern void * ucl_map_find (const ucl_map_t M, const ucl_value_t key);

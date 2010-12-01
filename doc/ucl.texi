@@ -337,7 +337,7 @@ The map structure
 * map deletion::                Removing elements from a map.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
-* set iterators::               Composing map iterators.
+* map set::                     Composing map iterators.
 
 The vector structure
 
@@ -4913,7 +4913,7 @@ others (@url{http://www.tcl.tk/} for more about @acronym{TCL}).
 * map deletion::                Removing elements from a map.
 * map ops::                     Various operations on a map.
 * map iterators::               Iteration over a map.
-* set iterators::               Composing map iterators.
+* map set::                     Composing map iterators.
 @end menu
 
 @c page
@@ -4962,22 +4962,74 @@ code.
 @end deftp
 
 
-@deftypefn {Function Prototype} ucl_value_t ucl_node_key_fun_t (void * @var{node})
+The @ucl{} map container collects nodes of type @code{ucl_node_tag_t},
+which hold no custom data; we have to at least associate a key to each
+node, doing something like this:
+
+@example
+typedef struct link_tag_t @{
+  ucl_node_tag_t        node;
+  ucl_value_t           key;
+@} link_tag_t;
+
+typedef link_tag_t *        link_t;
+
+static ucl_value_t
+link_key (ucl_value_t context UCL_UNUSED, void * L_)
+@{
+  link_t    L = L_;
+  return L->key;
+@}
+
+static const ucl_node_getkey_t getkey = @{
+  .data = @{ .pointer = NULL @},
+  .func = link_key
+@};
+@end example
+
+@noindent
+and then use @code{getkey} as last argument to
+@cfunc{ucl_map_initialise}; we can use the key extractor directly like
+this:
+
+@example
+link_t          L;
+ucl_value_t     K;
+
+K = getkey.func(getkey.data, L);
+@end example
+
+
+@deftypefn {Function Prototype} ucl_value_t ucl_node_getkey_fun_t (ucl_value_t @var{context}, void * @var{node})
 Type of function which, applied to a pointer to node, returns the key
-(or a reference to) of the node.
+(or a reference to the key) associated to the node.
 @end deftypefn
+
+
+@deftp {Struct Typedef} ucl_node_getkey_t
+Structure holding the method used to extract the key from a node.  It
+has the following fields:
+
+@table @code
+@item ucl_value_t data
+Custom data value.
+
+@item ucl_node_getkey_fun_t * func
+Pointer to the function used to extract the key.
+@end table
+@end deftp
 
 @c page
 @node map creation
 @subsection Creating and destroying maps
 
 
-@deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp}, ucl_node_key_fun_t * @var{getkey})
+@deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp}, ucl_node_getkey_t @var{getkey})
 Initialise an already allocated map structure.  @var{M} must be a
 pointer to an already allocated map structure; pointer to the already
 allocated map structure; @var{flags} configures the map behaviour;
 @var{keycmp} is the function+context used to compare keys; @var{getkey}
-is a function used to extract the key from nodes.
+is the function+context used to extract the key from nodes.
 
 Map configuration @var{flags} can be zero of an ORed combination of:
 
@@ -5320,7 +5372,7 @@ starting with the last element.
 @end deftypefun
 
 @c page
-@node set iterators
+@node map set
 @subsection Composing map iterators
 
 @cindex Set iterators

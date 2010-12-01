@@ -102,10 +102,16 @@ ucl_map_size_decr (ucl_map_t M)
   --(M->size);
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))
+ucl_value_t
+node_key (const ucl_map_t M, void * N)
+{
+  return M->getkey.func(M->getkey.data, N);
+}
+static __inline__ __attribute__((__always_inline__,__nonnull__))
 int
 comparison_key_node (const ucl_map_t M, ucl_value_t K, ucl_node_t N)
 {
-  return M->keycmp.func(M->keycmp.data, K, M->getkey(N));
+  return M->keycmp.func(M->keycmp.data, K, node_key(M, N));
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))
 int
@@ -117,11 +123,11 @@ static __inline__ __attribute__((__always_inline__,__nonnull__))
 int
 comparison_node_node (const ucl_map_t M, ucl_node_t N1, ucl_node_t N2)
 {
-  return M->keycmp.func(M->keycmp.data, M->getkey(N1), M->getkey(N2));
+  return M->keycmp.func(M->keycmp.data, node_key(M, N1), node_key(M, N2));
 }
 
 void
-ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp, ucl_node_key_fun_t *getkey)
+ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp, ucl_node_getkey_t getkey)
 {
   assert(M);
   assert(keycmp.func);
@@ -155,7 +161,7 @@ ucl_map_insert (ucl_map_t M, void * L_)
      find a node with key equal to the key of "L": we return false. */
   {
     ucl_bool_t	 allow_multiple_objects	= M->flags & UCL_ALLOW_MULTIPLE_OBJECTS;
-    ucl_value_t	 K			= M->getkey(L);
+    ucl_value_t	 K			= node_key(M, L);
     for (ucl_node_t cursor = M->root; cursor;) {
       current = cursor;
       comparison_result = comparison_key_node(M, K, cursor);
@@ -964,7 +970,7 @@ map_upperbound_iterator_next (ucl_iterator_t I)
   assert(I->iterator);
   M = I->container;
   L = I->iterator;
-  K = M->getkey(L);
+  K = node_key(M, L);
   L = ucl_btree_step_inorder_backward(L);
   if (L)
     I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;
@@ -980,7 +986,7 @@ map_lowerbound_iterator_next (ucl_iterator_t I)
   assert(I->iterator);
   M = I->container;
   L = I->iterator;
-  K = M->getkey(L);
+  K = node_key(M, L);
   L = ucl_btree_step_inorder(L);
   if (L)
     I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;

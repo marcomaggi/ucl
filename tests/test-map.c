@@ -98,36 +98,41 @@
  ** Link type definitions.
  ** ----------------------------------------------------------------- */
 
-typedef struct map_link_tag_t {
+typedef struct link_tag_t {
   ucl_node_tag_t	node;
   ucl_value_t		key;
-} map_link_tag_t;
+} link_tag_t;
 
-typedef map_link_tag_t *	map_link_t;
+typedef link_tag_t *	link_t;
 
 static ucl_value_t
-getkey (void * L_)
+link_key (ucl_value_t context UCL_UNUSED, void * L_)
 {
-  map_link_t	L = L_;
+  link_t	L = L_;
   return L->key;
 }
 
+static const ucl_node_getkey_t getkey = {
+  .data = { .pointer = NULL },
+  .func	= link_key
+};
+
 /* to be used as right-side in assignments */
-#define DAD_OF(L)		((void *)(((map_link_t)(L))->node.dad))
-#define SON_OF(L)		((void *)(((map_link_t)(L))->node.son))
-#define BRO_OF(L)		((void *)(((map_link_t)(L))->node.bro))
+#define DAD_OF(L)		((void *)(((link_t)(L))->node.dad))
+#define SON_OF(L)		((void *)(((link_t)(L))->node.son))
+#define BRO_OF(L)		((void *)(((link_t)(L))->node.bro))
 
 /* to be used as left-side in assignments */
-#define DAD(L)			(((map_link_t)(L))->node.dad)
-#define SON(L)			(((map_link_t)(L))->node.son)
-#define BRO(L)			(((map_link_t)(L))->node.bro)
+#define DAD(L)			(((link_t)(L))->node.dad)
+#define SON(L)			(((link_t)(L))->node.son)
+#define BRO(L)			(((link_t)(L))->node.bro)
 
-#define STATUS(L)		(((map_link_t)L)->node.meta.avl_status)
+#define STATUS(L)		(((link_t)L)->node.meta.avl_status)
 #define STATUS_STRING(S)	((UCL_EQUAL_DEPTH==S)? "equal-depth": \
 				 ((UCL_SON_DEEPER==S)? "son-deeper":\
 				  ((UCL_BRO_DEEPER==S)? "bro-deeper": "corrupted")))
 
-#define KEY(L)			(((map_link_t)(L))->key.t_int)
+#define KEY(L)			(((link_t)(L))->key.t_int)
 #define MAYBE_KEY(L)		((L)? KEY(L) : -1)
 
 
@@ -135,17 +140,17 @@ getkey (void * L_)
  ** Helper functions.
  ** ----------------------------------------------------------*/
 
-static map_link_t
+static link_t
 alloc_link (int value)
 {
-  map_link_t 	L = NULL;
+  link_t 	L = NULL;
   ucl_value_t	K = { .t_int = value };
-  A.alloc(A.data, &L, sizeof(map_link_tag_t));
+  A.alloc(A.data, &L, sizeof(link_tag_t));
   L->key = K;
   return L;
 }
 static void
-free_link (map_link_t  L)
+free_link (link_t  L)
 {
   A.alloc(A.data, &L, 0);
 }
@@ -154,7 +159,7 @@ fill (ucl_map_t M, int begin, int end)
 {
   assert(0 == ucl_map_size(M));
   for (int i=begin; i<end; ++i) {
-    map_link_t 	L = alloc_link(i);
+    link_t 	L = alloc_link(i);
     ucl_map_insert(M, L);
   }
 }
@@ -162,7 +167,7 @@ static void
 clean (ucl_map_t M)
 {
 #if 0
-  for (map_link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
+  for (link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
     ucl_map_remove(M, L);
     free_link(L);
   }
@@ -175,7 +180,7 @@ clean (ucl_map_t M)
  ** ----------------------------------------------------------------- */
 
 static void
-checked_insertion (ucl_map_t M, int j, map_link_t * L)
+checked_insertion (ucl_map_t M, int j, link_t * L)
 /* Insert a new node with key  "j" and validate the existence of the new
    node  by  finding  it.   Store  the  node  pointer  in  the  location
    referenced by "L". */
@@ -198,7 +203,7 @@ validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_
    one. */
 {
   ucl_value_t	K = { .t_int = j };
-  map_link_t	L = ucl_map_find(M, K);
+  link_t	L = ucl_map_find(M, K);
   mcl_test_error_if_false(dad == DAD_OF(L),
 			  "invalid dad of node %d, expected %p (key=%d) got %p (key=%d)",
 			  j, dad, MAYBE_KEY(dad), DAD_OF(L), MAYBE_KEY(DAD_OF(L)));
@@ -218,7 +223,7 @@ validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_
  ** ----------------------------------------------------------------- */
 
 static void
-build_base_tree_with_plenty_of_holes (ucl_map_t M, map_link_t * L)
+build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
 {
   int		j;
 
@@ -292,7 +297,7 @@ print_inorder (ucl_map_t M)
 {
   ucl_iterator_t	I;
   ucl_value_t		K;
-  map_link_t		L;
+  link_t		L;
   int			i;
   for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
     L = ucl_iterator_ptr(I);
@@ -305,7 +310,7 @@ print_preorder_links (ucl_map_t M, const char * message, ...)
 {
   va_list		ap;
   ucl_iterator_t	I;
-  map_link_t	L, dad, son, bro;
+  link_t	L, dad, son, bro;
   int			i;
   fprintf(stderr, "*** ");
   va_start(ap, message);
@@ -359,7 +364,7 @@ test_insert_and_find (void)
 {
   mcl_test_begin("map-2.1", "simple insertion and finding") {
     ucl_map_t		M;
-    map_link_t 	L;
+    link_t 	L;
     ucl_value_t		K;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
@@ -373,7 +378,7 @@ test_insert_and_find (void)
 	K.t_int = 1;
 	L = ucl_map_find(M, K);
 	mcl_test_error_if_false(NULL != L, "unable to find node with key %d", K.t_int);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	mcl_test_error_if_false(1 == K.t_int,
 				"invalid key value, expected %d got %d", 1, K.t_int);
 
@@ -392,7 +397,7 @@ test_checked_inorder_insertion (void)
   mcl_test_begin("map-2.2",
 		 "inorder insertion and check of internal structure (bro rotations)") {
     ucl_map_t		M;
-    map_link_t 	L[10];
+    link_t 	L[10];
     int			j;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
@@ -605,7 +610,7 @@ test_checked_inverse_inorder_insertion (void)
   mcl_test_begin("map-2.3",
 		 "inverse inorder insertion and check of internal structure (son rotations)") {
     ucl_map_t		M;
-    map_link_t 	L[10];
+    link_t 	L[10];
     int			j;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
@@ -843,12 +848,12 @@ test_checked_insertion_random (void)
   mcl_test_begin("map-2.4",
 		 "random insertions and check of internal structure (son-bro rotations)") {
     ucl_map_t		M;
-    map_link_t 	L[SIZE];
+    link_t 	L[SIZE];
     int			j;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
       mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after construction");
-      memset(L, '\0', SIZE*sizeof(map_link_t));
+      memset(L, '\0', SIZE*sizeof(link_t));
       /* First we  build a  base tree with  an inorder insertion  of the
 	 numbers 0, 10, 20, 30, 40; we have plenty of integers available
 	 between each of them. */
@@ -955,7 +960,7 @@ test_insertion_and_removal (void)
 {
   mcl_test_begin("map-3.1", "multiple insertion and removal") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_value_t		K;
     int			i;
     ucl_bool_t		print=false;
@@ -974,7 +979,7 @@ test_insertion_and_removal (void)
       	K.t_int = i;
       	L = ucl_map_find(M, K);
       	ucl_map_remove(M, L);
-      	K = getkey(L);
+      	K = getkey.func(getkey.data, L);
       	assert(K.t_int == i);
       	free_link(L);
 	mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
@@ -991,7 +996,7 @@ test_inorder_iteration (void)
 {
   mcl_test_begin("map-4.1", "inorder iteration, few nodes inorder insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1004,7 +1009,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == LITTLENUMBER);
       for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == LITTLENUMBER);
@@ -1015,7 +1020,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.2", "inorder iteration, few nodes reverse inorder insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1028,7 +1033,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == LITTLENUMBER);
       for (ucl_map_iterator_inorder(M, I), i=1; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == LITTLENUMBER+1);
@@ -1039,7 +1044,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.3", "inorder iteration, mixed insertion order") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1056,7 +1061,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == SIZE);
       for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(inorder[i] == K.t_int);
       }
       assert(i == SIZE);
@@ -1067,7 +1072,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.4", "inorder iteration, mixed insertion order") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1084,7 +1089,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == SIZE);
       for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(inorder[i] == K.t_int);
       }
       assert(i == SIZE);
@@ -1095,7 +1100,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.5", "inorder iteration, many numbers inorder insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1108,7 +1113,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == NUMBER);
       for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == NUMBER);
@@ -1119,7 +1124,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.6", "inorder iteration, many numbers reverse inorder insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1132,7 +1137,7 @@ test_inorder_iteration (void)
       assert(ucl_map_size(M) == NUMBER);
       for (ucl_map_iterator_inorder(M, I), i=1; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == NUMBER+1);
@@ -1143,7 +1148,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.7", "inorder iteration, mixed insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t	L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1161,7 +1166,7 @@ test_inorder_iteration (void)
       mcl_test_error_if_false(ucl_map_size(M) == 40, "wrong size after insertion");
       for (ucl_map_iterator_inorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == 40);
@@ -1172,7 +1177,7 @@ test_inorder_iteration (void)
 
   mcl_test_begin("map-4.8", "inorder iteration, mixed insertion") {
     ucl_map_t		M;
-    map_link_t	L;
+    link_t		L;
     ucl_iterator_t	I;
     ucl_value_t		K;
     int			i;
@@ -1190,7 +1195,7 @@ test_inorder_iteration (void)
       mcl_test_error_if_false(ucl_map_size(M) == 40, "wrong size after insertion");
       for (ucl_map_iterator_inorder(M, I), i=1; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	L = ucl_iterator_ptr(I);
-	K = getkey(L);
+	K = getkey.func(getkey.data, L);
 	assert(i == K.t_int);
       }
       assert(i == 41);
