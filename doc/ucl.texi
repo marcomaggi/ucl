@@ -228,6 +228,7 @@ Data types you have to know
 * typedefs compar::             Comparison functions.
 * typedefs hash::               Hash functions.
 * typedefs callback::           Callback functions.
+* typedefs nodes::              Wrapping node structures.
 
 The data structures
 
@@ -311,8 +312,8 @@ The hash table structure
 * hash types::                  Hash table types definitions.
 * hash implementation::         How it's done.
 * hash creation::               Creating and destroying hash tables.
-* hash adding::                 Adding elements to a hash table.
-* hash removing::               Removing elements from a hash table.
+* hash insertion::              Adding elements to a hash table.
+* hash deletion::               Removing elements from a hash table.
 * hash ops::                    Various operations on a hash table.
 * hash resizing::               Resizing a hash table.
 * hash iterator::               Visiting elements in the table.
@@ -1062,6 +1063,7 @@ sections dedicated to containers.  Here common data types are described.
 * typedefs compar::             Comparison functions.
 * typedefs hash::               Hash functions.
 * typedefs callback::           Callback functions.
+* typedefs nodes::              Wrapping node structures.
 @end menu
 
 @c page
@@ -1534,6 +1536,64 @@ arguments; it will be used by all the @ucl{} functions that invoke a
 callback.  The default application function is
 @function{ucl_callback_apply}.
 @end deftypefun
+
+@c page
+@node typedefs nodes
+@section Wrapping node structures
+
+
+@deftypefn {Function Prototype} ucl_value_t ucl_node_getkey_fun_t (ucl_value_t @var{context}, void * @var{node})
+Type of function which, applied to a pointer to node, returns the key
+(or a reference to the key) associated to the node.
+@end deftypefn
+
+
+@deftp {Struct Typedef} ucl_node_getkey_t
+Structure holding the method used to extract the key from a node.  It
+has the following fields:
+
+@table @code
+@item ucl_value_t data
+Custom data value.
+
+@item ucl_node_getkey_fun_t * func
+Pointer to the function used to extract the key.
+@end table
+@end deftp
+
+
+The following is a usage example:
+
+@example
+typedef struct link_tag_t @{
+  ucl_node_tag_t        node;
+  ucl_value_t           key;
+@} link_tag_t;
+
+typedef link_tag_t *        link_t;
+
+static ucl_value_t
+link_key (ucl_value_t context UCL_UNUSED, void * L_)
+@{
+  link_t    L = L_;
+  return L->key;
+@}
+
+static const ucl_node_getkey_t getkey = @{
+  .data = @{ .pointer = NULL @},
+  .func = link_key
+@};
+@end example
+
+@noindent
+we can use the key extractor directly like this:
+
+@example
+link_t          L;
+ucl_value_t     K;
+
+K = getkey.func(getkey.data, L);
+@end example
 
 @c page
 @node containers
@@ -4181,8 +4241,8 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 * hash types::                  Hash table types definitions.
 * hash implementation::         How it's done.
 * hash creation::               Creating and destroying hash tables.
-* hash adding::                 Adding elements to a hash table.
-* hash removing::               Removing elements from a hash table.
+* hash insertion::              Adding elements to a hash table.
+* hash deletion::               Removing elements from a hash table.
 * hash ops::                    Various operations on a hash table.
 * hash resizing::               Resizing a hash table.
 * hash iterator::               Visiting elements in the table.
@@ -4201,12 +4261,42 @@ The base structure.  The vector of buckets is available as the field
 @end deftp
 
 
-@deftp {Struct Typedef} ucl_hash_entry_tag_t
-@deftpx {Pointer Typedef} ucl_hash_entry_t
-The type of table entry elements.  This structure stores only the key,
-no room for value is allocated; the keys are of type @code{ucl_value_t}
-(@ref{typedefs}).
-@end deftp
+The @ucl{} hash container collects entries of type
+@code{ucl_node_tag_t}, which hold no custom data; we have to at least
+associate a key to each node, doing something like this:
+
+@example
+typedef struct entry_tag_t @{
+  ucl_node_tag_t        node;
+  ucl_value_t           key;
+@} entry_tag_t;
+
+typedef entry_tag_t *        entry_t;
+
+static ucl_value_t
+entry_key (ucl_value_t context UCL_UNUSED, void * L_)
+@{
+  entry_t    L = L_;
+  return L->key;
+@}
+
+static const ucl_node_getkey_t getkey = @{
+  .data = @{ .pointer = NULL @},
+  .func = entry_key
+@};
+@end example
+
+@noindent
+and then use @code{getkey} as last argument to
+@cfunc{ucl_hash_initialise}; we can use the key extractor directly like
+this:
+
+@example
+entry_t         L;
+ucl_value_t     K;
+
+K = getkey.func(getkey.data, L);
+@end example
 
 @c page
 @node hash implementation
@@ -4330,7 +4420,8 @@ ucl_hash_table_t    H;
 
 ucl_vector_initialise_config_hash(C);
 ucl_vector_alloc(V, C);
-ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string);
+ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string,
+                    ucl_node_getkey_t getkey);
 @end example
 
 @noindent
@@ -4342,14 +4433,11 @@ entries; when using a @ucl{} memory allocator, it goes like this:
 ucl_memory_allocator_t  A;
 ucl_vector_t            V;
 ucl_hash_table_t        H;
-ucl_hash_entry_t        E;
-ucl_value_t             K;
+entry_t                 E;
 
 while ((E = ucl_hash_first(H)))
   @{
     ucl_hash_extract(H, E);
-    key = ucl_hash_entry_key_ref(E);
-    /* free "key" if needed */
     A.alloc(A.data, &E, 0);
   @}
 ucl_vector_free(V);
@@ -4359,7 +4447,7 @@ ucl_vector_free(V);
 the hash table structure does not need finalisation.
 
 
-@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_vector_t @var{buckets}, ucl_comparison_t @var{compar}, ucl_hash_t @var{hash})
+@deftypefun void ucl_hash_initialise (ucl_hash_t @var{self}, ucl_vector_t @var{buckets}, ucl_comparison_t @var{compar}, ucl_hash_t @var{hash}, ucl_node_getkey_t @var{getkey})
 Initialise the hash table referenced by @var{self}.  The @ucl{} vector
 of buckets, already initialised, becomes part of the hash table state.
 
@@ -4367,48 +4455,48 @@ of buckets, already initialised, becomes part of the hash table state.
 
 @var{hash} is the function+context used to compute the hash value of
 keys; @ref{typedefs hash} for details.
+
+@var{getkey} is the function+context used to extract the key from an
+entry structures; @ref{typedefs nodes} for details.
 @end deftypefun
 
 @c page
-@node hash adding
+@node hash insertion
 @subsection Adding elements to a hash table
 
 
 @deftypefun void ucl_hash_insert (ucl_hash_table_t @var{H}, void * @var{E})
 Insert a new entry in the table.  The entry structure must be allocated
 and filled with key and value by the user's code; the pointer @var{E} is
-internally cast to @code{ucl_hash_entry_t}.
+internally cast to @code{ucl_node_t}.
 
 Inserting an entry with a key that already exists in the table will
 work, but future invocations of @cfunc{ucl_hash_find} will return one or
-the other: nobody knows which one.
-@end deftypefun
-
-
-To avoid collision of keys, we have to check the existence of a key with
-@cfunc{ucl_hash_find} before attempting to insert a new entry.
+the other: nobody knows which one.  To avoid collision of keys, we have
+to check the existence of a key with @cfunc{ucl_hash_find} before
+attempting to insert a new entry.
 
 Example:
 
 @example
 ucl_memory_allocator_t  A;
-ucl_hash_t              H;
-ucl_hash_entry_t *      E;
+ucl_hash_table_t        H;
+entry_t                 E;
 ucl_value_t             K;
-
 
 K = ...
 E = ucl_hash_find(H, K);
 if (NULL == E)
   @{
-    A.alloc(A.data, &E, sizeof(ucl_hash_entry_tag_t));
-    ucl_hash_entry_set_key(E, key);
+    A.alloc(A.data, &E, sizeof(entry_t));
+    E->key = K;
     ucl_hash_insert(H, E);
   @}
 @end example
+@end deftypefun
 
 @c page
-@node hash removing
+@node hash deletion
 @subsection Removing elements from a hash table
 
 
@@ -4416,27 +4504,25 @@ if (NULL == E)
 Extract an entry from the table.  @var{E}, a pointer to the entry to be
 removed, must be the return value of a previous invocation to
 @cfunc{ucl_hash_find}; the pointer @var{E} is internally cast to
-@code{ucl_hash_entry_t}.  The entry structure is not destroyed nor
-freed, just extracted.
-@end deftypefun
-
+@code{ucl_node_t}.  The entry structure is not destroyed nor freed, just
+extracted.
 
 Example:
 
 @example
 ucl_memory_allocator_t  A;
 ucl_hash_t              H;
-ucl_hash_entry_t        E;
-ucl_value_t             K, K1;
+entry_t                 E;
+ucl_value_t             K;
 
 E = ucl_hash_find(H, K);
 if (NULL != E)
   @{
-    ucl_hash_extract(hash, entry_p);
-    K1 = ucl_hash_entry_ref_key(E);
+    ucl_hash_extract(H, E);
     A.alloc(A.data, &E, 0);
   @}
 @end example
+@end deftypefun
 
 @c page
 @node hash ops
@@ -4446,7 +4532,7 @@ if (NULL != E)
 @deftypefun {void *} ucl_hash_find (const ucl_hash_table_t @var{H}, const ucl_value_t @var{K})
 Search in the table an entry associated with the selected key.  Return a
 pointer to the entry or @cnull{} if the key was not found; the returned
-pointer can be safely cast to @code{ucl_hash_entry_t}.
+pointer can be safely cast to @code{ucl_node_t}.
 @end deftypefun
 
 
@@ -4454,7 +4540,7 @@ pointer can be safely cast to @code{ucl_hash_entry_t}.
 Return a pointer to the first entry in the table: the first link in the
 list of the first non--@cnull{} bucket.  If the table is empty: return
 @cnull{}; the returned pointer can be safely cast to
-@code{ucl_hash_entry_t}.
+@code{ucl_node_t}.
 @end deftypefun
 
 
@@ -4483,23 +4569,6 @@ ucl_hash_number_of_buckets(@var{this}))}.
 
 @deftypefun double ucl_hash_average_search_distance (const ucl_hash_table_t @var{this})
 Return the average number of entries per bucket.
-@end deftypefun
-
-@c ------------------------------------------------------------
-
-@subsubheading Key functions
-
-
-@deftypefun void ucl_hash_entry_set_key (void * @var{E}, const ucl_value_t @var{newkey})
-Store a new key in an entry structure.  The old key, if present, is
-overwritten.  The pointer @var{E} is internally cast to
-@code{ucl_hash_entry_t}
-@end deftypefun
-
-
-@deftypefun ucl_value_t ucl_hash_entry_ref_key (const void * @var{E})
-Return the key stored in an entry structure.  The pointer @var{E} is
-internally cast to @code{ucl_hash_entry_t}
 @end deftypefun
 
 @c page
@@ -4533,25 +4602,22 @@ If an error occurs reallocating the vector: the table is not corrupted.
 Initialise the table iterator.  The iterator pointer references the
 entries in the table.  The order in which the entries are visited is
 unknown.
-@end deftypefun
-
 
 Example:
 
 @example
 ucl_hash_table_t  H;
-ucl_hash_entry_t  E;
-ucl_value_t       K;
 ucl_iterator_t    I;
+entry_t           E;
 
 for (ucl_hash_iterator(H, I);
      ucl_iterator_more(I);
      ucl_iterator_next(I))
   @{
     E = ucl_iterator_ptr(I);
-    K = ucl_hash_entry_ref_key(E);
   @}
 @end example
+@end deftypefun
 
 @c page
 @node hash functions
@@ -4999,26 +5065,6 @@ ucl_value_t     K;
 
 K = getkey.func(getkey.data, L);
 @end example
-
-
-@deftypefn {Function Prototype} ucl_value_t ucl_node_getkey_fun_t (ucl_value_t @var{context}, void * @var{node})
-Type of function which, applied to a pointer to node, returns the key
-(or a reference to the key) associated to the node.
-@end deftypefn
-
-
-@deftp {Struct Typedef} ucl_node_getkey_t
-Structure holding the method used to extract the key from a node.  It
-has the following fields:
-
-@table @code
-@item ucl_value_t data
-Custom data value.
-
-@item ucl_node_getkey_fun_t * func
-Pointer to the function used to extract the key.
-@end table
-@end deftp
 
 @c page
 @node map creation

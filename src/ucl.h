@@ -118,6 +118,7 @@ typedef union ucl_value_t {
   /* The following are used by the UCL. */
   ucl_pointer_map_fun_t *	pointer_map_function;
   ucl_avl_status_t		avl_status;
+  ucl_bool_t			to_be_processed_during_rehashing;
   struct ucl_value_flags_t {
     unsigned int marked:     1;
   } flags;
@@ -1607,17 +1608,11 @@ ucl_vector_equal_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t
  ** Hash table functions.
  ** ----------------------------------------------------------------- */
 
-typedef struct ucl_hash_entry_tag_t {
-  struct ucl_hash_entry_tag_t *	next_entry_in_list;
-  ucl_value_t			key;
-  ucl_bool_t			to_be_processed_during_rehashing;
-} ucl_hash_entry_tag_t;
-typedef ucl_hash_entry_tag_t *	ucl_hash_entry_t;
-
 typedef struct ucl_hash_table_tag_t {
   ucl_vector_tag_t *	buckets;
   ucl_hash_t		hash;
   ucl_comparison_t	compar;
+  ucl_node_getkey_t	getkey;
   size_t		size;
   size_t		number_of_used_buckets;
 } ucl_hash_table_tag_t;
@@ -1625,22 +1620,8 @@ typedef struct ucl_hash_table_tag_t {
 typedef ucl_hash_table_tag_t ucl_hash_table_t[1];
 
 extern void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
-				 ucl_comparison_t compar, ucl_hash_t hash);
-
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
-ucl_value_t
-ucl_hash_entry_ref_key (void * _E)
-{
-  ucl_hash_entry_t E = _E;
-  return E->key;
-}
-static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__))
-void
-ucl_hash_entry_set_key (void * _E, ucl_value_t new_key)
-{
-  ucl_hash_entry_t E = _E;
-  E->key = new_key;
-}
+				 ucl_comparison_t compar, ucl_hash_t hash,
+				 ucl_node_getkey_t getkey);
 
 extern void ucl_hash_insert  (ucl_hash_table_t H, void * entry);
 extern void ucl_hash_extract (ucl_hash_table_t H, void * entry);

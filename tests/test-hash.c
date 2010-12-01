@@ -58,26 +58,50 @@ static const ucl_hash_t hash_integer = {
 };
 
 
+/** --------------------------------------------------------------------
+ ** Entry type definitions.
+ ** ----------------------------------------------------------------- */
+
+typedef struct entry_tag_t {
+  ucl_node_tag_t	node;
+  ucl_value_t		key;
+} entry_tag_t;
+
+typedef entry_tag_t *	entry_t;
+
+static ucl_value_t
+entry_key (ucl_value_t context UCL_UNUSED, void * E_)
+{
+  entry_t	E = E_;
+  return E->key;
+}
+
+static const ucl_node_getkey_t getkey = {
+  .data = { .pointer = NULL },
+  .func	= entry_key
+};
+
+
 /** ------------------------------------------------------------
  ** Helper functions.
  ** ----------------------------------------------------------*/
 
-static ucl_hash_entry_t
+static entry_t
 alloc_entry (void)
 {
-  ucl_hash_entry_t	E = NULL;
-  A.alloc(A.data, &E, sizeof(ucl_hash_entry_tag_t));
+  entry_t	E = NULL;
+  A.alloc(A.data, &E, sizeof(entry_tag_t));
   return E;
 }
 static void
-free_entry (ucl_hash_entry_t E)
+free_entry (entry_t E)
 {
   A.alloc(A.data, &E, 0);
 }
 static void
 clean (ucl_hash_table_t H)
 {
-  ucl_hash_entry_t  E;
+  entry_t  E;
   while ((E = ucl_hash_first(H))) {
     ucl_hash_extract(H, E);
     A.alloc(A.data, &E, 0);
@@ -86,20 +110,20 @@ clean (ucl_hash_table_t H)
 static void
 insert_elements_in_range (ucl_hash_table_t H, size_t begin, size_t end)
 {
-  ucl_hash_entry_t	E;
+  entry_t	E;
   ucl_value_t		K;
   for (size_t i=begin; i<end; ++i) {
     E = alloc_entry();
     assert(E);
     K.t_size = i;
-    ucl_hash_entry_set_key(E, K);
+    E->key = K;
     ucl_hash_insert(H, E);
   }
 }
 static void
 extract_elements_in_range (ucl_hash_table_t H, size_t begin, size_t end)
 {
-  ucl_hash_entry_t	E;
+  entry_t	E;
   ucl_value_t		K;
   for (size_t i=begin; i<end; ++i) {
     K.t_size = i;
@@ -112,8 +136,8 @@ extract_elements_in_range (ucl_hash_table_t H, size_t begin, size_t end)
 static void
 find_elements (ucl_hash_table_t H, size_t upper_limit)
 {
-  ucl_hash_entry_t	E;
-  ucl_value_t		K;
+  entry_t	E;
+  ucl_value_t	K;
   debug("finding elements from 0 to %d", upper_limit);
   for (size_t i=0; i<upper_limit; ++i) {
     K.t_size = i;
@@ -123,7 +147,7 @@ find_elements (ucl_hash_table_t H, size_t upper_limit)
       debug("not found %u", i);
 #endif
     assert(E);
-    K = ucl_hash_entry_ref_key(E);
+    K = E->key;
     assert(K.t_size == i);
   }
 }
@@ -139,7 +163,7 @@ test_construction_and_destruction (void)
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_int, ucl_hash_string);
+      ucl_hash_initialise(H, V, ucl_compare_int, ucl_hash_string, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       {
 	assert(0 == ucl_hash_size(H));
@@ -158,13 +182,13 @@ test_usage (void)
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_hash_table_t	H;
-    ucl_hash_entry_t	E;
+    entry_t		E;
     ucl_value_t		K, K1;
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
       size_t	i;
-      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       {
 	assert(0 == ucl_hash_size(H));
@@ -172,7 +196,7 @@ test_usage (void)
 	  E = alloc_entry();
 	  assert(E);
 	  K.t_size = i;
-	  ucl_hash_entry_set_key(E, K);
+	  E->key = K;
 	  ucl_hash_insert(H, E);
 	  assert(1+i == ucl_hash_size(H));
 	}
@@ -183,7 +207,7 @@ test_usage (void)
 	  K.t_size = i;
 	  E = ucl_hash_find(H, K);
 	  assert(E);
-	  K1 = ucl_hash_entry_ref_key(E);
+	  K1 = E->key;
 	  assert(K1.t_size == i);
 	  ucl_hash_extract(H, E);
 	  free_entry(E);
@@ -195,7 +219,7 @@ test_usage (void)
 	  E = alloc_entry();
 	  assert(E);
 	  K.t_size = i;
-	  ucl_hash_entry_set_key(E, K);
+	  E->key = K;
 	  ucl_hash_insert(H, E);
 	  assert(1+i == ucl_hash_size(H));
 	}
@@ -206,7 +230,7 @@ test_usage (void)
 	  K.t_size = i;
 	  E = ucl_hash_find(H, K);
 	  assert(E);
-	  K1 = ucl_hash_entry_ref_key(E);
+	  K1 = E->key;
 	  assert(K1.t_size == i);
 	  ucl_hash_extract(H, E);
 	  free_entry(E);
@@ -233,34 +257,34 @@ test_hashing_strings (void)
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_hash_table_t	H;
-    ucl_hash_entry_t	E;
-    ucl_value_t		K, K1;
+    entry_t		E;
+    ucl_value_t		K;
     size_t		j;
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string);
+      ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       assert(0 == ucl_hash_size(H));
       {
 	/* insert */
+	mcl_debug("inserting");
 	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
 	  E = alloc_entry();
 	  assert(E);
-	  K.chars = (char *)strs[j];
-	  ucl_hash_entry_set_key(E, K);
+	  E->key.chars = (char *)strs[j];
 	  ucl_hash_insert(H, E);
 	  assert(1+j == ucl_hash_size(H));
 	}
 	assert(NUMBER_OF_STRINGS == ucl_hash_size(H));
 
 	/* extract */
+	mcl_debug("extracting");
 	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
 	  K.chars = (char *)strs[j];
 	  E = ucl_hash_find(H, K);
 	  assert(E);
-	  K1 = ucl_hash_entry_ref_key(E);
-	  assert(K1.chars == strs[j]);
+	  assert(E->key.chars == strs[j]);
 	  ucl_hash_extract(H, E);
 	  free_entry(E);
 	  assert(10-j-1 == ucl_hash_size(H));
@@ -268,23 +292,23 @@ test_hashing_strings (void)
 	assert(0 == ucl_hash_size(H));
 
 	/* insert */
+	mcl_debug("inserting");
 	for (j=0; j<10; ++j) {
 	  E = alloc_entry();
 	  assert(E);
-	  K.chars = (char *)strs[j];
-	  ucl_hash_entry_set_key(E, K);
+	  E->key.chars = (char *)strs[j];
 	  ucl_hash_insert(H, E);
 	  assert(1+j == ucl_hash_size(H));
 	}
 	assert(NUMBER_OF_STRINGS == ucl_hash_size(H));
 
 	/* extract */
+	mcl_debug("extracting");
 	for (j=0; j<NUMBER_OF_STRINGS; ++j) {
 	  K.chars = (char *)strs[j];
 	  E = ucl_hash_find(H, K);
 	  assert(E);
-	  K1 = ucl_hash_entry_ref_key(E);
-	  assert(K1.chars == strs[j]);
+	  assert(E->key.chars == strs[j]);
 	  ucl_hash_extract(H, E);
 	  free_entry(E);
 	  assert(10-j-1 == ucl_hash_size(H));
@@ -292,11 +316,11 @@ test_hashing_strings (void)
 	assert(0 == ucl_hash_size(H));
 
 	/* insert */
+	mcl_debug("inserting");
 	for (j=0; j<10; ++j) {
 	  E = alloc_entry();
 	  assert(E);
-	  K.chars = (char *)strs[j];
-	  ucl_hash_entry_set_key(E, K);
+	  E->key.chars = (char *)strs[j];
 	  ucl_hash_insert(H, E);
 	  assert(1+j == ucl_hash_size(H));
 	}
@@ -320,7 +344,7 @@ test_resizing (void)
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       {
 	assert(0 == ucl_hash_size(H));
@@ -442,19 +466,19 @@ test_empty_iteration (void)
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_hash_table_t	H;
-    ucl_hash_entry_t	E;
+    entry_t	E;
     ucl_value_t		K;
     ucl_iterator_t	I;
     size_t		j;
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer, getkey);
       assert(0 == ucl_hash_size(H));
       {
 	for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
 	  E = ucl_iterator_ptr(I);
-	  K = ucl_hash_entry_ref_key(E);
+	  K = E->key;
 	}
 	assert(0 == j);
 	assert(0 == ucl_hash_size(H));
@@ -472,7 +496,7 @@ test_full_iteration (void)
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_hash_table_t	H;
-    ucl_hash_entry_t	E;
+    entry_t	E;
     ucl_value_t		K, K1;
     ucl_iterator_t	I;
     size_t		j;
@@ -480,7 +504,7 @@ test_full_iteration (void)
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       {
 	assert(0 == ucl_hash_size(H));
@@ -489,7 +513,7 @@ test_full_iteration (void)
 	  E = alloc_entry();
 	  assert(E);
 	  K.t_size = j;
-	  ucl_hash_entry_set_key(E, K);
+	  E->key = K;
 	  ucl_hash_insert(H, E);
 	  assert(ucl_hash_size(H) == (j+1));
 	}
@@ -502,7 +526,7 @@ test_full_iteration (void)
 	}
 	for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
 	  E = ucl_iterator_ptr(I);
-	  K1 = ucl_hash_entry_ref_key(E);
+	  K1 = E->key;
 	  results[K1.t_size] = 1;
 	}
 	assert(j == NUMBER);
@@ -514,7 +538,7 @@ test_full_iteration (void)
 	  K.t_size = j;
 	  E = ucl_hash_find(H, K);
 	  assert(E);
-	  K1 = ucl_hash_entry_ref_key(E);
+	  K1 = E->key;
 	  assert(K1.t_size == j);
 	  ucl_hash_extract(H, E);
 	  free_entry(E);
@@ -536,7 +560,7 @@ test_other_iteration (void)
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_hash_table_t	H;
-    ucl_hash_entry_t	E;
+    entry_t	E;
     ucl_value_t		K, K1;
     ucl_iterator_t	I;
     size_t		j;
@@ -544,26 +568,26 @@ test_other_iteration (void)
     ucl_vector_initialise_config_hash(C);
     ucl_vector_alloc(V, C);
     {
-      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer);
+      ucl_hash_initialise(H, V, ucl_compare_int, hash_integer, getkey);
       assert(UCL_HASH_DEFAULT_SIZE == ucl_vector_size(V));
       assert(0 == ucl_hash_size(H));
 
       E = alloc_entry();
       assert(E);
       K.t_size = 3;
-      ucl_hash_entry_set_key(E, K);
+      E->key = K;
       ucl_hash_insert(H, E);
 
       E = alloc_entry();
       assert(E);
       K.t_size = 10;
-      ucl_hash_entry_set_key(E, K);
+      E->key = K;
       ucl_hash_insert(H, E);
 
       E = alloc_entry();
       assert(E);
       K.t_size = 50;
-      ucl_hash_entry_set_key(E, K);
+      E->key = K;
       ucl_hash_insert(H, E);
 
       for (j=0; j<NUMBER; ++j) {
@@ -571,7 +595,7 @@ test_other_iteration (void)
       }
       for (ucl_hash_iterator(H, I), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
 	E = ucl_iterator_ptr(I);
-	K1 = ucl_hash_entry_ref_key(E);
+	K1 = E->key;
 	assert(K1.t_size < NUMBER);
 	results[K1.t_size] = 1;
       }
