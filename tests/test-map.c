@@ -1193,21 +1193,38 @@ test_inverse_inorder_insertion_and_deletion (void)
 
       /* delete 7:
        *
-       *    2b--6s--7=      2b--6s          2b--4=--6=
+       *    2b--6s--7=      2b--6s          2b--4b--6s
        *    |   |           |   |           |   |   |
        *    1s  4=--5=  =>  1s  4=--5=  =>  1s  3=  5=
        *    |   |           |   |           |
        *    0=  3=          0=  3=          0=
-       *
        */
       j=7;
       checked_deletion(M, j, &L[j]);
-      validate_links(M, 2, NULL, L[1], L[6], UCL_BRO_DEEPER);
+      validate_links(M, 2, NULL, L[1], L[4], UCL_BRO_DEEPER);
       validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
-      validate_links(M, 6, L[2], L[4], L[7], UCL_SON_DEEPER);
+      validate_links(M, 4, L[2], L[3], L[6], UCL_BRO_DEEPER);
       validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
-      validate_links(M, 4, L[6], L[3], L[5], UCL_EQUAL_DEPTH);
-      validate_links(M, 7, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[4], L[5], NULL, UCL_SON_DEEPER);
+      validate_links(M, 5, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
+      /* delete 6:
+       *
+       *    2b--4b--6s      2=--4=--5=
+       *    |   |   |       |   |
+       *    1s  3=  5=  =>  1s  3=
+       *    |               |
+       *    0=              0=
+       */
+      j=6;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 2, NULL, L[1], L[4], UCL_EQUAL_DEPTH);
+      validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
+      validate_links(M, 4, L[2], L[3], L[5], UCL_EQUAL_DEPTH);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
       validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
