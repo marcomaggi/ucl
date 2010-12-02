@@ -5359,17 +5359,19 @@ the map.
 
 @deftypefun {void *} ucl_map_find_or_next (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
-element with the lesser key greater than the selected one.  Return a
-pointer to the requested link or @cnull{} if all the keys in the map are
-lesser than the selected one.
+element with the lesser key greater than the selected one; if there are
+multple links having key equal to @var{key}, select the rightmost one.
+Return a pointer to the requested link or @cnull{} if all the keys in
+the map are lesser than the selected one.
 @end deftypefun
 
 
 @deftypefun {void *} ucl_map_find_or_prev (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
-element with the greater key lesser than the selected one.  Return a
-pointer to the requested link or @cnull{} if all the keys in the map are
-greater than the selected one.
+element with the greater key lesser than the selected one; if there are
+multple links having key equal to @var{key}, select the leftmost one.
+Return a pointer to the requested link or @cnull{} if all the keys in
+the map are greater than the selected one.
 @end deftypefun
 
 

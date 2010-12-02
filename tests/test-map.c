@@ -110,13 +110,11 @@ fill (ucl_map_t M, int begin, int end)
 static void
 clean (ucl_map_t M)
 {
-#if 0
   for (link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
     ucl_map_remove(M, L);
     free_link(L);
   }
   assert(0 == ucl_map_size(M));
-#endif
 }
 
 /** --------------------------------------------------------------------
@@ -313,7 +311,7 @@ test_construction_and_destruction (void)
 {
   mcl_test_begin("map-1.1", "construction and destruction") {
     ucl_map_t	M;
-    ucl_map_initialise(M, 0, ucl_compare_int_pointer, getkey);
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
       assert(0 == ucl_map_size(M));
     }
@@ -1531,6 +1529,145 @@ test_inorder_iteration (void)
   mcl_test_end();
 }
 
+static void
+test_miscellaneous (void)
+{
+  mcl_test_begin("map-10.1", "first, last, next and prev link") {
+    ucl_map_t	M;
+    link_t	L;
+    ucl_value_t	K;
+    int		j;
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
+    {
+      for (j=0; j<LITTLENUMBER; ++j)
+	ucl_map_insert(M, alloc_link(j));
+
+      L = ucl_map_first(M);
+      mcl_test_error_if_false(NULL != L, "NULL first link");
+      K = getkey.func(getkey.data, L);
+      mcl_test_error_if_false(0 == K.t_int, "wrong first key value, expected %d got %d", 0, K.t_int);
+
+      L = ucl_map_last(M);
+      mcl_test_error_if_false(NULL != L, "NULL first link");
+      K = getkey.func(getkey.data, L);
+      mcl_test_error_if_false(LITTLENUMBER-1 == K.t_int,
+			      "wrong last key value, expected %d got %d",
+			      LITTLENUMBER-1, K.t_int);
+
+
+      L = ucl_map_first(M);
+      for (j=1; j<LITTLENUMBER; ++j) {
+	L = ucl_map_next(L);
+	mcl_test_error_if_false(NULL != L, "NULL first link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(j == K.t_int, "wrong next key value, expected %d got %d", j, K.t_int);
+      }
+      L = ucl_map_next(L);
+      mcl_test_error_if_false(NULL == L, "wrong last next, expected NULL got %p", (void *)L);
+
+      L = ucl_map_last(M);
+      for (j=LITTLENUMBER-2; j>=0; --j) {
+	L = ucl_map_prev(L);
+	mcl_test_error_if_false(NULL != L, "NULL prev link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(j == K.t_int, "wrong prev key value, expected %d got %d", j, K.t_int);
+      }
+      L = ucl_map_prev(L);
+      mcl_test_error_if_false(NULL == L, "wrong last prev, expected NULL got %p", (void *)L);
+    }
+    clean(M);
+  }
+  mcl_test_end();
+  mcl_test_begin("map-10.2", "find or next/prev") {
+    ucl_map_t	M;
+    link_t	L;
+    ucl_value_t	K;
+    int		j;
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
+    {
+      for (j=0; j<=100; j+=10)
+	ucl_map_insert(M, alloc_link(j));
+
+      j = -10;
+      {
+	K.t_int = j;
+	L = ucl_map_find_or_next(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL next link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(0 == K.t_int, "wrong next key value, expected %d got %d", 0, K.t_int);
+
+	K.t_int = j;
+	L = ucl_map_find_or_prev(M, K);
+	mcl_test_error_if_false(NULL == L, "expected NULL prev link");
+      }
+
+      j = 45;
+      {
+	K.t_int = j;
+	L = ucl_map_find_or_next(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL next link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(50 == K.t_int, "wrong next key value, expected %d got %d", 50, K.t_int);
+
+	K.t_int = j;
+	L = ucl_map_find_or_prev(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL prev link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(40 == K.t_int, "wrong prev key value, expected %d got %d", 40, K.t_int);
+      }
+
+      j = 55;
+      {
+	K.t_int = j;
+	L = ucl_map_find_or_next(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL next link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(60 == K.t_int, "wrong next key value, expected %d got %d", 60, K.t_int);
+
+	K.t_int = j;
+	L = ucl_map_find_or_prev(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL prev link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(50 == K.t_int, "wrong prev key value, expected %d got %d", 50, K.t_int);
+      }
+
+      j = 110;
+      {
+	K.t_int = j;
+	L = ucl_map_find_or_next(M, K);
+	mcl_test_error_if_false(NULL == L, "expected NULL next link");
+
+	K.t_int = j;
+	L = ucl_map_find_or_prev(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL prev link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(100 == K.t_int, "wrong prev key value, expected %d got %d", 100, K.t_int);
+      }
+
+      for (j = 51; j<60; ++j) {
+	int	next = 60, prev = 50;
+
+	K.t_int = j;
+	L = ucl_map_find_or_next(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL next link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(next == K.t_int,
+				"wrong next key value, expected %d got %d", next, K.t_int);
+
+	K.t_int = j;
+	L = ucl_map_find_or_prev(M, K);
+	mcl_test_error_if_false(NULL != L, "NULL prev link");
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(prev == K.t_int,
+				"wrong prev key value, expected %d got %d", prev, K.t_int);
+      }
+
+    }
+    clean(M);
+  }
+  mcl_test_end();
+}
+
 int
 main (void)
 {
@@ -1551,6 +1688,9 @@ main (void)
 
   mcl_test_subtitle("iterators");
   test_inorder_iteration ();
+
+  mcl_test_subtitle("miscellaneous functions");
+  test_miscellaneous ();
 
   exit(EXIT_SUCCESS);
 }

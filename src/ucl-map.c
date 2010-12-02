@@ -47,7 +47,7 @@
  ** -----------------------------------------------------------------*/
 
 #ifndef DEBUGGING
-#  define DEBUGGING		1
+#  define DEBUGGING		0
 #endif
 #include "internal.h"
 
@@ -527,7 +527,7 @@ ucl_map_remove (ucl_map_t M, void * cur_)
      readjusting after an insertion.   We CANNOT take the following loop
      and  factor  it  out  joining  it  with the  loop  at  the  end  of
      "ucl_map_insert()". */
-  for (size_t depth=1;;) {
+  for (;;) {
     /* Step up to the dad of "dad". */
     cur=dad;
     dad=DAD_OF(cur);
@@ -704,8 +704,7 @@ ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t K)
   assert(M);
   /* Handle the case of empty map. */
   cur = M->root;
-  if (cur == NULL)
-    return cur;
+  if (! cur) return cur;
   /* Dive in the tree to find the key. */
   while (cur) {
     last = cur;
@@ -715,11 +714,13 @@ ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t K)
     else if (v < 0)
       cur = SON_OF(last);
     else { /* v == 0 */
+      /* If there  are more links with  key K, we step  to the rightmost
+         one. */
       if (M->flags & UCL_ALLOW_MULTIPLE_OBJECTS) {
 	do {
 	  last = cur;
 	  cur  = ucl_btree_step_inorder(last);
-	  if (NULL == cur) break;
+	  if (! cur) break;
 	  v = comparison_key_node(M, K, cur);
 	} while (0 == v);
       }
@@ -732,18 +733,16 @@ ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t K)
      requested one. */
   return (v < 0)? last : ucl_btree_step_inorder(last);
 }
-
 
 void *
 ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t K)
 {
-  int		v;
   ucl_node_t 	cur, last;
-  assert(M != 0);
+  int		v;
+  assert(M);
   /* Handle the case of empty map. */
   cur = M->root;
-  if (NULL == cur)
-    return cur;
+  if (! cur) return cur;
   /* Dive in the tree to find the key. */
   while (cur) {
     last = cur;
@@ -753,11 +752,13 @@ ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t K)
     else if (v < 0)
       cur = SON_OF(last);
     else { /* v == 0 */
+      /* If there  are more links  with key K,  we step to  the leftmost
+         one. */
       if (M->flags & UCL_ALLOW_MULTIPLE_OBJECTS) {
 	do {
 	  last = cur;
 	  cur  = ucl_btree_step_inorder_backward(last);
-	  if (NULL == cur) break;
+	  if (! cur) break;
 	  v = comparison_key_node(M, K, cur);
 	} while (0 == v);
       }
