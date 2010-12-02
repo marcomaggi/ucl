@@ -495,7 +495,6 @@ ucl_map_remove (ucl_map_t M, void * cur_)
         dad_is_root = (M->root == dad);
         dad = ucl_btree_avl_rot_left(dad);
         if (dad_is_root) M->root = dad;
-        assert(IS_BRO_DEEPER(dad));
       }
       return;
     } else {
