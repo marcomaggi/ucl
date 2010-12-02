@@ -5,62 +5,6 @@
 
   Abstract
 
-	Removing nodes from 0 to 9 produces these trees:
-
-  * remove 0:
-
-  |      3-----7--8--9       3-----7--8--9
-  |      |     |             |     |
-  |      1--2  5--6      =>  1--2  5--6
-  |      |     |                   |
-  |      0     4                   4
-
-  * remove 1 (right-left rotation raising 5):
-
-  |      3-----7--8--9       3-----7--8--9     5------7--8--9
-  |      |     |             |     |           |      |
-  |      1--2  5--6      =>  2     5--6     => 3--4   6
-  |            |                   |           |
-  |            4                   4           2
-
-  * remove 2:
-
-  |      5------7--8--9      5-----7--8--9
-  |      |      |            |     |
-  |      3--4   6            3--4  6
-  |      |
-  |      2
-
-  * remove 3 (right rotation raising 7):
-
-  |      5-----7--8--9       7--8--9
-  |      |     |             |
-  |      4     6         =>  5--6
-  |                          |
-  |                          4
-
-  * remove 4:
-
-  |      7--8--9             7--8--9
-  |      |                   |
-  |      5--6            =>  5--6
-  |      |
-  |      4
-
-  * remove 5:
-
-  |      7--8--9
-  |      |
-  |      6
-
-  * remove 6 (right rotation raising 8):
-
-  |      7--8--9             8--9
-  |                      =>  |
-  |                          7
-
-  * remove 7, 8 and 9 is just detaching them.
-
 
   Copyright (c) 2003-2005, 2008, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
 
@@ -197,6 +141,25 @@ checked_insertion (ucl_map_t M, int j, link_t * L)
   mcl_test_error_if_false(j == K1.t_int, "invalid key value, expected %d got %d", j, K1.t_int);
 }
 static void
+checked_deletion (ucl_map_t M, int j, link_t * L)
+/* Delete the node with key "j".*/
+{
+  link_t	N;
+  ucl_value_t	K;
+  size_t	old_size=ucl_map_size(M);
+  mcl_debug("deleting %d", j);
+  K.t_int = j;
+  N = ucl_map_find(M, K);
+  mcl_test_error_if_true(NULL == N, "unable to find node with key %d", j);
+  mcl_test_error_if_false(j == N->key.t_int,
+			  "error finding node with key %d, got key %d", j, N->key.t_int);
+  mcl_test_error_if_false(N == *L, "unexpected node with key %d, expected %p got %p",
+			  j, (void *)*L, (void *)N);
+  ucl_map_remove(M, N);
+  *L = NULL;
+  mcl_test_error_if_false(old_size == 1+ucl_map_size(M), "invalid size after deletion of %d", j);
+}
+static void
 validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_status_t expected_status)
 /* Extract from "M" the node with  key "j", the validate its links to be
    the  given ones,  finally validate  its AVL  status to  be  the given
@@ -228,11 +191,11 @@ build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
   int		j;
 
   /* add 0 and 10:
-
-     |
-     |      0b--10=
-     |
-  */
+   *
+   *
+   *      0b--10=
+   *
+   */
   j=0;
   mcl_debug("inserting %d", j);
   checked_insertion(M, j, &L[j]);
@@ -245,12 +208,11 @@ build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
   validate_links(M, 10, L[0], NULL, NULL, UCL_EQUAL_DEPTH);
 
   /* add 2 (bro rotation raising 10):
-
-     |      0--10--20     10=--20=
-     |                 => |
-     |                    0=
-
-  */
+   *
+   *      0--10--20     10=--20=
+   *                 => |
+   *                    0=
+   */
   j=20;
   mcl_debug("inserting %d", j);
   checked_insertion(M, j, &L[j]);
@@ -259,11 +221,11 @@ build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
   validate_links(M, 20, L[10], NULL, NULL, UCL_EQUAL_DEPTH);
 
   /* add 30:
-
-     |      10b--20b--30=
-     |      |
-     |      0=
-  */
+   *
+   *      10b--20b--30=
+   *      |
+   *      0=
+   */
   j=30;
   mcl_debug("inserting %d", j);
   checked_insertion(M, j, &L[j]);
@@ -273,11 +235,11 @@ build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
   validate_links(M, 30, L[20], NULL, NULL,  UCL_EQUAL_DEPTH);
 
   /* add 40 (bro rotation raising 30):
-
-     |      10--20--30--40           10b--30=--40=
-     |      |                =>      |     |
-     |      0                        0=   20=
-  */
+   *
+   *      10--20--30--40           10b--30=--40=
+   *      |                =>      |     |
+   *      0                        0=   20=
+   */
   j=40;
   mcl_debug("inserting %d", j);
   checked_insertion(M, j, &L[j]);
@@ -402,16 +364,16 @@ test_checked_inorder_insertion (void)
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
       mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after construction");
-      /* Inserting  10 numbers  from 0  to 9  produces these  trees (AVL
-	 status  at the  side of  the number:  "s" son  deeper,  "b" bro
-	 deeper, "=" equal depth):
+      /* Inserting 10 numbers  from 0 to 9 produces  the following trees
+	 (AVL status at the side of  the number: "s" son deeper, "b" bro
+	 deeper, "=" equal depth). */
 
-	 * add 0 and 1:
-
-	 |
-	 |      0b--1=
-	 |
-      */
+      /* add 0 and 1:
+       *
+       *
+       *      0b--1=
+       *
+       */
       j=0;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -428,12 +390,11 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 2 (bro rotation raising 1):
-
-       |      0--1--2     1=--2=
-       |               => |
-       |                  0=
-
-      */
+       *
+       *      0--1--2     1=--2=
+       *               => |
+       *                  0=
+       */
       j=2;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -443,13 +404,12 @@ test_checked_inorder_insertion (void)
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
 
-
       /* add 3:
-
-       |      1b--2b--3=
-       |      |
-       |      0=
-      */
+       *
+       *      1b--2b--3=
+       *      |
+       *      0=
+       */
       j=3;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -461,11 +421,11 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 4 (bro rotation raising 3):
-
-       |      1--2--3--4           1b--3=--4=
-       |      |            =>      |   |
-       |      0                    0=  2=
-      */
+       *
+       *      1--2--3--4           1b--3=--4=
+       *      |            =>      |   |
+       *      0                    0=  2=
+       */
       j=4;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -478,14 +438,13 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 5 (bro rotation raising 3):
-
-       |      1--3--4--5           3=--4b--5=
-       |      |  |         =>      |
-       |      0  2                 1=--2=
-       |                           |
-       |                           0=
-      */
-
+       *
+       *      1--3--4--5           3=--4b--5=
+       *      |  |         =>      |
+       *      0  2                 1=--2=
+       *                           |
+       *                           0=
+       */
       j=5;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -499,14 +458,13 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 6 (bro rotation raising 5):
-
-       |      3--4--5--6           3=------5=--6=
-       |      |                    |       |
-       |      1--2         =>      1=--2=  4=
-       |      |                    |
-       |      0                    0=
-      */
-
+       *
+       *      3--4--5--6           3=------5=--6=
+       *      |                    |       |
+       *      1--2         =>      1=--2=  4=
+       *      |                    |
+       *      0                    0=
+       */
       j=6;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -521,14 +479,13 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 7:
-
-       |      3----5--6--7
-       |      |    |
-       |      1--2 4
-       |      |
-       |      0
-      */
-
+       *
+       *      3----5--6--7
+       *      |    |
+       *      1--2 4
+       *      |
+       *      0
+       */
       j=7;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -544,14 +501,13 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 8 (bro rotation raising 7):
-
-       |      3----5--6--7--8    3b------5b--7=--8=
-       |      |    |             |       |   |
-       |      1--2 4          => 1=--2=  4=  6=
-       |      |                  |
-       |      0                  0=
-      */
-
+       *
+       *      3----5--6--7--8    3b------5b--7=--8=
+       *      |    |             |       |   |
+       *      1--2 4          => 1=--2=  4=  6=
+       *      |                  |
+       *      0                  0=
+       */
       j=8;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -568,15 +524,13 @@ test_checked_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 9 (bro rotation raising 7):
-
-       |      3-----5--7--8--9    3b------7=--8b--9=
-       |      |     |  |          |       |
-       |      1--2  4  6      =>  1=--2=  5=--6=
-       |      |                   |       |
-       |      0                   0=      4=
-
-      */
-
+       *
+       *      3-----5--7--8--9    3b------7=--8b--9=
+       *      |     |  |          |       |
+       *      1--2  4  6      =>  1=--2=  5=--6=
+       *      |                   |       |
+       *      0                   0=      4=
+       */
       j=9;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -617,15 +571,14 @@ test_checked_inverse_inorder_insertion (void)
       mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after construction");
       /* Inserting  10 numbers  from 0  to 9  produces these  trees (AVL
 	 status  at the  side of  the number:  "s" son  deeper,  "b" bro
-	 deeper, "=" equal depth):
+	 deeper, "=" equal depth). */
 
-	 * add 9 and 8:
-
-	 |
-	 |      9s
-	 |	|
-	 |	8=
-      */
+      /* add 9 and 8:
+       *
+       *    9s
+       *    |
+       *    8=
+       */
       j=9;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -642,14 +595,13 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 7 (son rotation raising 1):
-
-       |      9            8=--9=
-       |      |         => |
-       |      8            7=
-       |      |
-       |      7
-
-      */
+       *
+       *      9            8=--9=
+       *      |         => |
+       *      8            7=
+       *      |
+       *      7
+       */
       j=7;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -660,13 +612,13 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 6:
-
-       |      8s--9=
-       |      |
-       |      7s
-       |      |
-       |      6=
-      */
+       *
+       *      8s--9=
+       *      |
+       *      7s
+       *      |
+       *      6=
+       */
       j=6;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -678,15 +630,15 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 5 (son rotation raising 6):
-
-       |      8s--9=       8s--9=
-       |      |            |
-       |      7s           6=--7=
-       |      |        =>  |
-       |      6=           5=
-       |      |
-       |      5
-      */
+       *
+       *      8s--9=       8s--9=
+       *      |            |
+       *      7s           6=--7=
+       *      |        =>  |
+       *      6=           5=
+       *      |
+       *      5
+       */
       j=5;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -699,16 +651,15 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 4 (son rotation raising 6):
-
-       |      8s--9=         6=--8=--9=
-       |      |              |   |
-       |      6=--7=         5s  7=
-       |      |         =>   |
-       |      5=             4=
-       |      |
-       |      4
-      */
-
+       *
+       *      8s--9=         6=--8=--9=
+       *      |              |   |
+       *      6=--7=         5s  7=
+       *      |         =>   |
+       *      5=             4=
+       *      |
+       *      4
+       */
       j=4;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -722,16 +673,15 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 3 (son rotation raising 4):
-
-       |      6=--8=--9=       6=------8=--9=
-       |      |   |            |       |
-       |      5s  7=       =>  4=--5=  7=
-       |      |                |
-       |      4=               3=
-       |      |
-       |      3
-      */
-
+       *
+       *      6=--8=--9=       6=------8=--9=
+       *      |   |            |       |
+       *      5s  7=       =>  4=--5=  7=
+       *      |                |
+       *      4=               3=
+       *      |
+       *      3
+       */
       j=3;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -746,16 +696,15 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 2:
-
-       |      6s------8=--9=
-       |      |       |
-       |      4s--5=  7=
-       |      |
-       |      3s
-       |      |
-       |      2=
-      */
-
+       *
+       *      6s------8=--9=
+       *      |       |
+       *      4s--5=  7=
+       *      |
+       *      3s
+       *      |
+       *      2=
+       */
       j=2;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -771,20 +720,17 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 1 (son rotation raising 2):
-
-       |      6s------8=--9=       6s------8=--9=
-       |      |       |            |       |
-       |      4s--5=  7=           4s--5=  7=
-       |      |                    |
-       |      3s               =>  2=--3=
-       |      |                    |
-       |      2=                   1=
-       |      |
-       |      1
-      */
-      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
-			      "unbalanced tree after insertion of %d", j);
-
+       *
+       *      6s------8=--9=       6s------8=--9=
+       *      |       |            |       |
+       *      4s--5=  7=           4s--5=  7=
+       *      |                    |
+       *      3s               =>  2=--3=
+       *      |                    |
+       *      2=                   1=
+       *      |
+       *      1
+       */
       j=1;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -801,18 +747,17 @@ test_checked_inverse_inorder_insertion (void)
 			      "unbalanced tree after insertion of %d", j);
 
       /* add 0 (son rotation raising 2):
-
-       |      6s------8=--9=        6s-----------8=--9=
-       |      |       |             |            |
-       |      4s--5=  7=            2=--4=--5=   7=
-       |      |                     |   |
-       |      2=--3=            =>  1s  3=
-       |      |                     |
-       |      1=                    0=
-       |      |
-       |      0
-      */
-
+       *
+       *      6s------8=--9=        6s-----------8=--9=
+       *      |       |             |            |
+       *      4s--5=  7=            2=--4=--5=   7=
+       *      |                     |   |
+       *      2=--3=            =>  1s  3=
+       *      |                     |
+       *      1=                    0=
+       *      |
+       *      0
+       */
       j=0;
       mcl_debug("inserting %d", j);
       checked_insertion(M, j, &L[j]);
@@ -847,9 +792,9 @@ test_checked_insertion_random (void)
 #define SIZE		100
   mcl_test_begin("map-2.4",
 		 "random insertions and check of internal structure (son-bro rotations)") {
-    ucl_map_t		M;
+    ucl_map_t	M;
     link_t 	L[SIZE];
-    int			j;
+    int		j;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
       mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after construction");
@@ -956,36 +901,318 @@ test_checked_insertion_random (void)
 }
 
 static void
-test_insertion_and_removal (void)
+test_inorder_insertion_and_deletion (void)
 {
-  mcl_test_begin("map-3.1", "multiple insertion and removal") {
-    ucl_map_t		M;
-    link_t	L;
-    ucl_value_t		K;
-    int			i;
-    ucl_bool_t		print=false;
+#undef  SIZE
+#define SIZE	10
+  mcl_test_begin("map-3.1", "multiple inorder insertion and deletion") {
+    ucl_map_t	M;
+    link_t 	L[SIZE];
+    int		j;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
-      for (i=0; i< LITTLENUMBER; ++i) {
-	ucl_map_insert(M, alloc_link(i));
-	if (print) print_preorder_links (M, "after inserting link %d", i);
-	mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
-				"unbalanced tree after insertion of %d", i);
-      }
-      assert(LITTLENUMBER == ucl_map_size(M));
-      for (i=0; i<LITTLENUMBER; ++i) {
-	mcl_debug("removing %d", i);
-	if (print || i==4 || i==3) print_preorder_links (M, "before removing link %d", i);
-      	K.t_int = i;
-      	L = ucl_map_find(M, K);
-      	ucl_map_remove(M, L);
-      	K = getkey.func(getkey.data, L);
-      	assert(K.t_int == i);
-      	free_link(L);
-	mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
-				"unbalanced tree after deletion of %d", i);
-	if (print || i==3) print_preorder_links (M, "after removing link %d", i);
-      }
+      for (j=0; j<SIZE; ++j)
+	checked_insertion(M, j, &L[j]);
+
+      /* Inserting numbers from 0 to 9 inorder has produced this tree:
+       *
+       *   3b------7=--8b--9=
+       *   |       |
+       *   1=--2=  5=--6=
+       *   |       |
+       *   0=      4=
+       */
+      validate_links(M, 3, NULL, L[1], L[7], UCL_BRO_DEEPER);
+      validate_links(M, 1, L[3], L[0], L[2], UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[3], L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 2, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[7], L[4], L[6], UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after inorder insertion of nodes");
+
+      /* delete 0:
+       *
+       *   3b------7=--8b--9=       3b------7=--8b--9=
+       *   |       |                |       |
+       *   1=--2=  5=--6=       =>  1b--2=  5=--6=
+       *   |       |                        |
+       *   0=      4=                       4=
+       */
+      j=0;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 3, NULL, L[1], L[7], UCL_BRO_DEEPER);
+      validate_links(M, 1, L[3], NULL, L[2], UCL_BRO_DEEPER);
+      validate_links(M, 7, L[3], L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links(M, 2, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[7], L[4], L[6], UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 1:
+       *
+       *   3b------7=--8b--9=      7s--8b--9=
+       *   |       |               |
+       *   1b--2=  5=--6=      =>  3b--5=--6=
+       *           |               |   |
+       *           4=              2=  4=
+       */
+      j=1;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 7, NULL, L[3], L[8], UCL_SON_DEEPER);
+      validate_links(M, 3, L[7], L[2], L[5], UCL_BRO_DEEPER);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 2, L[3], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[3], L[4], L[6], UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 2:
+       *
+       *   7s--8b--9=         7s--8b--9=
+       *   |                  |
+       *   3b--5=--6=    =>   5s--6=
+       *   |   |              |
+       *   2=  4=             3b--4=
+       */
+      j=2;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 7, NULL, L[5], L[8], UCL_SON_DEEPER);
+      validate_links(M, 5, L[7], L[3], L[6], UCL_SON_DEEPER);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 3, L[5], NULL, L[4], UCL_BRO_DEEPER);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[3], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 3:
+       *
+       *   7s--8b--9=      7=--8b--9=
+       *   |               |
+       *   5s--6=      =>  5=--6=
+       *   |               |
+       *   3b--4=          4=
+       */
+      j=3;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 7, NULL, L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[7], L[4], L[6], UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 4, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 4:
+       *
+       *   7=--8b--9=      7=--8b--9=
+       *   |               |
+       *   5=--6=      =>  5b--6=
+       *   |
+       *   4=
+       */
+      j=4;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 7, NULL, L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[7], NULL, L[6], UCL_BRO_DEEPER);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 5:
+       *
+       *   7=--8b--9=      7b--8b--9=
+       *   |               |
+       *   5b--6=      =>  6=
+       *
+       */
+      j=5;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 7, NULL, L[6], L[8], UCL_BRO_DEEPER);
+      validate_links(M, 6, L[7], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 6:
+       *
+       *   7b--8b--9=      8=--9=
+       *   |               |
+       *   6=          =>  7=
+       *
+       */
+      j=6;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 8, NULL, L[7], L[9], UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 7:
+       *
+       *   8=--9=      8=--9=
+       *   |       =>
+       *   7=
+       *
+       */
+      j=7;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 8, NULL, NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 8:
+       *
+       *   8=--9=  =>  9=
+       *
+       */
+      j=8;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 9, NULL, NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+
+      /* delete 9 */
+      j=9;
+      checked_deletion(M, j, &L[j]);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(0 == ucl_map_size(M),
+			      "expected empty map after removing all the nodes, got size %u",
+			      ucl_map_size(M));
+    }
+  }
+  mcl_test_end();
+}
+
+static void
+test_inverse_inorder_insertion_and_deletion (void)
+{
+#undef  SIZE
+#define SIZE	10
+  mcl_test_begin("map-3.2", "multiple reverse inorder insertion and deletion") {
+    ucl_map_t	M;
+    link_t 	L[SIZE];
+    int		j;
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
+    {
+      for (j=SIZE-1; j>=0; --j)
+	checked_insertion(M, j, &L[j]);
+      mcl_test_error_if_false(10 == ucl_map_size(M),
+			      "invalid size after insertion, expected %d got %d",
+			      SIZE, ucl_map_size(M));
+
+      /* Inserting numbers from 9 to 0 has produced the following tree:
+       *
+       *    6s-----------8=--9=
+       *    |            |
+       *    2=--4=--5=   7=
+       *    |   |
+       *    1s  3=
+       *    |
+       *    0=
+       */
+      validate_links(M, 6, NULL, L[2], L[8], UCL_SON_DEEPER);
+      validate_links(M, 2, L[6], L[1], L[4], UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[6], L[7], L[9], UCL_EQUAL_DEPTH);
+      validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
+      validate_links(M, 4, L[2], L[3], L[5], UCL_EQUAL_DEPTH);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
+      /* delete 9:
+       *
+       *    6s-----------8=--9=      6s-----------8s
+       *    |            |           |            |
+       *    2=--4=--5=   7=          2=--4=--5=   7=
+       *    |   |                =>  |   |
+       *    1s  3=                   1s  3=
+       *    |                        |
+       *    0=                       0=
+       */
+      j=9;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 6, NULL, L[2], L[8], UCL_SON_DEEPER);
+      validate_links(M, 2, L[6], L[1], L[4], UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[6], L[7], NULL, UCL_SON_DEEPER);
+      validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
+      validate_links(M, 4, L[2], L[3], L[5], UCL_EQUAL_DEPTH);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
+      /* delete 8:
+       *
+       *    6s-----------8s      6s--7=            2b--6s--7=
+       *    |            |       |                 |   |
+       *    2=--4=--5=   7=      2=--4=--5=        1s  4=--5=
+       *    |   |            =>  |   |         =>  |   |
+       *    1s  3=               1s  3=            0=  3=
+       *    |                    |
+       *    0=                   0=
+       */
+      j=8;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 2, NULL, L[1], L[6], UCL_BRO_DEEPER);
+      validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
+      validate_links(M, 6, L[2], L[4], L[7], UCL_SON_DEEPER);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[6], L[3], L[5], UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
+      /* delete 7:
+       *
+       *    2b--6s--7=      2b--6s          2b--4=--6=
+       *    |   |           |   |           |   |   |
+       *    1s  4=--5=  =>  1s  4=--5=  =>  1s  3=  5=
+       *    |   |           |   |           |
+       *    0=  3=          0=  3=          0=
+       *
+       */
+      j=7;
+      checked_deletion(M, j, &L[j]);
+      validate_links(M, 2, NULL, L[1], L[6], UCL_BRO_DEEPER);
+      validate_links(M, 1, L[2], L[0], NULL, UCL_SON_DEEPER);
+      validate_links(M, 6, L[2], L[4], L[7], UCL_SON_DEEPER);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[6], L[3], L[5], UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
     }
   }
   mcl_test_end();
@@ -1219,8 +1446,9 @@ main (void)
   test_checked_inverse_inorder_insertion ();
   test_checked_insertion_random ();
 
-  mcl_test_subtitle("insertion and removal");
-  test_insertion_and_removal ();
+  mcl_test_subtitle("insertion and deletion");
+  test_inorder_insertion_and_deletion ();
+  test_inverse_inorder_insertion_and_deletion ();
 
   mcl_test_subtitle("iterators");
   test_inorder_iteration ();

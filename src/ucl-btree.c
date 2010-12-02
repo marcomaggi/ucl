@@ -174,94 +174,162 @@ ucl_btree_swap (void * A_, void * B_)
 
 void *
 ucl_btree_avl_rot_left (void * old_cur_)
-/* Perform a  left rotation  which balances a  left-left-higher subtree.
- * Example:
+/* Perform a left rotation which  balances a son deeper subtree.  We use
+ * this rotation in two cases: "new_cur" is son deeper too, "new_cur" is
+ * equal depth.
+ *
+ * Example  of the  son  deeper  "new_cur", notice  that  the tree  gets
+ * shorter and  that "old_cur"  and "new_cur" are  the only  nodes which
+ * need to change status:
  *
  *               (top)                      (top)
  *                 |                          |
- *                11 (old_cur)                9 (new_cur)
+ *                11s (old_cur)               9= (new_cur)
  *                / \                    -----+-----
- *     (new_cur) 9   12                 7           11 (old_cur)
+ *     (new_cur) 9s  12=                7=          11= (old_cur)
  *              / \             =>     / \         /  \
- *             7   10 (bro)           6   8      10   12
+ *             7=  10= (bro)          6=  8=     10=   12=
  *            / \                              (bro)
- *           6   8
+ *           6=  8=
  *
+ * Example of the  equal depth "new_cur", notice that  the tree does not
+ * change its  depth and that "new_cur"  is the only node  that needs to
+ * change status:
+ *
+ *               (top)                      (top)
+ *                 |                          |
+ *                12s (old_cur)               9b (new_cur)
+ *               /  \                    -----+-----
+ *    (new_cur) 9=   13=                7=          12s (old_cur)
+ *             / \              =>     / \         /  \
+ *            7=  10b (bro)           6=  8=     10b   13=
+ *           / \    \                        (bro) \
+ *          6=  8=   11=                            11=
+ *
+ * We want  to support  also the following  special case of  equal depth
+ * "new_cur", which is useful when deleting a leaf node; notice the tree
+ * does not change its depth  and that both "new_cur" and "old_cur" need
+ * to change status:
+ *
+ *               (top)                  (top)
+ *                 |                      |
+ *                12s (old_cur)           9b (new_cur)
+ *               /              =>         \
+ *    (new_cur) 9=                          12= (old_cur)
  */
 {
-  ucl_node_t	old_cur = old_cur_, new_cur, bro;
-  new_cur	= old_cur->son;
-  bro		= new_cur->bro;
-  assert(UCL_SON_DEEPER == old_cur->meta.avl_status);
-  assert(UCL_SON_DEEPER == new_cur->meta.avl_status);
-  { /* relink "old_cur" and "new_cur" */
-    new_cur->bro	= old_cur;
-    new_cur->dad	= old_cur->dad;
-    old_cur->dad	= new_cur;
-  }
-  { /* relink "old_cur" and "bro" */
-    old_cur->son	= bro;
-    if (bro) bro->dad	= old_cur;
-  }
-  { /* relink "top" */
-    ucl_node_t	top = new_cur->dad;
-    if (top) {
-      if (old_cur == top->bro)
-	top->bro = new_cur;
-      else {
-	assert(old_cur == top->son);
-	top->son = new_cur;
-      }
+  ucl_node_t		old_cur = old_cur_;
+  ucl_node_t		new_cur = old_cur->son;
+  ucl_node_t		bro	= new_cur->bro;
+  ucl_avl_status_t	new_cur_old_status = new_cur->meta.avl_status;
+  assert(UCL_SON_DEEPER  == old_cur->meta.avl_status);
+  assert(UCL_SON_DEEPER  == new_cur_old_status ||
+	 UCL_EQUAL_DEPTH == new_cur_old_status);
+  /* relink "old_cur" and "new_cur" */
+  new_cur->bro	= old_cur;
+  new_cur->dad	= old_cur->dad;
+  old_cur->dad	= new_cur;
+  /* relink "old_cur" and "bro" */
+  old_cur->son	= bro;
+  if (bro) bro->dad	= old_cur;
+  /* relink "top" */
+  ucl_node_t	top = new_cur->dad;
+  if (top) {
+    if (old_cur == top->bro)
+      top->bro = new_cur;
+    else {
+      assert(old_cur == top->son);
+      top->son = new_cur;
     }
   }
-  old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
-  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  if (UCL_SON_DEEPER == new_cur_old_status) {
+    old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+    new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  } else {
+    new_cur->meta.avl_status = UCL_BRO_DEEPER;
+    if (!old_cur->son && !old_cur->bro)
+      old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  }
   return new_cur;
 }
 
 void *
 ucl_btree_avl_rot_right (void * old_cur_)
-/* Perform a right rotation which balances a right-right-higher subtree.
- * Example:
+/* Perform a right rotation which balances a bro deeper subtree.  We use
+ * this rotation in two cases: "new_cur" is bro deeper too, "new_cur" is
+ * equal depth.
+ *
+ * Example  of the  bro  deeper  "new_cur", notice  that  the tree  gets
+ * shorter and  that "old_cur"  and "new_cur" are  the only  nodes which
+ * need to change state:
  *
  *         (top)                              (top)
  *           |                                  |
- *           7 (old_cur)                        9 (new_cur)
+ *           7b (old_cur)                       9= (new_cur)
  *          / \                            -----+-----
- *         6   9 (new_cur)   => (old_cur) 7           11
+ *         6=  9b (new_cur)  => (old_cur) 7=          11=
  *            / \                        / \         /  \
- *     (son) 8   11                     6   8      10    12
+ *     (son) 8=  11=                    6=  8=     10=   12=
  *              /  \                      (son)
- *            10    12
+ *            10=   12=
+ *
+ * Example of equal  depth "new_cur", notice that the  tree gets shorter
+ * and that 6 is the only node which needs to change state:
+ *
+ *         (top)                              (top)
+ *           |                                  |
+ *           6b (old_cur)                       9s (new_cur)
+ *          / \                            -----+-----
+ *         5=  9= (new_cur)  => (old_cur) 6b          11=
+ *            / \                        / \         /  \
+ *     (son) 8s  11=                    5=  8s     10=   12=
+ *          /   /  \                       / (son)
+ *         7= 10=   12=                   7=
+ *
+ * We want  to support  also the following  special case of  equal depth
+ * "new_cur", which is useful when deleting a leaf node; notice the tree
+ * does not change its depth  and that both "new_cur" and "old_cur" need
+ * to change status:
+ *
+ *          (top)                           (top)
+ *            |                               |
+ *           12b (old_cur)                    9s (new_cur)
+ *             \              =>             /
+ *              9= (new_cur)     (old_cur) 12=
  */
 {
-  ucl_node_t	old_cur = old_cur_, new_cur, son;
-  new_cur	= old_cur->bro;
-  son		= new_cur->son;
-  assert(UCL_BRO_DEEPER == old_cur->meta.avl_status);
-  assert(UCL_BRO_DEEPER == new_cur->meta.avl_status);
-  { /* relink "old_cur" and "new_cur" */
-    new_cur->son	= old_cur;
-    new_cur->dad	= old_cur->dad;
-    old_cur->dad	= new_cur;
-  }
-  { /* relink "old_cur" and "son" */
-    old_cur->bro	= son;
-    if (son) son->dad	= old_cur;
-  }
-  { /* relink "top" */
-    ucl_node_t	top = new_cur->dad;
-    if (top) {
-      if (old_cur == top->bro)
-	top->bro = new_cur;
-      else {
-	assert(old_cur == top->son);
-	top->son = new_cur;
-      }
+  ucl_node_t		old_cur = old_cur_;
+  ucl_node_t		new_cur	= old_cur->bro;
+  ucl_node_t		son	= new_cur->son;
+  ucl_avl_status_t	new_cur_old_status = new_cur->meta.avl_status;
+  assert(UCL_BRO_DEEPER  == old_cur->meta.avl_status);
+  assert(UCL_BRO_DEEPER  == new_cur_old_status ||
+	 UCL_EQUAL_DEPTH == new_cur_old_status);
+  /* relink "old_cur" and "new_cur" */
+  new_cur->son	= old_cur;
+  new_cur->dad	= old_cur->dad;
+  old_cur->dad	= new_cur;
+  /* relink "old_cur" and "son" */
+  old_cur->bro	= son;
+  if (son) son->dad	= old_cur;
+  /* relink "top" */
+  ucl_node_t	top = new_cur->dad;
+  if (top) {
+    if (old_cur == top->bro)
+      top->bro = new_cur;
+    else {
+      assert(old_cur == top->son);
+      top->son = new_cur;
     }
   }
-  old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
-  new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  if (UCL_BRO_DEEPER == new_cur_old_status) {
+    old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+    new_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  } else {
+    new_cur->meta.avl_status = UCL_SON_DEEPER;
+    if (!old_cur->son && !old_cur->bro)
+      old_cur->meta.avl_status = UCL_EQUAL_DEPTH;
+  }
   return new_cur;
 }
 
