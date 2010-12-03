@@ -169,12 +169,12 @@ ucl_map_insert (ucl_map_t M, void * L_)
     for (ucl_node_t cursor = M->root; cursor;) {
       current = cursor;
       comparison_result = comparison_key_node(M, K, cursor);
-      if ((comparison_result > 0) || (comparison_result==0 && allow_multiple_objects)) {
+      if ((comparison_result > 0) || (0==comparison_result && allow_multiple_objects)) {
 	cursor = BRO(current);
       } else if (comparison_result < 0) {
 	cursor = SON(current);
       } else {
-	assert(comparison_result == 0 && !allow_multiple_objects);
+	assert(0==comparison_result && !allow_multiple_objects);
 	return false;
       }
     }
@@ -182,7 +182,8 @@ ucl_map_insert (ucl_map_t M, void * L_)
   /* Here  "current"   holds  a   pointer  to  the   dad  of   "L".   If
      "comparison_result<0",  we  have  to  insert  "L" link  as  son  of
      "current"  (in the  left subtree),  else as  brother (in  the right
-     subtree). */
+     subtree,  this  happens also  with  multiple  links  with the  same
+     key). */
   if (comparison_result<0) {
     /*If we append "L" as son  of "current", "L" itself becomes its left
      *subtree:
@@ -241,7 +242,7 @@ ucl_map_insert (ucl_map_t M, void * L_)
      *the  AVL  status  of  the  upper nodes,  because  the  subtree  of
      *"current" HAS NOT changed depth.
      */
-    assert(comparison_result>0);
+    assert(comparison_result>=0);
     ucl_btree_set_dadbro(current, L);
     ucl_map_size_incr(M);
     if (SON(current)) {
@@ -498,6 +499,7 @@ ucl_map_remove (ucl_map_t M, void * cur_)
       }
       return;
     } else {
+      assert(! SON_OF(dad));
       /*We have removed  the bro of a tree having no  son.  The tree has
        *got shorter: we have to update the status of the upper nodes.
        *
@@ -775,16 +777,22 @@ ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t K)
 size_t
 ucl_map_count (const ucl_map_t M, const ucl_value_t K)
 {
-  size_t	count;
-  ucl_node_t 	L;
+  size_t	count = 0;
+  ucl_node_t 	L, first;
   assert(M);
-  count = 0;
-  L  = ucl_map_find(M, K);
+  L = first = ucl_map_find(M, K);
   if (L) {
+    if (! (UCL_ALLOW_MULTIPLE_OBJECTS & M->flags))
+      return 1;
     do {
       ++count;
       L = ucl_map_next(L);
     } while (L && (0 == comparison_key_node(M, K, L)));
+    L = ucl_map_prev(first);
+    while (L && (0 == comparison_key_node(M, K, L))) {
+      ++count;
+      L = ucl_map_prev(L);
+    }
   }
   return count;
 }

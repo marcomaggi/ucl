@@ -35,8 +35,6 @@
 #define NUMBER		50
 #define LITTLENUMBER	10
 
-#define A		ucl_memory_allocator
-
 
 /** --------------------------------------------------------------------
  ** Link type definitions.
@@ -87,6 +85,7 @@ static const ucl_node_getkey_t getkey = {
 static link_t
 alloc_link (int value)
 {
+  ucl_memory_allocator_t A = ucl_memory_allocator;
   link_t 	L = NULL;
   ucl_value_t	K = { .t_int = value };
   A.alloc(A.data, &L, sizeof(link_tag_t));
@@ -96,25 +95,25 @@ alloc_link (int value)
 static void
 free_link (link_t  L)
 {
+  ucl_memory_allocator_t A = ucl_memory_allocator;
   A.alloc(A.data, &L, 0);
 }
 static void
-fill (ucl_map_t M, int begin, int end)
+fill (ucl_map_t M, int first, int upper, int step)
 {
-  assert(0 == ucl_map_size(M));
-  for (int i=begin; i<end; ++i) {
-    link_t 	L = alloc_link(i);
-    ucl_map_insert(M, L);
-  }
+  for (int i=first; i<upper; i+=step)
+    ucl_map_insert(M, alloc_link(i));
 }
 static void
 clean (ucl_map_t M)
 {
+#if 0
   for (link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
     ucl_map_remove(M, L);
     free_link(L);
   }
   assert(0 == ucl_map_size(M));
+#endif
 }
 
 /** --------------------------------------------------------------------
@@ -246,6 +245,16 @@ build_base_tree_with_plenty_of_holes (ucl_map_t M, link_t * L)
   validate_links(M, 30, L[10], L[20], L[40], UCL_EQUAL_DEPTH);
   validate_links(M, 20, L[30], NULL, NULL, UCL_EQUAL_DEPTH);
   validate_links(M, 40, L[30], NULL, NULL, UCL_EQUAL_DEPTH);
+}
+static void
+fill_multimap (ucl_map_t M, int size, int first, int step, int times)
+{
+  int	j, k;
+  for (j=first; j<size; ++j)
+    ucl_map_insert(M, alloc_link(j));
+  for (k=0; k<(times-1); ++k)
+    for (j=first; j<size; j+=step)
+      ucl_map_insert(M, alloc_link(j));
 }
 
 /** --------------------------------------------------------------------
@@ -1530,7 +1539,587 @@ test_inorder_iteration (void)
 }
 
 static void
-test_miscellaneous (void)
+test_lower_bound_multimap_iterator (void)
+{
+  mcl_test_begin("map-5.1", "lower bound iteration on multi map") {
+    ucl_iterator_t	I;
+    ucl_map_t		M;
+    link_t		L;
+    ucl_value_t		K, K1;
+    int			j, first=0, step=5, times=3, expected_count;
+    ucl_map_initialise(M, UCL_ALLOW_MULTIPLE_OBJECTS, ucl_compare_int, getkey);
+    {
+      fill_multimap(M, 1+LITTLENUMBER, first, step, times);
+
+      K.t_int = 5;
+      expected_count = times;
+      for (ucl_map_lower_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K1 = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == K1.t_int,
+				"wrong key value, expected %d got %d", K.t_int, K1.t_int);
+      }
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+      K.t_int = 3;
+      expected_count = 1;
+      for (ucl_map_lower_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K1 = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == K1.t_int,
+				"wrong key value, expected %d got %d", K.t_int, K1.t_int);
+      }
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+      K.t_int = LITTLENUMBER+10;
+      expected_count = 0;
+      for (ucl_map_lower_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j);
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+    }
+    clean(M);
+  }
+  mcl_test_end();
+}
+
+static void
+test_upper_bound_multimap_iterator (void)
+{
+  mcl_test_begin("map-5.2", "upper bound iteration on multi map") {
+    ucl_iterator_t	I;
+    ucl_map_t		M;
+    link_t		L;
+    ucl_value_t		K, K1;
+    int			j, first=0, step=5, times=3, expected_count;
+    ucl_map_initialise(M, UCL_ALLOW_MULTIPLE_OBJECTS, ucl_compare_int, getkey);
+    {
+      fill_multimap(M, LITTLENUMBER, first, step, times);
+
+      K.t_int = 5;
+      expected_count = times;
+      for (ucl_map_upper_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K1 = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == K1.t_int,
+				"wrong key value, expected %d got %d", K.t_int, K1.t_int);
+      }
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+      K.t_int = 3;
+      expected_count = 1;
+      for (ucl_map_upper_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K1 = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == K1.t_int,
+				"wrong key value, expected %d got %d", K.t_int, K1.t_int);
+      }
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+      K.t_int = LITTLENUMBER+10;
+      expected_count = 0;
+      for (ucl_map_upper_bound(M, I, K), j=0; ucl_iterator_more(I); ucl_iterator_next(I), ++j);
+      mcl_test_error_if_false(expected_count == j,
+			      "wrong number of equal links, expected %d, got %d", expected_count, j);
+
+    }
+    clean(M);
+  }
+  mcl_test_end();
+}
+
+static void
+test_set_iteration_intersection (void)
+{
+  ucl_iterator_t	I, IA, IB;
+  ucl_map_t		A, B;
+  link_t		L;
+  ucl_value_t		K;
+  int			j, first_A, first_B, upper_A, upper_B, step=1;
+
+  mcl_test_begin("map-6.1.1", "set iteration, intersection, range in common") {
+    /* fifteen elements in common (5-19) */
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 5;
+      upper_A	= 20;
+      upper_B	= 35;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_intersection(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == 20,
+			      "wrong upper value for elements in common, expected %d got %d", 20, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.2", "set iteration, intersection, null intersection") {
+    /* null intersection */
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 20;
+      upper_A	= 10;
+      upper_B	= 10;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_intersection(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iterator");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.3", "set iteration, intersection, full intersection") {
+    /* full intersection */
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 0;
+      upper_A	= 20;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_intersection(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_A,
+			      "wrong upper value for full intersection, expected %d got %d",
+			      upper_A, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.4", "set iteration, intersection, full inclusion of first map") {
+    /* full inclusion of A */
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 5;
+      upper_A	= 20;
+      upper_B	= 15;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_intersection(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value for full intersection, expected %d got %d",
+			      upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.5", "set iteration, intersection, full inclusion of second map") {
+    /* full inclusion of B */
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 5;
+      first_B	= 0;
+      upper_A	= 15;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_intersection(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_A,
+			      "wrong upper value for full intersection, expected %d got %d",
+			      upper_A, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.6", "set iteration, intersection, intermixed values, null intersection") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      first_A	= 0;
+      first_B	= 1;
+      upper_A	= 20;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, 2);
+      fill(B, first_B, upper_B, 2);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_intersection(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
+      for (ucl_map_iterator_intersection(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_debug("key %d", K.t_int);
+      }
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.7", "set iteration, intersection, empty first map") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_B	= 0;
+      upper_B	= 20;
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_intersection(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.8", "set iteration, intersection, empty second map") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 20;
+      fill(A, first_A, upper_A, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_intersection(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.1.9", "set iteration, intersection, empty maps") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_intersection(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+}
+
+static void
+test_set_iteration_union (void)
+{
+  ucl_iterator_t	I, IA, IB;
+  ucl_map_t		A, B;
+  link_t		L;
+  ucl_value_t		K;
+  int			j, first_A, first_B, upper_A, upper_B, step=1;
+
+  mcl_test_begin("map-6.2.1", "set iteration, union, adjacent A and B") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 20;
+      upper_A	= 20;
+      upper_B	= 40;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value for adjacent maps, expected %d got %d",
+			      upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.2", "set iteration, union, adjacent B and A") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 20;
+      first_B	= 0;
+      upper_A	= 40;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_A,
+			      "wrong upper value for adjacent maps, expected %d got %d",
+			      upper_A, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.3", "set iteration, union, full overlapping") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 0;
+      upper_A	= 20;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+
+	mcl_test_error_if_false(ucl_iterator_more(I), "expected second value for %d", j);
+	ucl_iterator_next(I);
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_A,
+			      "wrong upper value for full overlapping, expected %d got %d",
+			      upper_A, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.4", "set iteration, union, empty map A") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_B	= 0;
+      upper_B	= 20;
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value for empty map A, expected %d got %d",
+			      upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.5", "set iteration, union, empty map B") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 20;
+      fill(A, first_A, upper_A, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value for empty map B, expected %d got %d",
+			      upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.6", "set iteration, union, empty maps") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_union(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration for empty maps");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.7", "set iteration, union, A included in B") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 10;
+      first_B	= 0;
+      upper_A	= 20;
+      upper_B	= 40;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+
+	if (first_A <= j && j < upper_A) {
+	  mcl_test_error_if_false(ucl_iterator_more(I), "expected second value for %d", j);
+	  ucl_iterator_next(I);
+	  L = ucl_iterator_ptr(I);
+	  K = getkey.func(getkey.data, L);
+	  mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+	}
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value for A included in B, expected %d got %d",
+			      upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.8", "set iteration, union, B included in A") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      first_B	= 10;
+      upper_A	= 40;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+
+	if (first_B <= j && j < upper_B) {
+	  mcl_test_error_if_false(ucl_iterator_more(I), "expected second value for %d", j);
+	  ucl_iterator_next(I);
+	  L = ucl_iterator_ptr(I);
+	  K = getkey.func(getkey.data, L);
+	  mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+	}
+      }
+      mcl_test_error_if_false(j == upper_A,
+			      "wrong upper value for B included in A, expected %d got %d",
+			      upper_A, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.2.9", "set iteration, union, intermixed values") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 2;
+      first_A	= 0;
+      first_B	= 1;
+      upper_A	= 20;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_union(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	mcl_test_error_if_false(K.t_int == j, "wrong key value, expected %d got %d", j, K.t_int);
+      }
+      mcl_test_error_if_false(j == upper_B,
+			      "wrong upper value, expected %d got %d", upper_B, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+}
+
+static void
+test_first_last_next_prev (void)
 {
   mcl_test_begin("map-10.1", "first, last, next and prev link") {
     ucl_map_t	M;
@@ -1578,6 +2167,11 @@ test_miscellaneous (void)
     clean(M);
   }
   mcl_test_end();
+}
+
+static void
+test_find_or_next_prev (void)
+{
   mcl_test_begin("map-10.2", "find or next/prev") {
     ucl_map_t	M;
     link_t	L;
@@ -1668,6 +2262,57 @@ test_miscellaneous (void)
   mcl_test_end();
 }
 
+static void
+test_count (void)
+{
+  mcl_test_begin("map-10.3", "count elements in simple map") {
+    ucl_map_t	M;
+    ucl_value_t	K;
+    int		j;
+    size_t	count;
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
+    {
+      for (j=0; j<=LITTLENUMBER; ++j)
+	ucl_map_insert(M, alloc_link(j));
+
+      for (j=0; j<=LITTLENUMBER; ++j) {
+	K.t_int = j;
+	count = ucl_map_count(M, K);
+	mcl_test_error_if_false(1 == count, "wrong count of %d, expected %u got %u", j, 1, count);
+      }
+
+    }
+    clean(M);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-10.4", "count elements in multi map") {
+    ucl_map_t	M;
+    ucl_value_t	K;
+    int		j;
+    size_t	count;
+    ucl_map_initialise(M, UCL_ALLOW_MULTIPLE_OBJECTS, ucl_compare_int, getkey);
+    {
+      fill_multimap(M, LITTLENUMBER, 0, 5, 3);
+
+      for (j=1; j<=LITTLENUMBER; ++j) {
+	K.t_int = j;
+	count = ucl_map_count(M, K);
+	mcl_test_error_if_false(1 == count, "wrong count of %d, expected %u got %u", j, 1, count);
+	if (0 == (1+j) % 5) ++j;
+      }
+
+      for (j=0; j<=LITTLENUMBER; j+=5) {
+	K.t_int = j;
+	count = ucl_map_count(M, K);
+	mcl_test_error_if_false(3 == count, "wrong count of %d, expected %u got %u", j, 3, count);
+      }
+    }
+    clean(M);
+  }
+  mcl_test_end();
+}
+
 int
 main (void)
 {
@@ -1689,8 +2334,18 @@ main (void)
   mcl_test_subtitle("iterators");
   test_inorder_iteration ();
 
+  mcl_test_subtitle("multimap iterators");
+  test_lower_bound_multimap_iterator ();
+  test_upper_bound_multimap_iterator ();
+
+  mcl_test_subtitle("set iterators");
+  test_set_iteration_intersection ();
+  test_set_iteration_union ();
+
   mcl_test_subtitle("miscellaneous functions");
-  test_miscellaneous ();
+  test_first_last_next_prev ();
+  test_find_or_next_prev ();
+  test_count ();
 
   exit(EXIT_SUCCESS);
 }
