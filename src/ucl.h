@@ -583,7 +583,7 @@ typedef ucl_iterator_tag_t	ucl_iterator_t[1];
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) ucl_bool_t
 ucl_iterator_more (ucl_iterator_t iterator)
 {
-  return (iterator->iterator != 0);
+  return (NULL != iterator->iterator);
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))void
 ucl_iterator_next (ucl_iterator_t iterator)

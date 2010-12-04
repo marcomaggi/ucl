@@ -963,10 +963,6 @@ map_lowerbound_iterator_next (ucl_iterator_t I)
     I->iterator = L;
 }
 
-/** ------------------------------------------------------------
- ** Set iterators.
- ** ----------------------------------------------------------*/
-
 void
 ucl_map_iterator_union (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {
@@ -1013,9 +1009,7 @@ union_find_next (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
     I->iterator = NULL;
   }
 }
-
-/* ------------------------------------------------------------ */
-
+
 void
 ucl_map_iterator_intersection (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {
@@ -1054,9 +1048,7 @@ intersection_find_common (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I
   }
   I->iterator = NULL;
 }
-
-/* ------------------------------------------------------------ */
-
+
 void
 ucl_map_iterator_complintersect	(ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {
@@ -1075,46 +1067,61 @@ ucl_map_iterator_complintersect	(ucl_iterator_t I1, ucl_iterator_t I2, ucl_itera
 static void
 complintersect_iterator_next (ucl_iterator_t I)
 {
+#undef COMPARISON
+#define COMPARISON()    comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2))
   ucl_iterator_tag_t * 	I1 = I->internal1.pointer;
   ucl_iterator_tag_t *	I2 = I->internal2.pointer;
-  int			v;
+  int			comparison_result;
+  /* Advance  the sub-iterator  that  was  last used  as  source of  the
+     current element:  that element has  been consumed.  If this  is the
+     first call to iterator_next: do not advance any iterator. */
   if (I->container == I1)
     ucl_iterator_next(I1);
   else if (I->container == I2)
     ucl_iterator_next(I2);
+  else
+    assert(NULL == I->container);
+  /* If both sub-iterators have elements: we have to decide which one is
+     the new current. */
   if (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
-    v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
-    while (0 == v) {
+    /* We  discard all  the elements  present in  both  the subiterators
+       until  we find  the first  couple  of different  elements or  one
+       sub-iterator runs out of elements. */
+    for (comparison_result = COMPARISON(); 0 == comparison_result; comparison_result = COMPARISON()) {
       ucl_iterator_next(I1);
       ucl_iterator_next(I2);
-      if ((! ucl_iterator_more(I1)) || (! ucl_iterator_more(I2)))
+      if (! (ucl_iterator_more(I1) && ucl_iterator_more(I2)))
 	break;
-      v = comparison_node_node(I1->container, ucl_iterator_ptr(I1), ucl_iterator_ptr(I2));
     }
+    /* If the last comparison was  non-zero and there are still elements
+       in  both sub-iterators:  select as  current the  smallest element
+       from the sub-iterators. */
     if (ucl_iterator_more(I1) && ucl_iterator_more(I2)) {
-      if (v < 0) {
+      if (comparison_result < 0) {
 	I->iterator  = I1->iterator;
 	I->container = I1;
-	return;
-      } else if (v > 0) {
+      } else if (comparison_result > 0) {
 	I->iterator  = I2->iterator;
 	I->container = I2;
-	return;
       }
+      return;
     }
   }
+  /* We are here when  one or both "I1" and "I2" has  no more values; we
+     just replace "I" with the one that still has values and go on until
+     it is empty, too.  If both are empty: we just end the iteration. */
   if (ucl_iterator_more(I1)) {
+    assert(! ucl_iterator_more(I2));
     I->iterator  = I1->iterator;
     I->container = I1;
   } else if (ucl_iterator_more(I2)) {
+    assert(! ucl_iterator_more(I1));
     I->iterator  = I2->iterator;
     I->container = I2;
   } else
     I->iterator = NULL;
 }
-
-/* ------------------------------------------------------------ */
-
+
 void
 ucl_map_iterator_subtraction (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I)
 {

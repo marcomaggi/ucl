@@ -2119,6 +2119,286 @@ test_set_iteration_union (void)
 }
 
 static void
+test_set_iteration_complintersect (void)
+{
+  ucl_iterator_t	I, IA, IB;
+  ucl_map_t		A, B;
+  link_t		L;
+  ucl_value_t		K;
+  int			key_A, key_B;
+  int			j, first_A, first_B, upper_A, upper_B, step=1, upper;
+
+  mcl_test_begin("map-6.3.1", "set iteration, complementary intersection, two series") {
+#undef SIZE
+#define SIZE	6
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 10 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 10;
+      first_B	= 5;
+      upper_B	= 11;
+      upper	= SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < upper)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected upper %d got %d", SIZE, j);
+      }
+      mcl_test_error_if_false(j == upper, "wrong upper value, expected %d got %d", upper, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+
+#if 0
+  ucl_map_constructor(map1, 0, compar);
+  ucl_map_constructor(map2, 0, compar);
+
+  size = ucl_map_size(map1);  assert(size == 0);
+  size = ucl_map_size(map2);  assert(size == 0);
+
+
+  /* two series */
+
+  fill_map(map1,  0, 10); /* from 0 to 9 */
+  fill_map(map2,  5, 11); /* from 5 to 10 */
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == test1[i]);
+      ++i;
+    }
+  assert(key.integer == 10);
+  assert(i == 6);
+
+  clean_map(map1);
+  clean_map(map2);
+
+  /* two series */
+
+  fill_map(map1, 5, 11);
+  fill_map(map2, 0, 10);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == test1[i]);
+      ++i;
+    }
+  assert(key.integer == 10);
+  assert(i == 6);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* full overlapping */
+
+  fill_map(map1, 0, 30);
+  fill_map(map2, 0, 30);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* empty map 1 */
+
+  fill_map(map2, 0, 20);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == i);
+      ++i;
+    }
+  assert(i == 20);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* empty map 2 */
+
+  fill_map(map1, 0, 20);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == i);
+      ++i;
+    }
+  assert(i == 20);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* empty maps */
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
+
+
+  /* inclusion 1 */
+
+  fill_map(map1, 10, 20); /* 10 -> 19 */
+  fill_map(map2, 0,  30); /*  0 -> 29 */
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == i);
+
+      ++i;
+      if (i == 10)
+	{
+	  i = 20;
+	}
+    }
+  assert(i == 30);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* inclusion 2 */
+
+  fill_map(map1, 0,  30);
+  fill_map(map2, 10, 20);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+      assert(key.integer == i);
+
+      ++i;
+      if (i == 10)
+	{
+	  i = 20;
+	}
+    }
+  assert(i == 30);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* intermixed values */
+
+  for (i=0; i<30; i += 2)
+    {
+      link_p = alloc_new_link();
+      assert(link_p);
+
+      key.num = i;
+      val.num = i;
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
+
+      ucl_map_insert(map1, link_p);
+    }
+  for (i=1; i<31; i += 2)
+    {
+      link_p = alloc_new_link();
+      assert(link_p);
+
+      key.num = i;
+      val.num = i;
+      ucl_map_setkey(link_p, key);
+      ucl_map_setval(link_p, val);
+
+      ucl_map_insert(map2, link_p);
+    }
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  i = 0;
+  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+       ucl_iterator_more(iterator);
+       ucl_iterator_next(iterator))
+    {
+      link_p	= ucl_iterator_ptr(iterator);
+      key	= ucl_map_getkey(link_p);
+
+      assert(key.integer == i);
+      ++i;
+    }
+
+  assert(i == 30);
+#endif
+}
+
+static void
 test_first_last_next_prev (void)
 {
   mcl_test_begin("map-10.1", "first, last, next and prev link") {
@@ -2341,6 +2621,7 @@ main (void)
   mcl_test_subtitle("set iterators");
   test_set_iteration_intersection ();
   test_set_iteration_union ();
+  test_set_iteration_complintersect ();
 
   mcl_test_subtitle("miscellaneous functions");
   test_first_last_next_prev ();
