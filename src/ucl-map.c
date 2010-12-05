@@ -47,7 +47,7 @@
  ** -----------------------------------------------------------------*/
 
 #ifndef DEBUGGING
-#  define DEBUGGING		0
+#  define DEBUGGING		1
 #endif
 #include "internal.h"
 
@@ -659,7 +659,7 @@ ucl_map_find (const ucl_map_t M, const ucl_value_t K)
 	do {
 	  last = cur;
 	  cur  = ucl_btree_step_inorder_backward(last);
-	} while (!cur && (0 == comparison_key_node(M, K, cur)));
+	} while (cur && (0 == comparison_key_node(M, K, cur)));
 	return last;
       } else
 	return cur;

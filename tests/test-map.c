@@ -27,7 +27,7 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		0
+#define MCL_DEBUGGING		1
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
@@ -158,7 +158,7 @@ checked_deletion (ucl_map_t M, int j, link_t * L)
 }
 static void
 validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_status_t expected_status)
-/* Extract from "M" the node with  key "j", the validate its links to be
+/* Extract from "M" the node with key "j", then validate its links to be
    the  given ones,  finally validate  its AVL  status to  be  the given
    one. */
 {
@@ -176,6 +176,28 @@ validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_
   mcl_test_error_if_false(expected_status == STATUS(L),
 			  "invalid status of node %d, expected %s got %s",
 			  j, STATUS_STRING(expected_status), STATUS_STRING(STATUS(L)));
+}
+static void
+validate_links_m (int key, void * cur, void * dad, void * son, void * bro,
+		  ucl_avl_status_t expected_status)
+/* Validate the  node referenced  by "cur" with  should have  key "key",
+   then validate  its links to be  the given ones,  finally validate its
+   AVL status to be the given one. */
+{
+  link_t	L = cur;
+  mcl_test_error_if_false(key == MAYBE_KEY(L), "invalid key %d for slot %p", key, cur);
+  mcl_test_error_if_false(dad == DAD_OF(L),
+			  "invalid dad of node %d, expected %p (key=%d) got %p (key=%d)",
+			  key, dad, MAYBE_KEY(dad), DAD_OF(L), MAYBE_KEY(DAD_OF(L)));
+  mcl_test_error_if_false(son == SON_OF(L),
+			  "invalid son of node %d, expected %p (key=%d) got %p (key=%d)",
+			  key, son, MAYBE_KEY(son), SON_OF(L), MAYBE_KEY(SON_OF(L)));
+  mcl_test_error_if_false(bro == BRO_OF(L),
+			  "invalid bro of node %d, expected %p (key=%d) got %p (key=%d)",
+			  key, bro, MAYBE_KEY(bro), BRO_OF(L), MAYBE_KEY(BRO_OF(L)));
+  mcl_test_error_if_false(expected_status == STATUS(L),
+			  "invalid status of node %d, expected %s got %s",
+			  key, STATUS_STRING(expected_status), STATUS_STRING(STATUS(L)));
 }
 
 /** --------------------------------------------------------------------
@@ -903,6 +925,88 @@ test_checked_insertion_random (void)
       for (j=0; j<SIZE; ++j)
 	if (L[j]) free_link(L[j]);
     }
+  }
+  mcl_test_end();
+}
+
+static void
+test_multimap_insert_and_find (void)
+{
+#undef SIZE
+#define SIZE		100
+#undef DIM
+#define DIM		10
+  mcl_test_begin("map-2.5", "multimap insertion and validation of internal structure") {
+    ucl_map_t		M;
+    link_t		L[SIZE];
+    int			j, k;
+    ucl_map_initialise(M, UCL_ALLOW_MULTIPLE_OBJECTS, ucl_compare_int, getkey);
+    {
+      mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after construction");
+      /* Inserting 10 numbers  from 0 to 9 produces  the following trees
+       * (AVL status at the side of  the number: "s" son deeper, "b" bro
+       * deeper, "=" equal depth).
+       *
+       *      3b------7=--8b--9=
+       *      |       |
+       *      1=--2=  5=--6=
+       *      |       |
+       *      0=      4=
+       */
+      memset(L, '\0', SIZE*sizeof(link_t));
+      for (j=0; j<DIM; ++j) {
+	mcl_debug("inserting %d", j);
+	checked_insertion(M, j, &L[j]);
+      }
+      validate_links(M, 3, NULL, L[1], L[7], UCL_BRO_DEEPER);
+      validate_links(M, 1, L[3], L[0], L[2], UCL_EQUAL_DEPTH);
+      validate_links(M, 7, L[3], L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 2, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 5, L[7], L[4], L[6], UCL_EQUAL_DEPTH);
+      validate_links(M, 4, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d", j);
+
+      /* add another 5 (bro/son rotation raising 5 the upper 5):
+       *
+       *   3b------7=--8b--9=      3b------7=--8b--9=      5=------7=--8b--9=
+       *   |       |               |       |               |       |
+       *   1=--2=  5=--6=      =>  1=--2=  5=--6s      =>  3s--4=  6s
+       *   |       |               |       |   |           |       |
+       *   0=      4=              0=      4=  5=          1=--2=  5(10)=
+       *                                                   |
+       *                                                   0=
+       */
+      j=10;
+      k=5;
+      mcl_debug("inserting %d", k);
+      checked_insertion(M, k, &L[j]);
+      validate_links_m( 5,  L[5],  NULL,  L[3],  L[7], UCL_EQUAL_DEPTH);
+#if 0
+      validate_links_m(3, L[3], NULL, L[1], L[7], UCL_BRO_DEEPER);
+      validate_links_m(1, L[1], L[3], L[0], L[2], UCL_EQUAL_DEPTH);
+      validate_links_m(7, L[7], L[3], L[5], L[8], UCL_EQUAL_DEPTH);
+      validate_links_m(0, L[0], L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links_m(2, L[2], L[1], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links_m(4, L[4], L[5], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links_m(6, L[6], L[5], L[10], NULL, UCL_SON_DEEPER);
+      validate_links_m(8, L[8], L[7], NULL, L[9], UCL_BRO_DEEPER);
+      validate_links_m(9, L[9], L[8], NULL, NULL, UCL_EQUAL_DEPTH);
+      validate_links_m(5, L[10], L[6], NULL, NULL, UCL_EQUAL_DEPTH);
+#endif
+      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+			      "unbalanced tree after insertion of %d in slot", k, j);
+
+      mcl_test_error_if_false((size_t)1+j == ucl_map_size(M),
+			      "invalid size after overall insertion, expected %d got %d",
+			      1+j, ucl_map_size(M));
+
+    }
+    clean(M);
   }
   mcl_test_end();
 }
@@ -2913,6 +3017,7 @@ main (void)
   test_checked_inorder_insertion ();
   test_checked_inverse_inorder_insertion ();
   test_checked_insertion_random ();
+  test_multimap_insert_and_find ();
 
   mcl_test_subtitle("insertion and deletion");
   test_inorder_insertion_and_deletion ();
