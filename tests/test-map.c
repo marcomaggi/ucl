@@ -27,7 +27,7 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		1
+#define MCL_DEBUGGING		0
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
@@ -2469,204 +2469,240 @@ test_set_iteration_subtraction (void)
     clean(B);
   }
   mcl_test_end();
-#if 0
-  /* two series */
 
-  fill_map(map1,  0, 10); /* from 0 to 9 */
-  fill_map(map2,  5, 11); /* from 5 to 10 */
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  mcl_test_begin("map-6.4.2", "set iteration, subtraction, second map overlaps first") {
+#undef SIZE
+#define SIZE	5
+    static const int expected_results[SIZE] = { 10, 11, 12, 13, 14 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == i);
-      ++i;
+      step	= 1;
+      first_A	= 5;
+      upper_A	= 15;
+      first_B	= 0;
+      upper_B	= 10;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_subtraction(IA, IB, I), j = 0; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("j=%d, I key %d, IA key %d, IB key %d", j, K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d\n",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
     }
-  assert(i == 5);
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  clean_map(map1);
-  clean_map(map2);
-
-  /* two series */
-
-  fill_map(map1, 5, 20);
-  fill_map(map2, 0, 10);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 10;
-  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  mcl_test_begin("map-6.4.3", "set iteration, subtraction, full overlapping") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == i);
-      ++i;
+      step	= 1;
+      first_A	= 0;
+      upper_A	= SIZE;
+      first_B	= 0;
+      upper_B	= SIZE;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_subtraction(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
     }
-  assert(i == 20);
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* full overlapping */
-
-  fill_map(map1, 0, 30);
-  fill_map(map2, 0, 30);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  ucl_map_iterator_subtraction(iter1, iter2, iterator);
-  assert(ucl_iterator_more(iterator) == 0);
-
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* empty map 1 */
-
-  fill_map(map2, 0, 20);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  ucl_map_iterator_subtraction(iter1, iter2, iterator);
-  assert(ucl_iterator_more(iterator) == 0);
-
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* empty map 2 */
-
-  fill_map(map1, 0, 20);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  mcl_test_begin("map-6.4.4", "set iteration, subtraction, empty first map") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == i);
-      ++i;
+      step	= 1;
+      first_B	= 0;
+      upper_B	= SIZE;
+      results_count = SIZE;
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_subtraction(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
     }
-  assert(i == 20);
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* empty maps */
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  ucl_map_iterator_subtraction(iter1, iter2, iterator);
-  assert(ucl_iterator_more(iterator) == 0);
-
-
-  /* inclusion 1 */
-
-  fill_map(map1, 10, 20); /* 10 -> 19 */
-  fill_map(map2, 0,  30); /*  0 -> 29 */
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  ucl_map_iterator_subtraction(iter1, iter2, iterator);
-  assert(ucl_iterator_more(iterator) == 0);
-
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* inclusion 2 */
-
-  fill_map(map1, 0,  30); /*  0 -> 29 */
-  fill_map(map2, 10, 20); /* 10 -> 19 */
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  mcl_test_begin("map-6.4.5", "set iteration, subtraction, empty secong map") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == i);
-
-      ++i;
-      if (i == 10)
-	{
-	  i = 20;
-	}
+      step	= 1;
+      first_A	= 0;
+      upper_B	= SIZE;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_subtraction(IA, IB, I), j = 0; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("j=%d, I key %d, IA key %d, IB key %d", j, K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == j,
+				  "wrong key value, expected %d got %d", j, K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d\n",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
     }
-  assert(i == 30);
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* intermixed values */
-
-  for (i=0; i<30; i += 2)
+  mcl_test_begin("map-6.4.6", "set iteration, subtraction, empty maps") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p = alloc_new_link();
-      assert(link_p);
-
-      key.num = i;
-      val.num = i;
-      ucl_map_setkey(link_p, key);
-      ucl_map_setval(link_p, val);
-
-      ucl_map_insert(map1, link_p);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_subtraction(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
     }
-  for (i=1; i<31; i += 2)
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.4.7", "set iteration, subtraction, first map included in second") {
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p = alloc_new_link();
-      assert(link_p);
-
-      key.num = i;
-      val.num = i;
-      ucl_map_setkey(link_p, key);
-      ucl_map_setval(link_p, val);
-
-      ucl_map_insert(map2, link_p);
+      step	= 1;
+      first_A	= 5;
+      upper_A	= 15;
+      first_B	= 0;
+      upper_B	= 20;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_subtraction(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration");
     }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
+  mcl_test_begin("map-6.4.8", "set iteration, subtraction, second map included in first") {
+#undef SIZE
+#define SIZE	10
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 15, 16, 17, 18, 19 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
     {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-
-      assert(key.integer == i);
-      i += 2;
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 20;
+      first_B	= 5;
+      upper_B	= 15;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_subtraction(IA, IB, I), j = 0; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("j=%d, I key %d, IA key %d, IB key %d", j, K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d\n",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
     }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
-  assert(i == 30);
-#endif
+  mcl_test_begin("map-6.4.9", "set iteration, subtraction, intermixed values") {
+#undef SIZE
+#define SIZE	10
+    static const int expected_results[SIZE] = { 0, 2, 4, 6, 8, 10, 12, 14, 16, 18 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 2;
+      first_A	= 0;
+      upper_A	= 20;
+      first_B	= 1;
+      upper_B	= 20;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_subtraction(IA, IB, I), j = 0; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("j=%d, I key %d, IA key %d, IB key %d", j, K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d\n",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 }
 
 static void
