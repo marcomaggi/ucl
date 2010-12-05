@@ -261,7 +261,7 @@ fill_multimap (ucl_map_t M, int size, int first, int step, int times)
  ** Printing functions.
  ** ----------------------------------------------------------------- */
 
-static void
+static void UCL_UNUSED
 print_inorder (ucl_map_t M)
 {
   ucl_iterator_t	I;
@@ -274,7 +274,7 @@ print_inorder (ucl_map_t M)
     fprintf(stderr, "i=%d %d\n", i, K.t_int);
   }
 }
-static void
+static void UCL_UNUSED
 print_preorder_links (ucl_map_t M, const char * message, ...)
 {
   va_list		ap;
@@ -2126,9 +2126,9 @@ test_set_iteration_complintersect (void)
   link_t		L;
   ucl_value_t		K;
   int			key_A, key_B;
-  int			j, first_A, first_B, upper_A, upper_B, step=1, upper;
+  int			j, first_A, first_B, upper_A, upper_B, step=1, results_count;
 
-  mcl_test_begin("map-6.3.1", "set iteration, complementary intersection, two series") {
+  mcl_test_begin("map-6.3.1", "set iteration, complementary intersection, first overlaps second") {
 #undef SIZE
 #define SIZE	6
     static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 10 };
@@ -2140,7 +2140,7 @@ test_set_iteration_complintersect (void)
       upper_A	= 10;
       first_B	= 5;
       upper_B	= 11;
-      upper	= SIZE;
+      results_count = SIZE;
       fill(A, first_A, upper_A, step);
       fill(B, first_B, upper_B, step);
       ucl_map_iterator_inorder(A, IA);
@@ -2152,28 +2152,324 @@ test_set_iteration_complintersect (void)
 	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
 	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
 	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
-	if (j < upper)
+	if (j < results_count)
 	  mcl_test_error_if_false(K.t_int == expected_results[j],
 				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
 	else
-	  mcl_test_error("index value out of bounds, expected upper %d got %d", SIZE, j);
+	  mcl_test_error("index value out of bounds, expected results count %d got %d",
+			 results_count, j);
       }
-      mcl_test_error_if_false(j == upper, "wrong upper value, expected %d got %d", upper, j);
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
     }
     clean(A);
     clean(B);
   }
   mcl_test_end();
 
+  mcl_test_begin("map-6.3.2", "set iteration, complementary intersection, second overlaps second") {
+#undef SIZE
+#define SIZE	6
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 10 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 5;
+      upper_A	= 11;
+      first_B	= 0;
+      upper_B	= 10;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 
+  mcl_test_begin("map-6.3.3", "set iteration, complementary intersection, full overlapping") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= SIZE;
+      first_B	= 0;
+      upper_B	= SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_complintersect(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iterator in full overlapping");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.4", "set iteration, complementary intersection, empty first map") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_B	= 0;
+      upper_B	= SIZE;
+      results_count = SIZE;
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == j,
+				  "wrong key value, expected %d got %d", j, K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d", results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results_count value, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.5", "set iteration, complementary intersection, empty second map") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= SIZE;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == j,
+				  "wrong key value, expected %d got %d", j, K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results_count %d got %d", results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.6", "set iteration, complementary intersection, empty maps") {
+#undef SIZE
+#define SIZE	10
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      ucl_map_iterator_complintersect(IA, IB, I);
+      mcl_test_error_if_true(ucl_iterator_more(I), "expected empty iteration for empty maps");
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.7", "set iteration, complementary intersection, first map included") {
+#undef SIZE
+#define SIZE	10
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 15, 16, 17, 18, 19 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 5;
+      upper_A	= 15;
+      first_B	= 0;
+      upper_B	= 20;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_B; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d", results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.8", "set iteration, complementary intersection, second map included") {
+#undef SIZE
+#define SIZE	10
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4, 15, 16, 17, 18, 19 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 20;
+      first_B	= 5;
+      upper_B	= 15;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d", results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+
+  mcl_test_begin("map-6.3.9", "set iteration, complementary intersection, intermixed values") {
+#undef SIZE
+#define SIZE	20
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 2;
+      first_A	= 0;
+      upper_A	= 20;
+      first_B	= 1;
+      upper_B	= 20;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_complintersect(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == j,
+				  "wrong key value, expected %d got %d", j, K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d", results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
+}
+
+static void
+test_set_iteration_subtraction (void)
+{
+  ucl_iterator_t	I, IA, IB;
+  ucl_map_t		A, B;
+  link_t		L;
+  ucl_value_t		K;
+  int			key_A, key_B;
+  int			j, first_A, first_B, upper_A, upper_B, step=1, results_count;
+
+  mcl_test_begin("map-6.4.1", "set iteration, subtraction, first map overlaps second") {
+#undef SIZE
+#define SIZE	5
+    static const int expected_results[SIZE] = { 0, 1, 2, 3, 4 };
+    ucl_map_initialise(A, 0, ucl_compare_int, getkey);
+    ucl_map_initialise(B, 0, ucl_compare_int, getkey);
+    {
+      step	= 1;
+      first_A	= 0;
+      upper_A	= 10;
+      first_B	= 5;
+      upper_B	= 11;
+      results_count = SIZE;
+      fill(A, first_A, upper_A, step);
+      fill(B, first_B, upper_B, step);
+      ucl_map_iterator_inorder(A, IA);
+      ucl_map_iterator_inorder(B, IB);
+      for (ucl_map_iterator_subtraction(IA, IB, I), j = first_A; ucl_iterator_more(I);
+	   ucl_iterator_next(I), ++j) {
+	L = ucl_iterator_ptr(I);
+	K = getkey.func(getkey.data, L);
+	key_A = ucl_iterator_more(IA)? getkey.func(getkey.data,ucl_iterator_ptr(IA)).t_int : -1;
+	key_B = ucl_iterator_more(IB)? getkey.func(getkey.data,ucl_iterator_ptr(IB)).t_int : -1;
+	mcl_debug("I key %d, IA key %d, IB key %d", K.t_int, key_A, key_B);
+	if (j < results_count)
+	  mcl_test_error_if_false(K.t_int == expected_results[j],
+				  "wrong key value, expected %d got %d", expected_results[j], K.t_int);
+	else
+	  mcl_test_error("index value out of bounds, expected results count %d got %d",
+			 results_count, j);
+      }
+      mcl_test_error_if_false(j == results_count,
+			      "wrong results count, expected %d got %d", results_count, j);
+    }
+    clean(A);
+    clean(B);
+  }
+  mcl_test_end();
 #if 0
-  ucl_map_constructor(map1, 0, compar);
-  ucl_map_constructor(map2, 0, compar);
-
-  size = ucl_map_size(map1);  assert(size == 0);
-  size = ucl_map_size(map2);  assert(size == 0);
-
-
   /* two series */
 
   fill_map(map1,  0, 10); /* from 0 to 9 */
@@ -2183,70 +2479,30 @@ test_set_iteration_complintersect (void)
   ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator))
     {
       link_p	= ucl_iterator_ptr(iterator);
       key	= ucl_map_getkey(link_p);
-      assert(key.integer == test1[i]);
+      assert(key.integer == i);
       ++i;
     }
-  assert(key.integer == 10);
-  assert(i == 6);
+  assert(i == 5);
 
   clean_map(map1);
   clean_map(map2);
 
   /* two series */
 
-  fill_map(map1, 5, 11);
+  fill_map(map1, 5, 20);
   fill_map(map2, 0, 10);
 
   ucl_map_iterator_inorder(map1, iter1);
   ucl_map_iterator_inorder(map2, iter2);
 
-  i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
-    {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == test1[i]);
-      ++i;
-    }
-  assert(key.integer == 10);
-  assert(i == 6);
-
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* full overlapping */
-
-  fill_map(map1, 0, 30);
-  fill_map(map2, 0, 30);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  ucl_map_iterator_complintersect(iter1, iter2, iterator);
-  assert(ucl_iterator_more(iterator) == 0);
-
-  clean_map(map1);
-  clean_map(map2);
-
-
-  /* empty map 1 */
-
-  fill_map(map2, 0, 20);
-
-  ucl_map_iterator_inorder(map1, iter1);
-  ucl_map_iterator_inorder(map2, iter2);
-
-  i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  i = 10;
+  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator))
     {
@@ -2261,6 +2517,35 @@ test_set_iteration_complintersect (void)
   clean_map(map2);
 
 
+  /* full overlapping */
+
+  fill_map(map1, 0, 30);
+  fill_map(map2, 0, 30);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  ucl_map_iterator_subtraction(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
+  /* empty map 1 */
+
+  fill_map(map2, 0, 20);
+
+  ucl_map_iterator_inorder(map1, iter1);
+  ucl_map_iterator_inorder(map2, iter2);
+
+  ucl_map_iterator_subtraction(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
+
+  clean_map(map1);
+  clean_map(map2);
+
+
   /* empty map 2 */
 
   fill_map(map1, 0, 20);
@@ -2269,7 +2554,7 @@ test_set_iteration_complintersect (void)
   ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator))
     {
@@ -2290,7 +2575,7 @@ test_set_iteration_complintersect (void)
   ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  ucl_map_iterator_subtraction(iter1, iter2, iterator);
   assert(ucl_iterator_more(iterator) == 0);
 
 
@@ -2302,22 +2587,8 @@ test_set_iteration_complintersect (void)
   ucl_map_iterator_inorder(map1, iter1);
   ucl_map_iterator_inorder(map2, iter2);
 
-  i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
-       ucl_iterator_more(iterator);
-       ucl_iterator_next(iterator))
-    {
-      link_p	= ucl_iterator_ptr(iterator);
-      key	= ucl_map_getkey(link_p);
-      assert(key.integer == i);
-
-      ++i;
-      if (i == 10)
-	{
-	  i = 20;
-	}
-    }
-  assert(i == 30);
+  ucl_map_iterator_subtraction(iter1, iter2, iterator);
+  assert(ucl_iterator_more(iterator) == 0);
 
   clean_map(map1);
   clean_map(map2);
@@ -2325,14 +2596,14 @@ test_set_iteration_complintersect (void)
 
   /* inclusion 2 */
 
-  fill_map(map1, 0,  30);
-  fill_map(map2, 10, 20);
+  fill_map(map1, 0,  30); /*  0 -> 29 */
+  fill_map(map2, 10, 20); /* 10 -> 19 */
 
   ucl_map_iterator_inorder(map1, iter1);
   ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator))
     {
@@ -2383,7 +2654,7 @@ test_set_iteration_complintersect (void)
   ucl_map_iterator_inorder(map2, iter2);
 
   i = 0;
-  for (ucl_map_iterator_complintersect(iter1, iter2, iterator);
+  for (ucl_map_iterator_subtraction(iter1, iter2, iterator);
        ucl_iterator_more(iterator);
        ucl_iterator_next(iterator))
     {
@@ -2391,7 +2662,7 @@ test_set_iteration_complintersect (void)
       key	= ucl_map_getkey(link_p);
 
       assert(key.integer == i);
-      ++i;
+      i += 2;
     }
 
   assert(i == 30);
@@ -2622,6 +2893,7 @@ main (void)
   test_set_iteration_intersection ();
   test_set_iteration_union ();
   test_set_iteration_complintersect ();
+  test_set_iteration_subtraction ();
 
   mcl_test_subtitle("miscellaneous functions");
   test_first_last_next_prev ();
