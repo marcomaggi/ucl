@@ -35,7 +35,7 @@ ucl_container_run_tests	=	\
 	run-test-hash		run-test-tree		\
 	run-test-vector		run-test-heap		\
 	run-test-list		run-test-graph		\
-	run-test-map
+	run-test-map		run-test-bst
 
 .PHONY: $(ucl_container_run_tests)
 
@@ -66,6 +66,9 @@ run-test-graph:
 run-test-map:
 	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-map
 
+run-test-bst:
+	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-bst
+
 ## --------------------------------------------------------------------
 
 ucl_container_tests	=	\
@@ -73,7 +76,7 @@ ucl_container_tests	=	\
 	test-hash		test-tree		\
 	test-vector		test-heap		\
 	test-list		test-graph		\
-	test-map
+	test-map		test-bst
 
 .PHONY: $(ucl_container_tests)
 
@@ -112,6 +115,10 @@ test-graph: ucl_shlib-all
 test-map: ucl_shlib-all
 	$(MAKE) tests PATTERNS=test-map.c
 	$(MAKE) run-test-map
+
+test-bst: ucl_shlib-all
+	$(MAKE) tests PATTERNS=test-bst.c
+	$(MAKE) run-test-bst
 
 #page
 ## ---------------------------------------------------------------------

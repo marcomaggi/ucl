@@ -253,6 +253,7 @@ The binary tree container
 * btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
+* btree bst::                   Routines for raw binary search trees.
 * btree avl::                   Routines for @avl{} trees.
 
 Iterations in a btree hierarchy
@@ -1630,6 +1631,7 @@ K = getkey.func(getkey.data, L);
 * btree swap::                  Swapping nodes.
 * btree visitors::              Finding nodes.
 * btree iteration::             Iterations in a btree hierarchy.
+* btree bst::                   Routines for raw binary search trees.
 * btree avl::                   Routines for @avl{} trees.
 @end menu
 
@@ -2668,6 +2670,40 @@ for (cur = get_the_top_node();
     do_something_with(cur);
   @}
 @end example
+
+@c page
+@node btree bst
+@subsection Routines for raw binary search trees
+
+
+The following routines can be used in the implementation of raw binary
+search trees (@acronym{BST}); they are included in @ucl{} only for
+completeness, because we should use balanced trees not raw ones.
+
+All the following functions accept @code{void *} values as arguments and
+return values; internally these pointers are cast to @code{ucl_node_t}.
+
+
+@deftypefun void ucl_bst_insert (void * @var{top}, void * @var{new}, ucl_comparison_t @var{keycmp}, ucl_node_getkey_t @var{getkey})
+Insert the node referenced by @var{new} in the binary search tree whose
+root is referenced by @var{top}; use @var{keycmp} to compare keys and
+@var{getkey} to extract a key from its node.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_bst_find (void * @var{top}, ucl_value_t @var{K}, ucl_comparison_t @var{keycmp}, ucl_node_getkey_t @var{getkey})
+Find the node having key referenced by @var{K} in the binary search tree
+having root referenced by @var{top}; use @var{keycmp} to compare keys
+and @var{getkey} to extract a key from its node.  Return a pointer to
+the first found node, or @cnull{} if none was found.
+@end deftypefun
+
+
+@deftypefun {void *} ucl_bst_delete (void * @var{root}, void * @var{cur})
+Remove the node referenced by @var{cur} from the binary search tree
+whose root is @var{root}.  Return the root node after the deletion,
+which may be @var{root} or not.
+@end deftypefun
 
 @c page
 @node btree avl

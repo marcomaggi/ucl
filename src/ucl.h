@@ -670,6 +670,13 @@ typedef struct ucl_embedded_node_tag_t {
 typedef ucl_embedded_node_tag_t *	ucl_embedded_node_t;
 /* END: RESERVED FOR INTERNAL USAGE */
 
+typedef ucl_value_t ucl_node_getkey_fun_t (ucl_value_t context, void * node);
+
+typedef struct ucl_node_getkey_t {
+  ucl_value_t			data;
+  ucl_node_getkey_fun_t *	func;
+} ucl_node_getkey_t;
+
 /* ------------------------------------------------------------ */
 
 typedef struct ucl_heap_tag_t {
@@ -756,6 +763,10 @@ extern void * ucl_btree_avl_rot_right		(void * old_dad);
 extern void * ucl_btree_avl_rot_right_left	(void * old_dad);
 extern size_t ucl_btree_avl_depth		(void * N_);
 extern ucl_bool_t ucl_btree_avl_is_balanced	(void * N_);
+
+extern void ucl_bst_insert  (void * root, void * N, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
+extern void * ucl_bst_find  (void * N, ucl_value_t K, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
+extern void* ucl_bst_delete (void * root, void * N);
 
 /* ------------------------------------------------------------ */
 
@@ -1414,13 +1425,6 @@ ucl_heap_size (const ucl_heap_t H)
 /** ------------------------------------------------------------
  ** Map container.
  ** ----------------------------------------------------------*/
-
-typedef ucl_value_t ucl_node_getkey_fun_t (ucl_value_t context, void * node);
-
-typedef struct ucl_node_getkey_t {
-  ucl_value_t			data;
-  ucl_node_getkey_fun_t *	func;
-} ucl_node_getkey_t;
 
 typedef struct ucl_map_tag_t {
   size_t		size;
