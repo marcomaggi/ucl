@@ -27,7 +27,7 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		1
+#define MCL_DEBUGGING		0
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
@@ -176,6 +176,24 @@ validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_
   mcl_test_error_if_false(expected_status == STATUS(L),
 			  "invalid status of node %d, expected %s got %s",
 			  j, STATUS_STRING(expected_status), STATUS_STRING(STATUS(L)));
+}
+static void
+checked_insertion_m (ucl_map_t M, int j, link_t * L)
+/* Insert a new node with key  "j" and validate the existence of the new
+   node  by  finding  it.   Store  the  node  pointer  in  the  location
+   referenced by "L". */
+{
+  size_t		old_size=ucl_map_size(M);
+  ucl_iterator_t	I;
+  ucl_value_t		K = { .t_int = j };
+  *L = alloc_link(j);
+  ucl_map_insert(M, *L);
+  mcl_test_error_if_false(1+old_size == ucl_map_size(M), "invalid size after insertion of %d", j);
+  for (ucl_map_lower_bound(M, I, K); ucl_iterator_more(I); ucl_iterator_next(I)) {
+    if (*L == ucl_iterator_ptr(I))
+      return;
+  }
+  mcl_test_error("unable to find inserted link with key %d", j);
 }
 static void
 validate_links_m (int key, void * cur, void * dad, void * son, void * bro,
@@ -983,21 +1001,22 @@ test_multimap_insert_and_find (void)
        */
       j=10;
       k=5;
-      mcl_debug("inserting %d", k);
-      checked_insertion(M, k, &L[j]);
+      mcl_debug("inserting %d in slot %d", k, j);
+      checked_insertion_m(M, k, &L[j]);
+      mcl_debug("inserted %d in slot %d, %p", k, j, L[j]);
+      /*               key  slot   dad    son    bro   status */
       validate_links_m( 5,  L[5],  NULL,  L[3],  L[7], UCL_EQUAL_DEPTH);
-#if 0
-      validate_links_m(3, L[3], NULL, L[1], L[7], UCL_BRO_DEEPER);
-      validate_links_m(1, L[1], L[3], L[0], L[2], UCL_EQUAL_DEPTH);
-      validate_links_m(7, L[7], L[3], L[5], L[8], UCL_EQUAL_DEPTH);
-      validate_links_m(0, L[0], L[1], NULL, NULL, UCL_EQUAL_DEPTH);
-      validate_links_m(2, L[2], L[1], NULL, NULL, UCL_EQUAL_DEPTH);
-      validate_links_m(4, L[4], L[5], NULL, NULL, UCL_EQUAL_DEPTH);
-      validate_links_m(6, L[6], L[5], L[10], NULL, UCL_SON_DEEPER);
-      validate_links_m(8, L[8], L[7], NULL, L[9], UCL_BRO_DEEPER);
-      validate_links_m(9, L[9], L[8], NULL, NULL, UCL_EQUAL_DEPTH);
-      validate_links_m(5, L[10], L[6], NULL, NULL, UCL_EQUAL_DEPTH);
-#endif
+      validate_links_m( 3,  L[3],  L[5],  L[1],  L[4], UCL_SON_DEEPER);
+      validate_links_m( 7,  L[7],  L[5],  L[6],  L[8], UCL_EQUAL_DEPTH);
+      validate_links_m( 1,  L[1],  L[3],  L[0],  L[2], UCL_EQUAL_DEPTH);
+      validate_links_m( 4,  L[4],  L[3],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links_m( 6,  L[6],  L[7], L[10],  NULL, UCL_SON_DEEPER);
+      validate_links_m( 8,  L[8],  L[7],  NULL,  L[9], UCL_BRO_DEEPER);
+      validate_links_m( 0,  L[0],  L[1],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links_m( 2,  L[2],  L[1],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      mcl_debug("key %d, %p %p", L[10]->key, L[10], L[5]);
+      validate_links_m( 5, L[10],  L[6],  NULL,  NULL, UCL_EQUAL_DEPTH);
+      validate_links_m( 9,  L[9],  L[8],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d in slot", k, j);
 

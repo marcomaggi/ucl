@@ -51,6 +51,8 @@
 #endif
 #include "internal.h"
 
+#define IS_MULTIMAP(M)          (UCL_ALLOW_MULTIPLE_OBJECTS & M->flags)
+
 #define AVL_STATUS(L)		(((ucl_node_t)L)->meta.avl_status)
 #define STATUS_STRING(N)	((UCL_EQUAL_DEPTH==(N))? "equal-depth": \
 				 ((UCL_SON_DEEPER==(N))? "son-deeper":	\
@@ -875,30 +877,38 @@ ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t K)
   if (! M->size)
     I->iterator = 0;
   else {
-    I->iterator	= ucl_map_find(M, K);
     I->next	= map_lowerbound_iterator_next;
+    I->iterator	= ucl_map_find(M, K);
+    if (I->iterator && IS_MULTIMAP(M)) {
+      /* When the container is a multimap: the first node found with key
+         "K" may not be the leftmost, so we need to step backwards until
+         we are sure to have found the leftmost. */
+      for (ucl_node_t N = ucl_btree_step_inorder_backward(I->iterator);
+           N && 0 == comparison_key_node(M, K, N);
+           N = ucl_btree_step_inorder_backward(N))
+        I->iterator = N;
+    }
   }
 }
 void
 ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t K)
 {
-  ucl_node_t 	L;
   assert(M);
   assert(I);
   I->container = M;
   if (0 == M->size)
     I->iterator = NULL;
   else {
-    L = ucl_map_find_or_next(M, K);
-    if (NULL == L) {
-      I->iterator = L;
-      return;
-    } else {
-      if (0 == comparison_key_node(M, K, L)) {
-	I->iterator	= L;
-	I->next		= map_upperbound_iterator_next;
-      } else
-	I->iterator = NULL;
+    I->next	= map_upperbound_iterator_next;
+    I->iterator = ucl_map_find(M, K);
+    if (I->iterator && IS_MULTIMAP(M)) {
+      /* When the container is a multimap: the first node found with key
+         "K" may not be the rightmost, so we need to step forwards until
+         we are sure to have found the rightmost. */
+      for (ucl_node_t N = ucl_btree_step_inorder(I->iterator);
+           N && 0 == comparison_key_node(M, K, N);
+           N = ucl_btree_step_inorder(N))
+        I->iterator = N;
     }
   }
 }
@@ -931,34 +941,26 @@ map_levelorder_iterator_next (ucl_iterator_t I)
   I->iterator = ucl_btree_step_levelorder(I->iterator);
 }
 static void
-map_upperbound_iterator_next (ucl_iterator_t I)
+map_lowerbound_iterator_next (ucl_iterator_t I)
 {
-  const ucl_map_tag_t *	M;
-  ucl_value_t		K;
-  ucl_node_t		L;
   assert(I->iterator);
-  M = I->container;
-  L = I->iterator;
-  K = node_key(M, L);
-  L = ucl_btree_step_inorder_backward(L);
+  ucl_node_t	L = I->iterator;
+  ucl_value_t	K = node_key(I->container, L);
+  L = ucl_btree_step_inorder(L);
   if (L)
-    I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;
+    I->iterator = (0 == comparison_key_node(I->container, K, L))? L : NULL;
   else
     I->iterator = L;
 }
 static void
-map_lowerbound_iterator_next (ucl_iterator_t I)
+map_upperbound_iterator_next (ucl_iterator_t I)
 {
-  const ucl_map_tag_t *	M;
-  ucl_value_t		K;
-  ucl_node_t		L;
   assert(I->iterator);
-  M = I->container;
-  L = I->iterator;
-  K = node_key(M, L);
-  L = ucl_btree_step_inorder(L);
+  ucl_node_t	L = I->iterator;
+  ucl_value_t	K = node_key(I->container, L);
+  L = ucl_btree_step_inorder_backward(L);
   if (L)
-    I->iterator = (0 == comparison_key_node(M, K, L))? L : NULL;
+    I->iterator = (0 == comparison_key_node(I->container, K, L))? L : NULL;
   else
     I->iterator = L;
 }
