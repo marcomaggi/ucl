@@ -1,11 +1,10 @@
 * Tree
 
-** Do the subtree binary tree levelorder iterator, adding a root
+** Do the subtree binary tree breadth first iterator, adding a root
    argument to the iterator function that stops the path when going
    upward.
 
-** Write the levelorder iterator for the tree container? Also known as
-   breadth first.
+** Write the breadth first iterator for the tree container?
 
 ** Write the "string" iterator for the tree. An iterator whose value is
    the string of nodes from the root to the currently selected one.

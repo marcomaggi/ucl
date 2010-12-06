@@ -260,7 +260,7 @@ Iterations in a btree hierarchy
 * btree inorder iteration::     Inorder iteration.
 * btree preorder iteration::    Preorder iteration.
 * btree postorder iteration::   Postorder iteration.
-* btree level iteration::       Level order iteration.
+* btree breadth first::         Breadth first iteration.
 
 The tree structure
 
@@ -2113,7 +2113,7 @@ has @cnull{} as dad.
 * btree inorder iteration::     Inorder iteration.
 * btree preorder iteration::    Preorder iteration.
 * btree postorder iteration::   Postorder iteration.
-* btree level iteration::       Level order iteration.
+* btree breadth first::         Breadth first iteration.
 @end menu
 
 @c page
@@ -2126,11 +2126,11 @@ rightmost.  Backward inorder iteration: visit all the nodes from the
 rightmost to the leftmost.  Example: given the tree:
 
 @example
-      5-------10----12
-      |        |     |
-      1--3--4  7--9 11
-         |     |  |
-         2     6  8
+5-------10----12
+|        |     |
+1--3--4  7--9 11
+   |     |  |
+   2     6  8
 @end example
 
 @noindent
@@ -2337,11 +2337,11 @@ Preorder iteration: visit the current node then the son then the
 brother.  Example:
 
 @example
-      5-------10----12
-      |        |     |
-      1--3--4  7--9 11
-         |     |  |
-         2     6  8
+5-------10----12
+|        |     |
+1--3--4  7--9 11
+   |     |  |
+   2     6  8
 @end example
 
 @noindent
@@ -2455,11 +2455,11 @@ Postorder iteration: visit the son, then the brother, then the parent
 node.  Example:
 
 @example
-      5-------10----12
-      |        |     |
-      1--3--4  7--9 11
-         |     |  |
-         2     6  8
+5-------10----12
+|        |     |
+1--3--4  7--9 11
+   |     |  |
+   2     6  8
 @end example
 
 @noindent
@@ -2567,18 +2567,18 @@ do_something_with(cur);
 @code{cur} can't be null in the loop.
 
 @c page
-@node btree level iteration
-@subsubsection Level order iteration
+@node btree breadth first
+@subsubsection Breadth first iteration
 
 
-Level order iteration: visit the tree level by level.  Example:
+Breadth first iteration: visit the tree level by level.  Example:
 
 @example
-      5-------10----12
-      |        |     |
-      1--3--4  7--9 11
-         |     |  |
-         2     6  8
+5-------10----12
+|        |     |
+1--3--4  7--9 11
+   |     |  |
+   2     6  8
 @end example
 
 @noindent
@@ -2602,7 +2602,7 @@ is the root node itself.
 
 @deftypefun {void *} ucl_btree_step_levelorder (void * @var{self})
 @deftypefunx {void *} ucl_btree_step_levelorder_backward (void * @var{self})
-Advance a levelorder iteration.  Given a node in the three: perform a
+Advance a breadth first iteration.  Given a node in the three: perform a
 single step and return a pointer to the next node, or @cnull{} if the
 iteration is over.
 @end deftypefun
@@ -5404,7 +5404,7 @@ the keys and values.
 @deftypefunx void ucl_map_iterator_preorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
 @deftypefunx void ucl_map_iterator_postorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
 @deftypefunx void ucl_map_iterator_levelorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
-Initalise an inorder, preorder, postorder or levelorder iteration.
+Initalise an inorder, preorder, postorder or breadth first iteration.
 @ref{btree iteration}, for details.
 @end deftypefun
 
