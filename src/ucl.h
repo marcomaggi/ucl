@@ -761,8 +761,10 @@ extern void * ucl_btree_avl_rot_left		(void * old_dad);
 extern void * ucl_btree_avl_rot_left_right	(void * old_dad);
 extern void * ucl_btree_avl_rot_right		(void * old_dad);
 extern void * ucl_btree_avl_rot_right_left	(void * old_dad);
-extern size_t ucl_btree_avl_depth		(void * N_);
+extern int    ucl_btree_avl_depth		(void * N_);
+extern int    ucl_btree_avl_factor		(void * N_);
 extern ucl_bool_t ucl_btree_avl_is_balanced	(void * N_);
+extern ucl_bool_t ucl_btree_avl_is_correct	(void * N_);
 
 extern void ucl_bst_insert  (void * root, void * N, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
 extern void * ucl_bst_find  (void * N, ucl_value_t K, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);

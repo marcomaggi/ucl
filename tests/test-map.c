@@ -27,7 +27,7 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		0
+#define MCL_DEBUGGING		1
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
@@ -216,6 +216,25 @@ validate_links_m (int key, void * cur, void * dad, void * son, void * bro,
   mcl_test_error_if_false(expected_status == STATUS(L),
 			  "invalid status of node %d, expected %s got %s",
 			  key, STATUS_STRING(expected_status), STATUS_STRING(STATUS(L)));
+}
+static ucl_bool_t
+is_balanced (ucl_map_t M, void * root)
+{
+  ucl_node_t	N = root;
+  if (!N) return true;
+  int	son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
+  int	bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
+  int	factor    = bro_depth - son_depth;
+#if 0
+  mcl_debug("key %d (%p), %s, f=%d, bro depth %d, son depth %d\n",
+	    getkey.func(getkey.data, N), N, STATUS_STRING(STATUS(N)), factor, bro_depth, son_depth);
+#endif
+  if ((-1 <= factor) && (factor <= +1))
+    return
+      ((N->son)? is_balanced(M, N->son) : true) &&
+      ((N->bro)? is_balanced(M, N->bro) : true);
+  else
+    return false;
 }
 
 /** --------------------------------------------------------------------
@@ -427,6 +446,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, j, NULL, NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       j=1;
       mcl_debug("inserting %d", j);
@@ -435,6 +456,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 1, L[0], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 2 (bro rotation raising 1):
        *
@@ -450,6 +473,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 2, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 3:
        *
@@ -466,6 +491,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 3, L[2], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 4 (bro rotation raising 3):
        *
@@ -483,6 +510,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 4, L[3], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 5 (bro rotation raising 3):
        *
@@ -503,6 +532,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 6 (bro rotation raising 5):
        *
@@ -546,6 +577,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 7, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 8 (bro rotation raising 7):
        *
@@ -569,6 +602,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 8, L[7], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 9 (bro rotation raising 7):
        *
@@ -593,6 +628,8 @@ test_checked_inorder_insertion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       ++j;
       mcl_test_error_if_false((size_t)j == ucl_map_size(M),
@@ -632,6 +669,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, j, NULL, NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       j=8;
       mcl_debug("inserting %d", j);
@@ -640,6 +679,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 8, L[9], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 7 (son rotation raising 1):
        *
@@ -657,6 +698,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 6:
        *
@@ -675,6 +718,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 6, L[7], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 5 (son rotation raising 6):
        *
@@ -696,6 +741,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 7, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 4 (son rotation raising 6):
        *
@@ -718,6 +765,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 3 (son rotation raising 4):
        *
@@ -741,6 +790,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 2:
        *
@@ -765,6 +816,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 2, L[3], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 1 (son rotation raising 2):
        *
@@ -792,6 +845,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 3, L[2], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 0 (son rotation raising 2):
        *
@@ -820,6 +875,8 @@ test_checked_inverse_inorder_insertion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       mcl_test_error_if_false(10 == ucl_map_size(M),
 			      "invalid size after insertion, expected %d got %d",
@@ -870,6 +927,8 @@ test_checked_insertion_random (void)
       validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 12:
        *
@@ -891,6 +950,8 @@ test_checked_insertion_random (void)
       validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 13 (son-bro rotation raising 13):
        *
@@ -914,6 +975,8 @@ test_checked_insertion_random (void)
       validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* add 11 (son-bro rotation raising 12):
        *
@@ -939,6 +1002,8 @@ test_checked_insertion_random (void)
       validate_links(M, 40, L[30],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       for (j=0; j<SIZE; ++j)
 	if (L[j]) free_link(L[j]);
@@ -986,10 +1051,10 @@ test_multimap_insert_and_find (void)
       validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
       validate_links(M, 8, L[7], NULL, L[9], UCL_BRO_DEEPER);
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
-      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
-			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(is_balanced(M, M->root), "unbalanced tree after insertion");
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root), "incorrect tree after insertion");
 
-      /* add another 5 (bro/son rotation raising 5 the upper 5):
+      /* add another 5 (bro/son rotation raising the upper 5):
        *
        *   3b------7=--8b--9=      3b------7=--8b--9=      5=------7=--8b--9=
        *   |       |               |       |               |       |
@@ -1017,7 +1082,7 @@ test_multimap_insert_and_find (void)
       mcl_debug("key %d, %p %p", L[10]->key, L[10], L[5]);
       validate_links_m( 5, L[10],  L[6],  NULL,  NULL, UCL_EQUAL_DEPTH);
       validate_links_m( 9,  L[9],  L[8],  NULL,  NULL, UCL_EQUAL_DEPTH);
-      mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
+      mcl_test_error_if_false(is_balanced(M, M->root),
 			      "unbalanced tree after insertion of %d in slot", k, j);
 
       mcl_test_error_if_false((size_t)1+j == ucl_map_size(M),
@@ -1064,6 +1129,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after inorder insertion of nodes");
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after inorder insertion of nodes");
 
       /* delete 0:
        *
@@ -1086,14 +1153,16 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 1:
        *
-       *   3b------7=--8b--9=      7s--8b--9=
-       *   |       |               |
-       *   1b--2=  5=--6=      =>  3b--5=--6=
-       *           |               |   |
-       *           4=              2=  4=
+       *   3b------7=--8b--9=      3b--7=--8b--9=      7s--8b--9=
+       *   |       |               |   |               |
+       *   1b--2=  5=--6=      =>  2=  5=--6=      =>  3b--5=--6=
+       *           |                   |               |   |
+       *           4=                  4=              2=  4=
        */
       j=1;
       checked_deletion(M, j, &L[j]);
@@ -1107,6 +1176,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 6, L[5], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 2:
        *
@@ -1127,6 +1198,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 4, L[3], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 3:
        *
@@ -1146,6 +1219,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 4:
        *
@@ -1164,6 +1239,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 5:
        *
@@ -1180,6 +1257,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 6:
        *
@@ -1195,6 +1274,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 7:
        *
@@ -1209,6 +1290,8 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 8:
        *
@@ -1220,12 +1303,16 @@ test_inorder_insertion_and_deletion (void)
       validate_links(M, 9, NULL, NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
 
       /* delete 9 */
       j=9;
       checked_deletion(M, j, &L[j]);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after deletion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after deletion of %d", j);
       mcl_test_error_if_false(0 == ucl_map_size(M),
 			      "expected empty map after removing all the nodes, got size %u",
 			      ucl_map_size(M));
@@ -1273,6 +1360,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 9, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 9:
        *
@@ -1297,6 +1386,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 7, L[8], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 8:
        *
@@ -1320,6 +1411,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 7:
        *
@@ -1340,6 +1433,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 5, L[6], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 6:
        *
@@ -1359,6 +1454,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 5, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 5:
        *
@@ -1377,6 +1474,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 3, L[4], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 4:
        *
@@ -1394,6 +1493,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 3:
        *
@@ -1410,6 +1511,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 2, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 2:
        *
@@ -1423,6 +1526,8 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 0, L[1], NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 1:
        *
@@ -1435,12 +1540,16 @@ test_inverse_inorder_insertion_and_deletion (void)
       validate_links(M, 0, NULL, NULL, NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
 
       /* delete 0 */
       j=0;
       checked_deletion(M, j, &L[j]);
       mcl_test_error_if_false(ucl_btree_avl_is_balanced(M->root),
 			      "unbalanced tree after insertion of %d", j);
+      mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			      "incorrect tree after insertion of %d", j);
       mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after deletion of all nodes");
     }
   }

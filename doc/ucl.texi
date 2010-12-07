@@ -2724,29 +2724,121 @@ a bro subtree is always at most @math{1}; so we can say that the @avl{}
 status is the bro's subtree depth minus the son's subtree depth.
 
 
-@deftypefun {void *} ucl_btree_avl_rot_left (void * @var{old_cur})
-Perform a @dfn{left rotation} (or @dfn{son rotation}) which balances a
-left--left--higher subtree; return a pointer to the node that has
-replaced @var{old_cur} in the tree.  Example:
+@deftypefun {void *} ucl_btree_avl_rot_left (void * @var{cur})
+Perform a @dfn{clockwise rotation} (or @dfn{son rotation} or @dfn{left
+rotation}) which balances a son deeper subtree:
 
 @example
-          (top)                      (top)
-            |                          |
-           11 (old_cur)                9 (new_cur)
-           / \                    -----+-----
-(new_cur) 9   12                 7           11 (old_cur)
-         / \             =>     / \         /  \
-        7   10 (bro)           6   8      10   12
-       / \                              (bro)
+   cur      son
+  /     =>    \
+son            cur
+@end example
+
+@noindent
+return a pointer to the node that has replaced @var{cur} in the tree,
+which is always the son of @var{cur}.
+
+This function must be called only when:
+
+@itemize
+@item
+both @samp{cur} and @samp{son} are son deeper;
+
+@item
+@samp{cur} is son deeper and @samp{son} is equal depth;
+@end itemize
+
+@noindent
+these are the useful cases and also the cases for which computing the
+@avl{} statuses after the rotation is not costly.
+
+Example:
+
+@example
+          (top)                       (top)
+            |                           |
+           11 (old_cur)                 9 (new_cur)
+           / \                     -----+-----
+(new_cur) 9   12            (son) 7           11 (old_cur)
+         / \             =>      / \         /  \
+  (son) 7   10 (bro)            6   8      10   12
+       / \                               (bro)
       6   8
 @end example
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_avl_rot_left_right (void * @var{old_cur})
+@deftypefun {void *} ucl_btree_avl_rot_right (void * @var{cur})
+Perform a @dfn{counterclockwise rotation} (or @dfn{right rotation} or
+@dfn{bro rotation}) which balances a right--right--higher subtree:
+
+@example
+cur               bro
+   \             /   \
+   bro     =>  cur   bro_bro
+      \
+  bro_bro
+@end example
+
+@noindent
+return a pointer to the node that has replaced @var{cur} in the
+tree, which is always the bro of @var{cur}.
+
+This function must be called only when both @var{cur} and its bro
+are bro higher (this is the really useful case and it is also the case
+for which computing the @avl{} statuses after the rotation is not
+costly).
+
+Example:
+
+@example
+    (top)                              (top)
+      |                                  |
+      7 (old_cur)                        9 (new_cur)
+     / \                            -----+-----
+    6   9 (new_cur)   => (old_cur) 7           11 (bro)
+       / \                        / \         /  \
+(son) 8   11 (bro)               6   8      10    12
+         /  \                      (son)
+       10    12
+@end example
+@end deftypefun
+
+
+@deftypefun {void *} ucl_btree_avl_rot_left_right (void * @var{cur})
 Perform a @dfn{left/right rotation} (or @dfn{son/bro rotation}) which
-balances a left--right--higher subtree; return a pointer to the node
-that has replaced @var{old_cur} in the tree.  Example:
+balances a left--right--higher subtree:
+
+@example
+   cur           son_bro
+  /              /     \
+son        =>  son     cur
+   \
+  son_bro
+@end example
+
+@noindent
+it can be seen as the sequence of a counterclockwise rotation for
+@samp{son} and a clockwise rotation for @samp{cur}:
+
+@example
+   cur              cur        son_bro
+  /                /           /     \
+son        =>    son     =>  son     cur
+   \            /
+  son_bro     son_bro
+@end example
+
+@noindent
+return a pointer to the node that has replaced @var{cur} in the
+tree, which is always the bro of the son of @var{cur}.
+
+This function must be called only when both @var{cur} and its son
+are son higher (this is the really useful case and it is also the case
+for which computing the @avl{} statuses after the rotation is not
+costly).
+
+Example:
 
 @example
          (top)                            (top)
@@ -2761,34 +2853,15 @@ that has replaced @var{old_cur} in the tree.  Example:
 (deep_son) (deep_bro)
 @end example
 
-We perform this rotation to balance a tree in which @var{old_cur} is son
+We perform this rotation to balance a tree in which @var{cur} is son
 deeper and its son is bro deeper.
 @end deftypefun
 
 
-@deftypefun {void *} ucl_btree_avl_rot_right (void * @var{old_cur})
-Perform a @dfn{right rotation} (or @dfn{bro rotation}) which balances a
-right--right--higher subtree; return a pointer to the node that has
-replaced @var{old_cur} in the tree.  Example:
-
-@example
-    (top)                              (top)
-      |                                  |
-      7 (old_cur)                        9 (new_cur)
-     / \                            -----+-----
-    6   9 (new_cur)   => (old_cur) 7           11
-       / \                        / \         /  \
-(son) 8   11                     6   8      10    12
-         /  \                      (son)
-       10    12
-@end example
-@end deftypefun
-
-
-@deftypefun {void *} ucl_btree_avl_rot_right_left (void * @var{old_cur})
+@deftypefun {void *} ucl_btree_avl_rot_right_left (void * @var{cur})
 Perform a @dfn{right/left rotation} (or @dfn{bro/son rotation}) which
 balances a right--left--higher subtree; return a pointer to the node
-that has replaced @var{old_cur} in the tree.  Example:
+that has replaced @var{cur} in the tree.  Example:
 
 @example
           (top)                           (top)
@@ -2803,21 +2876,41 @@ that has replaced @var{old_cur} in the tree.  Example:
 (deep_son)    (deep_bro)
 @end example
 
-We perform this rotation to balance a tree in which @var{old_cur} is bro
+We perform this rotation to balance a tree in which @var{cur} is bro
 deeper and its bro is son deeper.
 @end deftypefun
 
 
-@deftypefun size_t ucl_btree_avl_depth (void * @var{N})
+@deftypefun int ucl_btree_avl_depth (void * @var{N})
 Return the depth of the tree of which @var{N} is the root; if @var{N} is
 @cnull{} the return value is zero.  For this function to return the
 correct result: the tree must have nodes with correct status.
 @end deftypefun
 
 
+@deftypefun int ucl_btree_avl_factor (void * @var{N})
+Return the balance factor of @var{N}: the depth of the bro subtree minus
+the depth of the son subtree.  If @var{N} is @cnull{} the return value
+is zero.
+@end deftypefun
+
+
 @deftypefun ucl_bool_t ucl_btree_avl_is_balanced (void * @var{N})
 Return true if the tree of which @var{N} is the root is balanced; if
-@var{N} is @cnull{} the return value is true.
+@var{N} is @cnull{} the return value is true.  This function only checks
+that the left and right subtrees of each node have depth at most
+different by @math{1}, it does @strong{not} validates the @avl{} status
+of the nodes.
+@end deftypefun
+
+
+@deftypefun ucl_bool_t ucl_btree_avl_is_correct (void * @var{N})
+Return true if the tree of which @var{N} is the root is balanced and all
+the statuses are correct; if @var{N} is @cnull{} the return value is
+true.  This function checks that the left and right subtrees of each
+node have depth at most different by @math{1}, and also verifies that
+the @avl{} status of each node is coherent with the difference between
+depths.
 @end deftypefun
 
 @c page
