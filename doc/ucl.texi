@@ -1901,7 +1901,8 @@ Return true if the node is the root of a binary tree: it has no dad.
 
 @deftypefun int ucl_btree_depth (void * @var{N})
 Function with recursive implementation which computes the depth of the
-tree having @var{N} as root, @var{N} included.
+tree having @var{N} as root, @var{N} included.  Return zero if @var{N}
+is @cnull{}.
 @end deftypefun
 
 @c page
@@ -2935,7 +2936,8 @@ Example:
 @deftypefun int ucl_btree_avl_depth (void * @var{N})
 Return the depth of the tree of which @var{N} is the root; if @var{N} is
 @cnull{} the return value is zero.  For this function to return the
-correct result: the tree must have nodes with correct status.
+correct result: the tree must have nodes with correct status.  This
+function is faster than @cfunc{ucl_btree_depth}.
 @end deftypefun
 
 

@@ -606,8 +606,13 @@ ucl_btree_avl_is_balanced (void * N_)
 {
   ucl_node_t	N = N_;
   if (!N) return true;
+#if 1
+  int	son_depth = ucl_btree_depth(N->son);
+  int	bro_depth = ucl_btree_depth(N->bro);
+#else
   int	son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
   int	bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
+#endif
   int	factor    = bro_depth - son_depth;
 #if DEBUGGING_AND_LOGGING
   debug("factor=%d", factor);
@@ -624,8 +629,13 @@ ucl_btree_avl_is_correct (void * N_)
 {
   ucl_node_t	N = N_;
   if (!N) return true;
+#if 1
+  int	son_depth = ucl_btree_depth(N->son);
+  int	bro_depth = ucl_btree_depth(N->bro);
+#else
   int	son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
   int	bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
+#endif
   int	factor    = bro_depth - son_depth;
 #if DEBUGGING_AND_LOGGING
   debug("factor=%d, son depth=%d, bro depth=%d", factor, son_depth, bro_depth);
