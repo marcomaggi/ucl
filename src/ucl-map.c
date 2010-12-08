@@ -97,13 +97,13 @@ static void	subtraction_iterator_next (ucl_iterator_t iterator);
 
 static __inline__ __attribute__((__always_inline__,__nonnull__))
 void
-ucl_map_size_incr (ucl_map_t M)
+size_incr (ucl_map_t M)
 {
   ++(M->size);
 }
 static __inline__ __attribute__((__always_inline__,__nonnull__))
 void
-ucl_map_size_decr (ucl_map_t M)
+size_decr (ucl_map_t M)
 {
   --(M->size);
 }
@@ -145,222 +145,256 @@ ucl_map_initialise (ucl_map_t M, unsigned int flags, ucl_comparison_t keycmp, uc
 }
 
 ucl_bool_t
-ucl_map_insert (ucl_map_t M, void * L_)
+ucl_map_insert (ucl_map_t M, void * new_)
 {
-  ucl_node_t	L = L_, current=NULL;
+  ucl_node_t	new = new_, dad=NULL, child=NULL;
   int		comparison_result=0;
   assert(M);
-  assert(L);
-  /* The  new link  always  has  AVL status  set  to equal-depth  before
+  assert(new);
+  /* The  new link  always  has AVL  status  set to  equal depth  before
      rebalancing. */
-  AVL_STATUS(L) = UCL_EQUAL_DEPTH;
-  DAD(L) = BRO(L) = SON(L) = NULL;
+  AVL_STATUS(new) = UCL_EQUAL_DEPTH;
+  DAD(new) = BRO(new) = SON(new) = NULL;
   /* Handle the case of empty map. */
   if (! M->root) {
     assert(0 == ucl_map_size(M));
-    M->root = L;
-    ucl_map_size_incr(M);
+    M->root = new;
+    size_incr(M);
     return true;
   }
   /* If the map  is not empty, we have descend the  tree looking for the
      node that will be the dad of  "L".  If "M" is not a multimap and we
      find a node with key equal to the key of "L": we return false. */
   {
-    ucl_bool_t	 allow_multiple_objects	= M->flags & UCL_ALLOW_MULTIPLE_OBJECTS;
-    ucl_value_t	 K			= node_key(M, L);
+    ucl_bool_t	 allow_multiple_objects	= IS_MULTIMAP(M);
+    ucl_value_t	 K			= node_key(M, new);
     for (ucl_node_t cursor = M->root; cursor;) {
-      current = cursor;
+      dad = cursor;
       comparison_result = comparison_key_node(M, K, cursor);
-      if ((comparison_result > 0) || (0==comparison_result && allow_multiple_objects)) {
-	cursor = BRO(current);
-      } else if (comparison_result < 0) {
-	cursor = SON(current);
-      } else {
+      if ((comparison_result > 0) || (0==comparison_result && allow_multiple_objects))
+	cursor = BRO(cursor);
+      else if (comparison_result < 0)
+	cursor = SON(cursor);
+      else {
 	assert(0==comparison_result && !allow_multiple_objects);
 	return false;
       }
     }
   }
-  /* Here  "current"   holds  a   pointer  to  the   dad  of   "L".   If
-     "comparison_result<0",  we  have  to  insert  "L" link  as  son  of
-     "current"  (in the  left subtree),  else as  brother (in  the right
-     subtree,  this  happens also  with  multiple  links  with the  same
+  /* Here "dad" references  the node that will become  the dad of "new";
+     if "comparison_result<0": we have to  insert "new" as son of "dad",
+     else as brother (this happens  also when "new" and "dad" have equal
      key). */
   if (comparison_result<0) {
-    /*If we append "L" as son  of "current", "L" itself becomes its left
+    /*If we append "new" as son  of "dad", "new" itself becomes its left
      *subtree:
      *
-     *     -----
-     *    | cur |----> ?
-     *     -----  bro
-     *       |
-     *   son v
-     *     -----
-     *    |link |
-     *     -----
+     *   dad -- ?
+     *    |
+     *   new
      *
      *there are two cases:
      *
-     *1) The brother of "current" is NULL: "current" was UCL_EQUAL_DEPTH
-     *before and becomes  UCL_SON_DEEPER now; we have to  update the AVL
-     *status of the upper nodes, because the subtree under "current" HAS
-     *changed depth.
+     *1)  "NULL  ==  dad->bro":  "dad" was  UCL_EQUAL_DEPTH  before  and
+     *becomes UCL_SON_DEEPER  now; we have  to update the AVL  status of
+     *the upper  nodes, because  the tree having  "dad" as  root changed
+     *depth.
      *
-     *2)  The   brother  of  "current"   is  not  NULL:   "current"  was
-     *UCL_BRO_DEEPER before and becomes UCL_EQUAL_DEPTH now; there is no
-     *need  to update the  AVL status  of the  upper nodes,  because the
-     *subtree under "current" HAS NOT changed depth.
+     *2) "NULL != dad->bro": "dad" was UCL_BRO_DEEPER before and becomes
+     *UCL_EQUAL_DEPTH now; there is no  need to update the AVL status of
+     *the upper  nodes, because  the tree having  "dad" as root  HAS NOT
+     *changed depth.
      */
-    ucl_btree_set_dadson(current, L);
-    ucl_map_size_incr(M);
-    if (BRO(current)) {
-      assert(UCL_BRO_DEEPER == AVL_STATUS(current));
-      AVL_STATUS(current) = UCL_EQUAL_DEPTH;
+    ucl_btree_set_dadson(dad, new);
+    size_incr(M);
+    if (BRO(dad)) {
+      assert(IS_BRO_DEEPER(dad));
+      AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
       return true;
     } else {
-      assert(UCL_EQUAL_DEPTH == AVL_STATUS(current));
-      AVL_STATUS(current) = UCL_SON_DEEPER;
+      assert(IS_EQUAL_DEPTH(dad));
+      AVL_STATUS(dad) = UCL_SON_DEEPER;
     }
   } else {
-    /*If we append "L" as son of "current", "L" itself becomes the right
-     *subtree of "current".
+    /*If we append "new" as bro of "dad", "new" itself becomes the right
+     *subtree of "dad":
      *
-     *     -----       -----
-     *    | cur |---->|link |
-     *     -----  bro  -----
-     *       |
-     *   son v
-     *       ?
+     *   dad -- new
+     *    |
+     *    ?
      *
      *there are two cases:
      *
-     *3)  The son of  "current" is  NULL: "current"  was UCL_EQUAL_DEPTH
-     *before and becomes  UCL_BRO_DEEPER now; we have to  update the AVL
-     *status of the upper nodes, because the subtree under "current" HAS
-     *changed depth.
+     *3)  "NULL  ==  dad->son":  "dad" was  UCL_EQUAL_DEPTH  before  and
+     *becomes UCL_BRO_DEEPER  now; we have  to update the AVL  status of
+     *the upper nodes, because the tree havind "dad" as root HAS changed
+     *depth.
      *
-     *4) The son of "current"  is not NULL: "current" was UCL_SON_DEEPER
-     *before and becomes UCL_EQUAL_DEPTH now; there is no need to update
-     *the  AVL  status  of  the  upper nodes,  because  the  subtree  of
-     *"current" HAS NOT changed depth.
+     *4) "NULL != dad->son": "dad" was UCL_SON_DEEPER before and becomes
+     *UCL_EQUAL_DEPTH now; there is no  need to update the AVL status of
+     *the upper  nodes, because  the tree having  "dad" as root  HAS NOT
+     *changed depth.
      */
     assert(comparison_result>=0);
-    ucl_btree_set_dadbro(current, L);
-    ucl_map_size_incr(M);
-    if (SON(current)) {
-      assert(UCL_SON_DEEPER == AVL_STATUS(current));
-      AVL_STATUS(current) = UCL_EQUAL_DEPTH;
+    ucl_btree_set_dadbro(dad, new);
+    size_incr(M);
+    if (SON(dad)) {
+      assert(IS_SON_DEEPER(dad));
+      AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
       return true;
     } else {
-      assert(UCL_EQUAL_DEPTH == AVL_STATUS(current));
-      AVL_STATUS(current) = UCL_BRO_DEEPER;
+      assert(IS_EQUAL_DEPTH(dad));
+      AVL_STATUS(dad) = UCL_BRO_DEEPER;
     }
   }
-  /* Now we have to step up  the tree and update the "avl_status" of the
-     parent  nodes,  doing rotations  when  required  to  keep the  tree
-     balanced.
+  /* If we are  still here, we have  to step up the tree  and update the
+     AVL status of the ancestors of "dad", doing rotations when required
+     to keep the tree balanced.
 
-     We have to  do it while the subtree we come  from has gotten higher
-     with the  new insertion: if a  subtree has not  changed its height,
-     nothing changes from  the point of view of its  the parent node, so
-     no "avl_status" updates and rotations are required.
+     We enter  a loop in  which "child" is  the node we come  from while
+     stepping up  and "dad"  is the node  that needs status  update.  We
+     have to  loop while the  tree having "dad"  as root has  got deeper
+     with the insertion: if suchtree  has not changed its depth, nothing
+     changes  from the  point of  view of  its ancestors,  so  no status
+     updates are required. */
+  /* *** NOTE ***
 
-     *** NOTE ***
-
-     Readjusting  the balancing  after  an insertion  is DIFFERENT  from
-     readjusting after a removal.  We CANNOT take the following loop and
+     Adjusting  the  balancing  after  an insertion  is  DIFFERENT  from
+     adjusting after a  removal.  We CANNOT take the  following loop and
      factor  it   out  joining   it  with  the   loop  at  the   end  of
      "ucl_map_remove()". */
-  for (ucl_node_t dad = DAD_OF(current);; current = dad, dad = DAD_OF(current)) {
+  ucl_bool_t	dad_is_root;
+  for (child = dad, dad = DAD_OF(child);; child = dad, dad = DAD_OF(child)) {
     if (! dad)
-      return true; /* "current" is the root */
-    else if (SON_OF(dad) == current) { /* stepping up from the son subtree */
+      return true; /* "child" is the root */
+    else if (SON_OF(dad) == child) { /* stepping up from the son subtree */
       switch (AVL_STATUS(dad)) {
       case UCL_BRO_DEEPER:
-	/*Stepping up  from a  son subtree which  got deeper, we  find a
-	 *"dad" which was bro deeper: it becomes equal depth now and its
-	 *depth HAS NOT changed.  Example:
+	/* Stepping up  from a son subtree  which got deeper,  we find a
+	 * "dad" which  was bro deeper:  it becomes equal depth  now and
+	 * its depth HAS NOT changed.  Example:
 	 *
-	 *    (dad) 20b--25=--28=     (dad) 20=--25=--28=
-	 *           |    |                  |    |
-	 *    (cur) 15s  22=       => (cur) 15s  22=
-	 *           |                       |
-	 *      (L) 10=                 (L) 10=
+	 *    before insertion          insertion              adjustment
+	 *
+	 *   (dad) 20b--25=--28=    (dad) 20b--25=--28=    (dad) 20=--25=--28=
+	 *          |    |                 |    |                 |    |
+	 *   (chi) 15=  22=      => (chi) 15s  22=      => (chi) 15s  22=
+	 *                                 |                      |
+	 *   (new) 10               (new) 10=              (new) 10=
 	 */
 	AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
+	assert(ucl_btree_avl_is_correct(dad));
 	return true;
       case UCL_EQUAL_DEPTH:
-	/*Stepping up  from a  son subtree which  got deeper, we  find a
-	 *"dad" which was equal depth: it becomes son deeper now and its
-	 *depth HAS changed.  Example:
+	/* Stepping up  from a son subtree  which got deeper,  we find a
+	 * "dad" which  was equal depth:  it becomes son deeper  now and
+	 * its depth HAS changed.  Example:
 	 *
-	 *    (dad) 20=--25=          (dad) 20s--25=
-	 *           |                       |
-	 *    (cur) 15s            => (cur) 15s
-	 *           |                       |
-	 *      (L) 10=                 (L) 10=
+	 *    before insertion      insertion         adjustment
+	 *
+	 *   (dad) 20=--25=       (dad) 20=--25=    (dad) 20s--25=
+	 *          |                    |                 |
+	 *   (chi) 15=         => (chi) 15s      => (chi) 15s
+	 *                               |                 |
+	 *   (new) 10             (new) 10=         (new) 10=
 	 */
 	AVL_STATUS(dad) = UCL_SON_DEEPER;
+	assert(ucl_btree_avl_is_correct(dad));
 	continue;
       case UCL_SON_DEEPER:
 	/* Stepping up  from a son subtree  which got deeper,  we find a
-	   "dad"  which was  already son  deeper; we  have to  perform a
-	   rotation after which:  the new "dad" will be  equal depth and
-	   its depth will be equal to the one of the old "dad".  See the
-	   source code of the rotation functions for examples.  */
-	{
-	  ucl_bool_t	dad_is_root = (dad == M->root);
-	  if (UCL_SON_DEEPER == AVL_STATUS(current))
-	    dad = ucl_btree_avl_rot_left(dad);
-	  else
-	    dad = ucl_btree_avl_rot_left_right(dad);
-	  if (dad_is_root) M->root = dad;
-	  return true;
-	}
+	 * "dad"  which was  already son  deeper; we  have to  perform a
+	 * rotation after which:  the new "dad" will be  equal depth and
+	 * its depth will be equal to the one of the old "dad".
+	 *
+	 * Example requiring left rotation:
+	 *
+	 *    before insertion      insertion           adjustment
+	 *
+	 *   (dad) 20s            (dad) 20s      (chi) 15=--20= (dad)
+	 *          |                    |              |
+	 *   (chi) 15=         => (chi) 15s   => (new) 10=
+	 *                               |
+	 *   (new) 10             (new) 10=
+	 *
+	 * Example requiring left/right rotation:
+	 *
+	 *    before insertion      insertion           adjustment
+	 *
+	 *   (dad) 20s          (dad) 20s          (new) 10=--20= (dad)
+	 *          |        =>        |        =>        |
+	 *   (chi) 15=  10      (chi) 15b--10=     (chi) 15=
+	 *             (new)              (new)
+	 */
+	dad_is_root = (dad == M->root);
+	dad = IS_SON_DEEPER(child)? ucl_btree_avl_rot_left(dad) : ucl_btree_avl_rot_left_right(dad);
+	if (dad_is_root) M->root = dad;
+	assert(ucl_btree_avl_is_correct(dad));
+	return true;
       }
     } else { /* stepping up from the bro subtree */
       switch (AVL_STATUS(dad)) {
       case UCL_SON_DEEPER:
-	/*Stepping up  from a  bro subtree which  got deeper, we  find a
-	 *"dad" which was son deeper: it becomes equal depth now and its
-	 *depth HAS NOT changed.  Example:
+	/* Stepping up  from a bro subtree  which got deeper,  we find a
+	 * "dad" which  was son deeper:  it becomes equal depth  now and
+	 * its depth HAS NOT changed.  Example:
 	 *
-	 *             (cur)                       (cur)
-	 *   (dad) 20s--25b--28= (L)     (dad) 20=--25b--28= (L)
-	 *          |                           |
-	 *         15=--18=           =>       15=--18=
-	 *          |                           |
-	 *         10=                         10=
+	 *    before insertion       insertion         adjustment
+	 *
+	 *   (dad) (chi) (new)   (dad) (chi) (new)  (dad) (chi) (new)
+	 *     20s--25=  28        20s--25b--28=      20=--25b--28=
+	 *      |                   |                  |
+	 *     15=--18=        =>  15=--18=      =>   15=--18=
+	 *      |                   |                  |
+	 *     10=                 10=                10=
 	 */
 	AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
+	assert(ucl_btree_avl_is_correct(dad));
 	return true;
       case UCL_EQUAL_DEPTH:
-	/*Stepping up  from a  bro subtree which  got deeper, we  find a
-	 *"dad" which was equal depth: it becomes bro deeper now and its
-	 *depth HAS changed.  Example:
+	/* Stepping up  from a bro subtree  which got deeper,  we find a
+	 * "dad" which  was equal depth:  it becomes bro deeper  now and
+	 * its depth HAS changed.  Example:
 	 *
-	 *             (cur)                       (cur)
-	 *   (dad) 20=--25b--28= (L)     (dad) 20b--25b--28= (L)
-	 *          |                 =>        |
-	 *         15=                         15=
+	 *    before insertion       insertion         adjustment
+	 *
+	 *   (dad) (chi) (new)   (dad) (chi) (new)  (dad) (chi) (new)
+	 *     20=--25=  28        20=--25b--28=      20b--25b--28=
+	 *      |             =>    |            =>    |
+	 *     15=                 15=                15=
 	 */
 	AVL_STATUS(dad) = UCL_BRO_DEEPER;
+	assert(ucl_btree_avl_is_correct(dad));
 	continue;
       case UCL_BRO_DEEPER:
 	/* Stepping up  from a bro subtree  which got deeper,  we find a
-	   "dad"  which was  already bro  deeper; we  have to  perform a
-	   rotation after which:  the new "dad" will be  equal depth and
-	   its depth will be equal to the one of the old "dad".  See the
-	   source code of the rotation functions for examples.  */
-	{
-	  ucl_bool_t	dad_is_root = (dad == M->root);
-	  if (UCL_BRO_DEEPER == AVL_STATUS(current))
-	    dad = ucl_btree_avl_rot_right(dad);
-	  else
-	    dad = ucl_btree_avl_rot_right_left(dad);
-	  if (dad_is_root) M->root = dad;
-	  return true;
-	}
+	 * "dad"  which was  already bro  deeper; we  have to  perform a
+	 * rotation after which:  the new "dad" will be  equal depth and
+	 * its depth will be equal to the one of the old "dad".
+	 *
+	 * Example requiring right rotation:
+	 *
+	 *    before insertion       insertion         adjustment
+	 *
+	 *   (dad) (chi) (new)   (dad) (chi) (new)  (chi) (new)
+	 *     20b--25=  28        20b--25b--28=      25=--28=
+	 *                    =>                 =>    |
+	 *                                            20= (dad)
+	 *
+	 * Example requiring right/left rotation:
+	 *
+	 *   before insertion      insertion      adjustment
+	 *
+	 *   (dad) (chi)          (dad) (chi)     (new) (chi)
+	 *     20b--25=             20b--25s        28=--25=
+	 *                     =>         |    =>    |
+	 *    (new) 28             (new) 28=        20= (dad)
+	 */
+	dad_is_root = (dad == M->root);
+	dad = IS_BRO_DEEPER(child)? ucl_btree_avl_rot_right(dad) : ucl_btree_avl_rot_right_left(dad);
+	if (dad_is_root) M->root = dad;
+	assert(ucl_btree_avl_is_correct(dad));
+	return true;
       }
     }
   } /* end of for() */
@@ -407,7 +441,7 @@ ucl_map_remove (ucl_map_t M, void * cur_)
      Notice that "dad" cannot be NULL because we have made sure that the
      case of map with one element has been handled earlier. */
   dad = DAD_OF(cur);
-  ucl_map_size_decr(M);
+  size_decr(M);
   if (cur == SON_OF(dad)) {
     SON(dad) = NULL;
     if (BRO_OF(dad)) {
