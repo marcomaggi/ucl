@@ -5460,6 +5460,12 @@ invocations of @cfunc{ucl_map_next}.
 @end deftypefun
 
 
+@deftypefun ucl_bool_t ucl_map_find_node (const ucl_map_t @var{M}, void * @var{N})
+Return true if @var{N} is the pointer to a node in @var{M}, return false
+otherwise.
+@end deftypefun
+
+
 @deftypefun {void *} ucl_map_first (const ucl_map_t @var{M})
 Return a pointer to the element with lesser key in the map, or @cnull{}
 if the map is empty.

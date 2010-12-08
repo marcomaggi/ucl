@@ -405,7 +405,7 @@ ucl_map_remove (ucl_map_t M, void * cur_)
 {
   ucl_node_t	cur = cur_, dad, son, bro, L;
   ucl_bool_t	dad_is_root;
-  /* assert(ucl_map_find_node(M, cur)); */
+  assert(ucl_map_find_node(M, cur));
   debug("enter, removing link %p from map with %u nodes", (void *)cur, ucl_map_size(M));
   /* Handle the case of map with single node.  Notice that this function
      cannot be called with an empty map. */
@@ -722,6 +722,16 @@ ucl_map_find (const ucl_map_t M, const ucl_value_t K)
     }
   }
   return NULL;
+}
+ucl_bool_t
+ucl_map_find_node (const ucl_map_t M, void * N)
+{
+  ucl_value_t		K = node_key(M, N);
+  ucl_iterator_t	I;
+  for (ucl_map_lower_bound(M, I, K); ucl_iterator_more(I); ucl_iterator_next(I))
+    if (N == ucl_iterator_ptr(I))
+      return true;
+  return false;
 }
 size_t
 ucl_map_depth (const ucl_map_t M)

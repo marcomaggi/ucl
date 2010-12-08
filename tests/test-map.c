@@ -136,6 +136,7 @@ checked_insertion (ucl_map_t M, int j, link_t * L)
   mcl_test_error_if_false(NULL!=*L, "unable to find node with key %d", j);
   K1 = (*L)->key;
   mcl_test_error_if_false(j == K1.t_int, "invalid key value, expected %d got %d", j, K1.t_int);
+  mcl_test_error_if_false(ucl_map_find_node(M, *L), "unable to find node from pointer, key %d", j);
 }
 static void
 checked_deletion (ucl_map_t M, int j, link_t * L)
@@ -3084,7 +3085,7 @@ test_find_or_next_prev (void)
 static void
 test_count (void)
 {
-  mcl_test_begin("map-10.3", "count elements in simple map") {
+  mcl_test_begin("map-10.3.1", "count elements in simple map") {
     ucl_map_t	M;
     ucl_value_t	K;
     int		j;
@@ -3105,7 +3106,7 @@ test_count (void)
   }
   mcl_test_end();
 
-  mcl_test_begin("map-10.4", "count elements in multi map") {
+  mcl_test_begin("map-10.3.2", "count elements in multi map") {
     ucl_map_t	M;
     ucl_value_t	K;
     int		j;
@@ -3126,6 +3127,28 @@ test_count (void)
 	count = ucl_map_count(M, K);
 	mcl_test_error_if_false(3 == count, "wrong count of %d, expected %u got %u", j, 3, count);
       }
+    }
+    clean(M);
+  }
+  mcl_test_end();
+}
+
+static void
+test_find_node (void)
+{
+  mcl_test_begin("map-10.4.1", "find node by pointer") {
+    ucl_map_t	M;
+    link_t	L;
+    int		j;
+    ucl_map_initialise(M, 0, ucl_compare_int, getkey);
+    {
+      for (j=0; j<=LITTLENUMBER; ++j) {
+	L = alloc_link(j);
+	ucl_map_insert(M, L);
+	mcl_test_error_if_false(ucl_map_find_node(M, L), "unable to find node by pointer for key %d", j);
+      }
+      L = alloc_link(j);
+      mcl_test_error_if_true(ucl_map_find_node(M, L), "wrongly found node by pointer for key %d", j);
     }
     clean(M);
   }
@@ -3168,6 +3191,7 @@ main (void)
   test_first_last_next_prev ();
   test_find_or_next_prev ();
   test_count ();
+  test_find_node ();
 
   exit(EXIT_SUCCESS);
 }
