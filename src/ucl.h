@@ -755,6 +755,8 @@ extern void * ucl_btree_find_root (void * node)
 extern void ucl_btree_swap	(void * A, void * B);
 extern void ucl_btree_swap_out	(void * A, void * B);
 
+extern int ucl_btree_depth	(void * N);
+
 /* ------------------------------------------------------------ */
 
 extern void * ucl_btree_avl_rot_left		(void * old_dad);

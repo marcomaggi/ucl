@@ -124,6 +124,19 @@ ucl_btree_find_root (void * node)
   return N;
 }
 
+static int
+btree_depth (ucl_node_t N)
+{
+  int	son_depth = (N->son)? btree_depth(N->son) : 0;
+  int	bro_depth = (N->bro)? btree_depth(N->bro) : 0;
+  return 1 + ((son_depth > bro_depth)? son_depth : bro_depth);
+}
+int
+ucl_btree_depth (void * N)
+{
+  return N? btree_depth(N) : 0;
+}
+
 void
 ucl_btree_swap_out (void * A_, void * B_)
 /* Given two  pointers to links, interpret A  as pointer to a  node in a

@@ -1898,6 +1898,12 @@ Return true if the node is a leaf (no brother and no son).
 Return true if the node is the root of a binary tree: it has no dad.
 @end deftypefn
 
+
+@deftypefun int ucl_btree_depth (void * @var{N})
+Function with recursive implementation which computes the depth of the
+tree having @var{N} as root, @var{N} included.
+@end deftypefun
+
 @c page
 @node btree removing
 @subsection Removing elements

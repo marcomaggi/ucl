@@ -58,6 +58,7 @@ node_make (int idx)
 
   allocator.alloc(allocator.data, &p, sizeof(node_tag_t));
   p->idx = idx;
+  p->node.meta.t_int = idx;
   return p;
 }
 static void
@@ -686,6 +687,116 @@ test_subtree_and_range_iterations (void)
   mcl_test_end();
 }
 
+static void
+test_depth (void)
+{
+  mcl_test_begin("btree-5.1", "tree depth") {
+    node_t	N[13];
+    int		depth, expected, j;
+    build_tree(N);
+    {
+      /*
+       *    5-------10----12
+       *    |        |     |
+       *    1--3--4  7--9 11
+       *       |     |  |
+       *       2     6  8
+       */
+      j		= 1;
+      expected	= 3;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 2;
+      expected	= 1;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 3;
+      expected	= 2;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+#if 1
+      j		= 4;
+      expected	= 1;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      /*
+       *    5-------10----12
+       *    |        |     |
+       *    1--3--4  7--9 11
+       *       |     |  |
+       *       2     6  8
+       */
+
+      j		= 5;
+      expected	= 5;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 6;
+      expected	= 1;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+
+      j		= 7;
+      expected	= 3;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 8;
+      expected	= 1;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 9;
+      expected	= 2;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      /*
+       *    5-------10----12
+       *    |        |     |
+       *    1--3--4  7--9 11
+       *       |     |  |
+       *       2     6  8
+       */
+
+      j		= 10;
+      expected	= 4;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 11;
+      expected	= 1;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+
+      j		= 12;
+      expected	= 2;
+      depth	= ucl_btree_depth(N[j]);
+      mcl_test_error_if_false(expected == depth,
+			      "wrong depth for node %d, expected %d got %d", j, expected, depth);
+#endif
+    }
+    free_tree(N);
+  }
+  mcl_test_end();
+}
+
 /** ------------------------------------------------------------
  ** Main test function.
  ** ----------------------------------------------------------*/
@@ -699,6 +810,7 @@ main (void)
   test_hierarchy_finder_functions();
   test_whole_iterations();
   test_subtree_and_range_iterations();
+  test_depth();
 
   exit(EXIT_SUCCESS);
 }
