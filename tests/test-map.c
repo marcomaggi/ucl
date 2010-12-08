@@ -114,6 +114,8 @@ clean (ucl_map_t M)
     print_preorder_links(M, "before removing %d", L->key);
 #endif
     ucl_map_delete(M, L);
+    mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			    "incorrect avl tree after removal of %d", L->key);
     free_link(L);
   }
   mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after cleaning map");
