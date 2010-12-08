@@ -42,11 +42,21 @@
 #ifndef DEBUGGING
 #  define DEBUGGING		0
 #endif
+#ifndef DEBUGGING_AND_LOGGING
+#  define DEBUGGING_AND_LOGGING	0
+#endif
 #include "internal.h"
 
 #define AVL_STATUS(L)		(((ucl_node_t)L)->meta.avl_status)
 #define AVL_DEPTH(N)		ucl_btree_avl_depth(N)
-#define AVL_FACTOR(N)		((ucl_avl_status_t)(AVL_DEPTH((N)->bro) - AVL_DEPTH((N)->son)))
+#define AVL_FACTOR(N)		(AVL_DEPTH((N)->bro) - AVL_DEPTH((N)->son))
+
+#define IS_EQUAL_DEPTH(N)       (UCL_EQUAL_DEPTH == AVL_STATUS(N))
+#define IS_BRO_DEEPER(N)        (UCL_BRO_DEEPER  == AVL_STATUS(N))
+#define IS_SON_DEEPER(N)        (UCL_SON_DEEPER  == AVL_STATUS(N))
+
+#define IS_LEAF(N)		((! SON_OF(N)) && (! BRO_OF(N)))
+#define IS_AVL_LEAF(N)		(IS_LEAF(N) && IS_EQUAL_DEPTH(N))
 
 
 void *
@@ -182,64 +192,52 @@ ucl_btree_avl_rot_left (void * old_cur_)
  * use  this  rotation  in  two  cases: "new_cur"  is  son  deeper  too,
  * "new_cur" is equal depth.
  *
- * Example  of the  son  deeper  "new_cur", notice  that  the tree  gets
- * shorter and  that "old_cur"  and "new_cur" are  the only  nodes which
- * need to change status (balance factors in parentheses):
+ * Example with  "old_cur" being  "11" and having  son being  son deeper
+ * (balance factors in parentheses):
  *
  *                (top)                   (top)
  *                  |                       |
- *                11(-2) (old_cur)         9(0) (new_cur)
+ *                 11(-2)                   9(0)
  *                /  \                 -----+-----
- *   (new_cur) 9(-1)  12              7          11(0) (old_cur)
+ *            9(-1)   12              7          11(0)
  *              / \             =>   / \        /  \
- *             7   10 (bro)         6   8     10    12
- *            / \                            (bro)
+ *             7   10               6   8     10    12
+ *            / \
  *           6   8
  *
- * Example of the  equal depth "new_cur", notice that  the tree does not
- * change its  depth and that "new_cur"  is the only node  that needs to
- * change status (balance factors in parentheses):
+ * Example with  "old_cur" being "12"  and having son being  equal depth
+ * (balance factors in parentheses):
  *
  *               (top)                      (top)
  *                 |                          |
- *               12(-2) (old_cur)            9(+1) (new_cur)
+ *                12(-2)                      9(+1)
  *               /  \                    -----+-----
- *   (new_cur) 9(0)  13                 7          12(-1) (old_cur)
+ *             9(0)  13                 7          12(-1)
  *             / \              =>     / \         /  \
- *            7   10(+1) (bro)        6   8    10(+1)  13
- *           / \    \                        (bro) \
+ *            7   10                  6   8      10    13
+ *           / \    \                              \
  *          6   8    11                             11
- *
- * We want  to support  also the following  special case of  equal depth
- * "new_cur", which is useful when deleting a leaf node; notice the tree
- * does not change its depth  and that both "new_cur" and "old_cur" need
- * to change status:
- *
- *               (top)                  (top)
- *                 |                      |
- *                12s (old_cur)           9b (new_cur)
- *               /              =>         \
- *    (new_cur) 9=                          12= (old_cur)
  */
 {
+  debug("enter left rotation");
   ucl_node_t		old_cur = old_cur_;
+  ucl_node_t		top	= old_cur->dad;
   ucl_node_t		new_cur = old_cur->son;
   ucl_node_t		bro	= new_cur->bro;
-  ucl_node_t		top;
   ucl_avl_status_t	new_cur_old_status = AVL_STATUS(new_cur);
-  assert(UCL_SON_DEEPER  == AVL_STATUS(old_cur));
-  assert(UCL_SON_DEEPER  == new_cur_old_status ||
-	 UCL_EQUAL_DEPTH == new_cur_old_status);
+  assert(IS_SON_DEEPER(old_cur));
+  assert(IS_SON_DEEPER(new_cur) || IS_EQUAL_DEPTH(new_cur));
   assert(-2 == ucl_btree_avl_factor(old_cur));
+  assert((IS_SON_DEEPER(new_cur)? -1 : 0)  == ucl_btree_avl_factor(new_cur));
   /* relink "old_cur" and "new_cur" */
-  new_cur->bro	= old_cur;
   new_cur->dad	= old_cur->dad;
+  new_cur->bro	= old_cur;
   old_cur->dad	= new_cur;
   /* relink "old_cur" and "bro" */
   old_cur->son	= bro;
-  if (bro) bro->dad	= old_cur;
+  if (bro)
+    bro->dad	= old_cur;
   /* relink "top" */
-  top = new_cur->dad;
   if (top) {
     if (old_cur == top->bro)
       top->bro = new_cur;
@@ -254,11 +252,13 @@ ucl_btree_avl_rot_left (void * old_cur_)
      *      old_cur(-2)      new_cur(0)
      *       /           =>       \
      *   new_cur(-1)            old_cur(0)
+     *        \                  /
+     *         bro            bro
      */
     AVL_STATUS(old_cur) = UCL_EQUAL_DEPTH;
     AVL_STATUS(new_cur) = UCL_EQUAL_DEPTH;
-    assert(0 == ucl_btree_avl_factor(new_cur));
-    assert(0 == ucl_btree_avl_factor(old_cur));
+    assert(ucl_btree_avl_is_correct(new_cur));
+    assert(ucl_btree_avl_is_correct(old_cur));
   } else {
     assert(UCL_EQUAL_DEPTH == new_cur_old_status);
     /* The situation with balance factors in parentheses:
@@ -266,13 +266,13 @@ ucl_btree_avl_rot_left (void * old_cur_)
      *      old_cur(-2)      new_cur(+1)
      *       /           =>       \
      *   new_cur(0)             old_cur(-1)
+     *        \                  /
+     *         bro            bro
      */
     AVL_STATUS(new_cur) = UCL_BRO_DEEPER;
     AVL_STATUS(old_cur) = UCL_SON_DEEPER;
-    /* if (!old_cur->son) { */
-    /*   assert(! old_cur->bro); */
-    /*   AVL_STATUS(old_cur) = UCL_EQUAL_DEPTH; */
-    /* } */
+    assert(ucl_btree_avl_is_correct(new_cur));
+    assert(ucl_btree_avl_is_correct(old_cur));
     assert(+1 == ucl_btree_avl_factor(new_cur));
     assert(-1 == ucl_btree_avl_factor(old_cur));
   }
@@ -285,62 +285,52 @@ ucl_btree_avl_rot_right (void * old_cur_)
  * subtree.  We use this rotation  in two cases: "new_cur" is bro deeper
  * too, "new_cur" is equal depth.
  *
- * Example  of the  bro  deeper  "new_cur", notice  that  the tree  gets
- * shorter and  that "old_cur"  and "new_cur" are  the only  nodes which
- * need to change state:
+ * Example  with "old_cur"  being "7"  and having  bro being  bro deeper
+ * (balance factors in parentheses):
  *
  *         (top)                              (top)
  *           |                                  |
- *           7b (old_cur)                       9= (new_cur)
+ *           7(+2)                              9(0)
  *          / \                            -----+-----
- *         6=  9b (new_cur)  => (old_cur) 7=          11=
+ *         6   9(+1)         =>           7(0)        11
  *            / \                        / \         /  \
- *     (son) 8=  11=                    6=  8=     10=   12=
- *              /  \                      (son)
- *            10=   12=
+ *           8   11                     6   8      10    12
+ *              /  \
+ *            10    12
  *
- * Example of equal  depth "new_cur", notice that the  tree gets shorter
- * and that 6 is the only node which needs to change state:
+ * Example with  "old_cur" being  "6" and having  bro being  equal depth
+ * (balance factors in parentheses):
  *
  *         (top)                              (top)
  *           |                                  |
- *           6b (old_cur)                       9s (new_cur)
+ *           6(+2)                              9(-1)
  *          / \                            -----+-----
- *         5=  9= (new_cur)  => (old_cur) 6b          11=
+ *         5   9(0)          =>           6(+1)       11
  *            / \                        / \         /  \
- *     (son) 8s  11=                    5=  8s     10=   12=
- *          /   /  \                       / (son)
- *         7= 10=   12=                   7=
- *
- * We want  to support  also the following  special case of  equal depth
- * "new_cur", which is useful when deleting a leaf node; notice the tree
- * does not change its depth  and that both "new_cur" and "old_cur" need
- * to change status:
- *
- *          (top)                           (top)
- *            |                               |
- *           12b (old_cur)                    9s (new_cur)
- *             \              =>             /
- *              9= (new_cur)     (old_cur) 12=
+ *           8   11                     5=  8      10    12
+ *          /   /  \                       /
+ *         7  10    12                    7
  */
 {
+  debug("enter right rotation");
   ucl_node_t		old_cur = old_cur_;
+  ucl_node_t		top	= old_cur->dad;
   ucl_node_t		new_cur	= old_cur->bro;
   ucl_node_t		son	= new_cur->son;
   ucl_avl_status_t	new_cur_old_status = AVL_STATUS(new_cur);
-  assert(UCL_BRO_DEEPER  == AVL_STATUS(old_cur));
-  assert(UCL_BRO_DEEPER  == new_cur_old_status ||
-	 UCL_EQUAL_DEPTH == new_cur_old_status);
+  assert(IS_BRO_DEEPER(old_cur));
+  assert(IS_BRO_DEEPER(new_cur) || IS_EQUAL_DEPTH(new_cur));
   assert(+2 == ucl_btree_avl_factor(old_cur));
+  assert((IS_BRO_DEEPER(new_cur)? +1 : 0) == ucl_btree_avl_factor(new_cur));
   /* relink "old_cur" and "new_cur" */
-  new_cur->son	= old_cur;
   new_cur->dad	= old_cur->dad;
   old_cur->dad	= new_cur;
+  new_cur->son	= old_cur;
   /* relink "old_cur" and "son" */
   old_cur->bro	= son;
-  if (son) son->dad	= old_cur;
+  if (son)
+    son->dad	= old_cur;
   /* relink "top" */
-  ucl_node_t	top = new_cur->dad;
   if (top) {
     if (old_cur == top->bro)
       top->bro = new_cur;
@@ -355,25 +345,28 @@ ucl_btree_avl_rot_right (void * old_cur_)
      *   old_cur(+2)           new_cur(0)
      *        \          =>     /
      *      new_cur(+1)      old_cur(0)
+     *       /                   \
+     *    bro                     bro
      */
     AVL_STATUS(old_cur) = UCL_EQUAL_DEPTH;
     AVL_STATUS(new_cur) = UCL_EQUAL_DEPTH;
-    assert(0 == ucl_btree_avl_factor(new_cur));
-    assert(0 == ucl_btree_avl_factor(old_cur));
+    debug("leave ==");
+    assert(ucl_btree_avl_is_correct(new_cur));
+    assert(ucl_btree_avl_is_correct(old_cur));
   } else {
     /* The situation with balance factors in parentheses:
      *
      *   old_cur(+2)            new_cur(-1)
      *        \         =>      /
      *      new_cur(0)      old_cur(+1)
+     *      /                     \
+     *   bro                       bro
      */
     AVL_STATUS(new_cur) = UCL_SON_DEEPER;
-    AVL_STATUS(old_cur) = UCL_SON_DEEPER;
-    /* if (!old_cur->bro) { */
-    /*   assert(! old_cur->son); */
-    /*   AVL_STATUS(old_cur) = UCL_EQUAL_DEPTH; */
-    /* } */
-    fprintf(stderr, "new_cur factor %d\n", ucl_btree_avl_factor(new_cur));
+    AVL_STATUS(old_cur) = UCL_BRO_DEEPER;
+    debug("leave sb");
+    assert(ucl_btree_avl_is_correct(new_cur));
+    assert(ucl_btree_avl_is_correct(old_cur));
     assert(-1 == ucl_btree_avl_factor(new_cur));
     assert(+1 == ucl_btree_avl_factor(old_cur));
   }
@@ -383,69 +376,71 @@ ucl_btree_avl_rot_right (void * old_cur_)
 void *
 ucl_btree_avl_rot_left_right (void * old_cur_)
 /* Perform   a   double    rotation   which   balances   a   "son-higher
- * son-bro-higher" tree.  Example:
+ * son-bro-higher"  tree.   The  core  of  it  is  (balance  factors  in
+ * parentheses):
+ *
+ *            old_cur(-2)              new_cur(0)
+ *             /                         / \
+ *          son(+1)           =>      son   old_cur
+ *             \
+ *            new_cur
+ *
+ * notice  that  the  status  changes  only  for  the  nodes  "old_cur",
+ * "new_cur"  and "son";  the new  status of  "new_cur" is  always equal
+ * depth, while the status of the others must be computed.
+ *
+ * It can  be seen as the  sequence of a  right rotation on "son"  and a
+ * left rotation on "old_cur", though the computation of statuses at the
+ * end of  this double rotation is  different from the  one performed at
+ * the end of the simple rotation functions:
+ *
+ *            old_cur(-2)     old_cur        new_cur(0)
+ *             /               /             /    \
+ *          son(+1)    =>  new_cur     =>  son    old_cur
+ *             \             /
+ *            new_cur     son
+ *
+ * Example (balance factors in parentheses):
  *
  *             (top)                             (top)
  *               |                                 |
- *              10 (old_cur)                       8 (new_cur)
+ *              10(-2) (old_cur)                   8(0) (new_cur)
  *             /  \                      ----------+----------
- *      (son) 5    13             (son) 5                    10 (old_cur)
+ *    (son) 5(+1)  13             (son) 5(0)                 10(0) (old_cur)
  *           / \               =>      / \                  /  \
  *          3   8 (new_cur)           3   7                9    13
  *             / \                      (deep_son)  (deep_bro)
  * (deep_son) 7   9 (deep_bro)
- *
- *the core of it is:
- *
- *              10 (old_cur)              8 (new_cur)
- *             /                         / \
- *      (son) 5               =>  (son) 5   10 (old_cur)
- *             \
- *              8 (new_cur)
- *
- *and  it can be  seen as  a sequence  of counterclockwise  rotation for
- *"son" and a clockwise rotation for "old_cur":
- *
- *              10          10        8
- *             /           /         / \
- *            5     =>    8     =>  5   10
- *             \         /
- *              8       5
- *
- *though the computation of statuses  at the end of this double rotation
- *is different from the one performed  at the end of the simple rotation
- *functions.
- *
- *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
- *son-deeper and  "son" is bro-deeper.   Notice that the  status changes
- *only for the  nodes "old_cur", "new_cur" and "son";  the new status of
- *"new_cur" is always  equal depth, while the status  of the others must
- *be computed.
  */
 {
+  debug("enter left/right rotation");
   ucl_node_t	old_cur = old_cur_;
+  ucl_node_t	top	= old_cur->dad;
   ucl_node_t	son	= old_cur->son;
   ucl_node_t	new_cur	= son->bro;
-  ucl_node_t	top, deep_bro, deep_son;
-  assert(UCL_SON_DEEPER == old_cur->meta.avl_status);
-  assert(UCL_BRO_DEEPER == son->meta.avl_status);
+  ucl_node_t	deep_bro, deep_son;
+  assert(IS_SON_DEEPER(old_cur));
+  assert(IS_BRO_DEEPER(son));
+  assert(-2 == ucl_btree_avl_factor(old_cur));
+  assert(+1 == ucl_btree_avl_factor(son));
   /* relink "son" and "deep_son" */
-  deep_son = new_cur->son;
+  deep_son	= new_cur->son;
   son->bro	= deep_son;
-  if (deep_son) deep_son->dad = son;
+  if (deep_son)
+    deep_son->dad = son;
   /* relink "new_cur" and "son" */
-  new_cur->son= son;
+  new_cur->son	= son;
   son->dad	= new_cur;
   /* relink "old_cur" and "deep_bro" */
-  deep_bro = new_cur->bro;
-  old_cur->son = deep_bro;
-  if (deep_bro) deep_bro->dad = old_cur;
+  deep_bro	= new_cur->bro;
+  old_cur->son	= deep_bro;
+  if (deep_bro)
+    deep_bro->dad = old_cur;
   /* finish relinking "old_cur" and "new_cur" */
-  new_cur->bro	= old_cur;
   new_cur->dad	= old_cur->dad;
+  new_cur->bro	= old_cur;
   old_cur->dad	= new_cur;
   /* relink "top" */
-  top = new_cur->dad;
   if (top) {
     if (old_cur == top->bro)
       top->bro = new_cur;
@@ -467,71 +462,73 @@ ucl_btree_avl_rot_left_right (void * old_cur_)
 
 void *
 ucl_btree_avl_rot_right_left (void * old_cur_)
-/*Perform a  bro/son rotation  which balances a  bro-son-higher subtree.
- *Example:
+/* Perform   a   double    rotation   which   balances   a   "bro-higher
+ * bro-son-higher"  tree.   The  core  of  it  is  (balance  factors  in
+ * parentheses):
+ *
+ *         old_cur(+2)                 new_cur(0)
+ *                \                      /  \
+ *                 bro(-1)  =>    old_cur    bro
+ *                /
+ *         new_cur
+ *
+ * notice  that  the  status  changes  only  for  the  nodes  "old_cur",
+ * "new_cur"  and "son";  the new  status of  "new_cur" is  always equal
+ * depth, while the status of the others must be computed.
+ *
+ * It can  be seen as  the sequence  of a left  rotation on "bro"  and a
+ * right rotation  on "old_cur", though  the computation of  statuses at
+ * the end of  this double rotation is different  from the one performed
+ * at the end of the simple rotation functions:
+ *
+ *         old_cur(+2)         old_cur                new_cur(0)
+ *                \                \                    /  \
+ *                 bro(-1)  =>    new_cur  =>    old_cur    bro
+ *                /                   \
+ *         new_cur                     bro
+ *
+ * Example (balance factors in parentheses):
  *
  *             (top)                                (top)
  *               |                                    |
- *     (old_cur) 9                                   11 (new_cur)
+ *     (old_cur) 9(+2)                               11(0) (new_cur)
  *              / \                         ----------+---------
- *             8   13 (bro)      (old_cur) 9                    13 (bro)
+ *             8   13(-1) (bro)  (old_cur) 9(0)                 13(0) (bro)
  *                /  \         =>         / \                  /  \
- *    (new_cur) 11    14                 8   10              12    14
+ *   (new_cur) 11(0)  14                 8   10              12    14
  *             /  \                        (deep_son)  (deep_bro)
  *           10    12
  *   (deep_son)    (deep_bro)
- *
- *the core of it is:
- *
- *     (old_cur) 9                 (new_cur) 11
- *                \                         /  \
- *                 13 (bro)  =>  (old_cur) 9    13 (bro)
- *                /
- *    (new_cur) 11
- *
- *it can  be seen  as a  sequence of son  rotation for  "bro" and  a bro
- *rotation  for  "old_cur":
- *
- *               9         9              11
- *                \         \            /  \
- *                 13  =>    11     =>  9    13
- *                /            \
- *              11              13
- *
- *though the computation of statuses  at the end of this double rotation
- *is different from the one performed  at the end of the simple rotation
- *functions.
- *
- *We  perform this  rotation to  balance a  tree in  which  "old_cur" is
- *bro-deeper and  "bro" is son-deeper.   Notice that the  status changes
- *only for the  nodes "old_cur", "new_cur" and "bro";  the new status of
- *"new_cur" is always  equal depth, while the status  of the others must
- *be computed.
  */
 {
+  debug("enter right/left rotation");
   ucl_node_t	old_cur = old_cur_;
+  ucl_node_t	top	= old_cur->dad;
   ucl_node_t	bro	= old_cur->bro;
   ucl_node_t	new_cur	= bro->son;
-  ucl_node_t	top, deep_bro, deep_son;
+  ucl_node_t	deep_bro, deep_son;
   assert(UCL_BRO_DEEPER == old_cur->meta.avl_status);
   assert(UCL_SON_DEEPER == bro->meta.avl_status);
+  assert(+2 == ucl_btree_avl_factor(old_cur));
+  assert(-1 == ucl_btree_avl_factor(bro));
   /* relink "bro" and "deep_bro" */
-  deep_bro = new_cur->bro;
+  deep_bro	= new_cur->bro;
   bro->son	= deep_bro;
-  if (deep_bro) deep_bro->dad = bro;
+  if (deep_bro)
+    deep_bro->dad = bro;
   /* relink "new_cur" and "bro" */
-  new_cur->bro= bro;
+  new_cur->bro	= bro;
   bro->dad	= new_cur;
   /* relink "old_cur" and "deep_son" */
-  deep_son = new_cur->son;
-  old_cur->bro = deep_son;
-  if (deep_son) deep_son->dad = old_cur;
+  deep_son	= new_cur->son;
+  old_cur->bro	= deep_son;
+  if (deep_son)
+    deep_son->dad = old_cur;
   /* finish relinking "old_cur" and "new_cur" */
-  new_cur->son	= old_cur;
   new_cur->dad	= old_cur->dad;
+  new_cur->son	= old_cur;
   old_cur->dad	= new_cur;
   /* relink "top" */
-  top = new_cur->dad;
   if (top) {
     if (old_cur == top->bro)
       top->bro = new_cur;
@@ -558,7 +555,7 @@ ucl_btree_avl_depth (void * N_)
   if (!N) return 0;
   int		depth = 1;
   for (;;) {
-    switch (N->meta.avl_status) {
+    switch (AVL_STATUS(N)) {
     case UCL_SON_DEEPER:
       assert(N->son);
       ++depth;
@@ -599,7 +596,9 @@ ucl_btree_avl_is_balanced (void * N_)
   int	son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
   int	bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
   int	factor    = bro_depth - son_depth;
-  debug("factor=%d\n", factor);
+#if DEBUGGING_AND_LOGGING
+  debug("factor=%d", factor);
+#endif
   if ((-1 <= factor) && (factor <= +1))
     return
       ((N->son)? ucl_btree_avl_is_balanced(N->son) : true) &&
@@ -615,7 +614,9 @@ ucl_btree_avl_is_correct (void * N_)
   int	son_depth = (N->son)? (int)ucl_btree_avl_depth(N->son) : 0;
   int	bro_depth = (N->bro)? (int)ucl_btree_avl_depth(N->bro) : 0;
   int	factor    = bro_depth - son_depth;
-  debug("factor=%d\n", factor);
+#if DEBUGGING_AND_LOGGING
+  debug("factor=%d, son depth=%d, bro depth=%d", factor, son_depth, bro_depth);
+#endif
   switch (factor) {
   case -1:
     if (UCL_SON_DEEPER != AVL_STATUS(N))

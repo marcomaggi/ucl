@@ -27,13 +27,15 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		1
+#define MCL_DEBUGGING		0
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
 
 #define NUMBER		50
 #define LITTLENUMBER	10
+
+static void print_preorder_links (ucl_map_t M, const char * message, ...);
 
 
 /** --------------------------------------------------------------------
@@ -107,13 +109,14 @@ fill (ucl_map_t M, int first, int upper, int step)
 static void
 clean (ucl_map_t M)
 {
-#if 0
   for (link_t  L = ucl_map_first(M); L; L = ucl_map_first(M)) {
-    ucl_map_remove(M, L);
+#if 0
+    print_preorder_links(M, "before removing %d", L->key);
+#endif
+    ucl_map_delete(M, L);
     free_link(L);
   }
-  assert(0 == ucl_map_size(M));
-#endif
+  mcl_test_error_if_false(0 == ucl_map_size(M), "invalid size after cleaning map");
 }
 
 /** --------------------------------------------------------------------
@@ -137,6 +140,11 @@ checked_insertion (ucl_map_t M, int j, link_t * L)
   K1 = (*L)->key;
   mcl_test_error_if_false(j == K1.t_int, "invalid key value, expected %d got %d", j, K1.t_int);
   mcl_test_error_if_false(ucl_map_find_node(M, *L), "unable to find node from pointer, key %d", j);
+  mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			  "incorrect avl tree after insertion of %d", j);
+#if 0
+  print_preorder_links(M, "after insertion of %d", j);
+#endif
 }
 static void
 checked_deletion (ucl_map_t M, int j, link_t * L)
@@ -153,9 +161,11 @@ checked_deletion (ucl_map_t M, int j, link_t * L)
 			  "error finding node with key %d, got key %d", j, N->key.t_int);
   mcl_test_error_if_false(N == *L, "unexpected node with key %d, expected %p got %p",
 			  j, (void *)*L, (void *)N);
-  ucl_map_remove(M, N);
-  *L = NULL;
+  ucl_map_delete(M, N);
   mcl_test_error_if_false(old_size == 1+ucl_map_size(M), "invalid size after deletion of %d", j);
+  mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			  "incorrect avl tree after deletion of %d (%p)", j, *L);
+  *L = NULL;
 }
 static void
 validate_links (ucl_map_t M, int j, void * dad, void * son, void * bro, ucl_avl_status_t expected_status)
@@ -195,6 +205,8 @@ checked_insertion_m (ucl_map_t M, int j, link_t * L)
       return;
   }
   mcl_test_error("unable to find inserted link with key %d", j);
+  mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root),
+			  "incorrect avl tree after insertion of %d", j);
 }
 static void
 validate_links_m (int key, void * cur, void * dad, void * son, void * bro,
@@ -411,7 +423,7 @@ test_insert_and_find (void)
 	mcl_test_error_if_false(1 == K.t_int,
 				"invalid key value, expected %d got %d", 1, K.t_int);
 
-	ucl_map_remove(M, L);
+	ucl_map_delete(M, L);
 	free_link(L);
       }
       assert(0 == ucl_map_size(M));
@@ -1041,6 +1053,7 @@ test_multimap_insert_and_find (void)
       for (j=0; j<DIM; ++j) {
 	mcl_debug("inserting %d", j);
 	checked_insertion(M, j, &L[j]);
+	mcl_debug("done inserting %d", j);
       }
       validate_links(M, 3, NULL, L[1], L[7], UCL_BRO_DEEPER);
       validate_links(M, 1, L[3], L[0], L[2], UCL_EQUAL_DEPTH);
@@ -1055,6 +1068,10 @@ test_multimap_insert_and_find (void)
       mcl_test_error_if_false(is_balanced(M, M->root), "unbalanced tree after insertion");
       mcl_test_error_if_false(ucl_btree_avl_is_correct(M->root), "incorrect tree after insertion");
 
+      mcl_test_error_if_false(DIM == ucl_map_size(M),
+			      "invalid size after overall insertion, expected %d got %d",
+			      DIM, ucl_map_size(M));
+
       /* add another 5 (bro/son rotation raising the upper 5):
        *
        *   3b------7=--8b--9=      3b------7=--8b--9=      5=------7=--8b--9=
@@ -1065,6 +1082,7 @@ test_multimap_insert_and_find (void)
        *                                                   |
        *                                                   0=
        */
+#if 1
       j=10;
       k=5;
       mcl_debug("inserting %d in slot %d", k, j);
@@ -1085,10 +1103,7 @@ test_multimap_insert_and_find (void)
       validate_links_m( 9,  L[9],  L[8],  NULL,  NULL, UCL_EQUAL_DEPTH);
       mcl_test_error_if_false(is_balanced(M, M->root),
 			      "unbalanced tree after insertion of %d in slot", k, j);
-
-      mcl_test_error_if_false((size_t)1+j == ucl_map_size(M),
-			      "invalid size after overall insertion, expected %d got %d",
-			      1+j, ucl_map_size(M));
+#endif
 
     }
     clean(M);
@@ -3092,10 +3107,10 @@ test_count (void)
     size_t	count;
     ucl_map_initialise(M, 0, ucl_compare_int, getkey);
     {
-      for (j=0; j<=LITTLENUMBER; ++j)
+      for (j=0; j<LITTLENUMBER; ++j)
 	ucl_map_insert(M, alloc_link(j));
 
-      for (j=0; j<=LITTLENUMBER; ++j) {
+      for (j=0; j<LITTLENUMBER; ++j) {
 	K.t_int = j;
 	count = ucl_map_count(M, K);
 	mcl_test_error_if_false(1 == count, "wrong count of %d, expected %u got %u", j, 1, count);
@@ -3113,19 +3128,24 @@ test_count (void)
     size_t	count;
     ucl_map_initialise(M, UCL_ALLOW_MULTIPLE_OBJECTS, ucl_compare_int, getkey);
     {
-      fill_multimap(M, LITTLENUMBER, 0, 5, 3);
+      int	size	= NUMBER;
+      int	first	= 0;
+      int	step	= 5;
+      int	times	= 3;
+      fill_multimap(M, size, first, step, times);
 
-      for (j=1; j<=LITTLENUMBER; ++j) {
+      for (j=first; j<size; ++j) {
+	if (0 == j % step) continue;
 	K.t_int = j;
 	count = ucl_map_count(M, K);
 	mcl_test_error_if_false(1 == count, "wrong count of %d, expected %u got %u", j, 1, count);
-	if (0 == (1+j) % 5) ++j;
       }
 
-      for (j=0; j<=LITTLENUMBER; j+=5) {
+      for (j=first; j<size; j+=step) {
 	K.t_int = j;
 	count = ucl_map_count(M, K);
-	mcl_test_error_if_false(3 == count, "wrong count of %d, expected %u got %u", j, 3, count);
+	mcl_test_error_if_false((size_t)times == count,
+				"wrong count of %d, expected %d got %u", j, times, count);
       }
     }
     clean(M);

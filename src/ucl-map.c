@@ -63,6 +63,8 @@
 #define IS_BRO_DEEPER(N)        (UCL_BRO_DEEPER  == AVL_STATUS(N))
 #define IS_SON_DEEPER(N)        (UCL_SON_DEEPER  == AVL_STATUS(N))
 
+#define IS_LEAF(N)		((! SON_OF(N)) && (! BRO_OF(N)) && IS_EQUAL_DEPTH(N))
+
 /* to be used as right-side in assignments */
 #define DAD_OF(L)		((void *)((L)->dad))
 #define SON_OF(L)		((void *)((L)->son))
@@ -149,6 +151,7 @@ ucl_map_insert (ucl_map_t M, void * new_)
 {
   ucl_node_t	new = new_, dad=NULL, child=NULL;
   int		comparison_result=0;
+  ucl_bool_t	dad_is_root;
   assert(M);
   assert(new);
   /* The  new link  always  has AVL  status  set to  equal depth  before
@@ -262,9 +265,10 @@ ucl_map_insert (ucl_map_t M, void * new_)
      Adjusting  the  balancing  after  an insertion  is  DIFFERENT  from
      adjusting after a  removal.  We CANNOT take the  following loop and
      factor  it   out  joining   it  with  the   loop  at  the   end  of
-     "ucl_map_remove()". */
-  ucl_bool_t	dad_is_root;
-  for (child = dad, dad = DAD_OF(child);; child = dad, dad = DAD_OF(child)) {
+     "ucl_map_delete()". */
+  for (;;) {
+    child = dad;
+    dad   = DAD_OF(child);
     if (! dad)
       return true; /* "child" is the root */
     else if (SON_OF(dad) == child) { /* stepping up from the son subtree */
@@ -300,7 +304,7 @@ ucl_map_insert (ucl_map_t M, void * new_)
 	 */
 	AVL_STATUS(dad) = UCL_SON_DEEPER;
 	assert(ucl_btree_avl_is_correct(dad));
-	continue;
+	break;
       case UCL_SON_DEEPER:
 	/* Stepping up  from a son subtree  which got deeper,  we find a
 	 * "dad"  which was  already son  deeper; we  have to  perform a
@@ -365,7 +369,7 @@ ucl_map_insert (ucl_map_t M, void * new_)
 	 */
 	AVL_STATUS(dad) = UCL_BRO_DEEPER;
 	assert(ucl_btree_avl_is_correct(dad));
-	continue;
+	break;
       case UCL_BRO_DEEPER:
 	/* Stepping up  from a bro subtree  which got deeper,  we find a
 	 * "dad"  which was  already bro  deeper; we  have to  perform a
@@ -401,17 +405,15 @@ ucl_map_insert (ucl_map_t M, void * new_)
 }
 
 void
-ucl_map_remove (ucl_map_t M, void * cur_)
+ucl_map_delete (ucl_map_t M, void * del_)
 {
-  ucl_node_t	cur = cur_, dad, son, bro, L;
+  ucl_node_t	del = del_, dad, son, bro, tmp, child;
   ucl_bool_t	dad_is_root;
-  assert(ucl_map_find_node(M, cur));
-  debug("enter, removing link %p from map with %u nodes", (void *)cur, ucl_map_size(M));
+  assert(ucl_map_find_node(M, del));
   /* Handle the case of map with single node.  Notice that this function
      cannot be called with an empty map. */
   if (1 == M->size) {
-    debug("removing last and root node");
-    assert(cur == M->root);
+    assert(del == M->root);
     M->root = NULL;
     M->size = 0;
     return;
@@ -419,99 +421,140 @@ ucl_map_remove (ucl_map_t M, void * cur_)
   /* It is always possible to swap the root of a binary search tree with
      the rightmost element in its son's subtree, or the leftmost element
      in its bro's  subtree, and keep correct both  the tree ordering and
-     the AVL statuses of all the nodes but the root itself.
+     the AVL statuses of all the nodes but the old root itself.
 
-     Here we  swap "cur" with elements  in its subtree,  pushing it down
-     until  it becomes  a leaf;  this is  because it  is really  easy to
-     remove a leaf. */
-  while (SON_OF(cur) || BRO_OF(cur)) {
-    son = SON_OF(cur);
-    bro = BRO_OF(cur);
-    L   = son? ucl_btree_find_rightmost(son) : ucl_btree_find_leftmost(bro);
-    debug("swapping %p with %p", (void *)cur, (void *)L);
-    ucl_btree_swap(cur, L);
-    if (cur == M->root)
-      M->root = L;
+     The  following  loop swaps  "del"  with  elements  in its  subtree,
+     pushing it  down until  it becomes  a leaf; this  is because  it is
+     really easy to remove a leaf. */
+  while (SON_OF(del) || BRO_OF(del)) {
+    son = SON_OF(del);
+    bro = BRO_OF(del);
+    tmp = son? ucl_btree_find_rightmost(son) : ucl_btree_find_leftmost(bro);
+    ucl_btree_swap(del, tmp);
+    if (del == M->root)
+      M->root = tmp;
   }
-  /* Assert that "cur" is a leaf. */
-  assert(! SON_OF(cur));
-  assert(! BRO_OF(cur));
-  assert(UCL_EQUAL_DEPTH == AVL_STATUS(cur));
-  /* Remove  "cur" from  the  tree and  adjust  the status  of its  dad.
-     Notice that "dad" cannot be NULL because we have made sure that the
-     case of map with one element has been handled earlier. */
-  dad = DAD_OF(cur);
+  assert(IS_LEAF(del));
+  /* Remove the  leaf "del" from the  tree and adjust the  status of its
+     dad.  Notice  that "dad" cannot be  NULL because we  have made sure
+     that the case of map with one element has been handled earlier. */
+  dad = DAD_OF(del);
   size_decr(M);
-  if (cur == SON_OF(dad)) {
+  if (del == SON_OF(dad)) {
     SON(dad) = NULL;
     if (BRO_OF(dad)) {
+      assert(! IS_SON_DEEPER(dad));
       /* We have removed the leaf son of a tree having a bro.
        *
        *       dad--bro ...      dad--bro ...
        *        |    .       =>        .
-       *       cur   .                 .
+       *       del   .                 .
        */
-      if (IS_EQUAL_DEPTH(dad))
+      if (IS_EQUAL_DEPTH(dad)) {
         /* We have  removed the  leaf son of  a node being  equal depth;
          * example:
          *
          *  (dad) 5=--6= (bro)      (dad) 5b--6= (bro)
          *        |             =>
-         *  (cur) 4=
+         *  (del) 4=
          *
          * notice that  the depth of "dad"  tree does not  change: we do
          * NOT have to update the status of the upper nodes.
          */
         AVL_STATUS(dad) = UCL_BRO_DEEPER;
-      else {
+	assert(IS_LEAF(dad->bro));
+	assert(ucl_btree_avl_is_correct(dad));
+	return;
+      } else {
         assert(IS_BRO_DEEPER(dad));
-        /* We  have removed the  leaf son  of a  node being  bro deeper;
-         * example:
+        /* We have removed  the leaf son of a node  being bro deeper; we
+	 * need a rotation to rebalance the tree; there are 3 cases.
          *
-         *           (bro)                 (bro)
-         *  (dad) 5b--8=--9=      (dad) 5b--8=--9=         (bro) 8s--9=
-         *        |   |       =>            |       =>           |
-         *  (cur) 4=  7=                    7=         (old dad) 5b--7=
+         * The  bro of  "dad" is  bro  deeper: we  can only  do a  right
+         * rotation, after which the "dad" tree HAS got shorter:
          *
-         * notice that the  depth of the old "dad" tree  is equal to the
-         * depth of  the new "dad"  tree: we do  NOT have to  update the
-         * status of the upper nodes.
+         *           (bro)                (bro)
+         *  (dad) 5b--8b--9=     (dad) 5b--8b--9=     (bro) 8=--9=
+         *        |           =>                   =>       |
+         *  (del) 4=                                  (dad) 5=
+         *
+         * The bro of  "dad" is son deeper: we can  only do a right/left
+         * rotation, after which the "dad" tree HAS got shorter:
+         *
+         *  (dad) 5b--8s (bro)    (dad) 5b--8s (bro)          7=--8= (bro)
+         *        |   |        =>           |        =>       |
+         *  (del) 4=  7=                    7=          (dad) 5=
+         *
+         * The bro  of "dad" is equal  depth: in principle,  we could do
+         * either a right rotation or  a right/lerft rotation.  If we do
+         * a right rotation "dad" tree DOES NOT get shorter:
+         *
+         *          (bro)                 (bro)
+         *  (dad) 5b--8=--9=      (dad) 5b--8=--9=     (bro) 8s--9=
+         *        |   |       =>            |       =>       |
+         *  (del) 4=  7=                    7=         (dad) 5b--7=
+	 *
+         * if  we do  a  right/left  rotation "dad"  tree  DOES NOT  get
+         * shorter:
+         *
+         *          (bro)                 (bro)                (bro)
+         *  (dad) 5b--8=--9=      (dad) 5b--8=--9=           7b--8b--9=
+         *        |   |       =>            |       =>       |
+         *  (del) 4=  7=                    7=         (dad) 5=
+         *
+         * we select the right rotation.
          */
         dad_is_root = (M->root == dad);
-        dad = ucl_btree_avl_rot_right(dad);
-        if (dad_is_root) M->root = dad;
+	switch (AVL_STATUS(dad->bro)) {
+	case UCL_BRO_DEEPER:
+	  dad = ucl_btree_avl_rot_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_SON_DEEPER:
+	  dad = ucl_btree_avl_rot_right_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_EQUAL_DEPTH:
+	  dad = ucl_btree_avl_rot_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  return;
+	}
       }
-      return;
     } else {
       assert(! BRO_OF(dad));
-      assert(UCL_SON_DEEPER == AVL_STATUS(dad));
+      assert(IS_SON_DEEPER(dad));
       /* We have removed  the leaf son of a tree  being son deeper.  The
        * tree has got shorter: we have to update the status of the upper
        * nodes.
        *
-       *       dad              dad
-       *	|          =>
-       *       cur
+       *       dad      dad
+       *	|   =>
+       *       del
        */
       AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
+      assert(IS_LEAF(dad));
     }
   } else {
-    assert(cur == BRO_OF(dad));
+    assert(del == BRO_OF(dad));
     BRO(dad) = NULL;
     if (SON_OF(dad)) {
-      /* We have removed the bro of a tree having a son.
+      assert(! IS_BRO_DEEPER(dad));
+      /* We have removed the leaf bro of a tree having a son.
        *
-       *	dad--cur       dad
+       *	dad--del       dad
        *	 |         =>   |
        *	son ...        son ...
        *	 .              .
        *	 .              .
        */
-      if (IS_EQUAL_DEPTH(dad))
+      if (IS_EQUAL_DEPTH(dad)) {
         /* We have  removed the  leaf bro of  a node being  equal depth;
          * example:
          *
-         *  (dad) 5=--6= (cur)      (dad) 5s
+         *  (dad) 5=--6= (del)      (dad) 5s
          *        |             =>        |
          *  (son) 4=                (son) 4=
          *
@@ -519,26 +562,70 @@ ucl_map_remove (ucl_map_t M, void * cur_)
          * NOT have to update the status of the upper nodes.
          */
         AVL_STATUS(dad) = UCL_SON_DEEPER;
-      else {
+	assert(IS_LEAF(dad->son));
+	assert(ucl_btree_avl_is_correct(dad));
+	return;
+      } else {
         assert(IS_SON_DEEPER(dad));
-        /* We  have removed the  leaf bro  of a  node being  son deeper;
-         * example:
+        /* We have removed  the leaf bro of a node  being son deeper; we
+         * need a  rotation to rebalance  the tree; there are  3 cases.
          *
-         *  (dad) 5=--8= (cur)    (dad) 5s         (son) 3b--5s (old dad)
+         * The  son of  "dad"  is son  deeper:  we can  only  do a  left
+         * rotation, after which "dad" tree HAS got shorter.
+         *
+         *  (dad) 5s--8= (del)    (dad) 5s         (son) 3=--5= (dad)
+         *        |                     |                |
+         *  (son) 3s           => (son) 3s      =>       2=
+         *        |                     |
+         *        2=                    2=
+         *
+	 * The son of  "dad" is bro deeper: we can  only do a left/right
+	 * rotation, after which "dad" tree HAS got shorter:
+         *
+         *  (dad) 5s--8= (del)    (dad) 5s               4=--5= (dad)
+         *        |                     |                |
+         *  (son) 3b--4=       => (son) 3b--4=  => (son) 3=
+         *
+         * The son  of "dad" is equal  depth: in principle,  we could do
+         * either a left rotation or  a left/right rotation.  If we do a
+         * left rotation "dad" tree DOES NOT get shorter:
+         *
+         *  (dad) 5s--8= (del)    (dad) 5s         (son) 3b--5s (dad)
          *        |                     |                |   |
          *  (son) 3=--4=       => (son) 3=--4=  =>       2=  4=
          *        |                     |
          *        2=                    2=
          *
-         * notice that the  depth of the old "dad" tree  is equal to the
-         * depth of  the new "dad"  tree: we do  NOT have to  update the
-         * status of the upper nodes.
+         * if  we  do a  left/right  rotation  the  three DOES  NOT  get
+         * shorter:
+         *
+         *  (dad) 5s--8= (del)    (dad) 5s               4s--5= (dad)
+         *        |                     |                |
+         *  (son) 3=--4=       => (son) 3=--4=  => (son) 3s
+         *        |                     |                |
+         *        2=                    2=               2=
+         *
+         * we select a left rotation.
          */
         dad_is_root = (M->root == dad);
-        dad = ucl_btree_avl_rot_left(dad);
-        if (dad_is_root) M->root = dad;
+	switch (AVL_STATUS(dad->son)) {
+	case UCL_SON_DEEPER:
+	  dad = ucl_btree_avl_rot_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_BRO_DEEPER:
+	  dad = ucl_btree_avl_rot_left_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_EQUAL_DEPTH:
+	  dad = ucl_btree_avl_rot_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  return;
+	}
       }
-      return;
     } else {
       assert(! SON_OF(dad));
       assert(IS_BRO_DEEPER(dad));
@@ -546,154 +633,220 @@ ucl_map_remove (ucl_map_t M, void * cur_)
        * tree has got shorter: we have to update the status of the upper
        * nodes.
        *
-       *        dad--cur   =>   dad
+       *     dad--del   =>   dad
        *
        */
       AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
+      assert(IS_LEAF(dad));
     }
   }
-  /* If the function has not  returned yet, it is because removing "cur"
+  /* If the function has not  returned yet, it is because removing "del"
      made a subtree shorter than before,  so we have to step up the tree
-     and update  the "avl_status" of  the parent nodes,  doing rotations
-     when required to keep the tree balanced.
+     and update the  AVL status of ancestor nodes,  doing rotations when
+     required to keep the tree balanced.
 
-     Right now "dad"  has already its status set to  a correct value; we
-     have to start from the dad of "dad" and iterate.
+     We perform  a loop in  which "child" is  the node we come  from and
+     "dad" is the node that needs  to be balanced.  We iterate while the
+     tree having "dad"  as roo has got shorter with  the deletion: if it
+     has not changed  its depth, nothing changes from  the point of view
+     of its ancestor nodes, so no status updates are required. */
+  /* *** NOTE ***
 
-     We iterate while  the subtree we come from  has gotten shorter with
-     the  removal: if  a  subtree  has not  changed  its depth,  nothing
-     changes from  the point of view  of its parent nodes,  so no status
-     updates and rotations are required.
-
-     *** NOTE ***
-
-     Readjusting  the  balancing  after  a  removal  is  DIFFERENT  from
+     Readjusting  the  balancing  after  a deletion  is  DIFFERENT  from
      readjusting after an insertion.   We CANNOT take the following loop
      and  factor  it  out  joining  it  with the  loop  at  the  end  of
      "ucl_map_insert()". */
   for (;;) {
-    /* Step up to the dad of "dad". */
-    cur=dad;
-    dad=DAD_OF(cur);
-    /* If "dad" is the root, just return. */
-    if (!dad) {
-      M->root = cur;
-      return;
-    }
-    if (SON_OF(dad) == cur) {
-      /* The  son subtree  has got  shorter.   Has the  dad subtree  got
-	 shorter? */
-      debug("we have removed a link in the son subtree, dad's status is %s",
-	    STATUS_STRING(AVL_STATUS(dad)));
+    child=dad;
+    dad=DAD_OF(child);
+    if (!dad) return; /* "child" is the root */
+    if (child == SON_OF(dad)) { /* The son subtree has got shorter. */
       switch (AVL_STATUS(dad)) {
       case UCL_SON_DEEPER:
-	/* We come  from the son subtree  and "dad" was  son deeper: the
+	/* We come from  the son of "dad" and "dad"  was son deeper: the
 	 * tree having "dad" as root HAS got shorter.  Example:
 	 *
 	 *    dad--bro       dad--bro
 	 *     |        =>    |
-	 *    cur            cur
+	 *    chi            chi
 	 *     |
-	 *    it
+	 *    del
 	 */
 	AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
-	break; /* from the switch() */
+	assert(ucl_btree_avl_is_correct(dad));
+	break;
       case UCL_EQUAL_DEPTH:
-	/* We come from  the son subtree and "dad"  was equal depth: the
+	/* We come from the son of  "dad" and "dad" was equal depth: the
 	 * tree having "dad" as root HAS NOT got shorter.  Example:
 	 *
 	 *    dad--bro--two       dad--bro--two
 	 *     |    |        =>    |    |
-	 *    cur  one            cur  one
+	 *    chi  one            chi  one
 	 *     |
-	 *    it
+	 *    del
 	 */
 	AVL_STATUS(dad) = UCL_BRO_DEEPER;
+	assert(ucl_btree_avl_is_correct(dad));
 	return;
       case UCL_BRO_DEEPER:
-	/* We come  from the son subtree  and "dad" was  bro deeper: the
+	/* We come from  the son of "dad" and "dad"  was bro deeper: the
 	 * tree  having "dad"  as root  HAS NOT  got shorter  but  it is
-	 * unbalanced in the bro.  Example with right rotation:
+	 * unbalanced in the bro.  There are 3 cases.
 	 *
-	 *    dad--bro--two       dad--bro--two       bro-------two
-	 *     |    |    |         |    |    |         |         |
-	 *    cur  one  four  =>  cur  one  four  =>  dad--one  four
-	 *     |    |                   |              |    |
-	 *    it   three               three          cur  three
+	 * The  bro of  "dad"  is son  deeper:  we can  do a  right/left
+	 * rotation, after which "dad" tree HAS got shorter:
 	 *
-	 * other example with right/left rotation:
+	 *    dad--bro--two      dad--bro--two      one--bro--two
+	 *     |    |             |    |             |
+	 *    chi  one       =>  chi  one       =>  dad--thr
+	 *     |    |                  |             |
+	 *    del  thr                thr           chi
 	 *
-	 *    dad--bro--two       dad--bro--two       one---------bro--two
-	 *     |    |              |    |              |           |
-	 *    cur  one--four  =>  cur  one--four  =>  dad--three  four
-	 *     |    |                   |              |
-	 *    it   three               three          cur
+	 * The bro of  "dad" is bro deeper: we can  do a right rotation,
+	 * after which "dad" tree HAS got shorter:
 	 *
-	 * Notice that the new "dad" tree  has the same depth of the old
-	 * "dad" tree.
+	 *    dad--bro--two--fou    dad--bro--two--fou    bro-------two--fou
+	 *     |    |    |           |    |    |           |         |
+	 *    chi  one  thr      => chi  one  thr      => dad--one  thr
+	 *     |                                           |
+	 *    del                                         chi
+	 *
+	 * The bro  of "dad" is equal  depth: in principle,  we could do
+	 * either a right rotation or a right/left rotation.  If we do a
+	 * right rotation, "dad" tree DOES NOT get shorter:
+	 *
+	 *    dad--bro--two--fou    dad--bro--two--fou    bro--two--fou
+	 *     |    |                |    |                |
+	 *    chi  one           => chi  one           => dad--one
+	 *     |    |                     |                |    |
+	 *    del  thr                   thr              chi  thr
+	 *
+	 * if  we do  a right/left  rotation,  "dad" tree  DOES NOT  get
+	 * shorter  and  there  is  the  case  that  the  tree  is  left
+	 * unbalanced in the bro subtree:
+	 *
+	 *    dad--bro--two--fou    dad--bro--two--fou    one--bro--two--fou
+	 *     |    |                |    |                |
+	 *    chi  one           => chi  one           => dad--thr
+	 *     |    |                     |                |
+	 *    del  thr                   thr              chi
+	 *
+	 * so we must do a right rotation.
          */
         dad_is_root = (M->root == dad);
-        dad = IS_SON_DEEPER(dad->bro)? ucl_btree_avl_rot_right_left(dad) : ucl_btree_avl_rot_right(dad);
-        /* dad = ucl_btree_avl_rot_right(dad); */
-        if (dad_is_root) M->root = dad;
-        return;
+	switch (AVL_STATUS(dad->bro)) {
+	case UCL_BRO_DEEPER:
+	  dad = ucl_btree_avl_rot_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_SON_DEEPER:
+	  dad = ucl_btree_avl_rot_right_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_EQUAL_DEPTH:
+	  dad = ucl_btree_avl_rot_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  return;
+	}
       }
-    } else {
-      assert(BRO_OF(dad) == cur);
-      /* The  bro subtree  has got  shorter.   Has the  dad subtree  got
-	 shorter? */
-      debug("we have removed a link in the bro subtree, dad's status is %s",
-            STATUS_STRING(AVL_STATUS(dad)));
+    } else { /* The bro subtree has got shorter. */
+      assert(child == BRO_OF(dad));
       switch (AVL_STATUS(dad)) {
       case UCL_BRO_DEEPER:
-	/*We come  from the  bro subtree and  "dad" was bro  deeper: the
-	 *tree having "dad" as root HAS got shorter.  Example:
+	/* We come from  the bro of "dad" and "dad"  was bro deeper: the
+	 * tree having "dad" as root HAS got shorter.  Example:
 	 *
-	 *    dad--cur--it      dad--cur
-	 *     |            =>   |
-	 *    son               son
+	 *    dad--chi--del      dad--chi
+	 *     |             =>   |
+	 *    son                son
 	 */
 	AVL_STATUS(dad) = UCL_EQUAL_DEPTH;
+	assert(ucl_btree_avl_is_correct(dad));
 	break; /* from the switch() */
       case UCL_EQUAL_DEPTH:
-	/*We come  from the bro subtree  and "dad" was  equal depth: the
-	 *tree having "dad" as root HAS NOT got shorter.  Example:
+	/* We come from the bro of  "dad" and "dad" was equal depth: the
+	 * tree having "dad" as root HAS NOT got shorter.  Example:
 	 *
-	 *    dad--cur--it       dad--cur
+	 *    dad--chi--del      dad--chi
 	 *     |             =>   |
 	 *    son--one           son--one
 	 *     |                  |
 	 *    two                two
 	 */
 	AVL_STATUS(dad) = UCL_SON_DEEPER;
+	assert(ucl_btree_avl_is_correct(dad));
 	return;
       case UCL_SON_DEEPER:
-	/* We come  from the bro subtree  and "dad" was  son deeper: the
+	/* We come from  the bro of "dad" and "dad"  was son deeper: the
          * tree  having "dad" as  root HAS  NOT got  shorter but  it has
-         * become unbalanced in the son.  Example with left rotation:
+         * become unbalanced in the son.  There are 3 cases.
          *
-         *       dad--cur--it      dad--cur        son--dad--cur
-         *        |                 |               |    |
-         *       son--one      =>  son--one    =>   |   one
-         *        |                 |               |
-         *       two--three        two--three      two--three
+         * The son of "dad" is son  deeper: we do a left rotation, after
+         * which "dad" tree HAS got shorter:
          *
-         * other example with left/right rotation:
+         *   dad--chi--del    dad--chi        son--dad--chi
+         *    |                |               |    |
+         *   son--one      => son--one    =>   |   one
+         *    |                |               |
+         *   two--thr         two--thr        two--thr
          *
-         *       dad--cur--it      dad--cur        one--dad--cur
-         *        |                 |               |
-         *       son--one      =>  son--one    =>  son--three
-         *        |    |            |    |          |
-         *       two  three        two  three      two
+         * The son of "dad" is  bro deeper: we do a left/right rotation,
+         * after which "dad" tree HAS got shorter:
          *
-         * Notice that the new "dad" tree  has the same depth of the old
-         * "dad" tree.
+         *   dad--chi--del     dad--chi        one--dad--chi
+         *    |                 |               |
+         *   son--one      =>  son--one    =>  son--thr
+         *    |    |            |    |          |
+         *   two  thr          two  thr        two
+	 *
+         * The son  of "dad"  is equal depth:  in principle, we  coul do
+         * either a left rotation or  a left/right rotation.  If we do a
+         * left rotation, "dad" tree DOES NOT get shorter:
+         *
+         *   dad--chi--del    dad--chi         son--dad--chi
+         *    |                |                |    |
+         *   son--two--fou => son--two--fou => one  two--fou
+         *    |                |                |
+         *   one              one              thr
+         *    |                |
+         *   thr              thr
+         *
+	 * If  we do  a left/right  rotation,  "dad" tree  DOES NOT  get
+	 * shorter  but the  tree  may  be left  unbalanced  in the  son
+	 * subtree:
+         *
+         *   dad--chi--del    dad--chi         two--dad--chi
+         *    |                |                |    |
+         *   son--two--fou => son--two--fou => son  fou
+         *    |                |                |
+         *   one              one              one
+         *    |                |                |
+         *   thr              thr              thr
+	 *
+         * we must do a left rotation.
          */
 	debug("dad's son status is %s", STATUS_STRING(AVL_STATUS(SON_OF(dad))));
         dad_is_root = (M->root == dad);
-        dad = IS_BRO_DEEPER(dad->son)? ucl_btree_avl_rot_left_right(dad) : ucl_btree_avl_rot_left(dad);
-        if (dad_is_root) M->root = dad;
-	return;
+	switch (AVL_STATUS(dad->son)) {
+	case UCL_SON_DEEPER:
+	  dad = ucl_btree_avl_rot_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_BRO_DEEPER:
+	  dad = ucl_btree_avl_rot_left_right(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  break;
+	case UCL_EQUAL_DEPTH:
+	  dad = ucl_btree_avl_rot_left(dad);
+	  if (dad_is_root) M->root = dad;
+	  assert(ucl_btree_avl_is_correct(dad));
+	  return;
+	}
       }
     }
   } /* end of for() loop */

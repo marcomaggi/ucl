@@ -1456,7 +1456,7 @@ ucl_map_root (const ucl_map_t M)
 extern void ucl_map_initialise (ucl_map_t M, unsigned int flags,
 				ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
 extern ucl_bool_t ucl_map_insert (ucl_map_t M, void * L);
-extern void ucl_map_remove (ucl_map_t M, void * L);
+extern void ucl_map_delete (ucl_map_t M, void * L);
 extern void * ucl_map_find (const ucl_map_t M, const ucl_value_t key);
 extern ucl_bool_t ucl_map_find_node (const ucl_map_t M, void * N_);
 extern size_t ucl_map_depth (const ucl_map_t M);

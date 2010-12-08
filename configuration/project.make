@@ -18,6 +18,7 @@ $(eval $(call ds-h-files-installer,ucl_headers,$(ucl_SRCDIR),ucl*.h))
 ## Tests.
 ## ---------------------------------------------------------------------
 
+GDB		=
 PATTERNS	?= test-*.c
 
 ucl_tests_PATTERNS		= $(PATTERNS)
@@ -40,34 +41,34 @@ ucl_container_run_tests	=	\
 .PHONY: $(ucl_container_run_tests)
 
 run-test-btree:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-btree
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-btree
 
 run-test-circular:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-circular
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-circular
 
 run-test-hash:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-hash
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-hash
 
 run-test-tree:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-tree
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-tree
 
 run-test-vector:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-vector
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-vector
 
 run-test-heap:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-heap
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-heap
 
 run-test-list:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-list
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-list
 
 run-test-graph:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-graph
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-graph
 
 run-test-map:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-map
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-map
 
 run-test-bst:
-	$(ucl_tests_programs_ENV) $(ucl_tests_programs_BUILDDIR)/test-bst
+	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-bst
 
 ## --------------------------------------------------------------------
 
