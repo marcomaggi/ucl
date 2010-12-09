@@ -679,18 +679,6 @@ typedef struct ucl_node_getkey_t {
 
 /* ------------------------------------------------------------ */
 
-typedef struct ucl_heap_tag_t {
-  size_t		size;
-  ucl_node_t		root;
-  ucl_node_t		next;
-  int			state;
-  ucl_comparison_t	compar;
-} ucl_heap_tag_t;
-
-typedef ucl_heap_tag_t	ucl_heap_t[1];
-
-/* ------------------------------------------------------------ */
-
 typedef struct ucl_vector_config_tag_t {
   ucl_index_t			step_up;
   ucl_index_t			step_down;
@@ -754,6 +742,7 @@ extern void * ucl_btree_find_root (void * node)
 
 extern void ucl_btree_swap	(void * A, void * B);
 extern void ucl_btree_swap_out	(void * A, void * B);
+extern void ucl_btree_swap_no_meta (void * A_, void * B_);
 
 extern int ucl_btree_depth	(void * N);
 
@@ -1414,10 +1403,21 @@ extern void * ucl_list_ref (void * N_, ucl_index_t position);
  ** Heap functions.
  ** ----------------------------------------------------------*/
 
-extern void	ucl_heap_initialise	(ucl_heap_t H, ucl_comparison_t compar);
-extern void	ucl_heap_insert		(ucl_heap_t H, void * node);
-extern void *	ucl_heap_extract	(ucl_heap_t H);
-extern void	ucl_heap_merge		(ucl_heap_t H1, ucl_heap_t H2);
+typedef struct ucl_heap_tag_t {
+  size_t		size;
+  ucl_node_t		root;
+  ucl_node_t		next;
+  ucl_bool_t		append_to_bro_of_next;
+  ucl_comparison_t	keycmp;
+  ucl_node_getkey_t	getkey;
+} ucl_heap_tag_t;
+
+typedef ucl_heap_tag_t	ucl_heap_t[1];
+
+extern void ucl_heap_initialise	(ucl_heap_t H, ucl_comparison_t compar, ucl_node_getkey_t getkey);
+extern void ucl_heap_insert	(ucl_heap_t H, void * node);
+extern void * ucl_heap_extract	(ucl_heap_t H);
+extern void ucl_heap_merge	(ucl_heap_t H1, ucl_heap_t H2);
 
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
 ucl_heap_size (const ucl_heap_t H)

@@ -1993,7 +1993,7 @@ return a @code{void *} value; internally these pointers are cast to
 
 
 @deftypefun void ucl_btree_swap_out (void * @var{A}, void * @var{B})
-Given two pointers to nodes, interpret @var{A} as pointer to a node in a
+Given two pointers to nodes: interpret @var{A} as pointer to a node in a
 tree and @var{B} as pointer to a node @strong{out of any tree}; store
 the links and meta value of @var{A} into @var{B}, then resets the links
 and meta value of @var{A}.
@@ -2001,8 +2001,15 @@ and meta value of @var{A}.
 
 
 @deftypefun void ucl_btree_swap (void * @var{A}, void * @var{B})
-Given two pointers to nodes, swap the links and the meta value in the
+Given two pointers to nodes: swap the links and the meta value in the
 node structures.  Take care of the fact that @var{A} and @var{B} may
+reference each other.
+@end deftypefun
+
+
+@deftypefun void ucl_btree_swap_no_meta (void * @var{A}, void * @var{B})
+Given two pointers to nodes: swap the links but not the meta value in
+the node structures.  Take care of the fact that @var{A} and @var{B} may
 reference each other.
 @end deftypefun
 
@@ -3447,16 +3454,135 @@ Initialises a post--order iteration.
 
 
 @cindex Heap container
+@cindex Binary heap container
 
 
 The heap container allows us to collect a bunch of values and extract
 them sorted, from the lesser to the greater according to a custom
-comparison function.
+comparison function.  The @ucl{} heap is implemented as a binary tree,
+with nodes of type @code{ucl_node_tag_t}.
 
-The heap is implemented as a binary tree, with nodes of type
-@code{ucl_node_t}.  It is possible to use the heap to implement the heap
-sorting algorithm for the @ucl{} containers that make use of
-@code{ucl_node_t} nodes.
+@menu
+* heap intro::                  How it is done.
+* heap types::                  Heap type definitions.
+* heap creation::               Creating and destroying heaps.
+* heap insertion::              Adding elements to a heaps.
+* heap deletion::               Removing elements from a heaps.
+* heap ops::                    Various operations on a heaps.
+@end menu
+
+@c page
+@node heap intro
+@subsection How it is done
+
+
+The heap is implemented as binary tree in which we keep track of the
+root node and of the ``next dad'' node; new nodes are appended as
+children of the next dad, first as son then as bro; if a new node has
+key lesser than its dad we raise it in the tree.
+
+Let's see an example of heap construction.  Let's say the heap already
+has @samp{5} as root node; being the only one, the root node is also the
+next dad (marked with @samp{n} in the pictures).  Let's append @samp{8}
+as son of the next dad:
+
+@example
+n5
+ |
+ 8
+@end example
+
+@noindent
+now let's append @samp{10} as bro of next dad; the next dad becomes full
+so we do a breadth first step from @samp{5} to update it:
+
+@example
+n5--10       5--10
+ |      =>   |
+ 8          n8
+@end example
+
+@noindent
+now let's append @samp{3} as son of next dad, then raise it in the tree
+while it is lesser than its dad:
+
+@example
+ 5--10       5--10       3--10
+ |           |           |
+n8      =>  n3      =>  n5
+ |           |           |
+ 3           8           8
+@end example
+
+@noindent
+now let's append @samp{4} as bro of next dad, then raise it in the tree
+while it is lesser than its dad; finally, since the next dad has become
+full, we do a breadth first step from @samp{4} to update it:
+
+@example
+ 3--10       3--10      3--n10
+ |           |          |
+n5--4   =>  n4--5   =>  4--5
+ |           |          |
+ 8           8          8
+@end example
+
+@noindent
+we understand how to add @samp{12}:
+
+@example
+3--n10      3----n10
+|           |     |
+4--5    =>  4--5  12
+|           |
+8           8
+@end example
+
+@noindent
+and how to add @samp{14} updating the next dad with a breadth first step
+from @samp{10}:
+
+@example
+3----n10--14      3-----10--14
+|     |           |     |
+4--5  12      =>  4--5  12
+|                 |
+8                n8
+@end example
+
+@noindent
+further nodes will be appended to @samp{8}.
+
+Let's see some examples of node extraction.  Extracting a node from the
+heap means to extract its root, which is the lesser one; we replace it
+with the lesser among its children, then recursively descend the tree
+always replacing with the lesser.  So first we extract @samp{3}:
+
+@example
+ 3-----10--14      4-----10--14      4-----10--14
+ |     |           |     |           |     |
+ 4--5  12      =>  *--5  12      =>  5     12
+ |                 |                 |
+n8                n8                n8
+@end example
+
+@noindent
+then we extract @samp{4}:
+
+@example
+ 4-----10--14      5-----10--14      5-----10--14
+ |     |           |     |           |     |
+ 5     12      =>  *     12      => n8     12
+ |                 |
+n8                n8
+@end example
+
+@noindent
+and so on.
+
+@c page
+@node heap types
+@subsection Heap type definitions
 
 
 @deftp {Struct Typedef} ucl_heap_tag_t
@@ -3467,24 +3593,54 @@ nodes.
 @end deftp
 
 
-@menu
-* heap creation::             Creating and destroying heaps.
-* heap insertion::            Adding elements to a heaps.
-* heap deletion::             Removing elements from a heaps.
-* heap ops::                  Various operations on a heaps.
-@end menu
+The @ucl{} heap container collects nodes of type @code{ucl_node_tag_t},
+which hold no custom data; we have to at least associate a key to each
+node, doing something like this:
+
+@example
+typedef struct link_tag_t @{
+  ucl_node_tag_t        node;
+  ucl_value_t           key;
+@} link_tag_t;
+
+typedef link_tag_t *        link_t;
+
+static ucl_value_t
+link_key (ucl_value_t context UCL_UNUSED, void * L_)
+@{
+  link_t    L = L_;
+  return L->key;
+@}
+
+static const ucl_node_getkey_t getkey = @{
+  .data = @{ .pointer = NULL @},
+  .func = link_key
+@};
+@end example
+
+@noindent
+and then use @code{getkey} as last argument to
+@cfunc{ucl_heap_initialise}; we can use the key extractor directly like
+this:
+
+@example
+link_t          L;
+ucl_value_t     K;
+
+K = getkey.func(getkey.data, L);
+@end example
 
 @c page
 @node heap creation
 @subsection Creating and destroying heap
 
 
-@deftypefun void ucl_heap_initialise (ucl_heap_t @var{H}, ucl_comparison_t @var{compar})
-The base structure of a heap container must be allocated by the client
-code and initialised with this function.  The comparison function will
-get as arguments pointers to the heap nodes (@code{ucl_node_t}) in the
-@code{pointer} field of the @code{ucl_value_t} union; it is its
-responsibility to know how to extract the values from there.
+@deftypefun void ucl_heap_initialise (ucl_heap_t @var{H}, ucl_comparison_t @var{keycmp}, ucl_node_getkey_t @var{getkey})
+Initialise an already allocated heap structure.  @var{H} must be a
+pointer to an already allocated map structure; pointer to the already
+allocated map structure; @var{flags} configures the map behaviour;
+@var{keycmp} is the function+context used to compare keys; @var{getkey}
+is the function+context used to extract the key from nodes.
 @end deftypefun
 
 
