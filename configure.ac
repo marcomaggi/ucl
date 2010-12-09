@@ -32,15 +32,15 @@ dnl --------------------------------------------------------------------
 dnl Setup.
 dnl --------------------------------------------------------------------
 
-AC_INIT([ucl],[1.0a1],[marco.maggi-ipsu@poste.it])
+AC_INIT([ucl],[1.0a2],[marco.maggi-ipsu@poste.it])
 DS_BEGIN([./src/ucl.c])
 
 DS_C99_LANGUAGE_COMMON_SETUP
-DS_EXCLUDE_SECTION([DOC_RULES])
-DS_EXCLUDE_SECTION([DEV_RULES])
-DS_EXCLUDE_SECTION([CONFIG_INSPECTION_SCRIPT])
-DS_EXCLUDE_SECTION([AUTOCONF])
-DS_EXCLUDE_SECTION([PKGCONFIG])
+dnl DS_EXCLUDE_SECTION([DOC_RULES])
+dnl DS_EXCLUDE_SECTION([DEV_RULES])
+dnl DS_EXCLUDE_SECTION([CONFIG_INSPECTION_SCRIPT])
+dnl DS_EXCLUDE_SECTION([AUTOCONF])
+dnl DS_EXCLUDE_SECTION([PKGCONFIG])
 DS_C_LANGUAGE_LIBRARY([ucl],3,0,[ucl])
 
 dnl page

@@ -13,6 +13,7 @@ datadir=@datadir@
 docdir=${prefix}/doc
 includedir=@includedir@
 infodir=@infodir@
+htmldir=${docdir}
 libdir=@libdir@
 libexecdir=@libexecdir@
 localstatedir=@localstatedir@
@@ -37,20 +38,14 @@ library_interface_minor_version=@ucl_INTERFACE_MINOR_VERSION@
 library_id=@ucl_LIBRARY_ID@
 shared_library_name=@ucl_SHARED_LIBRARY_NAME@
 static_library_name=@ucl_STATIC_LIBRARY_NAME@
-stub_shared_library_id=@ucl_stub_SHARED_LIBRARY_ID@
-stub_shared_library_name=@ucl_stub_SHARED_LIBRARY_NAME@
-stub_shared_library_link_id=@ucl_stub_SHARED_LIBRARY_LINK_ID@
-stub_shared_library_link_name=@ucl_stub_SHARED_LIBRARY_LINK_NAME@
-stub_static_library_id=@ucl_stub_STATIC_LIBRARY_ID@
-stub_static_library_name=@ucl_stub_STATIC_LIBRARY_NAME@
 
 ## ------------------------------------------------------------
 
 Name: Useless Containers Library
 Description: C library of generic containers
 Version: ${library_interface_version}
-Libs: @LDFLAGS_DL@ -L${libdir} -l${stub_static_library_id}
-Cflags: -I${pkgincludedir} -DUCL_ENABLE_STUB=1
+Libs: -L${libdir} -l${library_id}
+Cflags: -I${pkgincludedir}
 
 ### end of file
 # Local Variables:

@@ -15,6 +15,7 @@ set -x
 
 ../configure \
     --with-abi=local-slackware                          \
+    --enable-use-sudo                                   \
     --enable-doc-html                                   \
     --enable-doc-pdf                                    \
     CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
