@@ -405,16 +405,6 @@ provided to handle collected data, but no container can be used without
 wrapping it in a module whose functions ``know'' how to deal with the
 type of collected data.
 
-The containers have to be used as ``leaves'' in the graph of
-dependencies of a whole application; they provide a service: collecting
-data.  For example: if we need to store a data structure in a linked
-list, we don't have to think that the structure ``is a'' list link, but
-rather that, temporarily, the structure is ``referenced by'' a list
-link.
-
-We give to the container the responsibility to hold a reference to a
-structure and we will come back later to take it out.
-
 All the function and data type names are prefixed with @code{ucl_}.
 There is no error reporting system: it is our responsibility to validate
 function's arguments using the appropriate @ucl{} functions.  With the
