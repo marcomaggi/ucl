@@ -458,9 +458,10 @@ and make use of it only if the test result is good.
 @section Structures size
 
 
-Under the tests directory of the source tree there is a small program
-that links to the library and prints the size of the @ucl{} data
-structures.  On a @code{i686-pc-linux-gnu} the output is:
+Under the @file{examples} directory of the source tree there is a small
+program that links to the library and prints the size of the @ucl{} data
+structures; it can be built and run with the @code{examples} makefile
+rule.  On a @code{i686-pc-linux-gnu} the output is:
 
 @example
 Size of common data types:
@@ -476,6 +477,7 @@ double          8
 long double     12
 size_t          4
 ptrdiff_t       4
+ucl_value_t     4
 
 Limits:
 
@@ -486,23 +488,18 @@ unsigned (UINT_MAX)             4294967295
 
 Size of UCL structures:
 
-ucl_value_t     4
-ucl_circular_t  16
-ucl_hash_t      68
-ucl_iterator_t  20
-ucl_list_t      20
-ucl_map_t       20
-ucl_vector_t    48
+ucl_circular_t       16
+ucl_hash_table_t     36
+ucl_heap_t           32
+ucl_iterator_t       20
+ucl_map_t            28
+ucl_vector_t         48
 
 Size of UCL link structures:
 
-ucl_btree_node_t        12
-ucl_hash_entry_t        16
-ucl_list_link_t         16
-ucl_map_link_t          24
-ucl_tree_node_t         12
-ucl_graph_node_t        28
-ucl_graph_link_t        28
+ucl_node_tag_t       16
+ucl_graph_node_tag_t 24
+ucl_graph_link_tag_t 28
 @end example
 
 @c page

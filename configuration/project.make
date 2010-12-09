@@ -134,6 +134,8 @@ ucl_examples_programs_ENV	= LD_LIBRARY_PATH=$(ucl_shared_library_BUILDDIR)
 
 $(eval $(call ds-c-example-programs,ucl))
 
+examples: ucl_examples-all
+	$(ucl_tests_programs_ENV) $(ucl_examples_BUILDDIR)/showsize
 
 ### end of file
 # Local Variables:
