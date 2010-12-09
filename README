@@ -107,6 +107,10 @@ environment.
 
     $ make tests
 
+to run tests for a all the containers:
+
+    $ make run-tests
+
 to run tests for a single container:
 
     $ make test-btree

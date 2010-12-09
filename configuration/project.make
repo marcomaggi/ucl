@@ -38,7 +38,9 @@ ucl_container_run_tests	=	\
 	run-test-list		run-test-graph		\
 	run-test-map		run-test-bst
 
-.PHONY: $(ucl_container_run_tests)
+.PHONY: $(ucl_container_run_tests) run-tests
+
+run-tests: $(ucl_container_run_tests)
 
 run-test-btree:
 	$(ucl_tests_programs_ENV) $(GDB)  $(ucl_tests_programs_BUILDDIR)/test-btree
