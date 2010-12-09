@@ -1424,6 +1424,11 @@ ucl_heap_size (const ucl_heap_t H)
 {
   return H->size;
 }
+static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) void *
+ucl_heap_root (const ucl_heap_t H)
+{
+  return H->root;
+}
 
 
 /** ------------------------------------------------------------

@@ -3684,6 +3684,11 @@ Merge two heaps: nodes from @var{other} are extracted and inserted into
 @var{H}.  When the function returns @var{other} is empty.
 @end deftypefun
 
+
+@deftypefn {Inline Function} {void *} ucl_heap_root (const ucl_heap_t @var{H})
+Return a pointer to the top node in the heap, without extracting it.
+@end deftypefn
+
 @c page
 @node circular
 @section The circular list
