@@ -276,10 +276,12 @@ The tree structure
 
 The heap structure
 
-* heap creation::             Creating and destroying heaps.
-* heap insertion::            Adding elements to a heaps.
-* heap deletion::             Removing elements from a heaps.
-* heap ops::                  Various operations on a heaps.
+* heap intro::                  How it is done.
+* heap types::                  Heap type definitions.
+* heap creation::               Creating and destroying heaps.
+* heap insertion::              Adding elements to a heaps.
+* heap deletion::               Removing elements from a heaps.
+* heap ops::                    Various operations on a heaps.
 
 The circular list
 
@@ -310,8 +312,8 @@ Depth first search
 
 The hash table structure
 
+* hash intro::                  How it is done.
 * hash types::                  Hash table types definitions.
-* hash implementation::         How it's done.
 * hash creation::               Creating and destroying hash tables.
 * hash insertion::              Adding elements to a hash table.
 * hash deletion::               Removing elements from a hash table.
@@ -4503,8 +4505,8 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 @end quotation
 
 @menu
+* hash intro::                  How it is done.
 * hash types::                  Hash table types definitions.
-* hash implementation::         How it's done.
 * hash creation::               Creating and destroying hash tables.
 * hash insertion::              Adding elements to a hash table.
 * hash deletion::               Removing elements from a hash table.
@@ -4515,57 +4517,8 @@ John Ousterhout and others (@url{http://www.tcl.tk/} for more about
 @end menu
 
 @c page
-@node hash types
-@subsection Hash table types definitions
-
-
-@deftp {Struct Typedef} ucl_hash_table_tag_t
-@deftpx {One Element Array} ucl_hash_table_t
-The base structure.  The vector of buckets is available as the field
-@code{ucl_vector_t buckets}.
-@end deftp
-
-
-The @ucl{} hash container collects entries of type
-@code{ucl_node_tag_t}, which hold no custom data; we have to at least
-associate a key to each node, doing something like this:
-
-@example
-typedef struct entry_tag_t @{
-  ucl_node_tag_t        node;
-  ucl_value_t           key;
-@} entry_tag_t;
-
-typedef entry_tag_t *        entry_t;
-
-static ucl_value_t
-entry_key (ucl_value_t context UCL_UNUSED, void * L_)
-@{
-  entry_t    L = L_;
-  return L->key;
-@}
-
-static const ucl_node_getkey_t getkey = @{
-  .data = @{ .pointer = NULL @},
-  .func = entry_key
-@};
-@end example
-
-@noindent
-and then use @code{getkey} as last argument to
-@cfunc{ucl_hash_initialise}; we can use the key extractor directly like
-this:
-
-@example
-entry_t         L;
-ucl_value_t     K;
-
-K = getkey.func(getkey.data, L);
-@end example
-
-@c page
-@node hash implementation
-@subsection How it's done
+@node hash intro
+@subsection How it is done
 
 
 A @ucl{} vector of pointers is allocated by the constructor; each
@@ -4644,7 +4597,7 @@ or less) constant.
 
 @c ------------------------------------------------------------
 
-@subsubsection Resizing
+@subsubheading Resizing
 
 Enlarging or restricting the hash table means enlarging or restricting
 the vector of buckets.  This happens with rules similar, but not equal,
@@ -4670,6 +4623,55 @@ Enlarging and restricting changes the number of buckets, so it requires
 a rehashing of all the entries in the table: this is expensive.
 
 @c page
+@node hash types
+@subsection Hash table types definitions
+
+
+@deftp {Struct Typedef} ucl_hash_table_tag_t
+@deftpx {One Element Array} ucl_hash_table_t
+The base structure.  The vector of buckets is available as the field
+@code{ucl_vector_t buckets}.
+@end deftp
+
+
+The @ucl{} hash container collects entries of type
+@code{ucl_node_tag_t}, which hold no custom data; we have to at least
+associate a key to each node, doing something like this:
+
+@example
+typedef struct entry_tag_t @{
+  ucl_node_tag_t        node;
+  ucl_value_t           key;
+@} entry_tag_t;
+
+typedef entry_tag_t *        entry_t;
+
+static ucl_value_t
+entry_key (ucl_value_t context UCL_UNUSED, void * L_)
+@{
+  entry_t    L = L_;
+  return L->key;
+@}
+
+static const ucl_node_getkey_t getkey = @{
+  .data = @{ .pointer = NULL @},
+  .func = entry_key
+@};
+@end example
+
+@noindent
+and then use @code{getkey} as last argument to
+@cfunc{ucl_hash_initialise}; we can use the key extractor directly like
+this:
+
+@example
+entry_t         L;
+ucl_value_t     K;
+
+K = getkey.func(getkey.data, L);
+@end example
+
+@c page
 @node hash creation
 @subsection Creating and destroying hash tables
 
@@ -4682,11 +4684,12 @@ the default values, for a table using strings as keys goes like this:
 ucl_vector_config_t C;
 ucl_vector_t        V;
 ucl_hash_table_t    H;
+ucl_node_getkey_t   getkey;
 
 ucl_vector_initialise_config_hash(C);
 ucl_vector_alloc(V, C);
 ucl_hash_initialise(H, V, ucl_compare_string, ucl_hash_string,
-                    ucl_node_getkey_t getkey);
+                    getkey);
 @end example
 
 @noindent
@@ -4769,8 +4772,8 @@ if (NULL == E)
 Extract an entry from the table.  @var{E}, a pointer to the entry to be
 removed, must be the return value of a previous invocation to
 @cfunc{ucl_hash_find}; the pointer @var{E} is internally cast to
-@code{ucl_node_t}.  The entry structure is not destroyed nor freed, just
-extracted.
+@code{ucl_node_t}.  The entry structure is neither destroyed nor freed,
+just extracted.
 
 Example:
 
@@ -4810,7 +4813,7 @@ list of the first non--@cnull{} bucket.  If the table is empty: return
 
 
 @deftypefun size_t ucl_hash_size (const ucl_hash_table_t @var{H})
-Return a value representing the number of entries in the table.
+Return the number of entries in the table.
 @end deftypefun
 
 
