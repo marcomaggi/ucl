@@ -406,6 +406,149 @@ ucl_map_insert (ucl_map_t M, void * new_)
 
 void
 ucl_map_delete (ucl_map_t M, void * del_)
+/*
+ * INTRODUCTION TO THE DELETION ALGORITHM
+ *
+ * This  is a brief  introduction to  make it  easier to  understand the
+ * source code.
+ *
+ * To remove a node  from an AVL search tree: first we  push it down the
+ * tree so that it becomes a leaf, then we detach it, finally we step up
+ * in the tree updating the status of the ancestor nodes.
+ *
+ * It is always possible to swap the node N of a binary search tree with
+ * the rightmost element  in its son's subtree, or  the leftmost element
+ * in its bro's subtree, keeping  correct both the tree ordering and the
+ * statuses of all the nodes but N itself; this is a desirable operation
+ * because detaching a leaf is really easy.
+ *
+ * We mark the  status of a node  with "=" for equal depth,  "s" for son
+ * deeper, "b" for bro deeper.  For example, pushing down the node 20 in
+ * the following tree:
+ *
+ *   20s--30=        15s--30=
+ *    |               |
+ *   10=--15=   =>   10=--20
+ *    |               |
+ *    5=              5=
+ *
+ * keeps correct ordering and statuses, with the exception of 20; we see
+ * that 15 gets the status that 20 had.
+ *
+ * We can then detach 20: the resulting tree is no more balanced and the
+ * statuses are  no more  correct; we  can fix them  by stepping  up the
+ * tree.  Node 10 lost the bro so now it is son deeper:
+ *
+ *    15s--30=
+ *     |
+ *   *10s
+ *     |
+ *     5=
+ *
+ * removing 20 has  not changed the depth of the subtree  of 10, so node
+ * 15 must not change its status.
+ *
+ *   *15s--30=
+ *     |
+ *    10s
+ *     |
+ *     5=
+ *
+ * A more  complex example, removing 3  in the tree below  by pushing it
+ * down its bro subtree.  First we swap it with 4, which is the leftmost
+ * in the bro subtree:
+ *
+ *   3b------7=--8b--9=      4b------7=--8b--9=
+ *   |       |               |       |
+ *   1=--2=  5=--6=      =>  1=--2=  5=--6=
+ *   |       |               |       |
+ *   0=      4=              0=      3
+ *
+ * then we  detach it adjusting the  status of its dad,  notice that the
+ * subtree of 5 has not got shorter:
+ *
+ *   4b------7=--8b--9=      4b------7=--8b--9=
+ *   |       |               |       |
+ *   1=--2=  5=--6=      =>  1=--2= *5b--6=
+ *   |                       |
+ *   0=      3               0=
+ *
+ * then  we step  up to  node 7,  we do  not need  to adjust  its status
+ * because the subtree we come from has not got shorter:
+ *
+ *                                   *
+ *   4b------7=--8b--9=      4b------7=--8b--9=
+ *   |       |               |       |
+ *   1=--2= *5b--6=      =>  1=--2=  5b--6=
+ *   |                       |
+ *   0=                      0=
+ *
+ * finally we  step up to node  4, we do  not need to adjust  its status
+ * because the subtree we come from has not got shorter:
+ *
+ *   *
+ *   4b------7=--8b--9=
+ *   |       |
+ *   1=--2=  5b--6=
+ *   |
+ *   0=
+ *
+ * Now what if we  remove 6?  We adjust the status of  5 and notice that
+ * its subtree has got shorter:
+ *
+ *   4b------7=--8b--9=
+ *   |       |
+ *   1=--2= *5=
+ *   |
+ *   0=
+ *
+ * then we step  up to node 7;  it was equal depth before  and its son's
+ * subtree has got shorter: its new status is bro deeper; the subtree of
+ * 7 has NOT got shorter because its previous status was equal depth:
+ *
+ *           *
+ *   4b------7b--8b--9=
+ *   |       |
+ *   1=--2=  5=
+ *   |
+ *   0=
+ *
+ * finally we  step up to node  4, we do  not need to adjust  its status
+ * because the subtree we come from has not got shorter.
+ *
+ * Now let's remove node 9 and adjust the status of its dad; the subtree
+ * of 8 has got shorter:
+ *
+ *               *
+ *   4b------7b--8=
+ *   |       |
+ *   1=--2=  5=
+ *   |
+ *   0=
+ *
+ * the we step up to node 7: we come from its bro subtree, which has got
+ * shorter, and its  status is bro deeper; the new status  of 7 is equal
+ * depth; the  subtree of 7 has  got shorter, because it  was bro deeper
+ * before:
+ *
+ *           *
+ *   4b------7=--8=
+ *   |       |
+ *   1=--2=  5=
+ *   |
+ *   0=
+ *
+ * finally we step  up to node 4:  its status is bro deeper  and we come
+ * from a  bro subtree  which has got  shorter; the  new status of  4 is
+ * equal depth:
+ *
+ *   *
+ *   4=------7=--8=
+ *   |       |
+ *   1=--2=  5=
+ *   |
+ *   0=
+ */
 {
   ucl_node_t	del = del_, dad, son, bro, tmp, child;
   ucl_bool_t	dad_is_root;

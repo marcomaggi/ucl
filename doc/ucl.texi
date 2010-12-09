@@ -5220,10 +5220,12 @@ while (N) @{
 @node map
 @section The map structure
 
+
 @cindex Map container
 
-The map container structure can be used to implement an associative
-array; it's implemented as an @acronym{AVL} tree.
+
+The map container is an @avl{} tree; it can be used to implement an
+associative array.
 
 @quotation
 The map/multimap idea was inspired by the book on C++ by Bjarne
@@ -5337,13 +5339,12 @@ K = getkey.func(getkey.data, L);
 
 
 @deftypefun void ucl_map_initialise (ucl_map_t @var{M}, unsigned int @var{flags}, ucl_comparison_t @var{keycmp}, ucl_node_getkey_t @var{getkey})
-Initialise an already allocated map structure.  @var{M} must be a
-pointer to an already allocated map structure; pointer to the already
-allocated map structure; @var{flags} configures the map behaviour;
-@var{keycmp} is the function+context used to compare keys; @var{getkey}
-is the function+context used to extract the key from nodes.
+Initialise an already allocated map structure.  @var{flags} configures
+the map behaviour; @var{keycmp} is the function+context used to compare
+keys; @var{getkey} is the function+context used to extract the key from
+nodes.
 
-Map configuration @var{flags} can be zero of an ORed combination of:
+Map configuration @var{flags} can be zero or an ORed combination of:
 
 @table @code
 @item UCL_ALLOW_MULTIPLE_OBJECTS
@@ -5393,184 +5394,6 @@ function only removes the link from the map, it's our responsibility to
 free the memory and resources associated to it.
 @end deftypefun
 
-@c ------------------------------------------------------------
-
-@subsubheading Introduction to the deletion algorithm
-
-This is a brief introduction to make it easier to understand the @ucl{}
-source code.
-
-To remove a node from an @avl{} search tree: first we push it down the
-tree so that it becomes a leaf, then we detach it, finally we step up in
-the tree updating the status of the parent nodes.
-
-It is always possible to swap the node @math{N} of a binary search tree
-with the rightmost element in its son's subtree, or the leftmost element
-in its bro's subtree, keeping correct both the tree ordering and the
-statuses of all the nodes but @math{N} itself; this is a desirable
-operation because detaching a leaf is really easy.
-
-We mark the status of a node with @samp{=} for equal depth, @samp{s} for
-son deeper, @samp{b} for bro deeper.  For example, pushing down the node
-@math{20} in the following tree:
-
-@example
-20s--30=        15s--30=
- |               |
-10=--15=   =>   10=--20
- |               |
- 5=              5=
-@end example
-
-@noindent
-keeps correct ordering and statuses, with the exception of @math{20}; we
-see that @math{15} gets the status that @math{20} had.
-
-We can then detach @math{20}: the resulting tree is no more balanced and
-the statuses are no more correct; we can fix them by stepping up the
-tree.  Node @math{10} lost the bro so now it is son deeper:
-
-@example
- 15s--30=
-  |
-*10s
-  |
-  5=
-@end example
-
-@noindent
-removing @math{20} has not changed the depth of the subtree of
-@math{10}, so node @math{15} must not change its state.
-
-@example
-*15s--30=
-  |
- 10s
-  |
-  5=
-@end example
-
-A more complex example, removing @math{3} in the tree below by pushing
-it down its bro subtree.  First we swap it with @math{4}, which is the
-leftmost in the bro subtree:
-
-@example
-3b------7=--8b--9=      4b------7=--8b--9=
-|       |               |       |
-1=--2=  5=--6=      =>  1=--2=  5=--6=
-|       |               |       |
-0=      4=              0=      3
-@end example
-
-@noindent
-then we detach it adjusting the status of its dad, notice that the
-subtree of @math{5} has @strong{not} got shorter:
-
-@example
-4b------7=--8b--9=      4b------7=--8b--9=
-|       |               |       |
-1=--2=  5=--6=      =>  1=--2= *5b--6=
-|                       |
-0=      3               0=
-@end example
-
-@noindent
-then we step up to node @math{7}, we do not need to adjust its status
-because the subtree we come from has not got shorter:
-
-@example
-                                *
-4b------7=--8b--9=      4b------7=--8b--9=
-|       |               |       |
-1=--2= *5b--6=      =>  1=--2=  5b--6=
-|                       |
-0=                      0=
-@end example
-
-@noindent
-finally we step up to node @math{4}, we do not need to adjust its status
-because the subtree we come from has not got shorter:
-
-@example
-*
-4b------7=--8b--9=
-|       |
-1=--2=  5b--6=
-|
-0=
-@end example
-
-Now what if we remove @math{6}?  We adjust the status of @math{5} and
-notice that its subtree has got shorter:
-
-@example
-4b------7=--8b--9=
-|       |
-1=--2= *5=
-|
-0=
-@end example
-
-@noindent
-then we step up to node @math{7}; it was equal depth before and its
-son's subtree has got shorter: its new status is bro deeper; the subtree
-of @math{7} has @strong{not} got shorter because its previous status was
-equal depth:
-
-@example
-        *
-4b------7b--8b--9=
-|       |
-1=--2=  5=
-|
-0=
-@end example
-
-@noindent
-finally we step up to node @math{4}, we do not need to adjust its status
-because the subtree we come from has not got shorter.
-
-Now let's remove node @math{9} and adjust the status of its dad; the
-subtree of @math{8} has got shorter:
-
-@example
-            *
-4b------7b--8=
-|       |
-1=--2=  5=
-|
-0=
-@end example
-
-@noindent
-the we step up to node @math{7}: we come from its bro subtree, which has
-got shorter, and its status is bro deeper; the new status of @math{7} is
-equal depth; the subtree of @math{7} has got shorter, because it was bro
-deeper before:
-
-@example
-        *
-4b------7=--8=
-|       |
-1=--2=  5=
-|
-0=
-@end example
-
-@noindent
-finally we step up to node @math{4}: its status is bro deeper and we
-come from a bro subtree which has got shorter; the new status of
-@math{4} is equal depth:
-
-@example
-*
-4=------7=--8=
-|       |
-1=--2=  5=
-|
-0=
-@end example
-
 @c page
 @node map ops
 @subsection Various operations on a map
@@ -5588,7 +5411,7 @@ simple maps.
 
 @deftypefun {void *} ucl_map_find (const ucl_map_t @var{M}, const ucl_value_t @var{key});
 Return a pointer to the (first found) element associated with @var{key}.
-The return value is @cnull{} if such an element doesn't exist.
+The return value is @cnull{} if such an element does not exist.
 
 For a multimap, this function returns a pointer to the first element
 with the selected key, so that the others can be found with repeated
@@ -5631,7 +5454,7 @@ the map.
 @deftypefun {void *} ucl_map_find_or_next (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the lesser key greater than the selected one; if there are
-multple links having key equal to @var{key}, select the rightmost one.
+multiple links having key equal to @var{key}, select the rightmost one.
 Return a pointer to the requested link or @cnull{} if all the keys in
 the map are lesser than the selected one.
 @end deftypefun
@@ -5640,7 +5463,7 @@ the map are lesser than the selected one.
 @deftypefun {void *} ucl_map_find_or_prev (const ucl_map_t @var{M}, const ucl_value_t @var{key})
 Given a key find the element in the map associated with it, or the
 element with the greater key lesser than the selected one; if there are
-multple links having key equal to @var{key}, select the leftmost one.
+multiple links having key equal to @var{key}, select the leftmost one.
 Return a pointer to the requested link or @cnull{} if all the keys in
 the map are greater than the selected one.
 @end deftypefun
@@ -5665,10 +5488,8 @@ Return the depth of the tree.
 @subsection Iteration over a map
 
 
-For the map, the iteration is over the map links:
-@cfunc{ucl_iterator_ptr} returns a pointer to the current map link.  We
-can use the @cfunc{ucl_map_getkey} and @cfunc{ucl_map_setkey} to acquire
-the keys and values.
+The iteration is over the map links: @cfunc{ucl_iterator_ptr} returns a
+pointer to the current map link.
 
 
 @deftypefun void ucl_map_iterator_inorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
@@ -5676,7 +5497,7 @@ the keys and values.
 @deftypefunx void ucl_map_iterator_postorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
 @deftypefunx void ucl_map_iterator_levelorder (const ucl_map_t @var{M}, ucl_iterator_t @var{I})
 Initalise an inorder, preorder, postorder or breadth first iteration.
-@ref{btree iteration}, for details.
+@ref{btree iteration} for details.
 @end deftypefun
 
 
@@ -5698,12 +5519,12 @@ starting with the last element.
 @cindex Set iterators
 
 It's possible to compose map iterators to implement set operations: the
-keys from a map are used as set elements, the values are not considered.
-A set operation is implemented as an iterator that visits one by one the
-result of the operation itself.
+keys from a map are used as set elements.  A set operation is
+implemented as an iterator that visits one by one the result of the
+operation itself.
 
 The key values must be of the same data type.  That means that the
-compare function used by both the maps, must accept the same type of
+compare function used by both the maps must accept the same type of
 values and return the same values when called with the same arguments.
 
 For all the set iterators, the arguments are:
