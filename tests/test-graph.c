@@ -407,7 +407,7 @@ build_test_graph_1 (ucl_graph_node_t N, ucl_graph_link_t L)
  ** Helper functions.
  ** ----------------------------------------------------------------- */
 
-static int
+static int UCL_UNUSED
 find_link (ucl_graph_link_t L, ucl_graph_link_t link)
 {
   for (size_t i=0; i<NUMBER_OF_LINKS_1; ++i) {
@@ -415,7 +415,7 @@ find_link (ucl_graph_link_t L, ucl_graph_link_t link)
   }
   return -1;
 }
-static int
+static int UCL_UNUSED
 find_node (ucl_graph_node_t N, ucl_graph_node_t node)
 {
   for (size_t i=0; i<NUMBER_OF_NODES_1; ++i) {
