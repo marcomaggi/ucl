@@ -77,7 +77,7 @@ clean (ucl_node_t N)
     free_node(N);
   }
 }
-static void
+static void UCL_UNUSED
 print_list (ucl_node_t N)
 {
   ucl_node_t	M = NULL;
