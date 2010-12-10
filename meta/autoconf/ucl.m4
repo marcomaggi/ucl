@@ -1,9 +1,9 @@
 # Part of: Useless Containers Library
 # Contents: GNU Autoconf macros for UCL loading
 # Date: Sun Sep 16, 2007
-# 
+#
 # Abstract
-# 
+#
 #       This file must be included in your "configure.ac" by
 #       putting:
 #
@@ -17,21 +17,21 @@
 #               USELESS_CONTAINERS_LIBRARY(1,0)
 #
 #       for interface version "1.0".
-# 
-# Copyright (c) 2007, 2008 Marco Maggi
-# 
+#
+# Copyright (c) 2007-2008, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+#
 # This  program  is free  software:  you  can redistribute  it
 # and/or modify it  under the terms of the  GNU General Public
 # License as published by the Free Software Foundation, either
 # version  3 of  the License,  or (at  your option)  any later
 # version.
-# 
+#
 # This  program is  distributed in  the hope  that it  will be
 # useful, but  WITHOUT ANY WARRANTY; without  even the implied
 # warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
 # PURPOSE.   See  the  GNU  General Public  License  for  more
 # details.
-# 
+#
 # You should  have received a  copy of the GNU  General Public
 # License   along   with    this   program.    If   not,   see
 # <http://www.gnu.org/licenses/>.
@@ -78,10 +78,6 @@ UCL_LIBRARY_ID=$("${UCL_CONFIG}" --library-id)
 AC_SUBST([UCL_LIBRARY_ID],[${UCL_LIBRARY_ID}])
 AC_MSG_NOTICE([UCL library identifier ${UCL_LIBRARY_ID}])
 
-UCL_STUB_STATIC_LIBRARY_ID=$("${UCL_CONFIG}" --stub-static-library-id)
-AC_SUBST([UCL_STUB_STATIC_LIBRARY_ID],[${UCL_STUB_STATIC_LIBRARY_ID}])
-AC_MSG_NOTICE([UCL stub static library identifier ${UCL_STUB_STATIC_LIBRARY_ID}])
-
 # Verify the header file.
 INCLUDES="${INCLUDES} -I${UCL_INCLUDEDIR}"
 ucl_saved_CPPFLAGS="${CPPFLAGS}"
@@ -91,37 +87,9 @@ CPPFLAGS="${ucl_saved_CPPFLAGS}"
 
 # Verify the static/shared library.
 UCL_LIBS=
-AC_CHECK_LIB(${UCL_LIBRARY_ID},ucl_version,[UCL_LIBS="-l${UCL_LIBRARY_ID}"],[
-AC_MSG_ERROR([cannot link to Useless Containers Library])
-])
+AC_CHECK_LIB(${UCL_LIBRARY_ID},ucl_version,[UCL_LIBS="-l${UCL_LIBRARY_ID}"],
+    [AC_MSG_ERROR([cannot link to Useless Containers Library])])
 AC_SUBST([UCL_LIBS],[${UCL_LIBS}])
-
-# Verify the static/shared library.
-UCL_STUB_LIBS=
-AC_CHECK_LIB(${UCL_STUB_STATIC_LIBRARY_ID},ucl_init_stub_table,
-    [UCL_STUB_LIBS="-l${UCL_STUB_STATIC_LIBRARY_ID}"],[
-AC_MSG_WARN([cannot link to stub static Useless Containers Library])
-],[-ldl])
-
-AC_SUBST([UCL_STUB_LIBS],[${UCL_STUB_LIBS}])
-
-AC_ARG_ENABLE([ucl-stub],
-    AC_HELP_STRING([--disable-ucl-stub], [Disable UCL linking with stub mechanism (default: ENabled).]), [
-        if test "$enableval" = yes ; then
-            UCL_ENABLE_STUB=yes
-        else
-            UCL_ENABLE_STUB=no
-        fi
-],[UCL_ENABLE_STUB=yes])
-
-AC_SUBST([UCL_ENABLE_STUB])
-
-if test "${UCL_ENABLE_STUB}" = 'yes' ; then
-    AC_MSG_NOTICE([enabled UCL linking with the stub mechanism])
-    AC_DEFINE([UCL_ENABLE_STUB],[1],[enables UCL linking with the stub mechanism])
-else
-    AC_MSG_NOTICE([Disabled UCL linking with the stub mechanism])
-fi
 
 ])
 

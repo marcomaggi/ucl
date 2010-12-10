@@ -1,6 +1,6 @@
 #!@SHELL@
 # @PACKAGE_NAME_LOWERCASE@-config --
-# 
+#
 # Package configuration script.
 
 #page
@@ -10,9 +10,6 @@
 
 PACKAGE_NAME="@PACKAGE_NAME@"
 PACKAGE_VERSION="@PACKAGE_VERSION@"
-PACKAGE_VERSION_MAJOR_MINOR="@PACKAGE_VERSION_MAJOR_MINOR@"
-PACKAGE_XVERSION="@PACKAGE_XVERSION@"
-PACKAGE_NAME_LOWERCASE="@PACKAGE_NAME_LOWERCASE@"
 
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
@@ -41,8 +38,6 @@ pkglibdir="@pkglibdir@"
 pkglibexecdir="@pkglibexecdir@"
 pkgsysconfdir="@pkgsysconfdir@"
 
-## ------------------------------------------------------------
-
 #page
 ## ------------------------------------------------------------
 ## Main.
@@ -52,17 +47,9 @@ case "$1" in
     --package-name)
 	echo "${PACKAGE_NAME}"
 	;;
-    --package-name-lowercase)
-	echo "${PACKAGE_NAME_LOWERCASE}"
-	;;
+
     --package-version)
 	echo "${PACKAGE_VERSION}"
-	;;
-    --package-version-majmin)
-	echo "${PACKAGE_VERSION_MAJOR_MINOR}"
-	;;
-    --package-xversion)
-	echo "${PACKAGE_XVERSION}"
 	;;
 
     ## ----------------------------------------
@@ -80,34 +67,6 @@ case "$1" in
     --library-id)
         # print the shared library identifier
         echo "@ucl_LIBRARY_ID@"
-        ;;
-    --shared-library-name)
-        echo "@ucl_SHARED_LIBRARY_NAME@"
-        ;;
-    --static-library-name)
-        # print the the static library file name
-        echo "@ucl_STATIC_LIBRARY_NAME@"
-        ;;      
-
-    --stub-shared-library-id)
-        echo "@ucl_stub_SHARED_LIBRARY_ID@"
-        ;;
-    --stub-shared-library-name)
-        echo "@ucl_stub_SHARED_LIBRARY_NAME@"
-        ;;
-
-    --stub-shared-library-link-id)
-        echo "@ucl_stub_SHARED_LIBRARY_LINK_ID@"
-        ;;
-    --stub-shared-library-link-name)
-        echo "@ucl_stub_SHARED_LIBRARY_LINK_NAME@"
-        ;;
-
-    --stub-static-library-id)
-        echo "@ucl_stub_STATIC_LIBRARY_ID@"
-        ;;
-    --stub-static-library-name)
-        echo "@ucl_stub_STATIC_LIBRARY_NAME@"
         ;;
 
     ## ----------------------------------------
@@ -184,14 +143,11 @@ case "$1" in
 	echo "${pkgsysconfdir}"
 	;;
     *)
-	echo 'usage: @PACKAGE_NAME_LOWERCASE@-config OPTION
+	echo 'usage: @PACKAGE_NAME@-config OPTION
 options:
 
     --package-name              print the package name
-    --package-name-lowercase    print the package name in lower case chars
     --package-version           print the full package version
-    --package-version-majmin    print the MAJOR.MINOR package version
-    --package-xversion          print the extended full package version
 
     --library-interface-version
                                 print the library interface version
@@ -203,19 +159,6 @@ options:
                                 minor number
 
     --library-id                print the library identifier
-    --shared-library-name       print the shared library file name
-    --static-library-name       print the static library file name
-    --stub-shared-library-id    print the stub shared library
-                                identifier
-    --stub-shared-library-name  print the stub shared library file name
-    --stub-shared-library-link-id
-                                print the stub shared library link
-                                identifier
-    --stub-shared-library-link-name
-                                print the stub shared library link
-                                file name
-    --stub-static-library-id    print the stub static library identifier
-    --stub-static-library-name  print the stub static library file name
 
     --prefix            print the installation prefix for
                         architecture-independent files

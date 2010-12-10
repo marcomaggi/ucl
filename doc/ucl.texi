@@ -415,6 +415,10 @@ officially it supports only the @gnu{} infrastructure: requires the
 @gnu{} C library and compiles fine with the @gnu{} C compiler
 (@code{-std=c99 -pedantic} switches).
 
+The library makes use of inline functions and it is designed to be used
+only by C libraries and programs; it is probably impossible to interface
+it with other languages, unless through a C language wrapper library.
+
 @menu
 * overview using::              Using the library.
 * overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
@@ -430,9 +434,8 @@ officially it supports only the @gnu{} infrastructure: requires the
 @set using_package              @value{PACKAGE_NICKNAME}
 @set using_PACKAGE              UCL
 @set using_config_script        @value{PACKAGE_NICKNAME}-config
-@set using_xversion             1.0a1
-@set using_version              1.0.0
-@set using_iface_version        1.2
+@set using_version              @version{}
+@set using_iface_version        3.0
 @set using_autoconf_macro       USELESS_CONTAINERS_LIBRARY
 
 @include overview-using.texiinc
