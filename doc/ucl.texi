@@ -1,86 +1,26 @@
-\input texinfo.tex @c -*-texinfo-*-
+\input texinfo.tex
 @c %**start of header
 @setfilename ucl.info
 @settitle Useless Containers Library
 @c %**end of header
 
-
-@c page
-@c ------------------------------------------------------------
-@c Macros.
-@c ------------------------------------------------------------
-
-@include version.texiinc
-
-@macro gnu{}
-@acronym{GNU}
-@end macro
-
-@macro gpl{}
-@acronym{GPL}
-@end macro
-
-@macro fdl{}
-@acronym{FDL}
-@end macro
+@include version.texi
+@include macros.texi
 
 @macro ucl{}
 @acronym{UCL}
-@end macro
-
-@macro tcl{}
-@acronym{TCL}
-@end macro
-
-@macro dfs{}
-@acronym{DFS}
-@end macro
-
-@c ------------------------------------------------------------
-@c Miscellaneous acronyms
-
-@macro ascii{}
-@acronym{ASCII}
-@end macro
-
-@macro api{}
-@acronym{API}
 @end macro
 
 @macro avl{}
 @acronym{AVL}
 @end macro
 
-@c Remember that @url is already used by Texinfo.
-@macro urla{}
-@acronym{URL}
+@macro dfs{}
+@acronym{DFS}
 @end macro
 
-@macro http{}
-@acronym{HTTP}
-@end macro
-
-@macro ftp{}
-@acronym{FTP}
-@end macro
-
-@macro smtp{}
-@acronym{SMTP}
-@end macro
-
-@c ------------------------------------------------------------
-@c C language macros.
-
-@macro function{NAME}
-@code{\NAME\()}
-@end macro
-
-@macro cfunc{NAME}
-@code{\NAME\()}
-@end macro
-
-@macro cnull{}
-@code{NULL}
+@macro tcl{}
+@acronym{TCL}
 @end macro
 
 @c page
@@ -92,7 +32,7 @@
 
 @c To be used as @value{PACKAGE} whenever we need to include the full
 @c name of this package.
-@set PACKAGE                    @ucl{}
+@set PACKAGE                    Useless Containers Library
 
 @c To be used as @value{PACKAGE} whenever we need to include the
 @c nickname of the project: the name that is used to compose the
@@ -109,8 +49,7 @@
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
-@set COPYRIGHT_YEARS            2001-2010
-
+@set COPYRIGHT_YEARS            2001-2010, 2013
 
 @c page
 @c ------------------------------------------------------------
@@ -118,30 +57,27 @@
 @c ------------------------------------------------------------
 
 @copying
-@noindent
-This document describes version @version{} of @value{PACKAGE}, a set of
-containers that can hold the basic set of C language types and untyped
-pointers.
+This document describes version @value{VERSION} of @value{PACKAGE}, a C
+language library implementing a set of containers.
 
 The package is distributed under the terms of the @gnu{} General Public
 License (@gpl{}) and can be downloaded from:
 
-@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}/}
+@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
 
 @noindent
 Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.3 or
-any later version published by the Free Software Foundation; with no
+under the terms of the @gnu{} Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with
 Invariant Sections being ``@gnu{} Free Documentation License'' and
-``@gnu{} General Public License'', no Front-Cover Texts, and no
-Back-Cover Texts.  A copy of the license is included in the section
-entitled ``GNU Free Documentation License''.
+``@gnu{} General Public License'', no Front--Cover Texts, and no
+Back--Cover Texts.  A copy of the license is included in the section
+entitled ``@gnu{} Free Documentation License''.
 @end quotation
 @end copying
-
 
 @c page
 @c ------------------------------------------------------------
@@ -174,7 +110,6 @@ entitled ``GNU Free Documentation License''.
 @syncodeindex fn cp
 @end ignore
 
-
 @c page
 @ifnottex
 @node Top
@@ -184,6 +119,7 @@ entitled ``GNU Free Documentation License''.
 
 @menu
 * overview::                    Overview of the library.
+* version::                     Version functions.
 * memory::                      Memory allocation.
 * typedefs::                    Data types you have to know.
 * containers::                  The data structures.
@@ -192,7 +128,6 @@ entitled ``GNU Free Documentation License''.
 
 Appendices
 
-* library version::             How to interpret the library version.
 * Package License::             GNU General Public License.
 * Documentation License::       GNU Free Documentation License.
 * references::                  Bibliography and references.
@@ -200,200 +135,9 @@ Appendices
 * function index::              An entry for each function.
 * type index::                  An entry for each type.
 * variable index::              An entry for each variable.
-
-@detailmenu
- --- The Detailed Node Listing ---
-
-Overview of the library
-
-* overview using::              Using the library.
-* overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
-* overview pkgconfig::          Using pkgconfig to load @ucl{}.
-* overview error::              Error handling.
-* overview size::               Structures size.
-* overview const::              Constification.
-
-Memory allocation
-
-* memory typedefs::             Allocator data types.
-* memory functions::            The default allocator.
-* memory blocks::               Handling blocks of memory.
-* memory ascii::                Handling ASCII strings.
-* memory macros::               Miscellaneous macros.
-
-Data types you have to know
-
-* typedefs value::              Collected values and others.
-* typedefs ranges::             Range selectors.
-* typedefs compar::             Comparison functions.
-* typedefs hash::               Hash functions.
-* typedefs callback::           Callback functions.
-* typedefs nodes::              Wrapping node structures.
-
-The data structures
-
-* btree::                       The binary tree structure.
-* tree::                        The tree structure.
-* circular::                    The circular list structure.
-* graph::                       The graph structure.
-* hash::                        The hash table structure.
-* heap::                        The heap structure.
-* list::                        The linked list structure.
-* map::                         The map structure.
-* vector::                      The vector structure.
-
-The binary tree container
-
-* btree typedefs::              Implementation and type definitions.
-* btree examples::              Usage examples.
-* btree creation::              Building btree hierarchies.
-* btree inspection::            Accessing nodes.
-* btree removing::              Removing elements.
-* btree find::                  Finding values.
-* btree swap::                  Swapping nodes.
-* btree visitors::              Finding nodes.
-* btree iteration::             Iterations in a btree hierarchy.
-* btree bst::                   Routines for raw binary search trees.
-* btree avl::                   Routines for @avl{} trees.
-
-Iterations in a btree hierarchy
-
-* btree inorder iteration::     Inorder iteration.
-* btree preorder iteration::    Preorder iteration.
-* btree postorder iteration::   Postorder iteration.
-* btree breadth first::         Breadth first iteration.
-
-The tree structure
-
-* tree implementation::         How it's done.
-* tree creation::               Creating a tree hierarchy.
-* tree insertion::              Inserting nodes into a tree.
-* tree testing::                Testing relationships between nodes.
-* tree relatives::              Accessing or setting the relatives of
-                                a node.
-* tree removing::               Removing elements from a tree.
-* tree iterators::              Traversing a tree.
-
-The heap structure
-
-* heap intro::                  How it is done.
-* heap types::                  Heap type definitions.
-* heap creation::               Creating and destroying heaps.
-* heap insertion::              Adding elements to a heaps.
-* heap deletion::               Removing elements from a heaps.
-* heap ops::                    Various operations on a heaps.
-
-The circular list
-
-* circular creation::           Creating and destroying circulars.
-* circular adding::             Adding elements to a circular.
-* circular removing::           Removing elements from a circular.
-* circular moving::             Moving the cursor.
-* circular search::             Searching elements.
-* circular ops::                Various operations on a circular.
-
-The graph structure
-
-* graph overview::              How it's done.
-* graph types::                 Graph type definitions.
-* graph insert::                Inserting links and nodes.
-* graph extract::               Extracting links and nodes.
-* graph merge::                 Merging links.
-* graph value::                 Accessing values.
-* graph link iter::             Link iterators.
-* graph ops::                   Various operations on a graph.
-* graph dfs::                   Depth first search.
-
-Depth first search
-
-* graph dfs example::           @dfs{} example.
-* graph dfs types::             @dfs{} related type defintions.
-* graph dfs api::               @dfs{} programming interface.
-
-The hash table structure
-
-* hash intro::                  How it is done.
-* hash types::                  Hash table types definitions.
-* hash creation::               Creating and destroying hash tables.
-* hash insertion::              Adding elements to a hash table.
-* hash deletion::               Removing elements from a hash table.
-* hash ops::                    Various operations on a hash table.
-* hash resizing::               Resizing a hash table.
-* hash iterator::               Visiting elements in the table.
-* hash functions::              Provided hash function.
-
-The linked list structure
-
-* list overview::               How it is done.
-* list cons::                   Constructing lists.
-* list visit::                  Visiting a list.
-* list deletion::               Removing elements from a list.
-* list ops::                    Various operations on a list.
-* list iteration::              Iteration over a list.
-
-The map structure
-
-* map intro::                   Introduction to operations and
-                                implementation.
-* map types::                   Type definitions for map.
-* map creation::                Creating and destroying maps.
-* map insertion::               Adding elements to a map.
-* map deletion::                Removing elements from a map.
-* map ops::                     Various operations on a map.
-* map iterators::               Iteration over a map.
-* map set::                     Composing map iterators.
-
-The vector structure
-
-* vector implementation::       How it's done.
-* vector typedefs::             Type definitions
-* vector creation::             Creating and destroying vectors.
-* vector indexes::              Converting indexes to pointers.
-* vector adding::               Adding elements to a vector.
-* vector removing::             Removing elements from a vector.
-* vector ops::                  Various operations on a vector.
-* vector find::                 Finding elements.
-* vector iteration::            Iteration over a vector.
-* vector memory::               Allocating and freeing memory.
-* vector as pqueue::            Using a vector as a priority queue.
-* vector high::                 High level functions.
-
-Converting indexes to pointers
-
-* vector indexes i2p::          Index to pointer conversion.
-* vector indexes p2i::          Pointer to index conversion.
-* vector indexes validation::   Validating indexes.
-* vector indexes range::        Range functions.
-* vector indexes block::        Range/block conversion.
-
-Allocating and freeing memory
-
-* vector memory intro::         Introduction to vector memory handling.
-* vector memory enlarge::       Enlarging allocated memory.
-* vector memory restrict::      Restricting allocated memory.
-* vector memory misc::          Miscellaneous memory functions.
-
-High level functions
-
-* vector high stack::           Stack and queue.
-* vector high append::          Appending data to a vector.
-* vector high insert::          Inserting into a vector.
-* vector high erase::           Removing from a vector.
-* vector high access::          Setters and getters.
-* vector high compare::         Comparing vectors.
-* vector high apply::           Applying functions.
-
-Miscellaneous functions
-
-* misc version::                Version functions.
-* misc compar::                 Comparison functions.
-* misc sort::                   Sorting functions.
-
-@end detailmenu
 @end menu
 
 @end ifnottex
-
 
 @c page
 @node overview
@@ -405,12 +149,16 @@ provided to handle collected data, but no container can be used without
 wrapping it in a module whose functions ``know'' how to deal with the
 type of collected data.
 
-All the function and data type names are prefixed with @code{ucl_}.
+@value{PACKAGE} installs the single header file @file{ucl.h}.  All the
+function names in the @api{} are prefixed with @code{ucl_}; all the
+constant names are prefixed with @code{UCL_}; all the type names are
+prefixed with @code{ucl_} and suffixed with @code{_t}.
+
 There is no error reporting system: it is our responsibility to validate
 function's arguments using the appropriate @ucl{} functions.  With the
 single exception of the vector module: @ucl{} does no memory allocation.
 
-The library is developed and tested under the Linux+@gnu{} system and
+The library is developed and tested under the @gnu{}+Linux system and
 officially it supports only the @gnu{} infrastructure: requires the
 @gnu{} C library and compiles fine with the @gnu{} C compiler
 (@code{-std=c99 -pedantic} switches).
@@ -419,26 +167,21 @@ The library makes use of inline functions and it is designed to be used
 only by C libraries and programs; it is probably impossible to interface
 it with other languages, unless through a C language wrapper library.
 
+When searching for the installed library with the @gnu{} Autotools, we
+can use the following macros in @file{configure.ac}:
+
+@example
+AC_CHECK_LIB([ucl],[ucl_version_string],,
+  [AC_MSG_ERROR([test for UCL library failed])])
+AC_CHECK_HEADERS([ucl.h],,
+  [AC_MSG_ERROR([test for UCL header failed])])
+@end example
+
 @menu
-* overview using::              Using the library.
-* overview autoconf::           Using @gnu{} Autoconf to load @ucl{}.
-* overview pkgconfig::          Using pkgconfig to load @ucl{}.
 * overview error::              Error handling.
 * overview size::               Structures size.
 * overview const::              Constification.
 @end menu
-
-@c ------------------------------------------------------------
-
-@set using_package_name         @value{PACKAGE}
-@set using_package              @value{PACKAGE_NICKNAME}
-@set using_PACKAGE              UCL
-@set using_config_script        @value{PACKAGE_NICKNAME}-config
-@set using_version              @version{}
-@set using_iface_version        3.0
-@set using_autoconf_macro       USELESS_CONTAINERS_LIBRARY
-
-@include overview-using.texiinc
 
 @c page
 @node overview error
@@ -565,6 +308,38 @@ It is not beautiful.  But the ugliness is only in the @ucl{} code, the
 user does not see it.
 
 @c page
+@node version
+@chapter Version functions
+
+
+The installed libraries follow version numbering as established by the
+@gnu{} Autotools.  For an explanation of interface numbers as managed by
+@gnu{} Libtool @xref{Libtool versioning, interface, Libtool's versioning
+system, libtool, Shared library support for @gnu{}}.
+
+
+@deftypefun {const char *} ucl_version_string (void)
+Return a pointer to a statically allocated @asciiz{} string representing
+the interface version number.
+@end deftypefun
+
+
+@deftypefun int ucl_version_interface_current (void)
+Return an integer representing the library interface current number.
+@end deftypefun
+
+
+@deftypefun int ucl_version_interface_revision (void)
+Return an integer representing the library interface current revision
+number.
+@end deftypefun
+
+
+@deftypefun int ucl_version_interface_age (void)
+Return an integer representing the library interface current age.
+@end deftypefun
+
+@c page
 @node memory
 @chapter Memory allocation
 
@@ -582,8 +357,8 @@ improve performance, because the @ucl{} makes use of a lot of little
 data structures.
 
 When needed: the library makes use of a default allocator that reverts
-to the standard @function{malloc}, @function{realloc} and
-@function{free} functions.
+to the standard @cfunc{malloc}, @cfunc{realloc} and
+@cfunc{free} functions.
 
 @menu
 * memory typedefs::             Allocator data types.
@@ -671,11 +446,11 @@ stored in @code{*@var{pp}}.
 @end itemize
 @end itemize
 
-This function must work like @function{malloc}, @function{realloc} and
-@function{free} with the fundamental difference that: in case of error
+This function must work like @cfunc{malloc}, @cfunc{realloc} and
+@cfunc{free} with the fundamental difference that: in case of error
 it must not return.  What it does instead of returning is not the
 business of @ucl{}; the default allocator will terminate the process
-with an invocation to @function{exit} with code @code{EXIT_FAILURE}.
+with an invocation to @cfunc{exit} with code @code{EXIT_FAILURE}.
 The @ucl{} guarantees that an error allocating memory will not corrupt
 any container (so the @code{alloc} function can @cfunc{longjump} to
 somewhere in case of error).
@@ -965,7 +740,7 @@ Reset to zero the fields.
 
 @deftypefun ucl_ascii_t ucl_ascii_const (char * @var{string})
 Build and return a structure initialised with @var{string}.  The length
-is determined with the standard @function{strlen} function.
+is determined with the standard @cfunc{strlen} function.
 @end deftypefun
 
 
@@ -1022,7 +797,7 @@ referenced memory block using @var{allocator}.
 
 @defmac ucl_struct_clean (@var{struct_p}, @var{type})
 @defmacx ucl_struct_reset (@var{struct_p}, @var{type})
-Reset to zero, using @function{memset}, the structure of @var{type}
+Reset to zero, using @cfunc{memset}, the structure of @var{type}
 pointed to by @var{struct_p}.
 @end defmac
 
@@ -1380,7 +1155,7 @@ The type of functions used to compare values.  Functions of this type
 are used by the associative containers.
 
 The behaviour of the function must be the one of the standard function
-@function{strcmp}: return @code{-1} if @code{a<b}, return @code{0} if
+@cfunc{strcmp}: return @code{-1} if @code{a<b}, return @code{0} if
 @code{a==b}, return @code{1} if @code{a>b}.
 
 The function has the responsibility to provide the comparison policy: to
@@ -1488,7 +1263,7 @@ Return true if the @code{func} field of @var{cb} is not @cnull{}.
 
 
 @deftypefun ucl_value_t ucl_callback_apply (ucl_callback_t @var{cb}, ...)
-If @function{ucl_callback_is_present} applied to @var{cb} evaluates to
+If @cfunc{ucl_callback_is_present} applied to @var{cb} evaluates to
 true: invoke the callback function using the callback context as first
 argument and a @code{va_list} as second argument; the @code{va_list}
 will hold references to the arguments to this function.  Return the
@@ -1500,7 +1275,7 @@ value is a @code{ucl_value_t} with all the bytes set to zero.
 
 
 @deftypefun ucl_value_t ucl_callback_eval_thunk (ucl_callback_t @var{cb})
-Like @function{ucl_callback_invoke} but the @code{va_list} argument is
+Like @cfunc{ucl_callback_invoke} but the @code{va_list} argument is
 replaced by @cnull{}.  Return the return value of the callback function.
 @end deftypefun
 
@@ -1510,7 +1285,7 @@ replaced by @cnull{}.  Return the return value of the callback function.
 
 
 The @ucl{} does not support any error reporting mechanism; this means
-that @function{ucl_callback_apply} does not expect the callback to fail.
+that @cfunc{ucl_callback_apply} does not expect the callback to fail.
 To avoid problems all the @ucl{} modules that need to apply a callback
 to arguments, do so by invoking a customisable function and are written
 in such a way that if the callback raises an exception nothing bad
@@ -1519,7 +1294,7 @@ happens.  The following @api{} handles this.
 
 @deftypefn {Function Prototype} ucl_value_t ucl_callback_apply_fun_t (ucl_callback_t @var{callback}, ...)
 The prototype of functions that apply a callback to a list of arguments.
-@function{ucl_callback_apply} has this prototype.
+@cfunc{ucl_callback_apply} has this prototype.
 @end deftypefn
 
 
@@ -1527,7 +1302,7 @@ The prototype of functions that apply a callback to a list of arguments.
 Register in @ucl{} a new function for the application of callbacks to
 arguments; it will be used by all the @ucl{} functions that invoke a
 callback.  The default application function is
-@function{ucl_callback_apply}.
+@cfunc{ucl_callback_apply}.
 @end deftypefun
 
 @c page
@@ -1795,7 +1570,7 @@ NULL == ucl_btree_getson(d)
 
 
 The correct way of building binary trees is to allocate node structures
-with a function that cleans them up, like @function{calloc}, then use
+with a function that cleans them up, like @cfunc{calloc}, then use
 the following functions to initialise the fields.  If a structure is
 recycled, we must reset its fields to zero first.
 
@@ -2063,7 +1838,7 @@ or to @var{self} itself if it has no brother.
 
 @deftypefun {void *} ucl_btree_find_deepest_son (void * @var{self})
 Find the deepest leftmost son in a subtree.  This is different from
-@function{ucl_btree_find_leftmost}.
+@cfunc{ucl_btree_find_leftmost}.
 
 Example:
 
@@ -2086,7 +1861,7 @@ Return a pointer to the deepest son in the @var{self} sub--hierarchy, or
 
 @deftypefun {void *} ucl_btree_find_deepest_bro (void * @var{self})
 Find the deepest rightmost bro in a subtree.  This is different from
-@function{ucl_btree_find_rightmost}.
+@cfunc{ucl_btree_find_rightmost}.
 
 Example:
 
@@ -2487,9 +2262,9 @@ return @code{void *} values; internally these pointers are cast to
 @deftypefnx {Inline Function} {void *} ucl_btree_first_postorder_backward (void * @var{root})
 Given a pointer to the root node of a tree, return the first node of a
 postorder iteration.  For the forward iteration: it is the deepest son
-found by @function{ucl_btree_find_deepest_son}; for the backward
+found by @cfunc{ucl_btree_find_deepest_son}; for the backward
 iteration: it is the deepest bro found by
-@function{ucl_btree_find_deepest_bro}.
+@cfunc{ucl_btree_find_deepest_bro}.
 @end deftypefn
 
 
@@ -3420,7 +3195,7 @@ are reset to @cnull{}.
 @subsection Traversing a tree
 
 
-For the tree iterators, the return value of @function{ucl_iterator_ptr}
+For the tree iterators, the return value of @cfunc{ucl_iterator_ptr}
 is a pointer to the current node.  All the following functions accept
 @code{void *} values as arguments: internally these pointers are cast to
 @code{ucl_node_t}.
@@ -3829,7 +3604,7 @@ the offset is zero, nothing happens.
 
 
 @deftypefun void ucl_circular_backward (ucl_circular_t @var{self}, int @var{times})
-A wrapper for @function{ucl_circular_forward}: move backwards the
+A wrapper for @cfunc{ucl_circular_forward}: move backwards the
 current position, @var{times} is the backward offset.  If the container
 is empty, or the offset is zero, nothing happens.
 @end deftypefun
@@ -3968,7 +3743,7 @@ node, one of incoming links of the destination node.
 
 
 Both node and link structures should be allocated using an equivalent of
-@function{calloc}, or reset to zero before being inserted in a graph.
+@cfunc{calloc}, or reset to zero before being inserted in a graph.
 
 
 @deftp {Struct Typedef} ucl_graph_node_tag_t
@@ -5542,7 +5317,7 @@ is not defined.
 
 The set iterators are used in the same fashion of all the other
 iterators in the @acronym{UCL} (@ref{iterators}).  The value retrieved
-with @function{ucl_iterator_ptr} is the pointer to the referenced map
+with @cfunc{ucl_iterator_ptr} is the pointer to the referenced map
 link.
 
 
@@ -6132,13 +5907,13 @@ else.
 
 
 @deftypefun void ucl_vector_swallow_block (ucl_vector_t @var{V}, ucl_vector_config_t @var{C}, ucl_block_t @var{block})
-A replacement for @function{ucl_vector_alloc} that takes an already
+A replacement for @cfunc{ucl_vector_alloc} that takes an already
 allocated block as data area; it is mandatory for the size of the block
 to be an integer multiple of the slot's dimension.  The vector is
 initialised to be full: all the slots are marked as used.
 
 The responsibility of the block memory is transferred to the vector, so
-the block must be freed only by calling @function{ucl_vector_free}; this
+the block must be freed only by calling @cfunc{ucl_vector_free}; this
 means that the memory will be freed by the allocator registered in
 @var{C}.
 @end deftypefun
@@ -6368,7 +6143,7 @@ for (i=ucl_range_min(R); i<=ucl_range_max(R); ++i)
 
 @noindent
 of course this is just an example, because it is much easiear to use
-@function{ucl_vector_push_back}.
+@cfunc{ucl_vector_push_back}.
 @end deftypefun
 
 @c page
@@ -6482,7 +6257,7 @@ slot in the vector.
 
 After the invocation of this function, it's possible to attempt a
 reallocation of the array to free some unused memory with a call to
-@function{ucl_vector_restrict}.
+@cfunc{ucl_vector_restrict}.
 
 
 Example of data erasure:
@@ -6955,11 +6730,11 @@ typedef struct pair_t @{
 and a @code{ucl_comparison_t} function+context to compare keys.
 
 If any time a @code{pair_t} must be inserted in the vector we use the
-@function{ucl_vector_insert_sort} function to determine the insertion
+@cfunc{ucl_vector_insert_sort} function to determine the insertion
 position, the elements will be kept sorted according to the key values
 and comparison algorithm.
 
-Then @function{ucl_vector_front} or @function{ucl_vector_back} can be
+Then @cfunc{ucl_vector_front} or @cfunc{ucl_vector_back} can be
 used to extract the element with lesser or greater key.
 
 @c page
@@ -7116,7 +6891,7 @@ This function invokes @cfunc{ucl_vector_enlarge_for_slots}.
 @deftypefun void ucl_vector_erase_range (ucl_vector_t @var{V}, ucl_range_t @var{R})
 Erase all the elements in the selected range.
 
-This function invokes @function{ucl_vector_restrict}.
+This function invokes @cfunc{ucl_vector_restrict}.
 @end deftypefun
 
 @c page
@@ -7581,19 +7356,15 @@ functions described above.
 
 
 @deftypefun void ucl_quicksort (void * @var{array}, size_t @var{count}, size_t @var{size}, ucl_comparison_t @var{compar})
-Like the standard @function{qsort}, but makes use of the comparison
+Like the standard @cfunc{qsort}, but makes use of the comparison
 function and context in @var{compar}.  @var{array} is an array of
 @var{count} elements of @var{size}.
 
 @quotation
-@strong{NOTE} This is indeed the @function{qsort} function from the
-@gnu{} C Library version 2.4, modified to use @var{compar}.
+@strong{NOTE} This is indeed the @cfunc{qsort} function from the @gnu{}
+C Library version 2.4, modified to use @var{compar}.
 @end quotation
 @end deftypefun
-
-@c page
-
-@include libversion.texiinc
 
 @c page
 @node references
@@ -7608,12 +7379,10 @@ dati in C}.  McGraw--Hill, 1993.
 Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 
 
-@c ------------------------------------------------------------
-
 @c page
 
-@include gpl-3.0.texiinc
-@include fdl-1.3.texiinc
+@include gpl-3.0.texi
+@include fdl-1.3.texi
 
 @c page
 @node concept index

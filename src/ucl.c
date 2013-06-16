@@ -9,7 +9,7 @@
 	Douglas  C. Schmidt  (schmidt@ics.uci.edu).   Modified by  Marco
 	Maggi (marcomaggi@gna.org).
 
-  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2005, 2007-2010, 2013 Marco Maggi <marco.maggi-ipsu@poste.it>
   Copyright (c) 1991,1992,1996,1997,1999,2004 Free Software Foundation,
   Inc.
 
@@ -67,27 +67,6 @@ void
 ucl_callback_set_application_function (ucl_callback_apply_fun_t * f)
 {
   ucl_callback_application_function = f;
-}
-
-
-/** ------------------------------------------------------------
- ** Version number functions.
- ** ----------------------------------------------------------*/
-
-const char *
-ucl_version (void)
-{
-  return PACKAGE_VERSION;
-}
-unsigned
-ucl_interface_major_version (void)
-{
-  return ucl_INTERFACE_MAJOR_VERSION;
-}
-unsigned
-ucl_interface_minor_version (void)
-{
-  return ucl_INTERFACE_MINOR_VERSION;
 }
 
 

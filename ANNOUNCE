@@ -1,0 +1,58 @@
+Subject: [announce] Useless Containers Library revision 2.0d0
+
+		   Useless Containers Library
+		   ==========================
+
+
+The  Useless Containers  Library  (UCL) is  an implementation  of
+generic data type containers  for the C language.  The containers
+are:
+
+* list, double-linked list;
+
+* circular, a circular double-linked list;
+
+* vector, an array with  arrangements that allow the minimisation
+  of memory reallocations;
+
+* map, an AVL tree used to implement an associative container;
+
+* tree, a not-binary tree structure;
+
+* heap, sorts elements;
+
+* graph, one day it will be implemented.
+
+
+  The package makes use of the  GNU Autotools and it is tested on
+a  GNU+Linux system.   It is  distributed under  the GNU  General
+Public License version 3.0.
+
+  The  latest version  of  this package  can  be downloaded  from
+Github:
+
+	  <http://sourceforge.net/projects/ucl/files/>
+
+
+development takes place at:
+
+	       <http://github.com/marcomaggi/ucl/>
+
+the documentation is available online:
+
+	  <http://marcomaggi.github.com/docs/ucl.html>
+
+
+Notes for revision 2.0d0
+------------------------
+
+* Stub library has been dropped.
+
+
+### end of file
+# Local Variables:
+# mode: text
+# coding: utf-8-unix
+# fill-column: 65
+# paragraph-start: "*"
+# End:

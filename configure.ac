@@ -1,58 +1,110 @@
 dnl @configure_input@
 dnl
-dnl Part of: Useless Containers Library
-dnl Contents: configuration script
-dnl Date: Mon Feb  2, 2009
-dnl
-dnl Abstract
-dnl
-dnl
-dnl
-dnl Copyright (c) 2009, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
-dnl
-dnl This  program  is free  software:  you  can redistribute  it
-dnl and/or modify it under the terms of the GNU General Public
-dnl License as published by the Free Software Foundation, either
-dnl version  3 of  the License,  or (at  your option)  any later
-dnl version.
-dnl
-dnl This  program is  distributed in  the hope  that it  will be
-dnl useful, but  WITHOUT ANY WARRANTY; without  even the implied
-dnl warranty  of  MERCHANTABILITY or  FITNESS  FOR A  PARTICULAR
-dnl PURPOSE.   See  the  GNU  General Public  License  for  more
-dnl details.
-dnl
-dnl You should  have received a  copy of the GNU  General Public
-dnl License   along   with    this   program.    If   not,   see
-dnl <http://www.gnu.org/licenses/>.
-dnl
 
-dnl page
-dnl --------------------------------------------------------------------
-dnl Setup.
-dnl --------------------------------------------------------------------
+AC_PREREQ([2.69])
+AC_INIT([Useless Containers Library],[2.0d0],[marco.maggi-ipsu@poste.it],
+  [ucl],[http://github.com/marcomaggi/ucl])
+AC_CONFIG_SRCDIR([src/])
+AC_CONFIG_MACRO_DIR([meta/autotools])
+AC_CONFIG_AUX_DIR([meta/autotools])
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+AM_INIT_AUTOMAKE([-Wall foreign dist-xz no-dist-gzip])
+AM_MAINTAINER_MODE
 
-AC_INIT([ucl],[1.0a3],[marco.maggi-ipsu@poste.it])
-DS_BEGIN([./src/ucl.c])
+AM_PROG_AR
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_MKDIR_P
 
-DS_C99_LANGUAGE_COMMON_SETUP
-dnl DS_EXCLUDE_SECTION([DOC_RULES])
-dnl DS_EXCLUDE_SECTION([DEV_RULES])
-dnl DS_EXCLUDE_SECTION([CONFIG_INSPECTION_SCRIPT])
-dnl DS_EXCLUDE_SECTION([AUTOCONF])
-dnl DS_EXCLUDE_SECTION([PKGCONFIG])
-DS_C_LANGUAGE_LIBRARY([ucl],3,0,[ucl])
+LT_PREREQ([2.4])
+LT_INIT
 
-dnl page
-dnl --------------------------------------------------------------------
-dnl Done.
-dnl --------------------------------------------------------------------
+#page
+#### interface version
 
-DS_CONFIG_FILE_PKGCONFIG
-DS_CONFIG_FILE_INSPECTION_SCRIPT
-DS_CONFIG_FILE_SLACKWARE_BIN_DESC
-DS_CONFIG_FILE_SLACKWARE_DOC_DESC
-DS_CONFIG_FILE_SLACKWARE_DEV_DESC
-DS_END
+ucl_VERSION_INTERFACE_CURRENT=3
+ucl_VERSION_INTERFACE_REVISION=0
+ucl_VERSION_INTERFACE_AGE=0
+AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_CURRENT],
+  [$ucl_VERSION_INTERFACE_CURRENT],
+  [current interface number])
+AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_REVISION],
+  [$ucl_VERSION_INTERFACE_REVISION],
+  [current interface implementation number])
+AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_AGE],
+  [$ucl_VERSION_INTERFACE_AGE],
+  [current interface age number])
+AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_STRING],
+  ["$ucl_VERSION_INTERFACE_CURRENT.$ucl_VERSION_INTERFACE_REVISION"],
+  [library interface version])
+AC_SUBST([ucl_VERSION_INTERFACE_CURRENT])
+AC_SUBST([ucl_VERSION_INTERFACE_REVISION])
+AC_SUBST([ucl_VERSION_INTERFACE_AGE])
+
+#page
+#### basic system inspection
+
+AC_LANG([C])
+dnl AC_DEFINE([_GNU_SOURCE],[1],[enable everything GNU])
+AC_PROG_CC_C99
+AM_PROG_AS
+AM_PROG_CC_C_O
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS([assert.h stdint.h strings.h errno.h stddef.h sys/mman.h sys/resource.h unistd.h])
+AC_CHECK_SIZEOF(void *)
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_TYPE_LONG_LONG_INT
+AC_TYPE_UNSIGNED_LONG_LONG_INT
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_INT8_T
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+
+dnl UCL_CHECK_PAGESIZE
+dnl AC_DEFINE_UNQUOTED([CCG_PAGESIZE],[$ucl_cv_pagesize],[Platform page size.])
+dnl UCL_CHECK_PAGESHIFT($ucl_cv_pagesize)
+dnl AC_DEFINE_UNQUOTED([CCG_PAGESHIFT],[$ucl_cv_pageshift],[Page shift bit count.])
+
+AC_CACHE_SAVE
+
+#page
+#### checks for library functions
+
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+dnl AC_CHECK_FUNCS([memmove memset strerror])
+dnl AC_CHECK_FUNCS([mmap munmap msync mremap madvise mlock munlock mlockall munlockall mprotect])
+dnl AC_CHECK_FUNCS([getenv])
+
+AC_CACHE_SAVE
+
+#page
+#### finish
+
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([Makefile]
+  [src/Makefile]
+  [doc/Makefile]
+  [tests/Makefile]
+  [meta/slackware/slack-desc]
+  [meta/ucl.pc]
+  [meta/ucl-config])
+AC_OUTPUT
 
 ### end of file
+# Local Variables:
+# mode: autoconf
+# page-delimiter: "^#page"
+# End:

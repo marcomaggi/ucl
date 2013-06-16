@@ -1,23 +1,9 @@
 # prepare.sh --
+#
 
-set -x
+set -ex
 
-(cd ..
-    test -f config.h.in || autoheader
-    if test \
-        configure -ot configure.ac -o \
-        configure -ot aclocal.m4   -o \
-        configure -ot infrastructure/develstuff.autoconf
-    then
-        autoconf
-        autoheader
-    fi)
-
-../configure \
-    --with-abi=local-slackware                          \
-    --enable-use-sudo                                   \
-    --enable-doc-html                                   \
-    --enable-doc-pdf                                    \
-    CFLAGS="-O3 -g -march=i686 -mtune=i686" "$@"
+(cd .. ; sh autogen.sh)
+sh ../configure.sh
 
 ### end of file

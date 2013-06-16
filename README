@@ -8,8 +8,8 @@ Topics
 
    1. Overview
    2. License
-   3. Usage
-   4. Make and install
+   3. Make and install
+   4. Usage
    A. Credits
    B. Bug reports
    C. Resources
@@ -45,7 +45,10 @@ compiler ("-std=c99 -pedantic" switches).
 2 License
 ---------
 
-Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+Copyright (c) 2001-2010, 2013 Marco Maggi
+<marco.maggi-ipsu@poste.it>
+Copyright (C)  1991, 1992, 1996,  1997, 1999, 2004  Free Software
+Foundation, Inc.
 
 This  program is free  software: you  can redistribute  it and/or
 modify it  under the terms of  the GNU General  Public License as
@@ -62,71 +65,58 @@ along      with     this      program.       If     not,      see
 <http://www.gnu.org/licenses/>.
 
 
-2. Usage
---------
-
-Read the documentation in Texinfo format.
-
-  The library  can be built  for both static linking  and dynamic
-linking.  There are containers  that depends on other containers.
-It is enough to include the main header file "ucl.h".
-
-  All the function names and data types are prefixed with "ucl_".
-
-
 3. Make and install
 -------------------
 
-If you are using a  checkout from the development repository, the
-"configure"  script  is  not   present;  to  build  it  just  run
-"autoconf" in the top directory of the source tree.
+To install from a proper release tarball, do this:
 
-  To build and install do this:
-
-    $ cd ucl-xxx
-    $ mkdir "=build"
-    $ ../configure [options]
+    $ cd ucl-2.0d0
+    $ mkdir build
+    $ cd build
+    $ ../configure
     $ make
+    $ make check
     $ make install
 
-  Warning: the  code makes sometimes heavy use  of the "assert()"
-macro; to exclude its  usage put the "--disable-assert" option on
-the command line of "configure"  or use the following setting for
-CPPFLAGS:
+to inspect the available configuration options:
 
-    $ configure CPPFLAGS="-DNDEBUG"
+    $ ../configure --help
 
-or compile with:
+  From a repository checkout or  snapshot (the ones from the
+Github site): we  may need to manually  run "libtoolize" the
+first time, then  we must first run  the script "autogen.sh"
+from the top source directory, to generate the needed files:
 
-    $ make CPPFLAGS="-DNDEBUG"
+    $ sh autogen.sh
 
-it is  strongly suggested to  disable assertions in  a production
-environment.
+for  this  we need  to  have  installed the  GNU  Autotools:
+Automake, Autoconf, Libtool.  After this:
 
-  To build the tests:
+    $ ../configure --enable-maintainer-mode [options]
+    $ make
+    $ make check
+    $ make install
 
-    $ make tests
+  The Makefile supports  the DESTDIR environment variable to
+install files in a  temporary location, example: to see what
+will happen:
 
-to run tests for a all the containers:
+    $ make -n install DESTDIR=/tmp/ucl
 
-    $ make run-tests
+to really do it:
 
-to run tests for a single container:
+    $ make install DESTDIR=/tmp/template
 
-    $ make test-btree
-    $ make test-circular
-    $ make test-graph
-    $ make test-hash
-    $ make test-heap
-    $ make test-list
-    $ make test-map
-    $ make test-tree
-    $ make test-vector
+  After  the  installation  it  is possible  to  verify  the
+installed library against the test suite with:
 
-each test has a name, to run  a single test we can use the "name"
-environment variable:
+    $ make installcheck
 
-    $ make test-vector name=vector-1.2
+
+4. Usage
+--------
+
+Read the documentation in Texinfo format.
 
 
 A. Credits
@@ -145,20 +135,29 @@ Foundation, Inc.
 B. Bug reports
 --------------
 
-A  bug in UCL  is my  fault only.   Bug reports  are appreciated,
+A bug  in UCL  is my  fault only.   Bug reports  are appreciated,
 register them with the issue tracker at the Github site.
 
 
 C. Resources
 ------------
 
-The latest version of this package can be downloaded from:
+The latest  version of this  package can be  downloaded from
+Github:
 
-	<http://github.com/marcomaggi/ucl/downloads>
+	  <http://sourceforge.net/projects/ucl/files/>
 
 development takes place at:
 
-	    <http://github.com/marcomaggi/ucl/>
+	       <http://github.com/marcomaggi/ucl/>
+
+and as backup at:
+
+	     <http://sourceforge.net/projects/ucl/>
+
+the documentation is available online:
+
+	  <http://marcomaggi.github.com/docs/ucl.html>
 
 the GNU Project software can be found here:
 
