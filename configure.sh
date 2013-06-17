@@ -11,7 +11,7 @@ prefix=/usr/local
     --enable-maintainer-mode                    \
     --disable-static --enable-shared            \
     --prefix="${prefix}"			\
-    CFLAGS='-O3'				\
+    CFLAGS='-O3 -pedantic'			\
     "$@"
 
 ### end of file
