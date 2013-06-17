@@ -14,12 +14,11 @@ check_PROGRAMS	= \
 	tree		\
 	vector
 
-# mcl-common.h
-# mcl-debug.h
-# mcl-test.h
-
 AM_CPPFLAGS	= -I$(top_srcdir)/src
 LDADD		= ../src/libucl.la
 TESTS		= $(check_PROGRAMS)
+
+installcheck-local: $(TESTS)
+	@for f in $(TESTS); do $(builddir)/$$f; done
 
 ### end of file
