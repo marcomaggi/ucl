@@ -192,7 +192,7 @@ ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_compariso
 {
   ucl_value_t	base = { .bytes = (uint8_t *)pbase };
   const size_t	max_thresh = MAX_THRESH * size;
-  ucl_value_t	a, b;
+  /* ucl_value_t	a, b; */
 
 
   if (total_elems == 0)
@@ -237,11 +237,11 @@ ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_compariso
       do {
 	while (cmp.func(cmp.data, left, mid) < 0) {
 	  left.bytes += size;
-	  a.bytes = left.bytes;
+	  /* a.bytes = left.bytes; */
 	}
 	while (cmp.func(cmp.data, mid, right) < 0) {
 	  right.bytes -= size;
-	  b.bytes = right.bytes;
+	  /* b.bytes = right.bytes; */
 	}
 	if (left.bytes < right.bytes) {
 	  SWAP (left.bytes, right.bytes, size);
@@ -315,7 +315,7 @@ ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_compariso
       tmp.bytes = run.bytes - size;
       while (cmp.func(cmp.data, run, tmp) < 0) {
 	tmp.bytes -= size;
-	b.bytes = (void *) tmp.bytes;
+	/* b.bytes = (void *) tmp.bytes; */
       }
       tmp.bytes += size;
       if (tmp.bytes != run.bytes) {
