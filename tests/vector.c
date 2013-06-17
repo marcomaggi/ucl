@@ -7,7 +7,7 @@
 
 	Initialisation, allocation, inspection.
 
-  Copyright (c) 2003-2005, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2003-2005, 2010, 2013 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -28,7 +28,7 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		0
+#define MCL_DEBUGGING		1
 #include "mcl-test.h"
 #include "debug.h"
 #include "ucl.h"
@@ -515,7 +515,7 @@ test_front_element (void)
     ucl_vector_initialise_config(C, sizeof(size_t), 8);
     ucl_vector_alloc(V, C);
     {
-      size_t *	P;
+      unsigned *	P;
       for (ucl_index_t i=0; i < NUMBER; ++i) {
 	ucl_vector_enlarge(V);
 	P = ucl_vector_index_to_new_slot(V, 0);
@@ -929,10 +929,10 @@ test_vector_insertion (void)
 }
 
 const size_t SIZE_OF_VECTOR	= 10;
-static size_t
+static int
 vector_ref (ucl_vector_t V, ucl_index_t position)
 {
-  return *((size_t *) ucl_vector_index_to_slot(V, position));
+  return *((int *) ucl_vector_index_to_slot(V, position));
 }
 static void
 test_block_insertion_initialise (ucl_vector_t V)
@@ -1245,13 +1245,14 @@ test_finding (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i, j;
-      size_t *		P;
+      int *		P;
       ucl_value_t	D = { .pointer = &j };
       fill(V, NUMBER, DELTA);
       for (i=0; i<NUMBER; ++i) {
 	j = i + DELTA;
 	P = ucl_vector_find(V, D);
 	assert(NULL != P);
+	/* mcl_debug("i=%u, j=%u, *P=%u, %d\n", i, j, *P, (*P == j)); */
 	assert(*P == j);
       }
     }
@@ -1276,7 +1277,7 @@ test_sort_finding (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i, j;
-      size_t *		P;
+      int *		P;
       ucl_value_t	D = { .pointer = &j };
       fill(V, NUMBER, DELTA);
       for (i=0; i<NUMBER; ++i) {
@@ -1290,7 +1291,7 @@ test_sort_finding (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i, j;
-      size_t *		P;
+      int *		P;
       ucl_value_t	D = { .pointer = &j };
       fill(V, NUMBER+1, DELTA);
       for (i=0; i<NUMBER+1; ++i) {
@@ -1321,7 +1322,7 @@ test_binary_search (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i, j;
-      size_t *		P;
+      int *		P;
       ucl_value_t	D = { .pointer = &j };
       fill(V, NUMBER, DELTA);
 
@@ -1360,7 +1361,7 @@ test_quick_sorting (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i;
-      size_t *		P;
+      int *		P;
 
       for (i=0; i<NUMBER; ++i) {
 	ucl_vector_enlarge(V);
@@ -1401,7 +1402,7 @@ test_sorted_predicate (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i;
-      size_t *		P;
+      int *		P;
       /* Push numbers [(NUMBER-1), 0]. */
       for (i=0; i<NUMBER; ++i) {
 	P = ucl_vector_push_back(V);
@@ -1434,7 +1435,7 @@ test_iterating (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i;
-      size_t *		P;
+      int *		P;
       fill(V, NUMBER, 0);
       for (ucl_vector_iterator_forward(V, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
 	P = ucl_iterator_ptr(I);
@@ -1464,7 +1465,7 @@ test_range_iteration (void)
     ucl_vector_alloc(V, C);
     {
       ucl_index_t	i;
-      size_t *		P;
+      int *		P;
       fill(V, NUMBER, 0);
       {
 	static const size_t	results[] = { 1, 2, 3, 4 };
@@ -1498,7 +1499,7 @@ test_appending (void)
     ucl_vector_t	DST, SRC;
     ucl_range_t		R;
     ucl_index_t		i;
-    size_t *		P;
+    int *		P;
     /* whole */
     {
       ucl_vector_initialise_config(C, sizeof(size_t), 8);
@@ -1581,7 +1582,7 @@ test_appending_more (void)
     ucl_vector_t	SRC[4];
     ucl_vector_t	DST;
     ucl_index_t		i;
-    size_t *		P;
+    int *		P;
     ucl_vector_initialise_config(C, sizeof(size_t), 16);
     for (i=0; i<4; ++i)
       ucl_vector_alloc(SRC[i], C);
@@ -1742,7 +1743,7 @@ test_accessors_range_block (void)
   const size_t STEP_UP		= 6;
   const size_t STEP_DOWN	= 10;
   const size_t PAD		= 0;
-  const size_t DIM		= sizeof(size_t);
+  const size_t DIM		= sizeof(int);
   mcl_test_begin("vector-12.1", "range/block conversion") {
     ucl_vector_config_t	C;
     ucl_vector_t	V;
@@ -1768,29 +1769,31 @@ test_accessors_range_block (void)
 
       ucl_range_set_min_max(R, 0, 99);
       B = ucl_vector_block_from_range(V, R);
-      for (ucl_index_t i=0; i<100; ++i)
-	assert(i == ((size_t *)B.ptr)[i]);
+      for (ucl_index_t i=0; i<100; ++i) {
+	/* mcl_debug("i=%d, B.ptr[i]=%d", i, ((size_t *)B.ptr)[i]); */
+	assert(i == ((int *)B.ptr)[i]);
+      }
 
       ucl_range_set_min_max(R, 10, 20);
       B = ucl_vector_block_from_range(V, R);
       for (ucl_index_t i=0; i<=10; ++i) {
-	assert(i+10 == ((size_t *)B.ptr)[i]);
+	assert(i+10 == ((int *)B.ptr)[i]);
       }
 
       ucl_range_set_min_max(R, 10, 10);
       B = ucl_vector_block_from_range(V, R);
       for (ucl_index_t i=0; i<=10; ++i)
-	assert(i+10 == ((size_t *)B.ptr)[i]);
+	assert(i+10 == ((int *)B.ptr)[i]);
 
       ucl_range_set_min_max(R, 0, 0);
       B = ucl_vector_block_from_range(V, R);
       for (ucl_index_t i=0; i<=0; ++i)
-	assert(i == ((size_t *)B.ptr)[i]);
+	assert(i == ((int *)B.ptr)[i]);
 
       ucl_range_set_min_max(R, 99, 99);
       B = ucl_vector_block_from_range(V, R);
       for (ucl_index_t i=0; i<=0; ++i)
-	assert(i+99 == ((size_t *)B.ptr)[i]);
+	assert(i+99 == ((int *)B.ptr)[i]);
 
       /* ------------------------------------------------------------ */
 
@@ -1883,13 +1886,13 @@ test_block_access_and_mutation (void)
   const size_t STEP_UP		= 6;
   const size_t STEP_DOWN	= 10;
   const size_t PAD		= 0;
-  const size_t DIM		= sizeof(size_t);
+  const size_t DIM		= sizeof(int);
   mcl_test_begin("vector-12.3", "block access and mutation") {
     ucl_vector_config_t	C;
     ucl_vector_t	V;
     ucl_block_t		allocated_memory;
     ucl_block_t		B;
-    size_t *		p;
+    int *		p;
     ucl_vector_initialise_config(C, DIM, SIZE);
     C->step_up			= STEP_UP;
     C->step_down		= STEP_DOWN;
@@ -1910,7 +1913,7 @@ test_block_access_and_mutation (void)
       B = ucl_vector_get_free_block_at_end(V, 10);
       assert(100 == ucl_vector_size(V));
       for (ucl_index_t i=0; i<10; ++i) {
-	((size_t *)B.ptr)[i] = i + 100;
+	((int *)B.ptr)[i] = i + 100;
       }
       ucl_vector_mark_as_used(V, B);
       assert(110 == ucl_vector_size(V));
@@ -1923,7 +1926,7 @@ test_block_access_and_mutation (void)
       B = ucl_vector_get_free_block_at_beginning(V, 10);
       assert(110 == ucl_vector_size(V));
       for (ucl_index_t i=0; i<10; ++i) {
-	((size_t *)B.ptr)[i] = i - 10;
+	((int *)B.ptr)[i] = i - 10;
       }
       ucl_vector_mark_as_used(V, B);
       assert(120 == ucl_vector_size(V));
@@ -2072,7 +2075,7 @@ static void
 test_map (void)
 {
   const size_t SIZE	= 8;
-  const size_t DIM	= sizeof(size_t);
+  const size_t DIM	= sizeof(int);
   mcl_test_begin("vector-13.4", "simple map") {
     ucl_vector_config_t	C;
     ucl_vector_t	result, operand;
@@ -2087,7 +2090,7 @@ test_map (void)
       fill(operand, 5, 1);
       ucl_vector_map(result, cb, operand);
       for (ucl_index_t i=0; i<5; ++i) {
-	size_t *	slot = ucl_vector_index_to_slot(result, i);
+	int *	slot = ucl_vector_index_to_slot(result, i);
 	assert(-(i+1) == *slot);
       }
     }
@@ -2101,7 +2104,7 @@ static void
 test_map_in_range (void)
 {
   const size_t SIZE	= 8;
-  const size_t DIM	= sizeof(size_t);
+  const size_t DIM	= sizeof(int);
   mcl_test_begin("vector-13.5", "map in range") {
     ucl_vector_config_t	C;
     ucl_vector_t	result, operand;
@@ -2118,7 +2121,7 @@ test_map_in_range (void)
       ucl_range_set_min_max(R, 3, 8);
       ucl_vector_map_range(result, cb, R, operand);
       for (ucl_index_t i=0; i<ucl_range_size(R); ++i) {
-	size_t *	slot = ucl_vector_index_to_slot(result, i);
+	int *	slot = ucl_vector_index_to_slot(result, i);
 	assert(-(i+4) == *slot);
       }
     }
@@ -2184,13 +2187,13 @@ static void
 test_copying (void)
 {
   const size_t SIZE	= 8;
-  const size_t DIM	= sizeof(size_t);
+  const size_t DIM	= sizeof(int);
   mcl_test_begin("vector-14.1", "copying") {
     ucl_vector_config_t	C;
     ucl_vector_t	DST, SRC;
     ucl_range_t		R;
     ucl_index_t		i;
-    size_t		j;
+    int			j;
     ucl_vector_initialise_config(C, DIM, SIZE);
     ucl_vector_alloc(DST, C);
     ucl_vector_alloc(SRC, C);
