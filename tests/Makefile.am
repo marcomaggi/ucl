@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+EXTRA_DIST	= mcl-common.h mcl-debug.h mcl-test.h
+
 check_PROGRAMS	= \
 	bst		\
 	btree		\
