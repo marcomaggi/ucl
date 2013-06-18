@@ -167,14 +167,23 @@ The library makes use of inline functions and it is designed to be used
 only by C libraries and programs; it is probably impossible to interface
 it with other languages, unless through a C language wrapper library.
 
-When searching for the installed library with the @gnu{} Autotools, we
-can use the following macros in @file{configure.ac}:
+This package installs a data file for @command{pkg-config}, so when
+searching for the installed library with the @gnu{} Autotools, we can
+just add the following macro use to @file{configure.ac}:
+
+@example
+PKG_CHECK_MODULES([UCL],[ucl >= 2.0])
+@end example
+
+@noindent
+which will set the variables @code{UCL_LIBS} and @code{UCL_CFLAGS}.
+Alternatively:
 
 @example
 AC_CHECK_LIB([ucl],[ucl_version_string],,
-  [AC_MSG_ERROR([test for UCL library failed])])
+  [AC_MSG_FAILURE([test for UCL library failed])])
 AC_CHECK_HEADERS([ucl.h],,
-  [AC_MSG_ERROR([test for UCL header failed])])
+  [AC_MSG_FAILURE([test for UCL header failed])])
 @end example
 
 @menu

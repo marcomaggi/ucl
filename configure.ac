@@ -4,6 +4,7 @@ dnl
 AC_PREREQ([2.69])
 AC_INIT([Useless Containers Library],[2.0d0],[marco.maggi-ipsu@poste.it],
   [ucl],[http://github.com/marcomaggi/ucl])
+AC_SUBST([MY_PKG_CONFIG_VERSION],[2.0])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([meta/autotools])
 AC_CONFIG_AUX_DIR([meta/autotools])
@@ -99,8 +100,7 @@ AC_CONFIG_FILES([Makefile]
   [doc/Makefile]
   [tests/Makefile]
   [meta/slackware/slack-desc]
-  [meta/ucl.pc]
-  [meta/ucl-config])
+  [meta/scripts/ucl.pc])
 AC_OUTPUT
 
 ### end of file
