@@ -2,7 +2,7 @@ dnl @configure_input@
 dnl
 
 AC_PREREQ([2.69])
-AC_INIT([Useless Containers Library],[2.0d0],[marco.maggi-ipsu@poste.it],
+AC_INIT([Useless Containers Library],[2.0d1],[marco.maggi-ipsu@poste.it],
   [ucl],[http://github.com/marcomaggi/ucl])
 AC_SUBST([MY_PKG_CONFIG_VERSION],[2.0])
 AC_CONFIG_SRCDIR([src/])
@@ -11,7 +11,7 @@ AC_CONFIG_AUX_DIR([meta/autotools])
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([-Wall foreign dist-xz no-dist-gzip])
+AM_INIT_AUTOMAKE([-Wall foreign dist-xz no-dist-gzip subdir-objects])
 AM_MAINTAINER_MODE
 
 AM_PROG_AR
@@ -96,9 +96,6 @@ AC_CACHE_SAVE
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile]
-  [src/Makefile]
-  [doc/Makefile]
-  [tests/Makefile]
   [meta/slackware/slack-desc]
   [meta/scripts/ucl.pc])
 AC_OUTPUT
