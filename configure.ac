@@ -2,7 +2,7 @@ dnl @configure_input@
 dnl
 
 AC_PREREQ([2.69])
-AC_INIT([Useless Containers Library],[2.0d1],[marco.maggi-ipsu@poste.it],
+AC_INIT([Useless Containers Library],[2.0d2],[marco.maggi-ipsu@poste.it],
   [ucl],[http://github.com/marcomaggi/ucl])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([meta/autotools])
