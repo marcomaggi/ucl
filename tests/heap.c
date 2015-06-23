@@ -7,7 +7,7 @@
 
 
 
-  Copyright (c) 2003-2005, 2008, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2003-2005, 2008, 2010, 2015 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -143,7 +143,7 @@ print_preorder_links (ucl_heap_t H, const char * message, ...)
     vfprintf(stderr, message, ap);
   }
   va_end(ap);
-  fprintf(stderr, ": preorder links (%u nodes)\n", ucl_heap_size(H));
+  fprintf(stderr, ": preorder links (%ld nodes)\n", ucl_heap_size(H));
   for (ucl_btree_iterator_preorder(I, H->root), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
     L = ucl_iterator_ptr(I);
     dad = ucl_btree_ref_dad(L);

@@ -4,14 +4,13 @@ dnl
 AC_PREREQ([2.69])
 AC_INIT([Useless Containers Library],[2.0d1],[marco.maggi-ipsu@poste.it],
   [ucl],[http://github.com/marcomaggi/ucl])
-AC_SUBST([MY_PKG_CONFIG_VERSION],[2.0])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([meta/autotools])
 AC_CONFIG_AUX_DIR([meta/autotools])
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([-Wall foreign dist-xz no-dist-gzip subdir-objects])
+AM_INIT_AUTOMAKE([foreign dist-xz no-dist-gzip subdir-objects])
 AM_MAINTAINER_MODE
 
 AM_PROG_AR
@@ -24,26 +23,12 @@ LT_PREREQ([2.4])
 LT_INIT
 
 #page
-#### interface version
+#### libraries interface version
 
-ucl_VERSION_INTERFACE_CURRENT=3
-ucl_VERSION_INTERFACE_REVISION=0
-ucl_VERSION_INTERFACE_AGE=0
-AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_CURRENT],
-  [$ucl_VERSION_INTERFACE_CURRENT],
-  [current interface number])
-AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_REVISION],
-  [$ucl_VERSION_INTERFACE_REVISION],
-  [current interface implementation number])
-AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_AGE],
-  [$ucl_VERSION_INTERFACE_AGE],
-  [current interface age number])
-AC_DEFINE_UNQUOTED([ucl_VERSION_INTERFACE_STRING],
-  ["$ucl_VERSION_INTERFACE_CURRENT.$ucl_VERSION_INTERFACE_REVISION"],
-  [library interface version])
-AC_SUBST([ucl_VERSION_INTERFACE_CURRENT])
-AC_SUBST([ucl_VERSION_INTERFACE_REVISION])
-AC_SUBST([ucl_VERSION_INTERFACE_AGE])
+dnl This is the version stored in the pkg-config data file.
+AC_SUBST([UCL_PKG_CONFIG_VERSION],[0.1])
+
+MM_LIBTOOL_LIBRARY_VERSIONS([ucl],3,0,0)
 
 #page
 #### basic system inspection

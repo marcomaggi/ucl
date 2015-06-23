@@ -43,7 +43,7 @@
 					children  of   the  same  parent
 					node;
 
-  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2005, 2007-2010, 2015 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -348,7 +348,7 @@ ucl_tree_extract_dad (void * _nod)
     last->bro = dad->bro;
     if (last->bro)
       last->bro->dad = last;
-    memset(dad, '\0', sizeof(ucl_node_t));
+    memset(dad, '\0', sizeof(ucl_node_tag_t));
   }
   return dad;
 }
@@ -397,7 +397,7 @@ ucl_tree_extract_son (void * _nod)
       nod->son = son->bro;
       nod->son->dad = nod;
     }
-    memset(son, '\0', sizeof(ucl_node_t));
+    memset(son, '\0', sizeof(ucl_node_tag_t));
   }
   return son;
 }
@@ -461,7 +461,7 @@ ucl_tree_extract_prev (void * _nod)
       nod->dad = son;
     } else /* dad == NULL && son == NULL */
       nod->dad = NULL;
-    memset(prv, '\0', sizeof(ucl_node_t));
+    memset(prv, '\0', sizeof(ucl_node_tag_t));
   }
   return prv;
 }
@@ -511,7 +511,7 @@ ucl_tree_extract_next (void * _nod)
       bro->dad = nod;
     } else /* son == NULL && bro == NULL */
       nod->bro = NULL;
-    memset(nxt, '\0', sizeof(ucl_node_t));
+    memset(nxt, '\0', sizeof(ucl_node_tag_t));
   }
   return nxt;
 }

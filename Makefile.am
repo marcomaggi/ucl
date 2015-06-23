@@ -2,14 +2,16 @@
 
 ACLOCAL_AMFLAGS		= -I meta/autotools
 AUTOMAKE_OPTIONS	= foreign
-EXTRA_DIST		= INSTALL meta/scripts/ucl.pc.in
+EXTRA_DIST		= INSTALL configure.sh
 dist_doc_DATA		= README COPYING
-
-pkgconfigdir		= $(libdir)/pkgconfig
-nodist_pkgconfig_DATA	= meta/scripts/ucl.pc
-
 AM_CFLAGS		= -Wall
 AM_CPPFLAGS		= -I$(srcdir)/src -I$(srcdir)/tests
+
+## --------------------------------------------------------------------
+
+EXTRA_DIST		+= meta/scripts/ucl.pc.in
+pkgconfigdir		= $(libdir)/pkgconfig
+nodist_pkgconfig_DATA	= meta/scripts/ucl.pc
 
 #page
 #### documentation

@@ -6,7 +6,7 @@
   Abstract
 
 
-  Copyright (c) 2003-2005, 2008, 2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2003-2005, 2008, 2010, 2015 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -361,7 +361,7 @@ print_preorder_links (ucl_map_t M, const char * message, ...)
     vfprintf(stderr, message, ap);
   }
   va_end(ap);
-  fprintf(stderr, ": preorder links (%u nodes)\n", ucl_map_size(M));
+  fprintf(stderr, ": preorder links (%ld nodes)\n", ucl_map_size(M));
   for (ucl_map_iterator_preorder(M, I), i=0; ucl_iterator_more(I); ucl_iterator_next(I), ++i) {
     L = ucl_iterator_ptr(I);
     dad = ucl_btree_ref_dad(L);

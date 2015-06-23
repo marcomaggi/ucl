@@ -7,7 +7,7 @@
 
         Define a set of generic macros and functions.
 
-  Copyright (c) 2008, 2009 Marco Maggi <marcomaggi@gna.org>
+  Copyright (c) 2008, 2009, 2015 Marco Maggi <marcomaggi@gna.org>
 
   This program is free software:  you can redistribute it and/or modify
   it under the terms of the  GNU General Public License as published by
@@ -47,7 +47,6 @@
 
 
 #if (MCL_DEBUGGING == 1)
-#  warning debugging is on
 
 #  define mcl_debug_question(EXPR)		((EXPR)?"yes":"no")
 #  define mcl_debug_mark()			mcl_debug("mark")
