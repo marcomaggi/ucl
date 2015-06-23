@@ -7,22 +7,6 @@
 @include version.texi
 @include macros.texi
 
-@macro ucl{}
-@acronym{UCL}
-@end macro
-
-@macro avl{}
-@acronym{AVL}
-@end macro
-
-@macro dfs{}
-@acronym{DFS}
-@end macro
-
-@macro tcl{}
-@acronym{TCL}
-@end macro
-
 @c page
 @c ------------------------------------------------------------
 @c Values.
@@ -49,7 +33,31 @@
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
-@set COPYRIGHT_YEARS            2001-2010, 2013
+@set COPYRIGHT_YEARS            2001-2010, 2013, 2015
+
+@c ------------------------------------------------------------
+
+@set GITHUB_URL                 @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set BITBUCKET_URL              @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set DOWNLOAD_URL               @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}/downloads}
+@set DOCUMENTATION_URL          @url{http://marcomaggi.github.io/docs/@value{PACKAGE_NICKNAME}.html}
+@set VICARE_HOMEPAGE_URL        @url{http://marcomaggi.github.io/vicare.html}
+
+@macro ucl{}
+@acronym{UCL}
+@end macro
+
+@macro avl{}
+@acronym{AVL}
+@end macro
+
+@macro dfs{}
+@acronym{DFS}
+@end macro
+
+@macro tcl{}
+@acronym{TCL}
+@end macro
 
 @c page
 @c ------------------------------------------------------------
@@ -61,9 +69,21 @@ This document describes version @value{VERSION} of @value{PACKAGE}, a C
 language library implementing a set of containers.
 
 The package is distributed under the terms of the @gnu{} General Public
-License (@gpl{}) and can be downloaded from:
+License (@gpl{}).
 
-@center @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
+The latest release can be downloaded from:
+
+@center @value{DOWNLOAD_URL}
+
+@noindent
+development takes place at:
+
+@center @value{GITHUB_URL}
+
+@noindent
+and as backup at:
+
+@center @value{BITBUCKET_URL}
 
 @noindent
 Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
@@ -167,9 +187,36 @@ The library makes use of inline functions and it is designed to be used
 only by C libraries and programs; it is probably impossible to interface
 it with other languages, unless through a C language wrapper library.
 
+@menu
+* overview linking::            Linking code with the library.
+* overview error::              Error handling.
+* overview size::               Structures size.
+* overview const::              Constification.
+@end menu
+
+@c page
+@node overview linking
+@section Linking code with the library
+
+
 This package installs a data file for @command{pkg-config}, so when
-searching for the installed library with the @gnu{} Autotools, we can
-just add the following macro use to @file{configure.ac}:
+searching for the installed library with the @gnu{} Autotools, we can:
+
+@itemize
+@item
+Install the file @file{pkg.m4} from @file{/usr/share/aclocal} into the
+source tree of the package, for example under @file{meta/autoconf/}.
+
+@item
+Include @file{pkg.m4} in the template by adding the following line to
+@file{acinclude.m4}:
+
+@example
+m4_include(meta/autoconf/pkg.m4)
+@end example
+
+@item
+Just add the following macro use to @file{configure.ac}:
 
 @example
 PKG_CHECK_MODULES([UCL],[ucl >= 2.0])
@@ -177,20 +224,16 @@ PKG_CHECK_MODULES([UCL],[ucl >= 2.0])
 
 @noindent
 which will set the variables @code{UCL_LIBS} and @code{UCL_CFLAGS}.
-Alternatively:
+@end itemize
+
+Alternatively we can use the raw @gnu{} Autoconf macros:
 
 @example
-AC_CHECK_LIB([ucl],[ucl_version_string],,
+AC_CHECK_LIB([ucl],[cct_version_string],,
   [AC_MSG_FAILURE([test for UCL library failed])])
 AC_CHECK_HEADERS([ucl.h],,
   [AC_MSG_FAILURE([test for UCL header failed])])
 @end example
-
-@menu
-* overview error::              Error handling.
-* overview size::               Structures size.
-* overview const::              Constification.
-@end menu
 
 @c page
 @node overview error
