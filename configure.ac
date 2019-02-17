@@ -2,12 +2,12 @@
 #
 
 AC_PREREQ([2.69])
-MMUX_PKG_VERSIONS([2],[0],[0],[devel.2])
+MMUX_PKG_VERSIONS([3],[0],[0],[devel.0])
 AC_INIT([Useless Containers Library],[MMUX_PACKAGE_VERSION],
   [marco.maggi-ipsu@poste.it],
   [ucl],[http://github.com/marcomaggi/ucl])
 MMUX_INIT
-MMUX_LIBTOOL_LIBRARY_VERSIONS([ucl],3,0,0)
+MMUX_LIBTOOL_LIBRARY_VERSIONS([ucl],4,0,0)
 AC_REVISION([0.1])
 AC_COPYRIGHT([Copyright (c) 2001-2010, 2013, 2019 Marco Maggi
 <marco.maggi-ipsu@poste.it>
