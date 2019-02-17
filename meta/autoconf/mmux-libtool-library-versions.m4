@@ -1,10 +1,10 @@
-dnl mm-libtool-library-versions.m4
-
-dnl Set version numbers for libraries built with GNU Libtool.
-dnl
-dnl   MM_LIBTOOL_LIBRARY_VERSIONS(stem,current,revision,age)
-dnl
-AC_DEFUN([MM_LIBTOOL_LIBRARY_VERSIONS],
+## mmux-libtool-library-versions.m4 --
+#
+# Set version numbers for libraries built with GNU Libtool.
+#
+#   MM_LIBTOOL_LIBRARY_VERSIONS(stem,current,revision,age)
+#
+AC_DEFUN([MMUX_LIBTOOL_LIBRARY_VERSIONS],
   [$1_VERSION_INTERFACE_CURRENT=$2
    $1_VERSION_INTERFACE_REVISION=$3
    $1_VERSION_INTERFACE_AGE=$4
@@ -24,4 +24,7 @@ AC_DEFUN([MM_LIBTOOL_LIBRARY_VERSIONS],
    AC_SUBST([$1_VERSION_INTERFACE_REVISION])
    AC_SUBST([$1_VERSION_INTERFACE_AGE])])
 
-dnl end of file
+### end of file
+# Local Variables:
+# mode: autoconf
+# End:

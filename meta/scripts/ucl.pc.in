@@ -19,8 +19,9 @@ sysconfdir=@sysconfdir@
 ## ------------------------------------------------------------
 
 Name: @PACKAGE_NAME@
-Description: C library of containers
-Version: @MY_PKG_CONFIG_VERSION@
+Description: Useless Containers Library
+Version: @MMUX_PKG_CONFIG_VERSION@
+Requires: ccexceptions >= 0.8.0, ccmemory >= 0.2.1, ccstructs >= 0.2.0
 Libs: -L${libdir} -lucl
 Cflags: -I${includedir}
 

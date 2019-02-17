@@ -1,0 +1,30 @@
+-*- coding: utf-8-unix -*-
+
+			   News file for UCL
+			   =================
+
+Notes for revision 2.0.0-devel.3
+--------------------------------
+
+* Package infrastructure development.
+
+
+Notes for revision 2.0d2
+------------------------
+
+* Some infrastructure and code review.
+
+
+Notes for revision 2.0d0
+------------------------
+
+* Stub library has been dropped.
+
+
+### end of file
+# Local Variables:
+# mode: text
+# fill-column: 72
+# paragraph-start: "*"
+# ispell-local-dictionary: "en_GB"
+# End:
