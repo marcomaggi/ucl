@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS	= foreign
 EXTRA_DIST		= INSTALL
 dist_doc_DATA		= README COPYING
 AM_CFLAGS		= $(MMUX_CFLAGS)
-AM_CPPFLAGS		= -I$(srcdir)/src -I$(srcdir)/tests
+AM_CPPFLAGS		= -I$(srcdir)/src
 
 ## --------------------------------------------------------------------
 
