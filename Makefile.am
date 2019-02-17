@@ -21,7 +21,7 @@ AM_MAKEINFOHTMLFLAGS	= --split=node -c WORDS_IN_PAGE=0 \
 info_TEXINFOS		= doc/ucl.texi
 doc_ucl_TEXINFOS	= \
 	doc/macros.texi		\
-	doc/gpl-3.0.texi	\
+	doc/lgpl-3.0.texi	\
 	doc/fdl-1.3.texi
 
 
