@@ -33,7 +33,7 @@
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
-@set COPYRIGHT_YEARS            2001-2010, 2013, 2015
+@set COPYRIGHT_YEARS            2001-2010, 2013, 2015, 2019
 
 @c ------------------------------------------------------------
 
@@ -910,7 +910,7 @@ The data type of objects that can be stored in the containers; it's a
 @itemx uint32_t t_uint32
 One field for each built in C language type.
 
-@itemx size_t t_size
+@item size_t t_size
 @itemx ssize_t t_ssize
 @itemx intptr_t t_intptr
 @itemx uintptr_t t_uintptr
@@ -1423,10 +1423,10 @@ K = getkey.func(getkey.data, L);
 @menu
 * btree::                       The binary tree structure.
 * tree::                        The tree structure.
+* heap::                        The heap structure.
 * circular::                    The circular list structure.
 * graph::                       The graph structure.
 * hash::                        The hash table structure.
-* heap::                        The heap structure.
 * list::                        The linked list structure.
 * map::                         The map structure.
 * vector::                      The vector structure.
@@ -7419,6 +7419,14 @@ C Library version 2.4, modified to use @var{compar}.
 @end deftypefun
 
 @c page
+@c ------------------------------------------------------------
+@c Appendices.
+@c ------------------------------------------------------------
+
+@include gpl-3.0.texi
+@include fdl-1.3.texi
+
+@c page
 @node references
 @appendix Bibliography and references
 
@@ -7429,12 +7437,6 @@ dati in C}.  McGraw--Hill, 1993.
 
 @noindent
 Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
-
-
-@c page
-
-@include gpl-3.0.texi
-@include fdl-1.3.texi
 
 @c page
 @node concept index
