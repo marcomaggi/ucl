@@ -6,7 +6,7 @@
 
 	Lisp-like lists using the "ucl_node_tag_t" structure.
 
-  Copyright (c) 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2008-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -28,7 +28,7 @@
  ** ----------------------------------------------------------*/
 
 #define DEBUGGING	0
-#include "internal.h"
+#include "ucl-internals.h"
 
 #define SWAP(APTR, BPTR)	\
   do {				\

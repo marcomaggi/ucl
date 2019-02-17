@@ -24,7 +24,7 @@
 	the  book "Algoritmi +  Strutture Dati  = Programmi"  di Niklaus
 	Wirth, 1987 Tecniche Nuove.
 
-  Copyright (c) 2001-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -49,7 +49,7 @@
 #ifndef DEBUGGING
 #  define DEBUGGING		0
 #endif
-#include "internal.h"
+#include "ucl-internals.h"
 
 #define IS_MULTIMAP(M)          (UCL_ALLOW_MULTIPLE_OBJECTS & M->flags)
 

@@ -7,7 +7,7 @@
 
 
 
-  Copyright (C) 2013 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (C) 2013, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -28,10 +28,14 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#include "internal.h"
+#include "ucl-internals.h"
 
 
-const char *
+/** --------------------------------------------------------------------
+ ** Version functions.
+ ** ----------------------------------------------------------------- */
+
+char const *
 ucl_version_string (void)
 {
   return ucl_VERSION_INTERFACE_STRING;

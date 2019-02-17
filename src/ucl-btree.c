@@ -18,7 +18,7 @@
               | no3 |
                -----
 
-  Copyright (c) 2002-2005, 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2002-2005, 2008-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -45,7 +45,7 @@
 #ifndef DEBUGGING_AND_LOGGING
 #  define DEBUGGING_AND_LOGGING	0
 #endif
-#include "internal.h"
+#include "ucl-internals.h"
 
 #define AVL_STATUS(L)		(((ucl_node_t)L)->meta.avl_status)
 #define AVL_DEPTH(N)		ucl_btree_avl_depth(N)

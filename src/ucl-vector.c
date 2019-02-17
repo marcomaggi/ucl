@@ -11,7 +11,7 @@
 	inspired by the book on C++  by Bjarne Stroustrup and by the STL
 	C++ (Standard Template Library).
 
-  Copyright (c) 2001-2005, 2007-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2005, 2007-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -35,7 +35,7 @@
 #ifndef DEBUGGING
 #  define DEBUGGING		0
 #endif
-#include "internal.h"
+#include "ucl-internals.h"
 
 #define SLOT_NUMBER_THAT_TRIGGERS_BINARY_OVER_LINEAR_SEARCH	8
 

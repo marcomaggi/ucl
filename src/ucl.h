@@ -8,7 +8,7 @@
 	This file must be included in every module that makes use of the
 	UCL containers.
 
-  Copyright (c)  2001-2010  Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c)  2001-2010, 2019  Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -24,13 +24,70 @@
   along with this  program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __UCL_H
-#define __UCL_H 1
+#ifndef UCL_H
+#define UCL_H 1
+
+
+/** --------------------------------------------------------------------
+ ** Preliminary definitions.
+ ** ----------------------------------------------------------------- */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The macro UCL_UNUSED indicates that a  function, function argument or variable may
+   potentially be unused. Usage examples:
+
+   static int unused_function (char arg) UCL_UNUSED;
+   int foo (char unused_argument UCL_UNUSED);
+   int unused_variable UCL_UNUSED;
+*/
+#ifdef __GNUC__
+#  define UCL_UNUSED		__attribute__((__unused__))
+#else
+#  define UCL_UNUSED		/* empty */
+#endif
+
+#ifndef __GNUC__
+#  define __attribute__(...)	/* empty */
+#endif
+
+/* I found  the following chunk on  the Net.  (Marco Maggi;  Sun Feb 26,
+   2012) */
+#if defined _WIN32 || defined __CYGWIN__
+#  ifdef BUILDING_DLL
+#    ifdef __GNUC__
+#      define ucl_decl		__attribute__((__dllexport__)) extern
+#    else
+#      define ucl_decl		__declspec(dllexport) extern
+#    endif
+#  else
+#    ifdef __GNUC__
+#      define ucl_decl		__attribute__((__dllimport__)) extern
+#    else
+#      define ucl_decl		__declspec(dllimport) extern
+#    endif
+#  endif
+#  define ucl_private_decl	extern
+#else
+#  if __GNUC__ >= 4
+#    define ucl_decl		__attribute__((__visibility__("default"))) extern
+#    define ucl_private_decl	__attribute__((__visibility__("hidden")))  extern
+#  else
+#    define ucl_decl		extern
+#    define ucl_private_decl	extern
+#  endif
+#endif
 
 
 /** --------------------------------------------------------------------
  ** Headers.
  ** -----------------------------------------------------------------*/
+
+#include <ccexceptions.h>
+#include <ccmemory.h>
+#include <ccstructs.h>
 
 #include <assert.h>
 #include <stdarg.h>
@@ -42,39 +99,21 @@
 
 
 /** --------------------------------------------------------------------
- ** Basic definitions.
- ** -----------------------------------------------------------------*/
+ ** Constants and preprocessor macros.
+ ** ----------------------------------------------------------------- */
 
-#undef UCL_BEGIN_C_DECL
-#undef UCL_END_C_DECL
-#ifdef __cplusplus
-#  define UCL_BEGIN_C_DECL		extern "C" {
-#  define UCL_END_C_DECL		}
-#else
-#  define UCL_BEGIN_C_DECL		/* empty */
-#  define UCL_END_C_DECL		/* empty */
-#endif
+#define UCL_PC(POINTER_TYPE, POINTER_NAME, EXPRESSION)	\
+  POINTER_TYPE * POINTER_NAME = (POINTER_TYPE *) (EXPRESSION)
 
-UCL_BEGIN_C_DECL
+
+/** --------------------------------------------------------------------
+ ** Version functions.
+ ** ----------------------------------------------------------------- */
 
-/* ------------------------------------------------------------------ */
-
-/* The macro UCL_UNUSED indicates  that a function, function argument or
-   variable may potentially be unused.  Usage examples:
-
-   static int unused_function (char arg) UCL_UNUSED;
-   int foo (char unused_argument UCL_UNUSED);
-   int unused_variable UCL_UNUSED;
-*/
-#ifdef __GNUC__
-#  define UCL_UNUSED		__attribute__((unused))
-#else
-#  define UCL_UNUSED		/* empty */
-#endif
-
-#ifndef __GNUC__
-#  define __attribute__(...)	/* empty */
-#endif
+ucl_decl char const *	ucl_version_string		(void);
+ucl_decl int		ucl_version_interface_current	(void);
+ucl_decl int		ucl_version_interface_revision	(void);
+ucl_decl int		ucl_version_interface_age	(void);
 
 
 /** --------------------------------------------------------------------
@@ -124,7 +163,7 @@ typedef union ucl_value_t {
   } flags;
 } ucl_value_t;
 
-extern const ucl_value_t ucl_value_null;
+ucl_decl const ucl_value_t ucl_value_null;
 
 typedef struct ucl_array_of_pointers_t {
   ucl_value_t	data;
@@ -162,8 +201,8 @@ typedef struct ucl_memory_allocator_t {
   ucl_memory_alloc_fun_t *	alloc;
 } ucl_memory_allocator_t;
 
-extern ucl_memory_alloc_fun_t ucl_memory_alloc;
-extern const ucl_memory_allocator_t ucl_memory_allocator;
+ucl_decl ucl_memory_alloc_fun_t ucl_memory_alloc;
+ucl_decl const ucl_memory_allocator_t ucl_memory_allocator;
 
 static __inline__ __attribute__((__always_inline__,__pure__))
 void *
@@ -299,7 +338,7 @@ typedef struct ucl_ascii_list_t {
   char **	ptr;
 } ucl_ascii_list_t;
 
-extern const ucl_ascii_t ucl_ascii_empty;
+ucl_decl const ucl_ascii_t ucl_ascii_empty;
 
 /* ------------------------------------------------------------ */
 
@@ -527,7 +566,7 @@ typedef struct ucl_callback_t {
   ucl_value_t		data;
 } ucl_callback_t;
 
-extern const ucl_callback_t	ucl_callback_null;
+ucl_decl const ucl_callback_t	ucl_callback_null;
 
 typedef ucl_value_t ucl_callback_apply_fun_t (ucl_callback_t callback, ...);
 
@@ -560,7 +599,7 @@ ucl_callback_eval_thunk (ucl_callback_t callback)
   return retval;
 }
 
-extern void ucl_callback_set_application_function (ucl_callback_apply_fun_t * f);
+ucl_decl void ucl_callback_set_application_function (ucl_callback_apply_fun_t * f);
 
 
 /** ------------------------------------------------------------
@@ -718,124 +757,124 @@ typedef struct ucl_vector_array_t {
  ** Binary tree prototypes.
  ** ----------------------------------------------------------*/
 
-extern void * ucl_btree_find_value (void * node, ucl_value_t value, ucl_comparison_t compar)
+ucl_decl void * ucl_btree_find_value (void * node, ucl_value_t value, ucl_comparison_t compar)
   __attribute__((__nonnull__,__pure__));
 
 /* ------------------------------------------------------------ */
 
-extern void * ucl_btree_find_leftmost (void * node)
+ucl_decl void * ucl_btree_find_leftmost (void * node)
   __attribute__((__nonnull__,__pure__));
 
-extern void * ucl_btree_find_rightmost (void * node)
+ucl_decl void * ucl_btree_find_rightmost (void * node)
   __attribute__((__nonnull__,__pure__));
 
-extern void * ucl_btree_find_deepest_son (void * node)
+ucl_decl void * ucl_btree_find_deepest_son (void * node)
   __attribute__((__nonnull__,__pure__));
 
-extern void * ucl_btree_find_deepest_bro (void * node)
+ucl_decl void * ucl_btree_find_deepest_bro (void * node)
   __attribute__((__nonnull__,__pure__));
 
-extern void * ucl_btree_find_root (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-/* ------------------------------------------------------------ */
-
-extern void ucl_btree_swap	(void * A, void * B);
-extern void ucl_btree_swap_out	(void * A, void * B);
-extern void ucl_btree_swap_no_meta (void * A_, void * B_);
-
-extern int ucl_btree_depth	(void * N);
-
-/* ------------------------------------------------------------ */
-
-extern void * ucl_btree_avl_rot_left		(void * old_dad);
-extern void * ucl_btree_avl_rot_left_right	(void * old_dad);
-extern void * ucl_btree_avl_rot_right		(void * old_dad);
-extern void * ucl_btree_avl_rot_right_left	(void * old_dad);
-extern int    ucl_btree_avl_depth		(void * N_);
-extern int    ucl_btree_avl_factor		(void * N_);
-extern ucl_bool_t ucl_btree_avl_is_balanced	(void * N_);
-extern ucl_bool_t ucl_btree_avl_is_correct	(void * N_);
-
-extern void ucl_bst_insert  (void * root, void * N, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
-extern void * ucl_bst_find  (void * N, ucl_value_t K, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
-extern void* ucl_bst_delete (void * root, void * N);
-
-/* ------------------------------------------------------------ */
-
-extern void * ucl_btree_step_inorder (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_inorder_backward (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_preorder (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_preorder_backward (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_postorder (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_postorder_backward (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_levelorder (void * node)
-  __attribute__((__nonnull__,__pure__));
-
-extern void * ucl_btree_step_levelorder_backward (void * node)
+ucl_decl void * ucl_btree_find_root (void * node)
   __attribute__((__nonnull__,__pure__));
 
 /* ------------------------------------------------------------ */
 
-extern void ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_swap	(void * A, void * B);
+ucl_decl void ucl_btree_swap_out	(void * A, void * B);
+ucl_decl void ucl_btree_swap_no_meta (void * A_, void * B_);
+
+ucl_decl int ucl_btree_depth	(void * N);
+
+/* ------------------------------------------------------------ */
+
+ucl_decl void * ucl_btree_avl_rot_left		(void * old_dad);
+ucl_decl void * ucl_btree_avl_rot_left_right	(void * old_dad);
+ucl_decl void * ucl_btree_avl_rot_right		(void * old_dad);
+ucl_decl void * ucl_btree_avl_rot_right_left	(void * old_dad);
+ucl_decl int    ucl_btree_avl_depth		(void * N_);
+ucl_decl int    ucl_btree_avl_factor		(void * N_);
+ucl_decl ucl_bool_t ucl_btree_avl_is_balanced	(void * N_);
+ucl_decl ucl_bool_t ucl_btree_avl_is_correct	(void * N_);
+
+ucl_decl void ucl_bst_insert  (void * root, void * N, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
+ucl_decl void * ucl_bst_find  (void * N, ucl_value_t K, ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
+ucl_decl void* ucl_bst_delete (void * root, void * N);
+
+/* ------------------------------------------------------------ */
+
+ucl_decl void * ucl_btree_step_inorder (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_inorder_backward (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_preorder (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_preorder_backward (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_postorder (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_postorder_backward (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_levelorder (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+ucl_decl void * ucl_btree_step_levelorder_backward (void * node)
+  __attribute__((__nonnull__,__pure__));
+
+/* ------------------------------------------------------------ */
+
+ucl_decl void ucl_btree_iterator_inorder (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_inorder_backward (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_inorder_backward (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_preorder (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_preorder (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_preorder_backward (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_preorder_backward (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_postorder (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_postorder (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_postorder_backward (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_postorder_backward (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_levelorder (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_levelorder (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_node)
+ucl_decl void ucl_btree_iterator_levelorder_backward (ucl_iterator_t iterator, void * root_node)
   __attribute__((__nonnull__));
 
 /* ------------------------------------------------------------ */
 
-extern void ucl_btree_subtree_iterator_inorder (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_inorder (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_inorder_backward (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_preorder (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_preorder (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_preorder_backward (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_postorder (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_postorder (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_postorder_backward (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
-extern void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_levelorder (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
-extern void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node)
+ucl_decl void ucl_btree_subtree_iterator_levelorder_backward (ucl_iterator_t iterator, void * node)
   __attribute__((__nonnull__));
 
 
@@ -1002,21 +1041,21 @@ ucl_graph_node_set_mark (ucl_graph_node_t N, const ucl_value_t mark)
 
 /* ------------------------------------------------------------ */
 
-extern ucl_graph_link_t ucl_graph_last_output_link  (ucl_graph_link_t  link_p);
-extern ucl_graph_link_t ucl_graph_last_input_link   (ucl_graph_link_t  link_p);
-extern ucl_graph_link_t ucl_graph_first_output_link (ucl_graph_link_t  link_p);
-extern ucl_graph_link_t ucl_graph_first_input_link  (ucl_graph_link_t  link_p);
+ucl_decl ucl_graph_link_t ucl_graph_last_output_link  (ucl_graph_link_t  link_p);
+ucl_decl ucl_graph_link_t ucl_graph_last_input_link   (ucl_graph_link_t  link_p);
+ucl_decl ucl_graph_link_t ucl_graph_first_output_link (ucl_graph_link_t  link_p);
+ucl_decl ucl_graph_link_t ucl_graph_first_input_link  (ucl_graph_link_t  link_p);
 
-extern void ucl_graph_link (ucl_graph_node_t s, ucl_graph_link_t l, ucl_graph_node_t d);
-extern void ucl_graph_unlink (ucl_graph_link_t link_p);
-extern void ucl_graph_erase_node_destroy_links (ucl_graph_node_t N, ucl_callback_t destructor);
+ucl_decl void ucl_graph_link (ucl_graph_node_t s, ucl_graph_link_t l, ucl_graph_node_t d);
+ucl_decl void ucl_graph_unlink (ucl_graph_link_t link_p);
+ucl_decl void ucl_graph_erase_node_destroy_links (ucl_graph_node_t N, ucl_callback_t destructor);
 
-extern ucl_bool_t ucl_graph_nodes_are_linked        (ucl_graph_node_t src, ucl_graph_node_t dst);
-extern ucl_bool_t ucl_graph_nodes_are_doubly_linked (ucl_graph_node_t src, ucl_graph_node_t dst);
-extern ucl_bool_t ucl_graph_nodes_are_connected     (ucl_graph_node_t a,   ucl_graph_node_t b);
+ucl_decl ucl_bool_t ucl_graph_nodes_are_linked        (ucl_graph_node_t src, ucl_graph_node_t dst);
+ucl_decl ucl_bool_t ucl_graph_nodes_are_doubly_linked (ucl_graph_node_t src, ucl_graph_node_t dst);
+ucl_decl ucl_bool_t ucl_graph_nodes_are_connected     (ucl_graph_node_t a,   ucl_graph_node_t b);
 
-extern void ucl_graph_merge_upon_input_link  (ucl_graph_link_t in, ucl_graph_link_t out);
-extern void ucl_graph_merge_upon_output_link (ucl_graph_link_t in, ucl_graph_link_t out);
+ucl_decl void ucl_graph_merge_upon_input_link  (ucl_graph_link_t in, ucl_graph_link_t out);
+ucl_decl void ucl_graph_merge_upon_output_link (ucl_graph_link_t in, ucl_graph_link_t out);
 
 
 /** ------------------------------------------------------------
@@ -1052,9 +1091,9 @@ typedef struct ucl_graph_dfs_item_t {
   size_t		out_counter;
 } ucl_graph_dfs_item_t;
 
-extern void ucl_graph_dfs_initialise_handle (ucl_graph_dfs_t S, ucl_vector_t visited_nodes);
-extern void ucl_graph_dfs_directed	    (ucl_graph_dfs_t S, ucl_graph_node_t root);
-extern void ucl_graph_dfs		    (ucl_graph_dfs_t S, ucl_graph_node_t root);
+ucl_decl void ucl_graph_dfs_initialise_handle (ucl_graph_dfs_t S, ucl_vector_t visited_nodes);
+ucl_decl void ucl_graph_dfs_directed	    (ucl_graph_dfs_t S, ucl_graph_node_t root);
+ucl_decl void ucl_graph_dfs		    (ucl_graph_dfs_t S, ucl_graph_node_t root);
 
 
 /** ------------------------------------------------------------
@@ -1271,21 +1310,21 @@ ucl_tree_set_prevnext (void * prev, void * next)
 
 /* ------------------------------------------------------------ */
 
-extern ucl_bool_t ucl_tree_is_dad (void * nod_p, void * cld_p)
+ucl_decl ucl_bool_t ucl_tree_is_dad (void * nod_p, void * cld_p)
   __attribute__((__nonnull__));
-extern ucl_bool_t ucl_tree_is_bro (void * nod_p, void * bro)
+ucl_decl ucl_bool_t ucl_tree_is_bro (void * nod_p, void * bro)
   __attribute__((__nonnull__,__pure__));
-extern ucl_bool_t ucl_tree_has_dad (void * nod_p)
+ucl_decl ucl_bool_t ucl_tree_has_dad (void * nod_p)
   __attribute__((__nonnull__,__pure__));
-extern ucl_bool_t ucl_tree_has_prev (void * nod_p)
+ucl_decl ucl_bool_t ucl_tree_has_prev (void * nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_ref_dad (void * _nod_p)
+ucl_decl void * ucl_tree_ref_dad (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_ref_prev (void * _nod_p)
+ucl_decl void * ucl_tree_ref_prev (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_ref_first (void * _nod_p)
+ucl_decl void * ucl_tree_ref_first (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
-extern void * ucl_tree_ref_last (void * _nod_p)
+ucl_decl void * ucl_tree_ref_last (void * _nod_p)
   __attribute__((__nonnull__,__pure__));
 
 static __inline__ __attribute__((__always_inline__,__nonnull__)) void *
@@ -1299,17 +1338,17 @@ ucl_tree_ref_next (void * node)
   return ucl_btree_ref_bro(node);
 }
 
-extern void ucl_tree_insert_dad (void * nod_p, void * dad);
-extern void ucl_tree_insert_son (void *  nod_p, void *  son);
-extern void ucl_tree_insert_next (void *  nod_p, void *  nxt_p);
-extern void ucl_tree_insert_prev (void *  nod_p, void *  prv_p);
-extern void * ucl_tree_extract_dad (void * nod_p);
-extern void * ucl_tree_extract_son (void * nod_p);
-extern void * ucl_tree_extract_prev (void * nod_p);
-extern void * ucl_tree_extract_next (void * nod_p);
-extern void ucl_tree_iterator_inorder (void *  nod_p, ucl_iterator_t iterator);
-extern void ucl_tree_iterator_preorder (void * nod_p, ucl_iterator_t iterator);
-extern void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
+ucl_decl void ucl_tree_insert_dad (void * nod_p, void * dad);
+ucl_decl void ucl_tree_insert_son (void *  nod_p, void *  son);
+ucl_decl void ucl_tree_insert_next (void *  nod_p, void *  nxt_p);
+ucl_decl void ucl_tree_insert_prev (void *  nod_p, void *  prv_p);
+ucl_decl void * ucl_tree_extract_dad (void * nod_p);
+ucl_decl void * ucl_tree_extract_son (void * nod_p);
+ucl_decl void * ucl_tree_extract_prev (void * nod_p);
+ucl_decl void * ucl_tree_extract_next (void * nod_p);
+ucl_decl void ucl_tree_iterator_inorder (void *  nod_p, ucl_iterator_t iterator);
+ucl_decl void ucl_tree_iterator_preorder (void * nod_p, ucl_iterator_t iterator);
+ucl_decl void ucl_tree_iterator_postorder (void * nod_p, ucl_iterator_t iterator);
 
 
 /** ------------------------------------------------------------
@@ -1374,29 +1413,29 @@ ucl_list_last (void * N)
 
 /* ------------------------------------------------------------------ */
 
-extern void * ucl_list_caar (void * node);
-extern void * ucl_list_cadr (void * node);
-extern void * ucl_list_cdar (void * node);
-extern void * ucl_list_cddr (void * node);
-extern void * ucl_list_caaar (void * node);
-extern void * ucl_list_caadr (void * node);
-extern void * ucl_list_cadar (void * node);
-extern void * ucl_list_caddr (void * node);
-extern void * ucl_list_cdaar (void * node);
-extern void * ucl_list_cdadr (void * node);
-extern void * ucl_list_cddar (void * node);
-extern void * ucl_list_cdddr (void * node);
+ucl_decl void * ucl_list_caar (void * node);
+ucl_decl void * ucl_list_cadr (void * node);
+ucl_decl void * ucl_list_cdar (void * node);
+ucl_decl void * ucl_list_cddr (void * node);
+ucl_decl void * ucl_list_caaar (void * node);
+ucl_decl void * ucl_list_caadr (void * node);
+ucl_decl void * ucl_list_cadar (void * node);
+ucl_decl void * ucl_list_caddr (void * node);
+ucl_decl void * ucl_list_cdaar (void * node);
+ucl_decl void * ucl_list_cdadr (void * node);
+ucl_decl void * ucl_list_cddar (void * node);
+ucl_decl void * ucl_list_cdddr (void * node);
 
-extern void * ucl_list_remove (void * node);
-extern void * ucl_list_popfront (void * node, void ** new_first_p);
-extern void * ucl_list_popback (void * node);
+ucl_decl void * ucl_list_remove (void * node);
+ucl_decl void * ucl_list_popfront (void * node, void ** new_first_p);
+ucl_decl void * ucl_list_popback (void * node);
 
-extern void ucl_list_for_each (ucl_callback_t cb, void * N);
-extern void ucl_list_map (void * P, ucl_callback_t cb, void * Q);
-extern void * ucl_list_reverse (void * N);
+ucl_decl void ucl_list_for_each (ucl_callback_t cb, void * N);
+ucl_decl void ucl_list_map (void * P, ucl_callback_t cb, void * Q);
+ucl_decl void * ucl_list_reverse (void * N);
 
-extern size_t ucl_list_length (void * node);
-extern void * ucl_list_ref (void * N_, ucl_index_t position);
+ucl_decl size_t ucl_list_length (void * node);
+ucl_decl void * ucl_list_ref (void * N_, ucl_index_t position);
 
 
 /** ------------------------------------------------------------
@@ -1414,10 +1453,10 @@ typedef struct ucl_heap_tag_t {
 
 typedef ucl_heap_tag_t	ucl_heap_t[1];
 
-extern void ucl_heap_initialise	(ucl_heap_t H, ucl_comparison_t compar, ucl_node_getkey_t getkey);
-extern void ucl_heap_insert	(ucl_heap_t H, void * node);
-extern void * ucl_heap_extract	(ucl_heap_t H);
-extern void ucl_heap_merge	(ucl_heap_t H1, ucl_heap_t H2);
+ucl_decl void ucl_heap_initialise	(ucl_heap_t H, ucl_comparison_t compar, ucl_node_getkey_t getkey);
+ucl_decl void ucl_heap_insert	(ucl_heap_t H, void * node);
+ucl_decl void * ucl_heap_extract	(ucl_heap_t H);
+ucl_decl void ucl_heap_merge	(ucl_heap_t H1, ucl_heap_t H2);
 
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
 ucl_heap_size (const ucl_heap_t H)
@@ -1460,130 +1499,130 @@ ucl_map_root (const ucl_map_t M)
   return M->root;
 }
 
-extern void ucl_map_initialise (ucl_map_t M, unsigned int flags,
+ucl_decl void ucl_map_initialise (ucl_map_t M, unsigned int flags,
 				ucl_comparison_t keycmp, ucl_node_getkey_t getkey);
-extern ucl_bool_t ucl_map_insert (ucl_map_t M, void * L);
-extern void ucl_map_delete (ucl_map_t M, void * L);
-extern void * ucl_map_find (const ucl_map_t M, const ucl_value_t key);
-extern ucl_bool_t ucl_map_find_node (const ucl_map_t M, void * N_);
-extern size_t ucl_map_depth (const ucl_map_t M);
-extern void * ucl_map_first (const ucl_map_t M);
-extern void * ucl_map_last (const ucl_map_t M);
-extern void * ucl_map_next (void * L);
-extern void * ucl_map_prev (void * L);
-extern void * ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key);
-extern void * ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key);
-extern size_t ucl_map_count (const ucl_map_t M, const ucl_value_t key);
-extern void ucl_map_iterator_inorder (const ucl_map_t M, ucl_iterator_t I);
-extern void ucl_map_iterator_inorder_backward (const ucl_map_t M, ucl_iterator_t I);
-extern void ucl_map_iterator_preorder (const ucl_map_t M, ucl_iterator_t I);
-extern void ucl_map_iterator_postorder (const ucl_map_t M, ucl_iterator_t I);
-extern void ucl_map_iterator_levelorder (const ucl_map_t M, ucl_iterator_t I);
-extern void ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
-extern void ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
-extern void ucl_map_iterator_union (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
-extern void ucl_map_iterator_intersection (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
-extern void ucl_map_iterator_complintersect (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
-extern void ucl_map_iterator_subtraction (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+ucl_decl ucl_bool_t ucl_map_insert (ucl_map_t M, void * L);
+ucl_decl void ucl_map_delete (ucl_map_t M, void * L);
+ucl_decl void * ucl_map_find (const ucl_map_t M, const ucl_value_t key);
+ucl_decl ucl_bool_t ucl_map_find_node (const ucl_map_t M, void * N_);
+ucl_decl size_t ucl_map_depth (const ucl_map_t M);
+ucl_decl void * ucl_map_first (const ucl_map_t M);
+ucl_decl void * ucl_map_last (const ucl_map_t M);
+ucl_decl void * ucl_map_next (void * L);
+ucl_decl void * ucl_map_prev (void * L);
+ucl_decl void * ucl_map_find_or_next (const ucl_map_t M, const ucl_value_t key);
+ucl_decl void * ucl_map_find_or_prev (const ucl_map_t M, const ucl_value_t key);
+ucl_decl size_t ucl_map_count (const ucl_map_t M, const ucl_value_t key);
+ucl_decl void ucl_map_iterator_inorder (const ucl_map_t M, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_inorder_backward (const ucl_map_t M, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_preorder (const ucl_map_t M, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_postorder (const ucl_map_t M, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_levelorder (const ucl_map_t M, ucl_iterator_t I);
+ucl_decl void ucl_map_lower_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
+ucl_decl void ucl_map_upper_bound (const ucl_map_t M, ucl_iterator_t I, const ucl_value_t key);
+ucl_decl void ucl_map_iterator_union (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_intersection (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_complintersect (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
+ucl_decl void ucl_map_iterator_subtraction (ucl_iterator_t I1, ucl_iterator_t I2, ucl_iterator_t I);
 
 
 /** ------------------------------------------------------------
  ** Vector functions.
  ** ----------------------------------------------------------*/
 
-extern void ucl_vector_initialise_config (ucl_vector_config_t config,
+ucl_decl void ucl_vector_initialise_config (ucl_vector_config_t config,
 					  size_t slot_dimension,
 					  size_t number_of_slots);
-extern void ucl_vector_initialise_config_buffer (ucl_vector_config_t config);
-extern void ucl_vector_initialise_config_hash   (ucl_vector_config_t config);
-extern void ucl_vector_initialise_config_dfs    (ucl_vector_config_t config);
-extern void ucl_vector_alloc (ucl_vector_t V, ucl_vector_config_t config);
-extern void ucl_vector_free (ucl_vector_t V);
+ucl_decl void ucl_vector_initialise_config_buffer (ucl_vector_config_t config);
+ucl_decl void ucl_vector_initialise_config_hash   (ucl_vector_config_t config);
+ucl_decl void ucl_vector_initialise_config_dfs    (ucl_vector_config_t config);
+ucl_decl void ucl_vector_alloc (ucl_vector_t V, ucl_vector_config_t config);
+ucl_decl void ucl_vector_free (ucl_vector_t V);
 
-extern void ucl_vector_swallow_block (ucl_vector_t V, ucl_vector_config_t config, ucl_block_t block);
+ucl_decl void ucl_vector_swallow_block (ucl_vector_t V, ucl_vector_config_t config, ucl_block_t block);
 
-extern size_t ucl_vector_number_of_step_up_slots (const ucl_vector_t V);
-extern size_t ucl_vector_number_of_step_down_slots (const ucl_vector_t V);
-extern size_t ucl_vector_number_of_padding_slots (const ucl_vector_t V);
-extern ucl_bool_t ucl_vector_running (const ucl_vector_t V);
-extern void ucl_vector_update_number_of_step_up_slots (ucl_vector_t V, size_t step_up);
-extern void ucl_vector_update_number_of_step_down_slots (ucl_vector_t V, size_t step_down);
-extern void ucl_vector_update_number_of_padding_slots (ucl_vector_t V, size_t padding);
-extern void ucl_vector_mark_all_slots_as_used (ucl_vector_t V);
-extern void ucl_vector_mark_allocated_range_as_used (ucl_vector_t V, ucl_range_t range);
-extern void ucl_vector_reset (ucl_vector_t V);
-extern void ucl_vector_clean (ucl_vector_t V);
-extern void * ucl_vector_index_to_slot (const ucl_vector_t V, ucl_index_t idx);
-extern void * ucl_vector_index_to_new_slot (const ucl_vector_t V, ucl_index_t idx);
-extern ucl_index_t ucl_vector_last_index (const ucl_vector_t V);
-extern ucl_index_t ucl_vector_slot_to_index (const ucl_vector_t V, const void *_pointer_to_slot_p);
-extern ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t V, const void *pointer_to_slot_p);
-extern ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t V, ucl_index_t idx);
-extern ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t V, ucl_index_t idx);
-extern ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t V, ucl_range_t range);
-extern ucl_range_t ucl_vector_range (const ucl_vector_t V);
-extern ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t V, ucl_index_t position);
-extern ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t V, ucl_index_t position);
-extern ucl_range_t ucl_vector_range_from_end_with_span (const ucl_vector_t V, size_t span);
-extern void * ucl_vector_insert (ucl_vector_t V, void *_pointer_to_slot_p);
-extern void * ucl_vector_insert_sort (ucl_vector_t V, ucl_value_t data);
-extern void ucl_vector_erase (ucl_vector_t V, void *_pointer_to_slot_p);
-extern size_t ucl_vector_slot_dimension (const ucl_vector_t V);
-extern size_t ucl_vector_size (const ucl_vector_t V);
-extern void ucl_vector_set_compar (ucl_vector_t V, ucl_comparison_t compar);
-extern ucl_block_t ucl_vector_get_memory_block (const ucl_vector_t V);
-extern ucl_block_t ucl_vector_get_data_block (const ucl_vector_t V);
-extern ucl_block_t ucl_vector_get_free_block_at_end (ucl_vector_t V, size_t requested_slots);
-extern ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t V, size_t requested_slots);
-extern void ucl_vector_mark_as_used (ucl_vector_t V, ucl_block_t used_block);
-extern void ucl_vector_quick_sort (ucl_vector_t V);
-extern ucl_bool_t ucl_vector_sorted (ucl_vector_t V);
-extern ucl_block_t ucl_vector_block_from_range (const ucl_vector_t V, const ucl_range_t range);
-extern ucl_range_t ucl_vector_range_from_block (const ucl_vector_t V, const ucl_block_t block);
-extern void ucl_vector_iterator_forward (const ucl_vector_t V, ucl_iterator_t iterator);
-extern void ucl_vector_iterator_backward (const ucl_vector_t V, ucl_iterator_t iterator);
-extern void ucl_vector_iterator_range_forward (const ucl_vector_t V, ucl_range_t range, ucl_iterator_t iterator);
-extern void ucl_vector_iterator_range_backward (const ucl_vector_t V, ucl_range_t range, ucl_iterator_t iterator);
-extern ucl_bool_t ucl_vector_will_enlarge (ucl_vector_t V);
-extern size_t ucl_vector_enlarged_size (ucl_vector_t V);
-extern void ucl_vector_enlarge (ucl_vector_t V);
-extern void ucl_vector_enlarge_for_slots (ucl_vector_t V, size_t required_free_slots);
-extern void ucl_vector_enlarge_for_range (ucl_vector_t V, ucl_range_t range);
-extern ucl_bool_t ucl_vector_will_restrict (ucl_vector_t V);
-extern size_t ucl_vector_restricted_size (ucl_vector_t V);
-extern void ucl_vector_restrict (ucl_vector_t V);
-extern void ucl_vector_set_memory_to_zero (ucl_vector_t V);
-extern size_t ucl_vector_number_of_free_slots (const ucl_vector_t V);
-extern void * ucl_vector_find (const ucl_vector_t V, const ucl_value_t data);
-extern void * ucl_vector_sort_find (const ucl_vector_t V, const ucl_value_t data);
-extern void * ucl_vector_binary_search (const ucl_vector_t V, const ucl_value_t data);
-extern void * ucl_vector_push_back (ucl_vector_t V);
-extern void * ucl_vector_push_front (ucl_vector_t V);
-extern void ucl_vector_pop_back (ucl_vector_t V);
-extern void ucl_vector_pop_front (ucl_vector_t V);
-extern void ucl_vector_append_block (ucl_vector_t V, const ucl_block_t block);
-extern void ucl_vector_append (ucl_vector_t target, const ucl_vector_t source);
-extern void ucl_vector_append_range (ucl_vector_t target, const ucl_vector_t source, ucl_range_t range);
-extern void ucl_vector_append_more (ucl_vector_t target, const ucl_vector_t source, ...);
-extern void ucl_vector_append_more_from_array (ucl_vector_t target, const ucl_vector_array_t * vectors);
-extern void ucl_vector_insert_block (ucl_vector_t target, ucl_index_t offset, const ucl_block_t block);
-extern void ucl_vector_insert_range (ucl_vector_t V, ucl_index_t offset, const ucl_vector_t A, ucl_range_t range);
-extern void ucl_vector_insert_vector (ucl_vector_t T, ucl_index_t offset, const ucl_vector_t S);
-extern void ucl_vector_erase_range (ucl_vector_t V, ucl_range_t index_range);
-extern void ucl_vector_copy_range (ucl_vector_t target, ucl_index_t position, ucl_vector_t source, ucl_range_t source_range);
-extern void ucl_vector_set_block (ucl_vector_t target, ucl_index_t position, ucl_block_t source);
-extern void ucl_vector_get_block (ucl_block_t target, ucl_index_t position, ucl_vector_t source);
-extern int ucl_vector_compare_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb);
-extern int ucl_vector_compare (const ucl_vector_t a, const ucl_vector_t b);
-extern ucl_bool_t ucl_vector_equal (const ucl_vector_t a, const ucl_vector_t b);
-extern void ucl_vector_for_each (ucl_callback_t callback, const ucl_vector_t V);
-extern void ucl_vector_for_each_in_range (ucl_callback_t callback, ucl_range_t range, const ucl_vector_t V);
-extern void ucl_vector_for_each_multiple_from_array (ucl_callback_t callback, const ucl_vector_array_t * vectors);
-extern void ucl_vector_for_each_multiple (ucl_callback_t callback, const ucl_vector_t first, ...);
-extern void ucl_vector_map (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t V);
-extern void ucl_vector_map_range (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, const ucl_vector_t V);
-extern void ucl_vector_map_multiple_from_array (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_array_t * vectors);
-extern void ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t first, ...);
+ucl_decl size_t ucl_vector_number_of_step_up_slots (const ucl_vector_t V);
+ucl_decl size_t ucl_vector_number_of_step_down_slots (const ucl_vector_t V);
+ucl_decl size_t ucl_vector_number_of_padding_slots (const ucl_vector_t V);
+ucl_decl ucl_bool_t ucl_vector_running (const ucl_vector_t V);
+ucl_decl void ucl_vector_update_number_of_step_up_slots (ucl_vector_t V, size_t step_up);
+ucl_decl void ucl_vector_update_number_of_step_down_slots (ucl_vector_t V, size_t step_down);
+ucl_decl void ucl_vector_update_number_of_padding_slots (ucl_vector_t V, size_t padding);
+ucl_decl void ucl_vector_mark_all_slots_as_used (ucl_vector_t V);
+ucl_decl void ucl_vector_mark_allocated_range_as_used (ucl_vector_t V, ucl_range_t range);
+ucl_decl void ucl_vector_reset (ucl_vector_t V);
+ucl_decl void ucl_vector_clean (ucl_vector_t V);
+ucl_decl void * ucl_vector_index_to_slot (const ucl_vector_t V, ucl_index_t idx);
+ucl_decl void * ucl_vector_index_to_new_slot (const ucl_vector_t V, ucl_index_t idx);
+ucl_decl ucl_index_t ucl_vector_last_index (const ucl_vector_t V);
+ucl_decl ucl_index_t ucl_vector_slot_to_index (const ucl_vector_t V, const void *_pointer_to_slot_p);
+ucl_decl ucl_bool_t ucl_vector_pointer_is_valid_slot (const ucl_vector_t V, const void *pointer_to_slot_p);
+ucl_decl ucl_bool_t ucl_vector_index_is_valid (const ucl_vector_t V, ucl_index_t idx);
+ucl_decl ucl_bool_t ucl_vector_index_is_valid_new (const ucl_vector_t V, ucl_index_t idx);
+ucl_decl ucl_bool_t ucl_vector_range_is_valid (const ucl_vector_t V, ucl_range_t range);
+ucl_decl ucl_range_t ucl_vector_range (const ucl_vector_t V);
+ucl_decl ucl_range_t ucl_vector_range_from_position_to_end (const ucl_vector_t V, ucl_index_t position);
+ucl_decl ucl_range_t ucl_vector_range_from_end_to_position (const ucl_vector_t V, ucl_index_t position);
+ucl_decl ucl_range_t ucl_vector_range_from_end_with_span (const ucl_vector_t V, size_t span);
+ucl_decl void * ucl_vector_insert (ucl_vector_t V, void *_pointer_to_slot_p);
+ucl_decl void * ucl_vector_insert_sort (ucl_vector_t V, ucl_value_t data);
+ucl_decl void ucl_vector_erase (ucl_vector_t V, void *_pointer_to_slot_p);
+ucl_decl size_t ucl_vector_slot_dimension (const ucl_vector_t V);
+ucl_decl size_t ucl_vector_size (const ucl_vector_t V);
+ucl_decl void ucl_vector_set_compar (ucl_vector_t V, ucl_comparison_t compar);
+ucl_decl ucl_block_t ucl_vector_get_memory_block (const ucl_vector_t V);
+ucl_decl ucl_block_t ucl_vector_get_data_block (const ucl_vector_t V);
+ucl_decl ucl_block_t ucl_vector_get_free_block_at_end (ucl_vector_t V, size_t requested_slots);
+ucl_decl ucl_block_t ucl_vector_get_free_block_at_beginning (ucl_vector_t V, size_t requested_slots);
+ucl_decl void ucl_vector_mark_as_used (ucl_vector_t V, ucl_block_t used_block);
+ucl_decl void ucl_vector_quick_sort (ucl_vector_t V);
+ucl_decl ucl_bool_t ucl_vector_sorted (ucl_vector_t V);
+ucl_decl ucl_block_t ucl_vector_block_from_range (const ucl_vector_t V, const ucl_range_t range);
+ucl_decl ucl_range_t ucl_vector_range_from_block (const ucl_vector_t V, const ucl_block_t block);
+ucl_decl void ucl_vector_iterator_forward (const ucl_vector_t V, ucl_iterator_t iterator);
+ucl_decl void ucl_vector_iterator_backward (const ucl_vector_t V, ucl_iterator_t iterator);
+ucl_decl void ucl_vector_iterator_range_forward (const ucl_vector_t V, ucl_range_t range, ucl_iterator_t iterator);
+ucl_decl void ucl_vector_iterator_range_backward (const ucl_vector_t V, ucl_range_t range, ucl_iterator_t iterator);
+ucl_decl ucl_bool_t ucl_vector_will_enlarge (ucl_vector_t V);
+ucl_decl size_t ucl_vector_enlarged_size (ucl_vector_t V);
+ucl_decl void ucl_vector_enlarge (ucl_vector_t V);
+ucl_decl void ucl_vector_enlarge_for_slots (ucl_vector_t V, size_t required_free_slots);
+ucl_decl void ucl_vector_enlarge_for_range (ucl_vector_t V, ucl_range_t range);
+ucl_decl ucl_bool_t ucl_vector_will_restrict (ucl_vector_t V);
+ucl_decl size_t ucl_vector_restricted_size (ucl_vector_t V);
+ucl_decl void ucl_vector_restrict (ucl_vector_t V);
+ucl_decl void ucl_vector_set_memory_to_zero (ucl_vector_t V);
+ucl_decl size_t ucl_vector_number_of_free_slots (const ucl_vector_t V);
+ucl_decl void * ucl_vector_find (const ucl_vector_t V, const ucl_value_t data);
+ucl_decl void * ucl_vector_sort_find (const ucl_vector_t V, const ucl_value_t data);
+ucl_decl void * ucl_vector_binary_search (const ucl_vector_t V, const ucl_value_t data);
+ucl_decl void * ucl_vector_push_back (ucl_vector_t V);
+ucl_decl void * ucl_vector_push_front (ucl_vector_t V);
+ucl_decl void ucl_vector_pop_back (ucl_vector_t V);
+ucl_decl void ucl_vector_pop_front (ucl_vector_t V);
+ucl_decl void ucl_vector_append_block (ucl_vector_t V, const ucl_block_t block);
+ucl_decl void ucl_vector_append (ucl_vector_t target, const ucl_vector_t source);
+ucl_decl void ucl_vector_append_range (ucl_vector_t target, const ucl_vector_t source, ucl_range_t range);
+ucl_decl void ucl_vector_append_more (ucl_vector_t target, const ucl_vector_t source, ...);
+ucl_decl void ucl_vector_append_more_from_array (ucl_vector_t target, const ucl_vector_array_t * vectors);
+ucl_decl void ucl_vector_insert_block (ucl_vector_t target, ucl_index_t offset, const ucl_block_t block);
+ucl_decl void ucl_vector_insert_range (ucl_vector_t V, ucl_index_t offset, const ucl_vector_t A, ucl_range_t range);
+ucl_decl void ucl_vector_insert_vector (ucl_vector_t T, ucl_index_t offset, const ucl_vector_t S);
+ucl_decl void ucl_vector_erase_range (ucl_vector_t V, ucl_range_t index_range);
+ucl_decl void ucl_vector_copy_range (ucl_vector_t target, ucl_index_t position, ucl_vector_t source, ucl_range_t source_range);
+ucl_decl void ucl_vector_set_block (ucl_vector_t target, ucl_index_t position, ucl_block_t source);
+ucl_decl void ucl_vector_get_block (ucl_block_t target, ucl_index_t position, ucl_vector_t source);
+ucl_decl int ucl_vector_compare_range (const ucl_vector_t a, ucl_range_t ra, const ucl_vector_t b, ucl_range_t rb);
+ucl_decl int ucl_vector_compare (const ucl_vector_t a, const ucl_vector_t b);
+ucl_decl ucl_bool_t ucl_vector_equal (const ucl_vector_t a, const ucl_vector_t b);
+ucl_decl void ucl_vector_for_each (ucl_callback_t callback, const ucl_vector_t V);
+ucl_decl void ucl_vector_for_each_in_range (ucl_callback_t callback, ucl_range_t range, const ucl_vector_t V);
+ucl_decl void ucl_vector_for_each_multiple_from_array (ucl_callback_t callback, const ucl_vector_array_t * vectors);
+ucl_decl void ucl_vector_for_each_multiple (ucl_callback_t callback, const ucl_vector_t first, ...);
+ucl_decl void ucl_vector_map (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t V);
+ucl_decl void ucl_vector_map_range (ucl_vector_t result, ucl_callback_t callback, ucl_range_t range, const ucl_vector_t V);
+ucl_decl void ucl_vector_map_multiple_from_array (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_array_t * vectors);
+ucl_decl void ucl_vector_map_multiple (ucl_vector_t result, ucl_callback_t callback, const ucl_vector_t first, ...);
 
 /* ------------------------------------------------------------------ */
 
@@ -1633,24 +1672,24 @@ typedef struct ucl_hash_table_tag_t {
 
 typedef ucl_hash_table_tag_t ucl_hash_table_t[1];
 
-extern void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
+ucl_decl void ucl_hash_initialise (ucl_hash_table_t H, ucl_vector_t buckets,
 				 ucl_comparison_t compar, ucl_hash_t hash,
 				 ucl_node_getkey_t getkey);
 
-extern void ucl_hash_insert  (ucl_hash_table_t H, void * entry);
-extern void ucl_hash_extract (ucl_hash_table_t H, void * entry);
+ucl_decl void ucl_hash_insert  (ucl_hash_table_t H, void * entry);
+ucl_decl void ucl_hash_extract (ucl_hash_table_t H, void * entry);
 
-extern void * ucl_hash_find  (const ucl_hash_table_t H, const ucl_value_t key);
-extern void * ucl_hash_first (const ucl_hash_table_t H);
+ucl_decl void * ucl_hash_find  (const ucl_hash_table_t H, const ucl_value_t key);
+ucl_decl void * ucl_hash_first (const ucl_hash_table_t H);
 
-extern void ucl_hash_enlarge  (ucl_hash_table_t H);
-extern void ucl_hash_restrict (ucl_hash_table_t H);
+ucl_decl void ucl_hash_enlarge  (ucl_hash_table_t H);
+ucl_decl void ucl_hash_restrict (ucl_hash_table_t H);
 
-extern void ucl_hash_iterator (const ucl_hash_table_t H, ucl_iterator_t iterator);
+ucl_decl void ucl_hash_iterator (const ucl_hash_table_t H, ucl_iterator_t iterator);
 
-extern size_t ucl_hash_number_of_used_buckets  (const ucl_hash_table_t H);
-extern size_t ucl_hash_bucket_chain_length     (const ucl_hash_table_t H, ucl_index_t position);
-extern double ucl_hash_average_search_distance (const ucl_hash_table_t H);
+ucl_decl size_t ucl_hash_number_of_used_buckets  (const ucl_hash_table_t H);
+ucl_decl size_t ucl_hash_bucket_chain_length     (const ucl_hash_table_t H, ucl_index_t position);
+ucl_decl double ucl_hash_average_search_distance (const ucl_hash_table_t H);
 
 static __inline__ __attribute__((__always_inline__,__pure__,__nonnull__)) size_t
 ucl_hash_number_of_buckets (const ucl_hash_table_t H)
@@ -1676,10 +1715,10 @@ typedef struct ucl_circular_tag_t {
 
 typedef ucl_circular_tag_t ucl_circular_t[1];
 
-extern void ucl_circular_insert (ucl_circular_t self, ucl_node_t new);
-extern ucl_node_t  ucl_circular_extract (ucl_circular_t self);
-extern void ucl_circular_forward (ucl_circular_t self, int times);
-extern ucl_node_t  ucl_circular_find (ucl_circular_t self, ucl_value_t val);
+ucl_decl void ucl_circular_insert (ucl_circular_t self, ucl_node_t new);
+ucl_decl ucl_node_t  ucl_circular_extract (ucl_circular_t self);
+ucl_decl void ucl_circular_forward (ucl_circular_t self, int times);
+ucl_decl ucl_node_t  ucl_circular_find (ucl_circular_t self, ucl_value_t val);
 
 static __inline__ void
 ucl_circular_constructor (ucl_circular_t self)
@@ -1717,24 +1756,20 @@ ucl_circular_backward (ucl_circular_t self, int times)
  ** Miscellaneous functions.
  ** -----------------------------------------------------------------*/
 
-extern const char * ucl_version (void);
-extern unsigned	ucl_interface_major_version (void);
-extern unsigned	ucl_interface_minor_version (void);
+ucl_decl ucl_comparison_fun_t	ucl_compare_int_fun;
+ucl_decl ucl_comparison_fun_t	ucl_compare_unsigned_int_fun;
+ucl_decl ucl_comparison_fun_t	ucl_compare_string_fun;
+ucl_decl ucl_comparison_fun_t	ucl_compare_int_pointer_fun;
 
-extern ucl_comparison_fun_t	ucl_compare_int_fun;
-extern ucl_comparison_fun_t	ucl_compare_unsigned_int_fun;
-extern ucl_comparison_fun_t	ucl_compare_string_fun;
-extern ucl_comparison_fun_t	ucl_compare_int_pointer_fun;
+ucl_decl const ucl_comparison_t	ucl_compare_int;
+ucl_decl const ucl_comparison_t	ucl_compare_unsigned_int;
+ucl_decl const ucl_comparison_t	ucl_compare_string;
+ucl_decl const ucl_comparison_t	ucl_compare_int_pointer;
 
-extern const ucl_comparison_t	ucl_compare_int;
-extern const ucl_comparison_t	ucl_compare_unsigned_int;
-extern const ucl_comparison_t	ucl_compare_string;
-extern const ucl_comparison_t	ucl_compare_int_pointer;
+ucl_decl const ucl_hash_t		ucl_hash_string;
+ucl_decl ucl_hash_fun_t		ucl_hash_string_fun;
 
-extern const ucl_hash_t		ucl_hash_string;
-extern ucl_hash_fun_t		ucl_hash_string_fun;
-
-extern void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp);
+ucl_decl void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, ucl_comparison_t cmp);
 
 
 /** ------------------------------------------------------------
@@ -1743,6 +1778,6 @@ extern void ucl_quicksort (void *const pbase, size_t total_elems, size_t size, u
 
 UCL_END_C_DECL
 
-#endif /* __UCL_H */
+#endif /* UCL_H */
 
 /* end of file */

@@ -8,7 +8,7 @@
 	This  module  declares  the  functions  used  to  handle  memory
 	allocation.
 
-  Copyright (c) 2004-2005, 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2004-2005, 2008-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -29,7 +29,7 @@
  ** Headers.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "ucl-internals.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>

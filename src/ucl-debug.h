@@ -6,7 +6,7 @@
 
 	Define a set of generic macros and functions.
 
-   Copyright (c) 2008-2010 Marco Maggi <marco.maggi-ipsu@poste.it>
+   Copyright (c) 2008-2010, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
 
    This program is free software:  you can redistribute it and/or modify
    it under the terms of the  GNU General Public License as published by
@@ -22,8 +22,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DEBUG_H
-#define DEBUG_H 1
+#ifndef UCL_DEBUG_H
+#define UCL_DEBUG_H 1
 
 
 /** ------------------------------------------------------------
@@ -83,6 +83,6 @@ debug_print (const char * file, const char * function, int line, const char * te
 #  define debug_question(...)		/* empty */
 #endif
 
-#endif /* DEBUG_H */
+#endif /* UCL_DEBUG_H */
 
 /* end of file */

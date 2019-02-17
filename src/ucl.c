@@ -9,7 +9,7 @@
 	Douglas  C. Schmidt  (schmidt@ics.uci.edu).   Modified by  Marco
 	Maggi (marcomaggi@gna.org).
 
-  Copyright (c) 2001-2005, 2007-2010, 2013 Marco Maggi <marco.maggi-ipsu@poste.it>
+  Copyright (c) 2001-2005, 2007-2010, 2013, 2019 Marco Maggi <marco.maggi-ipsu@poste.it>
   Copyright (c) 1991,1992,1996,1997,1999,2004 Free Software Foundation,
   Inc.
 
@@ -33,7 +33,7 @@
  ** Header files.
  ** ----------------------------------------------------------*/
 
-#include "internal.h"
+#include "ucl-internals.h"
 
 const ucl_ascii_t	ucl_ascii_empty		= { .ptr = (char *)"", .len = 0 };
 const ucl_value_t	ucl_value_null		= { .t_unsigned_long = 0 };
