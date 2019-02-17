@@ -39,8 +39,8 @@ libucl_la_CFLAGS	= $(AM_CFLAGS) $(CCEXCEPTIONS_CFLAGS) $(CCMEMORY_CFLAGS) $(CCST
 libucl_la_LDFLAGS	= -version-info $(ucl_CURRENT):$(ucl_REVISION):$(ucl_AGE) \
 	$(CCEXCEPTIONS_LIBS) $(CCMEMORY_LIBS) $(CCSTRUCTS_LIBS)
 libucl_la_SOURCES	= \
-	src/debug.h		\
-	src/internal.h		\
+	src/ucl-debug.h		\
+	src/ucl-internals.h	\
 	src/ucl-version.c	\
 	src/ucl.c		\
 	src/ucl.h		\
