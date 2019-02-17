@@ -87,9 +87,9 @@ ucl_tests_ldadd		= libucl.la $(CCTESTS_LIBS)
 
 ## --------------------------------------------------------------------
 
-tests_condition_objects_CPPFLAGS	= $(ucl_tests_cppflags)
-tests_condition_objects_CFLAGS		= $(ucl_tests_cflags)
-tests_condition_objects_LDADD		= $(ucl_tests_ldadd)
+# tests_condition_objects_CPPFLAGS	= $(ucl_tests_cppflags)
+# tests_condition_objects_CFLAGS	= $(ucl_tests_cflags)
+# tests_condition_objects_LDADD		= $(ucl_tests_ldadd)
 
 tests_bst_CPPFLAGS	= $(ucl_tests_cppflags)
 tests_bst_CFLAGS	= $(ucl_tests_cflags)
