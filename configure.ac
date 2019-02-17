@@ -57,7 +57,7 @@ MMUX_LANG_C11
 AM_PROG_AS
 AM_PROG_CC_C_O
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h stdint.h strings.h errno.h stddef.h unistd.h])
+AC_CHECK_HEADERS([assert.h stdint.h stdbool.h strings.h errno.h stddef.h unistd.h])
 
 MMUX_DETERMINE_SIZEOF([SIZE_T],[size_t],[MMUX_INCLUDE_STDDEF_H])
 MMUX_DETERMINE_SIZEOF([SSIZE_T],[ssize_t],[MMUX_INCLUDE_UNISTD_H])

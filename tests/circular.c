@@ -7,7 +7,7 @@
 
 
 
-  Copyright (c) 2003, 2005, 2008, 2010 Marco Maggi
+  Copyright (c) 2003, 2005, 2008, 2010, 2019 Marco Maggi
 
   This program is  free software: you can redistribute  it and/or modify
   it under the  terms of the GNU General Public  License as published by
@@ -29,9 +29,9 @@
  ** ----------------------------------------------------------------- */
 
 #define MCL_DEBUGGING		0
-#include "mcl-test.h"
-#include "debug.h"
 #include "ucl.h"
+#include "ucl-debug.h"
+#include "mcl-test.h"
 
 #define NUMBER	20
 

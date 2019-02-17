@@ -7,7 +7,7 @@
 
 	Common definitions for C language code.
 
-  Copyright (c) 2009 Marco Maggi <marcomaggi@gna.org>
+  Copyright (c) 2009, 2019 Marco Maggi <marcomaggi@gna.org>
 
   This program is free software:  you can redistribute it and/or modify
   it under the terms of the  GNU General Public License as published by
@@ -27,6 +27,10 @@
 #define MCL_DEFINES_H 1
 
 
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_STDBOOL_H
 #  include <stdbool.h>

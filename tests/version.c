@@ -19,7 +19,7 @@
 int
 main (int argc UCL_UNUSED, char const * const argv[] UCL_UNUSED)
 {
-  ucl_library_init();
+  /* ucl_library_init(); */
 
   printf("version number string: %s\n", ucl_version_string());
   printf("libtool version number: %d:%d:%d\n",

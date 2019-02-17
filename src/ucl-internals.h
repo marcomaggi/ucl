@@ -34,10 +34,10 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>	/* sometimes useful for debugging */
-#include <limits.h>
 #include "ucl.h"
 #include "ucl-debug.h"
+#include <stdio.h>	/* sometimes useful for debugging */
+#include <limits.h>
 
 
 /** --------------------------------------------------------------------

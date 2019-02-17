@@ -65,7 +65,7 @@ ucl_btree_find_value (void * root, ucl_value_t value, ucl_comparison_t compar)
   ucl_node_t	N  = root;
   ucl_value_t	D;
   int		v;
-  while (NULL != root) {
+  while (NULL != N) {
     D.pointer = N;
     v = compar.func(compar.data, value, D);
     if (v > 0)
