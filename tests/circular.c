@@ -29,14 +29,17 @@
 
 #define MCL_DEBUGGING		0
 #include "ucl.h"
-#include "ucl-debug.h"
-#include "mcl-test.h"
+#include <cctests.h>
 
 #define NUMBER	20
 
 static ucl_memory_allocator_t	A;
 
 
+/** --------------------------------------------------------------------
+ ** Helpers.
+ ** ----------------------------------------------------------------- */
+
 static void
 fill (ucl_circular_t circ, int number, int first)
 {
@@ -58,26 +61,47 @@ clean (ucl_circular_t circ)
   }
   assert(0 == ucl_circular_size(circ));
 }
+
 
-static void
-test_constructor (void)
+/** --------------------------------------------------------------------
+ ** Test constructors.
+ ** ----------------------------------------------------------------- */
+
+void
+test_1_1 (cce_destination_t upper_L)
 {
-  mcl_test_begin("circular-1.1", "construction and destruction") {
+  cce_location_t	L[1];
+
+  if (cce_location(L)) {
+    cce_run_catch_handlers_raise(L, upper_L);
+  } else {
     ucl_circular_t	circ;
+
     ucl_circular_constructor(circ);
     {
-      assert(0 == ucl_circular_size(circ));
-      assert(NULL == ucl_circular_current(circ));
+      cctests_assert(L, 0 == ucl_circular_size(circ));
+      cctests_assert(L, NULL == ucl_circular_current(circ));
     }
     ucl_circular_destructor(circ);
+
+    cce_run_body_handlers(L);
   }
-  mcl_test_end();
 }
+
 
-static void
-test_forward_movement (void)
+/** --------------------------------------------------------------------
+ ** Test forward movements.
+ ** ----------------------------------------------------------------- */
+
+void
+test_2_1 (cce_destination_t upper_L)
+/* Test backwards movement. */
 {
-  mcl_test_begin("circular-2.1", "forward movement") {
+  cce_location_t	L[1];
+
+  if (cce_location(L)) {
+    cce_run_catch_handlers_raise(L, upper_L);
+  } else {
     ucl_circular_t	circ;
     ucl_circular_constructor(circ);
     {
@@ -87,25 +111,30 @@ test_forward_movement (void)
 	for (int i=0; i<NUMBER; ++i) {
 	  ucl_circular_forward(circ, 1);
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	}
 	for (int i=0; i<NUMBER; ++i) {
 	  ucl_circular_forward(circ, 1);
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	}
       }
       clean(circ);
     }
     ucl_circular_destructor(circ);
+    cce_run_body_handlers(L);
   }
-  mcl_test_end();
 }
-
-static void
-test_backward_movement (void)
+
+void
+test_2_2 (cce_destination_t upper_L)
+/* Test backwards movement. */
 {
-  mcl_test_begin("circular-2.2", "backward movement") {
+  cce_location_t	L[1];
+
+  if (cce_location(L)) {
+    cce_run_catch_handlers_raise(L, upper_L);
+  } else {
     ucl_circular_t	circ;
     ucl_circular_constructor(circ);
     {
@@ -114,32 +143,43 @@ test_backward_movement (void)
 	ucl_node_t	link;
 	for (int i=NUMBER-1; i>=0; --i) {
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	  ucl_circular_backward(circ, 1);
 	}
 	for (int i=NUMBER-1; i>=0; --i) {
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	  ucl_circular_backward(circ, 1);
 	}
       }
       clean(circ);
     }
     ucl_circular_destructor(circ);
+
+    cce_run_body_handlers(L);
   }
-  mcl_test_end();
 }
+
 
-static int
+/** --------------------------------------------------------------------
+ ** Test searching.
+ ** ----------------------------------------------------------------- */
+
+int
 compare (ucl_value_t data, ucl_value_t outer, ucl_value_t inner)
 {
   inner.t_int = ((ucl_node_t)inner.pointer)->meta.t_int;
   return ucl_compare_int_fun(data, outer, inner);
 }
-static void
-test_finding (void)
+
+void
+test_3_1 (cce_destination_t upper_L)
 {
-  mcl_test_begin("circular-3.1", "finding elements") {
+  cce_location_t	L[1];
+
+  if (cce_location(L)) {
+    cce_run_catch_handlers_raise(L, upper_L);
+  } else {
     ucl_circular_t	circ;
     ucl_comparison_t	compar = { .data = { .pointer = NULL }, .func = compare };
     ucl_circular_constructor(circ);
@@ -152,40 +192,49 @@ test_finding (void)
 
 	val.t_int = 10;
 	link = ucl_circular_find(circ, val);
-	assert(link);
-	assert(val.t_int == link->meta.t_int);
+	cctests_assert(L, link);
+	cctests_assert(L, val.t_int == link->meta.t_int);
 
 	val.t_int= NUMBER-1;
 	link = ucl_circular_find(circ, val);
-	assert(link);
-	assert(val.t_int == link->meta.t_int);
+	cctests_assert(L, link);
+	cctests_assert(L, val.t_int == link->meta.t_int);
 
 	val.t_int = 0;
 	link = ucl_circular_find(circ, val);
-	assert(link);
-	assert(val.t_int == link->meta.t_int);
+	cctests_assert(L, link);
+	cctests_assert(L, val.t_int == link->meta.t_int);
 
 	val.t_int = 4;
 	link = ucl_circular_find(circ, val);
-	assert(link);
-	assert(val.t_int == 4);
+	cctests_assert(L, link);
+	cctests_assert(L, val.t_int == 4);
 
 	val.t_int = NUMBER-1;
 	link = ucl_circular_find(circ, val);
-	assert(link);
-	assert(val.t_int == link->meta.t_int);
+	cctests_assert(L, link);
+	cctests_assert(L, val.t_int == link->meta.t_int);
       }
       clean(circ);
     }
     ucl_circular_destructor(circ);
+    cce_run_body_handlers(L);
   }
-  mcl_test_end();
 }
+
 
-static void
-test_misc (void)
+/** --------------------------------------------------------------------
+ ** Test miscellaneous operations.
+ ** ----------------------------------------------------------------- */
+
+void
+test_4_1 (cce_destination_t upper_L)
 {
-  mcl_test_begin("circular-4.1", "miscellaneous movements") {
+  cce_location_t	L[1];
+
+  if (cce_location(L)) {
+    cce_run_catch_handlers_raise(L, upper_L);
+  } else {
     ucl_circular_t	circ;
     ucl_comparison_t	compar = { .data = { .pointer = NULL }, .func = compare };
     ucl_circular_constructor(circ);
@@ -199,7 +248,7 @@ test_misc (void)
 	/* let's go to the element holding "16" (20-4=16) */
 	val.t_int = NUMBER-4;
 	link = ucl_circular_find(circ, val);
-	assert(link->meta.t_int == val.t_int);
+	cctests_assert(L, link->meta.t_int == val.t_int);
 
 	/* now we extract 10 elements: from 16 to 19 (4 elms) and from 0
 	   to 5 (6 elms) */
@@ -209,70 +258,86 @@ test_misc (void)
 	}
 	/* now the current element is "6" */
 	link = ucl_circular_current(circ);
-	assert(link->meta.t_int == 6);
+	cctests_assert(L, link->meta.t_int == 6);
 
 	/* the next element is "7",  followed by unit step increments to
 	   "15" (=20-4-1) */
 	for (int i=7; i<NUMBER-4; ++i) {
 	  ucl_circular_forward(circ, 1);
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	}
 	link = ucl_circular_current(circ);
-	assert(link->meta.t_int == 15);
+	cctests_assert(L, link->meta.t_int == 15);
 
 	/* next is "6" */
 	for (int i=6; i<NUMBER-4; ++i) {
 	  ucl_circular_forward(circ, 1);
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	}
 	link = ucl_circular_current(circ);
-	assert(link->meta.t_int == 15);
+	cctests_assert(L, link->meta.t_int == 15);
 
 	for (int i=NUMBER-5; i>=6; --i) {
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	  ucl_circular_backward(circ, 1);
 	}
 	link = ucl_circular_current(circ);
-	assert(link->meta.t_int == 15);
+	cctests_assert(L, link->meta.t_int == 15);
 
 	for (int i=NUMBER-5; i>=6; --i) {
 	  link = ucl_circular_current(circ);
-	  assert(link->meta.t_int == i);
+	  cctests_assert(L, link->meta.t_int == i);
 	  ucl_circular_backward(circ, 1);
 	}
 	link = ucl_circular_current(circ);
-	assert(link->meta.t_int == NUMBER-5);
+	cctests_assert(L, link->meta.t_int == NUMBER-5);
       }
       clean(circ);
     }
     ucl_circular_destructor(circ);
+    cce_run_body_handlers(L);
   }
-  mcl_test_end();
 }
+
 
 int
 main (void)
 {
-  mcl_test_title("circular tests");
+  //ucl_library_init();
   A = ucl_memory_allocator;
 
-  mcl_test_subtitle("construction");
-  test_constructor();
+  cctests_init("tests for circular lists");
+  {
+    cctests_begin_group("constructors");
+    {
+      cctests_run(test_1_1);
+    }
+    cctests_end_group();
 
-  mcl_test_subtitle("movement");
-  test_forward_movement ();
-  test_backward_movement ();
+    cctests_begin_group("forward and backward movement");
+    {
+      cctests_run(test_2_1);
+      cctests_run(test_2_2);
+    }
+    cctests_end_group();
 
-  mcl_test_subtitle("searching");
-  test_finding ();
+    cctests_begin_group("search");
+    {
+      cctests_run(test_3_1);
+    }
+    cctests_end_group();
 
-  mcl_test_subtitle("miscellaneous operations");
-  test_misc ();
+    cctests_begin_group("miscellaneous operations");
+    {
+      cctests_run(test_4_1);
+    }
+    cctests_end_group();
 
-  exit(EXIT_SUCCESS);
+  }
+  cctests_final();
 }
 
 /* end of file */
