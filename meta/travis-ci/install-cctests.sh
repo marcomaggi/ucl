@@ -7,7 +7,7 @@
 # is run from the top directory of the build tree.
 
 PROGNAME=install-cctests.sh
-VERSION=0.3.0-devel.5
+VERSION=0.3.0-devel.6
 STEM="cctests-${VERSION}"
 ARCHIVE="${STEM}.tar.gz"
 SOURCE_URI="https://github.com/marcomaggi/cctests/archive/v${VERSION}.tar.gz"
