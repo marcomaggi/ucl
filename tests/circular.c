@@ -27,7 +27,6 @@
  ** Headers.
  ** ----------------------------------------------------------------- */
 
-#define MCL_DEBUGGING		0
 #include "ucl.h"
 #include <cctests.h>
 
