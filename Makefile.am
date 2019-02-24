@@ -4,8 +4,8 @@ ACLOCAL_AMFLAGS		= -I meta/autotools
 AUTOMAKE_OPTIONS	= foreign
 EXTRA_DIST		= INSTALL
 dist_doc_DATA		= README COPYING
-AM_CFLAGS		= $(MMUX_CFLAGS)
 AM_CPPFLAGS		= -I$(srcdir)/src
+AM_CFLAGS		= $(MMUX_CFLAGS)
 
 ## --------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ lib_LTLIBRARIES		= libucl.la
 libucl_la_CPPFLAGS	= $(AM_CPPFLAGS)
 libucl_la_CFLAGS	= $(AM_CFLAGS) $(CCEXCEPTIONS_CFLAGS) $(CCMEMORY_CFLAGS) $(CCSTRUCTS_CFLAGS)
 libucl_la_LDFLAGS	= -version-info $(ucl_CURRENT):$(ucl_REVISION):$(ucl_AGE) \
-	$(CCEXCEPTIONS_LIBS) $(CCMEMORY_LIBS) $(CCSTRUCTS_LIBS)
+	$(AM_LDFLAGS) $(CCEXCEPTIONS_LIBS) $(CCMEMORY_LIBS) $(CCSTRUCTS_LIBS)
 libucl_la_SOURCES	= \
 	src/ucl-debug.h		\
 	src/ucl-internals.h	\
@@ -83,7 +83,7 @@ endif
 
 ucl_tests_cppflags	= $(AM_CPPFLAGS) -I$(srcdir)/tests
 ucl_tests_cflags	= $(AM_CFLAGS) $(CCEXCEPTIONS_CFLAGS) $(CCMEMORY_CFLAGS) $(CCSTRUCTS_CFLAGS) $(CCTESTS_CFLAGS)
-ucl_tests_ldadd		= libucl.la $(CCTESTS_LIBS)
+ucl_tests_ldadd		= $(AM_LDFLAGS) libucl.la $(CCTESTS_LIBS)
 
 ## --------------------------------------------------------------------
 
