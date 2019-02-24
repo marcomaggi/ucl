@@ -7428,6 +7428,45 @@ dati in C}.  McGraw--Hill, 1993.
 @noindent
 Bjarne Stroustroup.  @emph{C++}.  Addison-Wesley, 1997.
 
+The documentation of @value{PACKAGE} is available online:
+
+@center @value{DocumentationUrl}
+
+@noindent
+the latest release of this package can be downloaded from:
+
+@center @value{DownloadUrl}
+
+@noindent
+development takes place at:
+
+@center @value{GithubUrl}
+
+@noindent
+and as backup at:
+
+@center @value{BitbucketUrl}
+
+@noindent
+the package CCExceptions is available at:
+
+@center @url{https://github.com/marcomaggi/ccexceptions/}
+
+@noindent
+the package CCMemory is available at:
+
+@center @url{https://github.com/marcomaggi/ccmemory/}
+
+@noindent
+the package CCStructs is available at:
+
+@center @url{https://github.com/marcomaggi/ccstructs/}
+
+@noindent
+the package CCTests is available at:
+
+@center @url{https://github.com/marcomaggi/cctests/}
+
 @c page
 @node concept index
 @appendix An entry for each concept
