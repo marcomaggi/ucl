@@ -1,0 +1,30 @@
+@node overview ccnames
+@section Generated function names
+
+
+@value{PACKAGE} uses the facilities of the package CCStructs to generate function names for ``well
+known'' functions, using the preprocessor macros defined in the header file @file{ccnames.h};
+@ccstructsref{ccnames, Automatically generated @api{} names}.  Example uses of such macros are:
+
+@example
+ccname_init(ccptn_t, pointer, clean)
+ccname_new(ccptn_t,  pointer, clean)
+@end example
+
+@noindent
+which expand into names for constructor functions of @objtype{ccptn_t} structures, initialised from
+a pointer, registered to be destroyed using a clean handler.  Another example is:
+
+@example
+ccname_iface_new(ccstructs_dumpable_I, ccptn_t)
+@end example
+
+@noindent
+which expands into the name of the constructor function for the interface
+@objtype{ccstructs_dumpable_I} implemented by the @struct{} type @objtype{ccptn_t}.
+
+
+@c Local Variables:
+@c mode: texinfo
+@c TeX-master: t
+@c End:

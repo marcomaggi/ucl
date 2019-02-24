@@ -1,0 +1,46 @@
+@node overview exceptions
+@section Handling exceptional conditions
+
+
+@value{PACKAGE} uses the facilities of the package CCExceptions to signal exceptional conditions by
+performing non--local exits to a previously defined location; @ccexceptionsref{Top, CCExceptions}.
+The basic template of such mechanism is:
+
+@example
+cce_location_t  L[1];
+
+if (cce_location(L)) @{
+  /* Handle the exception here. */
+  cce_run_catch_handlers_final(L);
+@} else @{
+  /* Do the work here. */
+  cce_run_body_handlers(L);
+@}
+@end example
+
+CCExceptions allows us to perform destruction operations upon leaving a location (represented by an
+initialised instance of @objtype{cce_location_t}), by using exception handlers that register an
+asynchronous resource for destruction; @ccexceptionsref{handlers, The locations handlers @api{}}.
+
+@value{PACKAGE} defines two categories of constructors:
+
+@table @dfn
+@item plain
+A @dfn{plain} constructor @strong{does not} register the @struct{} instance it builds for
+destruction upon leaving a location.  It is up to us to do so, using CCException's handlers @api{}
+or one of its variants.
+
+@item guarded
+A @dfn{guarded} constructor @strong{does} register the @struct{} instance it builds for destruction
+upon leaving a location.  The destructor will be called by @cfunc{cce_run_body_handlers} or
+@cfunc{cce_run_catch_handlers} or one of their variants.
+
+When the facilities of @file{ccnames.h} are used: the guarded constructors have names built by
+@cfunc{ccname_init} or @cfunc{ccname_new} with the @code{clean} or @code{error} variants.
+@end table
+
+
+@c Local Variables:
+@c mode: texinfo
+@c TeX-master: t
+@c End:

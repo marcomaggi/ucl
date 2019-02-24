@@ -37,11 +37,34 @@
 
 @c ------------------------------------------------------------
 
-@set GITHUB_URL                 @url{http://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
-@set BITBUCKET_URL              @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}}
-@set DOWNLOAD_URL               @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}/downloads}
-@set DOCUMENTATION_URL          @url{http://marcomaggi.github.io/docs/@value{PACKAGE_NICKNAME}.html}
-@set VICARE_HOMEPAGE_URL        @url{http://marcomaggi.github.io/vicare.html}
+@set CCExceptionsVersion       0.8.0
+@set CCMemoryVersion           0.2.1
+@set CCStructsVersion          0.2.0
+@set CCTestsVersion            0.3.0
+
+@c ------------------------------------------------------------
+
+@set PackageAutoconfPrefix              UCL
+@set PackagePkgconfigModule             ucl
+@set PackageLibsVar                     @env{UCL_LIBS}
+@set PackageCflagsVar                   @env{UCL_CFLAGS}
+@c This is the stem of the library in "libucl.so".
+@set PackageLibstem                     ucl
+@set PackageApiPrefixLower              ucl_
+@set PackageApiPrefixUpper              UCL_
+
+@set PackageHeader                      ucl.h
+@set PackageHeaderFile                  @file{@value{PackageHeader}}
+
+@set GithubUrl                 @url{https://github.com/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set BitbucketUrl              @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}}
+@set DownloadUrl               @url{https://bitbucket.org/marcomaggi/@value{PACKAGE_NICKNAME}/downloads}
+@set DocumentationUrl          @url{https://marcomaggi.github.io/docs/@value{PACKAGE_NICKNAME}.html}
+
+@c page
+@c ------------------------------------------------------------
+@c Macros.
+@c ------------------------------------------------------------
 
 @macro ucl{}
 @acronym{UCL}
@@ -68,21 +91,26 @@
 This document describes version @value{VERSION} of @value{PACKAGE}, a C11 language library
 implementing a set of containers.
 
+The library supports @posix{} platforms.  The library depends on the packages: CCExceptions, at
+least version @value{CCExceptionsVersion}; CCMemory, at least version @value{CCMemoryVersion};
+CCStructs, at least version @value{CCStructsVersion}.  To run the test suite: the package depends
+upon the package CCTests, at least version @value{CCTestsVersion}.
+
 The package is distributed under the terms of the @gnu{} Lesser General Public License (@lgpl{}).
 
 The latest release can be downloaded from:
 
-@center @value{DOWNLOAD_URL}
+@center @value{DownloadUrl}
 
 @noindent
 development takes place at:
 
-@center @value{GITHUB_URL}
+@center @value{GithubUrl}
 
 @noindent
 and as backup at:
 
-@center @value{BITBUCKET_URL}
+@center @value{BitbucketUrl}
 
 @noindent
 Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
@@ -161,78 +189,41 @@ Appendices
 @chapter Overview of the library
 
 
-This container library may be thought of as ``low level''.  Methods are
-provided to handle collected data, but no container can be used without
-wrapping it in a module whose functions ``know'' how to deal with the
-type of collected data.
+This container library may be thought of as ``low level''.  Methods are provided to handle collected
+data, but no container can be used without wrapping it in a module whose functions ``know'' how to
+deal with the type of collected data.
 
-@cindex @file{ucl.h}, header file
-@cindex Header file @file{ucl.h}
-@value{PACKAGE} installs the single header file @file{ucl.h}.  All the
-function names in the @api{} are prefixed with @code{ucl_}; all the
-constant names are prefixed with @code{UCL_}; all the type names are
-prefixed with @code{ucl_} and suffixed with @code{_t}.
+This package supports @posix{} platforms.  This package depends on the packages: CCExceptions, at
+least version @value{CCExceptionsVersion}; CCMemory, at least version @value{CCMemoryVersion};
+CCStructs, at least version @value{CCStructsVersion}.  To run the test suite: this package depends
+upon the package CCTests, at least version @value{CCTestsVersion}.
 
-There is no error reporting system: it is our responsibility to validate
-function's arguments using the appropriate @ucl{} functions.  With the
-single exception of the vector module: @ucl{} does no memory allocation.
+@cindex @value{PackageHeaderFile}, header file
+@cindex Header file @value{PackageHeaderFile}
+@value{PACKAGE} installs the single header file @value{PackageHeaderFile}.  All the function names
+in the @api{} are prefixed with @code{@value{PackageApiPrefixLower}}; all the preprocessor symbol
+names are prefixed with @code{@value{PackageApiPrefixUpper}}; all the type names are prefixed with
+@code{@value{PackageApiPrefixLower}} and suffixed with @code{_t}.
 
-The library is developed and tested under the @gnu{}+Linux system and
-officially it supports only the @gnu{} infrastructure: requires the
-@gnu{} C library and compiles fine with the @gnu{} C compiler
-(@code{-std=c99 -pedantic} switches).
 
-The library makes use of inline functions and it is designed to be used
-only by C libraries and programs; it is probably impossible to interface
-it with other languages, unless through a C language wrapper library.
+There is no error reporting system: it is our responsibility to validate function's arguments using
+the appropriate @ucl{} functions.  With the single exception of the vector module: @ucl{} does no
+memory allocation.
 
 @menu
 * overview linking::            Linking code with the library.
+* overview ccnames::            Generated function names.
+* overview exceptions::         Handling exceptional conditions.
+* overview allocation::         Memory allocation for pathname instances.
 * overview error::              Error handling.
 * overview size::               Structures size.
 * overview const::              Constification.
 @end menu
 
-@c page
-@node overview linking
-@section Linking code with the library
-
-
-This package installs a data file for @command{pkg-config}, so when
-searching for the installed library with the @gnu{} Autotools, we can:
-
-@itemize
-@item
-Install the file @file{pkg.m4} from @file{/usr/share/aclocal} into the
-source tree of the package, for example under @file{meta/autoconf/}.
-
-@item
-Include @file{pkg.m4} in the template by adding the following line to
-@file{acinclude.m4}:
-
-@example
-m4_include(meta/autoconf/pkg.m4)
-@end example
-
-@item
-Just add the following macro use to @file{configure.ac}:
-
-@example
-PKG_CHECK_MODULES([UCL],[ucl >= 2.0])
-@end example
-
-@noindent
-which will set the variables @code{UCL_LIBS} and @code{UCL_CFLAGS}.
-@end itemize
-
-Alternatively we can use the raw @gnu{} Autoconf macros:
-
-@example
-AC_CHECK_LIB([ucl],[cct_version_string],,
-  [AC_MSG_FAILURE([test for UCL library failed])])
-AC_CHECK_HEADERS([ucl.h],,
-  [AC_MSG_FAILURE([test for UCL header failed])])
-@end example
+@include overview-linking.texi
+@include overview-ccnames.texi
+@include overview-ccexceptions.texi
+@include overview-ccmemory.texi
 
 @c page
 @node overview error
